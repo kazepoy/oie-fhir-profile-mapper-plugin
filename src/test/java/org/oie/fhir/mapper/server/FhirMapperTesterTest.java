@@ -93,6 +93,7 @@ public class FhirMapperTesterTest {
         String request = "{\"dataType\":\"XML\",\"message\":\"<row/>\",\"step\":" + FhirJson.write(config) + "}";
         Map<?, ?> out = (Map<?, ?>) FhirJson.parse(FhirMapperTester.test(request, ENVIRONMENT));
         assertEquals(Boolean.FALSE, out.get("validationPerformed"));
+        assertEquals("[]", out.get("errors").toString());
         assertEquals("[]", out.get("issues").toString());
         assertTrue(out.get("output").toString().contains("1980-13-45"));
         config.put("mappings", "[" + value("Patient.gender", "code", "nope()", "[[\"gender\"]]") + "]");

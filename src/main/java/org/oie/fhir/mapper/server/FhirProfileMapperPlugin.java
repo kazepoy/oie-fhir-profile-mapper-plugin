@@ -7,12 +7,15 @@
 package org.oie.fhir.mapper.server;
 
 import java.util.Properties;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.mirth.connect.model.ExtensionPermission;
 import com.mirth.connect.plugins.ServicePlugin;
+import com.mirth.connect.model.converters.ObjectXMLSerializer;
+import org.oie.fhir.mapper.FhirProfileMapperStep;
 
 public final class FhirProfileMapperPlugin implements ServicePlugin {
 
@@ -24,7 +27,10 @@ public final class FhirProfileMapperPlugin implements ServicePlugin {
     }
 
     @Override
-    public void init(Properties properties) {}
+    public void init(Properties properties) {
+        // Allow only our serialized step, without opening an entire package namespace.
+        ObjectXMLSerializer.getInstance().allowTypes(List.of(FhirProfileMapperStep.class.getName()), List.of(), List.of());
+    }
 
     @Override
     public void update(Properties properties) {}

@@ -138,19 +138,21 @@ public final class FhirMapperTester {
                 Context.exit();
             }
             out.put("output", result);
-            if (step.isValidateOutput() && result != null && (result.trim().startsWith("{") || result.trim().startsWith("<"))) {
-                out.put("validationPerformed", true);
-                try {
-                    FhirValidation validation = FhirFacade.validate(result, "", step.getProfiles(), step.getFhirVersion());
-                    for (Map<String, String> issue : validation.getIssues()) {
-                        Map<String, Object> i = new LinkedHashMap<>();
-                        i.put("severity", issue.get("severity"));
-                        i.put("location", issue.get("location"));
-                        i.put("message", issue.get("message"));
-                        issues.add(i);
+            if (result != null && (result.trim().startsWith("{") || result.trim().startsWith("<"))) {
+                if (step.isValidateOutput()) {
+                    out.put("validationPerformed", true);
+                    try {
+                        FhirValidation validation = FhirFacade.validate(result, "", step.getProfiles(), step.getFhirVersion());
+                        for (Map<String, String> issue : validation.getIssues()) {
+                            Map<String, Object> i = new LinkedHashMap<>();
+                            i.put("severity", issue.get("severity"));
+                            i.put("location", issue.get("location"));
+                            i.put("message", issue.get("message"));
+                            issues.add(i);
+                        }
+                    } catch (Exception e) {
+                        errors.add(error(null, 0, "Validation: " + e.getMessage()));
                     }
-                } catch (Exception e) {
-                    errors.add(error(null, 0, "Validation: " + e.getMessage()));
                 }
             } else if (result != null && errors.isEmpty()) {
                 errors.add(error(null, 0, "The step made no FHIR resource from this message (the inbound message is unchanged)."));

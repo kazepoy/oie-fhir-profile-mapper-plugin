@@ -88,7 +88,7 @@ public class FhirProfileMapperStep extends Step {
     private String profileVersion = "";
     private String resourceType = "";
     private boolean addMetaProfile = true;
-    private boolean validateOutput = true;
+    private Boolean validateOutput = true;
     private boolean setLastUpdated = false;
     private String variable = "";
     private String action = "resource";
@@ -278,7 +278,7 @@ public class FhirProfileMapperStep extends Step {
                 .append(", profiles: ").append(FhirJson.write(text(profiles)))
                 .append(", fhirVersion: ").append(FhirJson.write(text(fhirVersion).isEmpty() ? "R4" : text(fhirVersion)))
                 .append(", requiredProfile: ").append(FhirJson.write(text(profileUrl)))
-                .append(", validateOutput: ").append(validateOutput)
+                .append(", validateOutput: ").append(isValidateOutput())
                 .append(", cacheSeconds: ").append(Math.max(0, terminologyCacheSeconds))
                 .append(", timeoutSeconds: ").append(terminologyTimeoutSeconds > 0 ? terminologyTimeoutSeconds : 10)
                 .append(", authorization: ").append(text(terminologyAuthorization).isEmpty() ? "''" : "String((function () {\nreturn (" + text(terminologyAuthorization) + ");\n})())")
@@ -615,11 +615,11 @@ public class FhirProfileMapperStep extends Step {
         Map<String, Object> purged = super.getPurgedProperties();
         purged.put("fhirVersion", fhirVersion);
         purged.put("addMetaProfile", addMetaProfile);
-        purged.put("validateOutput", validateOutput);
+        purged.put("validateOutput", isValidateOutput());
         return purged;
     }
 
-    public boolean isValidateOutput() { return validateOutput; }
+    public boolean isValidateOutput() { return !Boolean.FALSE.equals(validateOutput); }
 
     public void setValidateOutput(boolean validateOutput) { this.validateOutput = validateOutput; }
 

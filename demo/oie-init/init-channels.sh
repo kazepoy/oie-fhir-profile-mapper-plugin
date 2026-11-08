@@ -51,6 +51,12 @@ xml_value() {
   sed -n "s:.*<$1>\(.*\)</$1>.*:\1:p" "$2" | head -n 1
 }
 
+check_channel() {
+  case "$(xml_value description "$RESPONSE_FILE")" in
+    'This channel is invalid.'*) fail "Canal invalide : $1. Vérifier les extensions et la désérialisation des étapes." ;;
+  esac
+}
+
 echo "=== Import des canaux ($OIE_URL) ==="
 count=0
 for file in "$CHANNELS_DIR"/*.xml; do
@@ -61,16 +67,19 @@ for file in "$CHANNELS_DIR"/*.xml; do
   # GET d'un canal absent : HTTP 204 sans corps.
   status=$(request GET "/channels/$id")
   if [ "$OIE_INIT_FORCE" != true ] && [ "$status" = 200 ] && [ -s "$RESPONSE_FILE" ]; then
+    check_channel "$name"
     echo "Canal déjà présent : $name"
     continue
   fi
   echo "Canal : $name"
   api PUT "/channels/$id?override=true" "$file"
+  api GET "/channels/$id"
+  check_channel "$name"
   echo "Déploiement : $name"
   api POST "/channels/$id/_deploy?returnErrors=true"
   # returnErrors=true : le moteur ne répond rien quand le déploiement passe.
   if [ -s "$RESPONSE_FILE" ]; then
-    echo "  -> ATTENTION, le moteur a répondu : $(cat "$RESPONSE_FILE")" >&2
+    fail "Déploiement refusé pour $name : $(cat "$RESPONSE_FILE")"
   fi
   count=$((count + 1))
 done
