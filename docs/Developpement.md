@@ -15,8 +15,8 @@ l'éditeur graphique suivront le [plan du projet](Plan.md).
 | `demo/` | OIE, Web Admin, FHIR Data Type et compilation du mapper dans Docker |
 | `docs/` | Plan de conception et documentation technique |
 
-Les futurs appels à FHIR Data Type seront centralisés dans l'adaptateur prévu
-au plan. Le socle n'embarque aucune bibliothèque HAPI ni copie du plugin tiers.
+Les appels à FHIR Data Type passent par la [façade et l'adaptateur](Integration-FHIR-Data-Type.md).
+Le plugin n'embarque aucune bibliothèque HAPI ni copie du moteur tiers.
 
 ## Démo
 
@@ -46,6 +46,7 @@ fhir-profile-mapper/
   LICENSE
   plugin.xml
   fhir-profile-mapper-server.jar
+  lib/fhir-profile-mapper-bridge.jar
 ```
 
 Ce ZIP peut aussi être installé dans *Settings > Extensions* d'OIE 4.7.0, suivi

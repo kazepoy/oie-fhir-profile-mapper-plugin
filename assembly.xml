@@ -20,5 +20,10 @@
       <outputDirectory>/</outputDirectory>
       <destName>fhir-profile-mapper-server.jar</destName>
     </file>
+    <file>
+      <source>${project.build.directory}/${project.build.finalName}-bridge.jar</source>
+      <outputDirectory>/lib</outputDirectory>
+      <destName>fhir-profile-mapper-bridge.jar</destName>
+    </file>
   </files>
 </assembly>

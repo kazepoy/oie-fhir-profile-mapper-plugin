@@ -23,9 +23,59 @@
     <maven.compiler.release>17</maven.compiler.release>
     <oie.version>4.7.0</oie.version>
     <log4j.version>2.26.1</log4j.version>
+    <datatype.fhir.version>1.5.1</datatype.fhir.version>
+    <hapi.version>8.12.1</hapi.version>
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>com.mirth.connect</groupId>
+      <artifactId>donkey-model</artifactId>
+      <version>${oie.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.matthy.oie</groupId>
+      <artifactId>datatype-fhir-api</artifactId>
+      <version>${datatype.fhir.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.matthy.oie</groupId>
+      <artifactId>datatype-fhir-engine</artifactId>
+      <version>${datatype.fhir.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ca.uhn.hapi.fhir</groupId>
+      <artifactId>hapi-fhir-validation</artifactId>
+      <version>${hapi.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>ca.uhn.hapi.fhir</groupId>
+      <artifactId>hapi-fhir-structures-r4</artifactId>
+      <version>${hapi.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>ca.uhn.hapi.fhir</groupId>
+      <artifactId>hapi-fhir-validation-resources-r4</artifactId>
+      <version>${hapi.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>ca.uhn.hapi.fhir</groupId>
+      <artifactId>hapi-fhir-caching-caffeine</artifactId>
+      <version>${hapi.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.2</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>com.mirth.connect</groupId>
       <artifactId>server-api</artifactId>
@@ -72,11 +122,38 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
+        <configuration>
+          <argLine>-Xmx1g</argLine>
+          <systemPropertyVariables>
+            <fhir.engine.direct>true</fhir.engine.direct>
+            <fhir.mapper.bridge.direct>true</fhir.mapper.bridge.direct>
+          </systemPropertyVariables>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.4.1</version>
+        <executions>
+          <execution>
+            <id>default-jar</id>
+            <configuration>
+              <excludes><exclude>org/oie/fhir/mapper/integration/bridge/**</exclude></excludes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>bridge</id>
+            <phase>package</phase>
+            <goals><goal>jar</goal></goals>
+            <configuration>
+              <classifier>bridge</classifier>
+              <includes>
+                <include>org/oie/fhir/mapper/integration/bridge/**</include>
+                <include>META-INF/LICENSE</include>
+              </includes>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
