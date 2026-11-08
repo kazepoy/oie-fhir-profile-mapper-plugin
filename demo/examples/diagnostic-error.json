@@ -1,0 +1,13 @@
+{
+  "step": {
+    "name": "Patient diagnostic",
+    "sequenceNumber": "0",
+    "action": "resource",
+    "resourceType": "Patient",
+    "profileUrl": "http://hl7.org/fhir/StructureDefinition/Patient",
+    "validateOutput": false,
+    "mappings": "[{\"key\":\"Patient.active\",\"type\":\"boolean\",\"expression\":\"'invalide'\",\"path\":[[\"active\"]]}]"
+  },
+  "dataType": "JSON",
+  "message": "{}"
+}

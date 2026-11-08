@@ -156,6 +156,13 @@ Ces routes demandent la permission Manage Channels. Le test est exécuté sur le
 
 **Generated script** montre la compilation réelle. **Validate Step** vérifie la configuration de l'étape ; un test de message vérifie aussi le comportement des expressions et, si elle est activée, la validation FHIR de leur résultat.
 
+Les erreurs du test et du script généré affichent l'étape, la phase, la clé,
+le chemin cible et l'expression lorsqu'ils sont connus. **Go to rule** ouvre
+les parents de l'élément, retire les filtres qui pourraient le masquer et
+positionne le focus sur la valeur, condition, itération ou traduction concernée.
+L'indice de règle dans la réponse API correspond au tableau `mappings` testé ;
+il ne constitue pas un identifiant stable après modification du mapping.
+
 ## 10. Limites et vérification
 
 L'administration Swing ne connaît pas cet éditeur. Les limites de construction FHIR restent celles du [README](Reprise-POC.md#limites-conservées), notamment les extensions primitives, contained et certaines formes de slicing.

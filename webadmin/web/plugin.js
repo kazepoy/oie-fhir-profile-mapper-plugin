@@ -571,6 +571,15 @@ function mapperSample(platform, element) {
   return { key, sample: { message, dataType } };
 }
 
+function mapperDiagnostic(error) {
+  const step = error.step || {};
+  const label = [step.name || (step.sequenceNumber ? `Step ${step.sequenceNumber}` : ""), error.phase, error.key,
+    error.line ? `line ${error.line}` : ""].filter(Boolean).join(" · ");
+  const target = Array.isArray(error.path) ? [step.resourceType || "", ...error.path.map(([name, instance]) => name + (instance === undefined ? "" : `[${instance}]`))].filter(Boolean).join(".") : "";
+  const kind = error.operation === "iteration" ? "each" : error.operation === "condition" ? "condition" : error.phase === "translation" ? "translate" : "value";
+  return { label, target, kind };
+}
+
 function ProfileMapperEditor({ element, onChange, platform }) {
   const [, rerender] = React.useReducer((x) => x + 1, 0);
   const state = React.useRef(null);
@@ -625,6 +634,34 @@ function ProfileMapperEditor({ element, onChange, platform }) {
   const profiles = element.profiles || "";
   const ctx = { version, profiles, instances: st.instances, showAll: st.showAll };
   const tree = st.rootIndex ? makeTree(st.rootIndex, ctx) : null;
+  const revealDiagnostic = (error) => {
+    const chain = st.rootIndex && makeTree(st.rootIndex, { ...ctx, showAll: true }).chain(error.key);
+    if (!chain) {
+      st.notice = `The element ${error.key} is not in the loaded profile.`;
+    } else {
+      st.showAll = true;
+      st.filter = "all";
+      for (const node of chain.slice(0, -1)) st.expanded.add(node.key);
+      st.pendingDiagnostic = { key: error.key, kind: mapperDiagnostic(error).kind };
+    }
+    rerender();
+  };
+  const diagnosticRef = (key, kind) => (node) => {
+    if (node && st.pendingDiagnostic?.key === key && st.pendingDiagnostic.kind === kind) {
+      st.pendingDiagnostic = null;
+      node.scrollIntoView({ block: "center" });
+      node.querySelector("input, textarea")?.focus();
+    }
+  };
+  const diagnosticView = (error, id) => {
+    const display = mapperDiagnostic(error);
+    return h("div", { key: id, style: { color: "#b91c1c", fontSize: "12px", marginBottom: "6px" } },
+      h("strong", null, display.label),
+      error.key && tree ? h("button", { type: "button", className: "btn btn-sm", style: { marginLeft: "6px" }, onClick: () => revealDiagnostic(error) }, "Go to rule") : null,
+      h("div", null, error.message),
+      display.target ? h("div", { style: { fontFamily: "monospace" } }, `Target: ${display.target}`) : null,
+      error.expression ? h("pre", { style: { whiteSpace: "pre-wrap", margin: "4px 0" } }, error.expression) : null);
+  };
 
   const allKeys = () => new Set([...st.values.keys(), ...st.iterations.keys(), ...st.translations.keys(), ...st.conditions.keys()]);
   const forget = (key) => {
@@ -1017,7 +1054,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     // mapping keeps its room, and the actions sit next to it, where they cannot push it away.
     return h(
       "tr",
-      { key: node.key, title: node.short ? `${node.key}: ${node.short}` : node.key },
+      { key: node.key, ref: diagnosticRef(node.key, "value"), title: node.short ? `${node.key}: ${node.short}` : node.key },
       h(
         "td",
         { style: { paddingLeft: `${node.depth * 16}px` } },
@@ -1078,7 +1115,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
   };
 
   const subRow = (node, suffix, children) =>
-    h("tr", { key: `${node.key}/${suffix}` }, h("td", { colSpan: 3, style: { paddingLeft: `${node.depth * 16 + 30}px`, background: "rgba(37, 99, 235, 0.05)" } }, h("div", { style: { display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" } }, children)));
+    h("tr", { key: `${node.key}/${suffix}`, ref: diagnosticRef(node.key, suffix) }, h("td", { colSpan: 3, style: { paddingLeft: `${node.depth * 16 + 30}px`, background: "rgba(37, 99, 235, 0.05)" } }, h("div", { style: { display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" } }, children)));
   const mono = { fontFamily: "monospace", fontSize: "12px" };
 
   const iterationRow = (node) => {
@@ -1196,7 +1233,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     rows.push(
       h(
         "tr",
-        { key: tree.root.key },
+        { key: tree.root.key, ref: diagnosticRef(tree.root.key, "value") },
         h(
           "td",
           { colSpan: 3 },
@@ -1509,7 +1546,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
               ? h(
                   "div",
                   { style: { marginTop: "6px" } },
-                  testResult.errors.map((e, i) => h("div", { key: `e${i}`, style: { color: "#b91c1c", fontSize: "12px" } }, (e.key ? `${e.key}: ` : "") + e.message)),
+                  testResult.errors.map((e, i) => diagnosticView(e, `e${i}`)),
                   testResult.output !== null && testResult.output !== undefined
                     ? h(
                         "div",
@@ -1529,7 +1566,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
               ? h(
                   "div",
                   { style: { marginTop: "6px" } },
-                  st.scriptResult.errors.map((e, i) => h("div", { key: `s${i}`, style: { color: "#b91c1c", fontSize: "12px" } }, (e.key ? `${e.key}: ` : "") + (e.line ? `line ${e.line}: ` : "") + e.message)),
+                  st.scriptResult.errors.map((e, i) => diagnosticView(e, `s${i}`)),
                   h("pre", { style: { maxHeight: "360px", overflow: "auto", fontSize: "11px", background: "rgba(0,0,0,0.03)", padding: "6px" } }, st.scriptResult.script || "")
                 )
               : null

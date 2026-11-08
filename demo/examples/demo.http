@@ -28,6 +28,15 @@ Content-Type: text/plain; charset=UTF-8
 
 < ./oru-r01-minimal.er7
 
+### Diagnostic structuré : conversion booléenne impossible, validation FHIR désactivée
+POST {{oie}}/extensions/fhir-profile-mapper/test
+Authorization: {{auth}}
+X-Requested-With: OpenAPI
+Accept: application/json
+Content-Type: text/plain; charset=UTF-8
+
+< ./diagnostic-error.json
+
 ### Une ligne SQL XML de la table métier patient vers ExampleLabPatient
 POST {{sqlPatient}}
 Content-Type: application/xml; charset=UTF-8

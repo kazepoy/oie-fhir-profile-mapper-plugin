@@ -121,7 +121,12 @@ Les valeurs sont construites dans l'ordre compilé ; les valeurs fixes/patterns 
 
 Une variable d'itération doit être un identifiant JavaScript autorisé, distinct de `msg`, `tmp`, des mots réservés et des noms internes commençant par `__`. Son indice est accessible par `<variable>Index`.
 
-Chaque règle est précédée dans le script par un commentaire `//@ clé`. `keyAt()` et les erreurs du runtime permettent ainsi de rattacher une erreur JavaScript à l'élément de mapping.
+Chaque règle est précédée dans le script par un commentaire `//@ clé` et un
+marqueur `//~fhir` contenant ses métadonnées de diagnostic. Des marqueurs de fin
+empêchent d'attribuer du code hors règle à la règle précédente. Les erreurs de
+syntaxe sont localisées dans ces régions ; les erreurs d'expression, de traduction
+et de conversion portent directement le contexte de la règle, sans recherche
+de sa clé dans le message d'erreur. Voir le [contrat des diagnostics](Specification-mapping.md#8-diagnostics-tests-dapi-et-traces).
 
 ## 5. Forme du JavaScript généré
 

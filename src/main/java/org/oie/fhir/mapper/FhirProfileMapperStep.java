@@ -70,6 +70,7 @@ public class FhirProfileMapperStep extends Step {
     private static final String RUNTIME_RESOURCE = "profile-mapper-runtime.js";
     /** Before the code of each element in the script, so that an error line leads to the element. */
     private static final String KEY_COMMENT = "//@ ";
+    private static final String DIAGNOSTIC_COMMENT = "//~fhir ";
     private static String runtime;
 
     private static final Pattern IDENTIFIER = Pattern.compile("[A-Za-z_$][A-Za-z0-9_$]*");
@@ -203,6 +204,7 @@ public class FhirProfileMapperStep extends Step {
         // The iterations and conditions per element; those on the resource itself (empty path) apart.
         Map<?, ?> resourceIteration = null;
         String resourceCondition = null;
+        Map<?, ?> resourceConditionRule = null;
         Map<String, Map<?, ?>> iterations = new HashMap<>();
         Map<String, String> conditions = new HashMap<>();
         Map<String, Integer> depths = new HashMap<>();
@@ -233,6 +235,7 @@ public class FhirProfileMapperStep extends Step {
             } else if (m.containsKey("condition") && !text(m.get("condition")).trim().isEmpty()) {
                 if (root) {
                     resourceCondition = text(m.get("condition")).trim();
+                    resourceConditionRule = m;
                     continue;
                 }
                 conditions.put(key, text(m.get("condition")).trim());
@@ -299,7 +302,7 @@ public class FhirProfileMapperStep extends Step {
         if (setLastUpdated) {
             sb.append("__fhir.set(__r, [[\"meta\"], [\"lastUpdated\"]], \"instant\", function () { return String(java.time.OffsetDateTime.now()); }, \"meta.lastUpdated\", null);\n");
         }
-        write(sb, resource);
+        write(sb, resource, entries);
         sb.append("return __fhir.finish(__r);\n};\n");
 
         sb.append("var __out;\n");
@@ -308,7 +311,9 @@ public class FhirProfileMapperStep extends Step {
         }
         sb.append("var __emit = function (").append(params).append(") {\n");
         if (resourceCondition != null) {
-            sb.append("if (!__fhir.when(function () {\nreturn (").append(resourceCondition).append(");\n}, ").append(FhirJson.write(resourceType.trim())).append(")) {\nreturn;\n}\n");
+            String diagnostic = mark(sb, resourceConditionRule, entries, "condition");
+            sb.append("if (!__fhir.when(function () {\nreturn (").append(resourceCondition).append(");\n}, ").append(FhirJson.write(resourceType.trim())).append(", ").append(diagnostic).append(")) {\nreturn;\n}\n");
+            clearMark(sb);
         }
         sb.append("var __res = __build(").append(params).append(");\n");
         if (create) {
@@ -337,8 +342,10 @@ public class FhirProfileMapperStep extends Step {
             if (create) {
                 throw error("a named Bundle is created once; iterate over its resources instead.");
             }
+            String diagnostic = mark(sb, resourceIteration, entries, "iteration");
             sb.append("__fhir.each(function () {\nreturn (").append(text(resourceIteration.get("each")).trim()).append(");\n}, __emit, ")
-                    .append(FhirJson.write(resourceType.trim())).append(");\n");
+                    .append(FhirJson.write(resourceType.trim())).append(", ").append(diagnostic).append(");\n");
+            clearMark(sb);
         } else {
             sb.append("__emit();\n");
         }
@@ -380,6 +387,49 @@ public class FhirProfileMapperStep extends Step {
             }
         }
         return null;
+    }
+
+    /** Metadata only within a generated rule's marked region; never guess from a previous rule. */
+    public static Map<?, ?> diagnosticAt(String script, int line) {
+        String[] lines = script.split("\n", -1);
+        for (int i = Math.min(line, lines.length) - 1; i >= 0; i--) {
+            if (lines[i].startsWith(DIAGNOSTIC_COMMENT)) {
+                Object value = FhirJson.parse(lines[i].substring(DIAGNOSTIC_COMMENT.length()));
+                return value instanceof Map ? (Map<?, ?>) value : null;
+            }
+        }
+        return null;
+    }
+
+    private static Map<?, ?> rule(List<?> entries, String key, String field) {
+        Map<?, ?> found = null;
+        for (Object entry : entries) {
+            Map<?, ?> m = (Map<?, ?>) entry;
+            if (key(m).equals(key) && m.containsKey(field)) found = m;
+        }
+        return found;
+    }
+
+    private static String mark(StringBuilder sb, Map<?, ?> rule, List<?> entries, String phase) {
+        Map<String, Object> diagnostic = new LinkedHashMap<>();
+        if (rule != null) {
+            for (int i = 0; i < entries.size(); i++) {
+                if (entries.get(i) == rule) { diagnostic.put("ruleIndex", i); break; }
+            }
+            diagnostic.put("key", key(rule));
+            diagnostic.put("path", rule.get("path"));
+            String field = "iteration".equals(phase) ? "each" : "condition".equals(phase) ? "condition" : "expression";
+            diagnostic.put("expression", rule.containsKey(field) ? rule.get(field) : FhirJson.NULL);
+        }
+        diagnostic.put("phase", phase);
+        diagnostic.put("operation", phase);
+        String json = FhirJson.write(diagnostic);
+        sb.append(DIAGNOSTIC_COMMENT).append(oneLine(json)).append('\n');
+        return json;
+    }
+
+    private static void clearMark(StringBuilder sb) {
+        sb.append(DIAGNOSTIC_COMMENT).append("null\n");
     }
 
     /** A step from the JSON of the web administrator's element (strings, booleans and numbers, also as text). */
@@ -435,27 +485,31 @@ public class FhirProfileMapperStep extends Step {
     }
 
     /** The values, iterations and conditions of a scope in order, then its fixed values: they need to know which entries exist. */
-    private void write(StringBuilder sb, Scope scope) throws ScriptBuilderException {
+    private void write(StringBuilder sb, Scope scope, List<?> entries) throws ScriptBuilderException {
         for (Object item : scope.items) {
             if (item instanceof Scope) {
                 Scope it = (Scope) item;
                 sb.append(KEY_COMMENT).append(oneLine(it.key)).append('\n');
                 if (it.iteration != null) {
+                    String diagnostic = mark(sb, it.iteration, entries, "iteration");
                     String var = text(it.iteration.get("variable")).trim();
                     sb.append("__fhir.each(function () {\nreturn (").append(text(it.iteration.get("each")).trim()).append(");\n}, function (")
                             .append(var).append(", ").append(it.indexVariable).append(") {\n");
                     sb.append("var ").append(var).append("Index = ").append(it.indexVariable).append(";\n");
-                    writeConditional(sb, it);
-                    sb.append("}, ").append(FhirJson.write(it.key)).append(");\n");
+                    writeConditional(sb, it, entries);
+                    sb.append("}, ").append(FhirJson.write(it.key)).append(", ").append(diagnostic).append(");\n");
+                    clearMark(sb);
                 } else {
-                    writeConditional(sb, it);
+                    writeConditional(sb, it, entries);
                 }
             } else {
                 Map<?, ?> m = (Map<?, ?>) item;
                 sb.append(KEY_COMMENT).append(oneLine(key(m))).append('\n');
+                String diagnostic = mark(sb, m, entries, "value");
                 sb.append("__fhir.set(__r, ").append(path(m, scope)).append(", ").append(FhirJson.write(text(m.get("type"))))
                         .append(", function () {\nreturn (").append(text(m.get("expression")).trim()).append(");\n}, ")
-                        .append(FhirJson.write(key(m))).append(", ").append(translation(m)).append(");\n");
+                        .append(FhirJson.write(key(m))).append(", ").append(translation(m)).append(", ").append(diagnostic).append(");\n");
+                clearMark(sb);
             }
         }
         for (Map<?, ?> m : scope.fixed) {
@@ -469,13 +523,15 @@ public class FhirProfileMapperStep extends Step {
         }
     }
 
-    private void writeConditional(StringBuilder sb, Scope scope) throws ScriptBuilderException {
+    private void writeConditional(StringBuilder sb, Scope scope, List<?> entries) throws ScriptBuilderException {
         if (scope.condition == null) {
-            write(sb, scope);
+            write(sb, scope, entries);
             return;
         }
-        sb.append("if (__fhir.when(function () {\nreturn (").append(scope.condition).append(");\n}, ").append(FhirJson.write(scope.key)).append(")) {\n");
-        write(sb, scope);
+        String diagnostic = mark(sb, rule(entries, scope.key, "condition"), entries, "condition");
+        sb.append("if (__fhir.when(function () {\nreturn (").append(scope.condition).append(");\n}, ").append(FhirJson.write(scope.key)).append(", ").append(diagnostic).append(")) {\n");
+        clearMark(sb);
+        write(sb, scope, entries);
         sb.append("}\n");
     }
 

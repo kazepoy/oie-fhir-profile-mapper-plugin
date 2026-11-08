@@ -189,6 +189,24 @@ structurels, complété par les règles sémantiques de la spécification.
 
 ## Étape 4 — Faire évoluer les diagnostics et le runtime existant
 
+**Premier jalon : diagnostics par règle.** Les erreurs de l'API de test et du
+script généré contiennent l'étape, la phase, l'indice de règle, le chemin cible
+et l'expression lorsqu'ils sont connus. Les erreurs de syntaxe utilisent les
+marqueurs du code généré ; les erreurs de valeur, condition, itération,
+traduction et conversion portent leur contexte directement. L'éditeur affiche
+ces détails et propose « Go to rule ». Le cas reproductible
+[diagnostic-error.json](../demo/examples/diagnostic-error.json) provoque une
+conversion booléenne impossible, indépendamment de la validation FHIR.
+
+**Vérifié :** 85 tests Java dans le build Docker et 10 tests de logique de
+l'éditeur. Après redémarrage de la démo, le rejeu des six canaux et le contrôle
+du diagnostic structuré via l'API OIE passent.
+
+Le traitement des `TypeError` est conservé pour ce jalon. Il reste à définir
+son évolution explicite, puis la trace activable et les identifiants stables.
+La vérification visuelle dans le navigateur reste à effectuer : l'outil échoue
+avant connexion dans cet environnement.
+
 Conserver le compilateur et le runtime repris, puis faire évoluer leurs diagnostics
 et leur débogage à partir des exemples de la spécification :
 

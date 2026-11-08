@@ -33,12 +33,14 @@ CHANNELS = {
 }
 
 
-def api(path, accept="application/xml"):
-    request = urllib.request.Request(API + path, headers={
+def api(path, accept="application/xml", data=None):
+    request = urllib.request.Request(API + path, data=data, headers={
         "Authorization": "Basic " + AUTH,
         "X-Requested-With": "OpenAPI",
         "Accept": accept,
     })
+    if data is not None:
+        request.add_header("Content-Type", "text/plain; charset=UTF-8")
     return HTTP.open(request, timeout=120).read()
 
 
@@ -162,6 +164,16 @@ def main():
     translated = json.loads(api("/extensions/fhir-profile-mapper/translate?" + query, "application/json"))
     assert translated["system"] == "http://loinc.org" and translated["code"] == "14749-6"
     print("OK façade : traduction ConceptMap locale GLU → LOINC 14749-6")
+
+    result = json.loads(api("/extensions/fhir-profile-mapper/test", "application/json",
+                            (EXAMPLES / "diagnostic-error.json").read_bytes()))
+    assert result["output"] is None and result["validationPerformed"] is False
+    assert len(result["errors"]) == 1
+    error = result["errors"][0]
+    assert error["step"]["name"] == "Patient diagnostic" and error["phase"] == "conversion"
+    assert error["key"] == "Patient.active" and error["ruleIndex"] == 0
+    assert error["path"] == [["active"]] and error["expression"] == "'invalide'"
+    print("OK diagnostic : Patient.active, règle 0, conversion, expression 'invalide'")
 
 
 if __name__ == "__main__":

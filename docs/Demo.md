@@ -68,6 +68,14 @@ Il vérifie aussi la traduction locale GLU vers LOINC et le refus de l'ORU sans
 date de naissance : réponse HTTP vide, message OIE en `ERROR` mentionnant
 `birthDate`. Ce dernier message d'erreur est donc attendu après le contrôle.
 
+Le fichier [diagnostic-error.json](../demo/examples/diagnostic-error.json) provoque
+volontairement une conversion booléenne impossible dans l'API de test. Le script
+vérifie que le diagnostic désigne `Patient.active`, la règle `0`, la phase
+`conversion` et l'expression `'invalide'`, avec la validation FHIR désactivée.
+Ce test d'API ne crée pas de message de channel. La même erreur peut être essayée
+dans l'éditeur en saisissant `'invalide'` comme expression de `Patient.active` :
+le bouton **Go to rule** ramène au champ concerné.
+
 Le script utilise les valeurs de démonstration par défaut. En cas de réglages
 personnalisés, lui transmettre `OIE_PASSWORD` et `OIE_HTTPS_PORT` dans son
 environnement ; il ne lit pas `.env`. Les ports des exemples sont publiés

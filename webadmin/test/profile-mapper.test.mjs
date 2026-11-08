@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const code = fs.readFileSync(path.join(here, "../web/plugin.js"), "utf8").replace("export function register", "function register");
 const context = vm.createContext({ console });
-vm.runInContext(code + "\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample };", context);
+vm.runInContext(code + "\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample, mapperDiagnostic };", context);
 const { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample } = context.t;
 
 const el = (id, min, max, types, more = {}) => ({ id, path: id.replace(/:[^.]+/g, ""), min, max, base: { max: more.baseMax ?? max }, type: types.map((t) => (typeof t === "string" ? { code: t } : t)), ...more });
@@ -54,6 +54,19 @@ const tree = (keys = [], showAll = false) => makeTree(patient, { version: "R4", 
 // Objects of the vm context have other prototypes: compare them as plain JSON.
 const plain = (x) => JSON.parse(JSON.stringify(x));
 const labels = (t, node) => (t.children(node) || []).map((n) => n.label);
+
+test("diagnostics show the step, slice path and phase and select the right editor field", () => {
+  const error = { step: { name: "Patient", resourceType: "Patient" }, key: "Patient.identifier:ipp.value",
+    phase: "conversion", operation: "value", line: "42", path: [["identifier", "ipp#0"], ["value"]] };
+  assert.deepEqual(plain(context.t.mapperDiagnostic(error)), {
+    label: "Patient · conversion · Patient.identifier:ipp.value · line 42",
+    target: "Patient.identifier[ipp#0].value", kind: "value"
+  });
+  assert.equal(context.t.mapperDiagnostic({ ...error, operation: "condition", phase: "syntax" }).kind, "condition");
+  assert.equal(context.t.mapperDiagnostic({ ...error, operation: "iteration" }).kind, "each");
+  assert.equal(context.t.mapperDiagnostic({ ...error, phase: "translation" }).kind, "translate");
+  assert.deepEqual(plain(context.t.mapperDiagnostic({ message: "old API error" })), { label: "", target: "", kind: "value" });
+});
 
 test("the tree hides ids and unsliced extensions unless asked, and opens data types", () => {
   const t = tree();

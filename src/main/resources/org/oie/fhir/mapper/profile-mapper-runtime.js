@@ -11,6 +11,15 @@
     var FhirTools = Packages.org.oie.fhir.mapper.fhir.FhirFacade;
     var FhirTerminology = Packages.org.oie.fhir.mapper.fhir.FhirFacade;
 
+    function failure(diagnostic, phase, message) {
+        var context = {};
+        for (var key in (diagnostic || {})) context[key] = diagnostic[key];
+        context.phase = phase;
+        var result = new Error(message);
+        result.fhirMapperDiagnostic = JSON.stringify(context);
+        return result;
+    }
+
     function FhirArray() {
         this.keys = [];
         this.items = {};
@@ -586,7 +595,7 @@
         // Sets the value of an element; the expression runs here, so a TypeError (a missing segment
         // or repetition in the source, e.g. msg['PID']['PID.3'][1] of one PID.3) is "no value".
         // translation: null, or {conceptMap, source, target, unmapped, value, keepSource, fallback}.
-        set: function (root, path, type, expression, element, translation) {
+        set: function (root, path, type, expression, element, translation, diagnostic) {
             var value;
             try {
                 value = expression();
@@ -594,12 +603,20 @@
                 if (e instanceof TypeError) {
                     return;
                 }
-                throw new Error('FHIR Profile Mapper, ' + element + ': ' + e.message);
+                throw failure(diagnostic, 'value', 'FHIR Profile Mapper, ' + element + ': ' + e.message);
             }
             if (translation) {
-                value = translateValue(value, translation, type, element, this.options);
+                try {
+                    value = translateValue(value, translation, type, element, this.options);
+                } catch (e) {
+                    throw failure(diagnostic, 'translation', 'FHIR Profile Mapper, ' + element + ': ' + e.message);
+                }
             }
-            value = convert(value, type, element);
+            try {
+                value = convert(value, type, element);
+            } catch (e) {
+                throw failure(diagnostic, 'conversion', 'FHIR Profile Mapper, ' + element + ': ' + e.message);
+            }
             if (value === undefined) {
                 return;
             }
@@ -646,20 +663,20 @@
         },
 
         // Whether a condition holds; a TypeError (a missing segment) is false.
-        when: function (expression, element) {
+        when: function (expression, element, diagnostic) {
             try {
                 return !!expression();
             } catch (e) {
                 if (e instanceof TypeError) {
                     return false;
                 }
-                throw new Error('FHIR Profile Mapper, condition of ' + element + ': ' + e.message);
+                throw failure(diagnostic, 'condition', 'FHIR Profile Mapper, condition of ' + element + ': ' + e.message);
             }
         },
 
         // Runs body(item, index) for each item of the list the expression gives; nothing when it
         // gives nothing (or a TypeError: a missing segment).
-        each: function (expression, body, element) {
+        each: function (expression, body, element, diagnostic) {
             var list;
             try {
                 list = expression();
@@ -667,7 +684,7 @@
                 if (e instanceof TypeError) {
                     return;
                 }
-                throw new Error('FHIR Profile Mapper, for each ' + element + ': ' + e.message);
+                throw failure(diagnostic, 'iteration', 'FHIR Profile Mapper, for each ' + element + ': ' + e.message);
             }
             var all = items(list);
             for (var i = 0; i < all.length; i++) {

@@ -227,8 +227,31 @@ Les routes existantes sont préfixées par `/api/extensions/fhir-profile-mapper`
 `X-Requested-With: OpenAPI`. Types sources : `HL7V2` (défaut), `XML`, `JSON`, `RAW`.
 
 `/script` renvoie `script` et `errors`. `/test` renvoie `output` (texte ou null),
-`validationPerformed`, `issues` et `errors`. Un diagnostic actuel contient
-`key` (ou null), `line` (numéro sérialisé en chaîne, ou null) et `message`.
+`validationPerformed`, `issues` et `errors`. Un diagnostic conserve `key` (ou
+null), `line` (numéro du script généré sérialisé en chaîne, ou null) et `message`.
+Il contient aussi :
+
+- `step` : nom, numéro de séquence, type de ressource et action de l'étape ;
+- `phase` : `configuration`, `syntax`, `input`, `execution`, `timeout`, `validation`,
+  ou la phase précise d'une règle : `value`, `condition`, `iteration`,
+  `translation`, `conversion` ;
+- `operation` : forme de la règle (`value`, `condition`, `iteration`), si connue,
+  indépendamment de la phase d'échec ;
+- `ruleIndex` : position de la règle dans le tableau `mappings`, à partir de zéro ;
+- `path` : chemin déclaré par la règle, avec ses marqueurs d'instance ;
+- `expression` : texte de l'expression de cette règle.
+
+Les champs indisponibles valent `null`. Les erreurs de configuration ou hors
+d'une règle ne sont pas attribuées à la dernière règle rencontrée. La ligne
+peut désigner le code commun du runtime ; `ruleIndex` et `path` permettent alors
+de retrouver la règle. `ruleIndex` n'est pas stable après réordonnancement du
+tableau, et `path` ne donne pas les indices concrets des itérations en cours.
+Pour une erreur de traduction, `expression` désigne la valeur source de la règle ;
+les paramètres et l'éventuel repli sont à lire dans son objet `translate`.
+
+L'éditeur affiche ces détails et propose « Go to rule » pour ouvrir l'élément
+concerné et viser le champ de valeur, condition, itération ou traduction.
+
 Une issue de validation contient `severity`, `location` et `message`.
 Un résultat sans issue ne signifie pas qu'une validation a été effectuée :
 consulter `validationPerformed`.
@@ -242,11 +265,13 @@ ne constitue pas une limite globale des appels FHIR/Java. Tester un channel
 déployé reste nécessaire pour vérifier références, transports et contexte réel.
 
 `key` identifie une position d'arbre, pas une règle unique : une itération et
-une condition peuvent partager cette clé. Il n'existe pas encore d'identifiant
-stable distinct ni de format de trace structuré public. Les commentaires
-`//@ clé` du script et les messages du runtime servent aujourd'hui au rattachement
-des erreurs. Les métadonnées internes de phase/durée ne constituent pas une API
-de trace. Identifiants, corrélation et export de trace seront définis au jalon suivant.
+une condition peuvent partager cette clé. `ruleIndex` les distingue dans cette
+révision du mapping. Il n'existe pas encore d'identifiant stable distinct ni de
+format de trace structuré public. Les marqueurs `//~fhir` relient les erreurs de
+syntaxe à la règle dans le script généré ; le runtime attache les métadonnées
+de la règle aux erreurs d'expression, de traduction et de conversion.
+Les métadonnées internes de phase/durée ne constituent pas une API de trace.
+Identifiants stables, corrélation et export de trace restent à définir.
 
 ## 9. Schéma et vérification reproductible
 

@@ -17,8 +17,10 @@ import org.apache.logging.log4j.Logger;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.EvaluatorException;
+import org.mozilla.javascript.JavaScriptException;
 import org.mozilla.javascript.RhinoException;
 import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
 
 import org.oie.fhir.mapper.util.FhirJson;
 import org.oie.fhir.mapper.FhirProfileMapperStep;
@@ -52,19 +54,21 @@ public final class FhirMapperTester {
     public static String script(String stepJson) {
         Map<String, Object> out = new LinkedHashMap<>();
         List<Object> errors = new ArrayList<>();
+        FhirProfileMapperStep step = null;
         try {
-            String script = FhirProfileMapperStep.fromJson(stepJson).getScript(false);
+            step = FhirProfileMapperStep.fromJson(stepJson);
+            String script = step.getScript(false);
             out.put("script", script);
             Context cx = new LimitedFactory().enterContext();
             try {
                 cx.compileString("function doTransform() {\n" + script + "\n}", "step", 0, null);
             } catch (EvaluatorException e) {
-                errors.add(error(script, e.lineNumber(), e.details()));
+                errors.add(error(step, script, e.lineNumber(), e.details(), "syntax", e));
             } finally {
                 Context.exit();
             }
         } catch (Exception e) {
-            errors.add(error(null, 0, e.getMessage()));
+            errors.add(error(step, null, 0, e.getMessage(), "configuration", null));
         }
         out.put("errors", errors);
         return FhirJson.write(out);
@@ -80,13 +84,15 @@ public final class FhirMapperTester {
         List<Object> issues = new ArrayList<>();
         out.put("output", null);
         out.put("validationPerformed", false);
+        FhirProfileMapperStep step = null;
+        String phase = "configuration";
         try {
             Object parsed = FhirJson.parse(requestJson);
             if (!(parsed instanceof Map)) {
                 throw new IllegalArgumentException("The test request is not a JSON object.");
             }
             Map<?, ?> request = (Map<?, ?>) parsed;
-            FhirProfileMapperStep step = FhirProfileMapperStep.fromJson(FhirJson.write(request.get("step")));
+            step = FhirProfileMapperStep.fromJson(FhirJson.write(request.get("step")));
             // Preview this step's resource without assembling the other steps or publishing results.
             step.setVariable("");
             String dataType = text(request.get("dataType")).isEmpty() ? "HL7V2" : text(request.get("dataType")).toUpperCase();
@@ -98,6 +104,7 @@ public final class FhirMapperTester {
             try {
                 Scriptable scope = cx.initStandardObjects();
                 Map<String, Object> channelMap = new HashMap<>();
+                phase = "input";
                 scope.put("__message", scope, environment.serialize(dataType, message));
                 scope.put("__dataType", scope, dataType);
                 scope.put("channelMap", scope, Context.javaToJS(channelMap, scope));
@@ -120,14 +127,15 @@ public final class FhirMapperTester {
                         // a code template that does not compile here: its functions are missing in the test
                     }
                 }
+                phase = "execution";
                 try {
                     Object value = cx.evaluateString(scope, "function doTransform() {\n" + script + "\n}\ndoTransform();\n" + RESULT, "step", 0, null);
                     result = value == null || value instanceof org.mozilla.javascript.Undefined ? null : Context.toString(value);
                 } catch (RhinoException e) {
-                    errors.add(error(script, e.lineNumber(), e.details()));
+                    errors.add(error(step, script, e.lineNumber(), e.details(), e instanceof EvaluatorException ? "syntax" : "execution", e));
                     result = null;
                 } catch (TimeLimit e) {
-                    errors.add(error(null, 0, e.getMessage()));
+                    errors.add(error(step, null, 0, e.getMessage(), "timeout", null));
                     result = null;
                 }
                 if (!text(step.getVariable()).isEmpty()) {
@@ -151,35 +159,43 @@ public final class FhirMapperTester {
                             issues.add(i);
                         }
                     } catch (Exception e) {
-                        errors.add(error(null, 0, "Validation: " + e.getMessage()));
+                        errors.add(error(step, null, 0, "Validation: " + e.getMessage(), "validation", null));
                     }
                 }
             } else if (result != null && errors.isEmpty()) {
-                errors.add(error(null, 0, "The step made no FHIR resource from this message (the inbound message is unchanged)."));
+                errors.add(error(step, null, 0, "The step made no FHIR resource from this message (the inbound message is unchanged).", "execution", null));
             }
         } catch (Exception e) {
-            errors.add(error(null, 0, e.getMessage()));
+            errors.add(error(step, null, 0, e.getMessage(), phase, null));
         }
         out.put("issues", issues);
         out.put("errors", errors);
         return FhirJson.write(out);
     }
 
-    private static Map<String, Object> error(String script, int line, String message) {
+    private static Map<String, Object> error(FhirProfileMapperStep step, String script, int line, String message, String phase, RhinoException cause) {
         Map<String, Object> e = new LinkedHashMap<>();
-        String key = script == null ? null : FhirProfileMapperStep.keyAt(script, line);
-        // An error of an expression is thrown by the runtime, which names the element.
-        java.util.regex.Matcher named = RUNTIME_ERROR.matcher(message == null ? "" : message);
-        if (named.find()) {
-            key = named.group(1);
+        Map<?, ?> diagnostic = null;
+        if (cause instanceof JavaScriptException && ((JavaScriptException) cause).getValue() instanceof Scriptable) {
+            Object value = ScriptableObject.getProperty((Scriptable) ((JavaScriptException) cause).getValue(), "fhirMapperDiagnostic");
+            if (value instanceof String) diagnostic = (Map<?, ?>) FhirJson.parse((String) value);
         }
-        e.put("key", key == null ? FhirJson.NULL : key);
+        if (diagnostic == null && script != null && "syntax".equals(phase)) {
+            diagnostic = FhirProfileMapperStep.diagnosticAt(script, line);
+        }
+        for (String field : List.of("key", "ruleIndex", "path", "expression", "operation")) {
+            Object value = diagnostic == null ? null : diagnostic.get(field);
+            e.put(field, value == null ? FhirJson.NULL : value);
+        }
+        if (diagnostic != null && !"syntax".equals(phase)) phase = String.valueOf(diagnostic.get("phase"));
+        e.put("phase", phase);
+        e.put("step", step == null ? FhirJson.NULL : Map.of(
+                "name", text(step.getName()), "sequenceNumber", text(step.getSequenceNumber()),
+                "resourceType", text(step.getResourceType()), "action", text(step.getAction())));
         e.put("line", line <= 0 ? FhirJson.NULL : String.valueOf(line));
         e.put("message", message == null ? "" : message);
         return e;
     }
-
-    private static final java.util.regex.Pattern RUNTIME_ERROR = java.util.regex.Pattern.compile("FHIR Profile Mapper, (?:condition of |for each )?([^:\\s]+):");
 
     private static String text(Object value) {
         return value == null || value == FhirJson.NULL ? "" : value.toString();
