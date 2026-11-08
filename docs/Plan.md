@@ -73,6 +73,22 @@ Le runtime, l'éditeur et l'adaptateur FHIR Data Type restent à réaliser dans 
 
 ## Étape 2 — Vérifier et isoler l'intégration avec FHIR Data Type
 
+### Ordre de reprise du POC et commits
+
+La première livraison reprend le POC existant dans notre plugin distinct, avec
+ses fonctions et ses exemples. Elle ne repart pas d'un mapper réduit.
+
+1. Centraliser l'intégration avec FHIR Data Type officiel et vérifier les
+   services nécessaires aux profils, snapshots, traductions et validations.
+2. Extraire le compilateur, le runtime et l'éditeur graphique du POC en conservant
+   leur comportement et leurs tests, derrière la façade.
+3. Importer et rejouer les six channels de référence dans la démo, puis vérifier
+   l'édition et le test d'un mapping dans l'administration web.
+
+Chaque jalon vérifié fait l'objet d'un commit distinct et d'un retour concret.
+La formalisation du format existant et les améliorations du débogage et de
+l'ergonomie suivent cette reprise fonctionnelle, par changements ciblés.
+
 Définir une façade limitée aux services nécessaires au mapper. L'adaptateur
 FHIR Data Type sera le seul endroit connaissant les classes, signatures et
 éventuelles routes HTTP du plugin tiers. Il traduira ses résultats et erreurs
@@ -113,7 +129,8 @@ directs à FHIR Data Type doivent rester confinés à l'adaptateur.
 
 ## Étape 3 — Spécifier le format JSON et les règles d'exécution
 
-Rédiger `docs/Specification-mapping.md` avant l'implémentation du nouveau runtime.
+Rédiger `docs/Specification-mapping.md` à partir du format et du runtime repris
+du POC, avant de faire évoluer leur contrat.
 La spécification devra définir :
 
 - version du format et version FHIR cible ;
