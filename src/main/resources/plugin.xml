@@ -1,0 +1,11 @@
+<pluginMetaData path="fhir-profile-mapper">
+  <name>FHIR Profile Mapper</name>
+  <author>OIE FHIR Profile Mapper</author>
+  <pluginVersion>${project.version}</pluginVersion>
+  <mirthVersion>${oie.version}</mirthVersion>
+  <description>Socle du plugin de mapping FHIR. Requiert FHIR Data Type. Le runtime et l'éditeur seront ajoutés ensuite.</description>
+  <serverClasses>
+    <string>org.oie.fhir.mapper.server.FhirProfileMapperPlugin</string>
+  </serverClasses>
+  <library type="SERVER" path="fhir-profile-mapper-server.jar" />
+</pluginMetaData>

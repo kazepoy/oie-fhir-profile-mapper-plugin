@@ -1,0 +1,103 @@
+name: fhir-profile-mapper-demo
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "5"
+
+volumes:
+  pgdata:
+  appdata:
+  logs:
+
+services:
+  # Build uniquement : le Dockerfile officiel compile OIE 4.7.0.
+  oie-engine:
+    build:
+      context: https://github.com/OpenIntegrationEngine/engine.git#v4.7.0
+      target: jre-run
+      args:
+        GRADLE_BUILD_ARGS: ${OIE_GRADLE_BUILD_ARGS:--PdisableSigning=true}
+    image: fhir-profile-mapper-demo-engine:4.7.0
+    profiles: [build]
+
+  oie-db:
+    image: postgres:18.3-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: oie
+      POSTGRES_USER: oie
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-demo-fhir-mapper-db}
+      TZ: ${TZ:-Europe/Paris}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U oie -d oie"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    logging: *logging
+
+  oie-app:
+    build:
+      context: ..
+      dockerfile: demo/Dockerfile
+      additional_contexts:
+        oie-engine: service:oie-engine
+    image: fhir-profile-mapper-demo-oie:4.7.0
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 60s
+    environment:
+      DATABASE: postgres
+      DATABASE_URL: jdbc:postgresql://oie-db:5432/oie
+      DATABASE_USERNAME: oie
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-demo-fhir-mapper-db}
+      _MP_HTTPS_PORT: "8443"
+      SERVER_ID: ${OIE_SERVER_ID:-18a8d2ca-8afb-4fd3-a7a6-7123d38aa468}
+      KEYSTORE_STOREPASS: ${OIE_KEYSTORE_STOREPASS:-demo-fhir-mapper-store}
+      KEYSTORE_KEYPASS: ${OIE_KEYSTORE_KEYPASS:-demo-fhir-mapper-key}
+      _MP_SERVER_INITIALADMINPASSWORD: ${OIE_PASSWORD:-demo-fhir-mapper-admin}
+      TZ: ${TZ:-Europe/Paris}
+    configs:
+      - source: oie-jvm-options
+        target: /opt/engine/conf/custom.vmoptions
+    ports:
+      - "${OIE_BIND_ADDRESS:-127.0.0.1}:${OIE_HTTPS_PORT:-8443}:8443"
+    volumes:
+      - appdata:/opt/engine/appdata
+      - logs:/opt/engine/logs
+    depends_on:
+      oie-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--no-check-certificate", "-Y", "off", "-T", "8", "-O", "/dev/null", "https://127.0.0.1:8443/oie-webadmin/"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
+    logging: *logging
+
+  # Les futurs exemples seront déposés dans oie-init/channels/.
+  oie-init:
+    image: curlimages/curl:8.21.0
+    restart: "no"
+    entrypoint: ["/bin/sh", "/oie-init/init-channels.sh"]
+    environment:
+      OIE_URL: https://oie-app:8443
+      OIE_USER: admin
+      OIE_PASSWORD: ${OIE_PASSWORD:-demo-fhir-mapper-admin}
+      OIE_INIT_FORCE: ${OIE_INIT_FORCE:-false}
+      OIE_SKIP_FIRST_LOGIN: ${OIE_SKIP_FIRST_LOGIN:-true}
+    volumes:
+      - ./oie-init:/oie-init:ro
+    depends_on:
+      oie-app:
+        condition: service_healthy
+    logging: *logging
+
+configs:
+  oie-jvm-options:
+    content: |
+      -Xmx${OIE_JAVA_MAX_HEAP:-2g}
