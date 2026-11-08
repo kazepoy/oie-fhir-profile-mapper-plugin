@@ -47,6 +47,15 @@ Content-Type: text/plain; charset=UTF-8
 
 < ./typeerror-error.json
 
+### Trace de l'aperçu : condition ignorée, valeur absente, conversion et constante
+POST {{oie}}/extensions/fhir-profile-mapper/test
+Authorization: {{auth}}
+X-Requested-With: OpenAPI
+Accept: application/json
+Content-Type: text/plain; charset=UTF-8
+
+< ./trace-preview.json
+
 ### Une ligne SQL XML de la table métier patient vers ExampleLabPatient
 POST {{sqlPatient}}
 Content-Type: application/xml; charset=UTF-8

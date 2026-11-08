@@ -225,9 +225,10 @@ public class FhirMapperTesterTest {
         assertTrue(error, error.contains("\"key\": \"Patient.gender\""));
         assertTrue(error, error.contains("nope"));
         long start = System.nanoTime();
-        String loop = FhirMapperTester.test("{\"dataType\":\"XML\",\"message\":\"<HL7Message><PID/></HL7Message>\",\"step\":" + step("[" + value("Patient.gender", "code", "(function () { while (true) {} })()", "[[\"gender\"]]") + "]") + "}",
+        String loop = FhirMapperTester.test("{\"trace\":{\"enabled\":true,\"maxEvents\":3},\"dataType\":\"XML\",\"message\":\"<HL7Message><PID/></HL7Message>\",\"step\":" + step("[" + value("Patient.gender", "code", "(function () { while (true) {} })()", "[[\"gender\"]]") + "]") + "}",
                 ENVIRONMENT);
         assertTrue(loop, loop.contains("was stopped"));
+        assertTrue(loop, ((Map<?, ?>) FhirJson.parse(loop)).containsKey("trace"));
         assertTrue((System.nanoTime() - start) / 1_000_000 < FhirMapperTester.TIME_LIMIT_MILLIS + 5000);
     }
 

@@ -10,12 +10,46 @@
     var global = this;
     var FhirTools = Packages.org.oie.fhir.mapper.fhir.FhirFacade;
     var FhirTerminology = Packages.org.oie.fhir.mapper.fhir.FhirFacade;
+    var trace = typeof __fhirMapperTrace === 'undefined' ? null : __fhirMapperTrace;
+    var traceIterations = [];
 
-    function failure(diagnostic, phase, message, cause) {
+    function started() {
+        return trace ? java.lang.System.nanoTime() : 0;
+    }
+
+    // Capture scalars only. Never inspect an arbitrary object's getters or call its toString().
+    function traceValue(value) {
+        var type = value === null ? 'null' : typeof value;
+        var out = {type: type};
+        var text;
+        if (type === 'string' || type === 'number' || type === 'boolean') text = String(value);
+        else if (value instanceof Decimal) { out.type = 'decimal'; text = value.text; }
+        if (text !== undefined) {
+            out.text = text.substring(0, 256);
+            out.truncated = text.length > 256;
+        }
+        return out;
+    }
+
+    function event(diagnostic, phase, status, start, value, details) {
+        if (!trace || !diagnostic || !trace.isRecording()) return;
+        var out = {};
+        for (var key in (diagnostic || {})) out[key] = diagnostic[key];
+        out.phase = phase;
+        out.status = status;
+        out.durationNanos = Math.max(0, java.lang.System.nanoTime() - start);
+        out.iterations = traceIterations.slice();
+        if (details) for (var key in details) out[key] = details[key];
+        if (trace.captureValues()) out.value = traceValue(value);
+        trace.record(JSON.stringify(out));
+    }
+
+    function failure(diagnostic, phase, message, cause, start) {
         var context = {};
         for (var key in (diagnostic || {})) context[key] = diagnostic[key];
         context.phase = phase;
         context.errorType = cause.name ? String(cause.name) : null;
+        event(diagnostic, phase, 'error', start, undefined, {errorType: context.errorType});
         var result = new Error(message);
         result.fhirMapperDiagnostic = JSON.stringify(context);
         return result;
@@ -597,23 +631,30 @@
         // translation: null, or {conceptMap, source, target, unmapped, value, keepSource, fallback}.
         set: function (root, path, type, expression, element, translation, diagnostic) {
             var value;
+            var start = started();
             try {
                 value = expression();
             } catch (e) {
-                throw failure(diagnostic, 'value', 'FHIR Profile Mapper, ' + element + ': ' + e.message, e);
+                throw failure(diagnostic, 'value', 'FHIR Profile Mapper, ' + element + ': ' + e.message, e, start);
             }
+            event(diagnostic, 'value', value === undefined || value === null ? 'absent' : 'success', start, value);
             if (translation) {
+                start = started();
                 try {
                     value = translateValue(value, translation, type, element, this.options);
                 } catch (e) {
-                    throw failure(diagnostic, 'translation', 'FHIR Profile Mapper, ' + element + ': ' + e.message, e);
+                    throw failure(diagnostic, 'translation', 'FHIR Profile Mapper, ' + element + ': ' + e.message, e, start);
                 }
+                event(diagnostic, 'translation', value === undefined ? 'absent' : 'success', start, value);
             }
+            start = started();
             try {
                 value = convert(value, type, element);
             } catch (e) {
-                throw failure(diagnostic, 'conversion', 'FHIR Profile Mapper, ' + element + ': ' + e.message, e);
+                throw failure(diagnostic, 'conversion', 'FHIR Profile Mapper, ' + element + ': ' + e.message, e, start);
             }
+            event(diagnostic, 'conversion', value === undefined ? 'absent' : 'success', start, value,
+                value === undefined ? {reason: 'empty-or-missing'} : null);
             if (value === undefined) {
                 return;
             }
@@ -625,17 +666,22 @@
         },
 
         // A fixed or pattern value, set only when its container (the first `when` segments) got a value.
-        fixed: function (root, path, when, value) {
+        fixed: function (root, path, when, value, diagnostic) {
+            var start = started();
             var node = root;
             for (var i = 0; i < when; i++) {
                 node = child(node, path[i], false);
                 if (node === undefined || node === null) {
+                    event(diagnostic, 'fixed', 'skipped', start, undefined, {reason: 'container-absent'});
                     return;
                 }
             }
             if (when === path.length) {
                 if (isObject(node) && isObject(value)) {
                     merge(node, value);
+                    event(diagnostic, 'fixed', 'merged', start, value);
+                } else {
+                    event(diagnostic, 'fixed', 'skipped', start, undefined, {reason: 'incompatible-pattern'});
                 }
                 return;
             }
@@ -646,8 +692,10 @@
             var current = get(node, last);
             if (current === undefined || current === null) {
                 put(node, last, copy(value));
+                event(diagnostic, 'fixed', 'applied', start, value);
             } else if (isObject(current) && isObject(value)) {
                 merge(current, value);
+                event(diagnostic, 'fixed', 'merged', start, value);
             } else if (current instanceof FhirArray && isArray(value)) {
                 var holder = {};
                 holder[last[0]] = current;
@@ -656,15 +704,22 @@
                     p[last[0]] = value;
                     return p;
                 })());
+                event(diagnostic, 'fixed', 'merged', start, value);
+            } else {
+                event(diagnostic, 'fixed', 'skipped', start, undefined, {reason: 'already-present'});
             }
         },
 
         // Whether a condition holds; exceptions are never interpreted as a false condition.
         when: function (expression, element, diagnostic) {
+            var start = started();
             try {
-                return !!expression();
+                var value = expression();
+                event(diagnostic, 'condition', value ? 'passed' : 'skipped', start, value,
+                    value ? null : {reason: 'falsey'});
+                return !!value;
             } catch (e) {
-                throw failure(diagnostic, 'condition', 'FHIR Profile Mapper, condition of ' + element + ': ' + e.message, e);
+                throw failure(diagnostic, 'condition', 'FHIR Profile Mapper, condition of ' + element + ': ' + e.message, e, start);
             }
         },
 
@@ -672,14 +727,21 @@
         // gives nothing. Exceptions are reported with the iteration's context.
         each: function (expression, body, element, diagnostic) {
             var list;
+            var start = started();
             try {
                 list = expression();
             } catch (e) {
-                throw failure(diagnostic, 'iteration', 'FHIR Profile Mapper, for each ' + element + ': ' + e.message, e);
+                throw failure(diagnostic, 'iteration', 'FHIR Profile Mapper, for each ' + element + ': ' + e.message, e, start);
             }
             var all = items(list);
+            event(diagnostic, 'iteration', all.length ? 'ready' : 'empty', start, undefined, {count: all.length});
             for (var i = 0; i < all.length; i++) {
-                body(all[i], i);
+                if (trace) traceIterations.push({ruleIndex: diagnostic ? diagnostic.ruleIndex : null, index: i});
+                try {
+                    body(all[i], i);
+                } finally {
+                    if (trace) traceIterations.pop();
+                }
             }
         },
 

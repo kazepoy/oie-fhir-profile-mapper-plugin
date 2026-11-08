@@ -519,7 +519,9 @@ public class FhirProfileMapperStep extends Step {
             } catch (NumberFormatException e) {
                 throw error("invalid \"when\" in " + key(m), e);
             }
-            sb.append("__fhir.fixed(__r, ").append(path(m, scope)).append(", ").append(when).append(", ").append(FhirJson.write(m.get("fixed"))).append(");\n");
+            String diagnostic = mark(sb, m, entries, "fixed");
+            sb.append("__fhir.fixed(__r, ").append(path(m, scope)).append(", ").append(when).append(", ").append(FhirJson.write(m.get("fixed"))).append(", ").append(diagnostic).append(");\n");
+            clearMark(sb);
         }
     }
 

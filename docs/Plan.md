@@ -11,14 +11,15 @@ doivent respecter ce même contrat.
 
 ## Suite des jalons
 
-Le socle, la reprise du POC, les six exemples, la spécification et les diagnostics
-par règle sont livrés. Le traitement explicite des erreurs d'expression complète
-ce socle. La suite conserve le runtime et l'éditeur existants :
+Le socle, la reprise du POC, les six exemples, la spécification, les diagnostics
+par règle, les erreurs d'expression explicites et la trace d'aperçu sont livrés.
+La suite conserve le runtime et l'éditeur existants :
 
-1. **Trace activable** : d'abord dans l'API de test, puis dans les channels et
-   l'éditeur ; export JSON, volume borné, capture des valeurs explicite,
-   corrélation au message et à la révision du mapping. Définir les identifiants
-   stables et le versionnement nécessaires à cette corrélation.
+1. **Étendre la trace aux channels** : l'API de test, l'affichage dans l'éditeur,
+   l'export JSON, les bornes et la capture explicite des valeurs sont livrés.
+   Ajouter les références réelles, la finalisation/publication des résultats et
+   la corrélation au message déployé. Définir les identifiants stables et le
+   versionnement nécessaires à cette corrélation.
 2. **Assistants de code** : catalogue commun au runtime et à l'éditeur,
    complétion contextuelle avec `Ctrl+Espace`, signatures, exemples, variables
    d'itération et liens d'aide vers les références officielles.
@@ -177,9 +178,9 @@ de démo. Quatre tests Java exécutent les exemples valides et invalides publié
 
 Le contrat conserve les fragments par étape OIE, les expressions Rhino et le
 réglage de validation par ressource seule ou Bundle. Il ne possède pas encore
-de champ de version du format, d'identifiant unique de règle ni de trace
-structurée publique. Les évolutions du diagnostic et du traitement des erreurs
-sont détaillées à l'étape 4 ; le versionnement et la trace restent à définir.
+de champ de version du format ni d'identifiant stable unique de règle. Les
+évolutions des diagnostics, des erreurs et de la trace d'aperçu sont détaillées
+à l'étape 4 ; le versionnement du mapping et la trace des channels restent à définir.
 
 La spécification couvre :
 
@@ -234,8 +235,7 @@ l'exception JavaScript d'origine. Une valeur explicitement absente reste omise ;
 les accès facultatifs doivent être gardés. La migration depuis le comportement
 du POC est décrite dans la [spécification](Specification-mapping.md#migration-des-accès-facultatifs).
 Les tests couvrent aussi l'absence de publication des ressources déjà construites
-lorsqu'une règle suivante échoue. La trace activable et les identifiants stables
-restent à réaliser.
+lorsqu'une règle suivante échoue. Les identifiants stables restent à réaliser.
 
 **Vérifié :** 89 tests Java dans le build Docker et 10 tests JavaScript. Les six
 canaux sont rejoués dans OIE sans modification de leurs exports. L'API vérifie
@@ -244,6 +244,19 @@ facultative absente et présente. Trois accès facultatifs des tests hérités d
 POC ont été gardés explicitement ; les résultats attendus sont conservés.
 La vérification visuelle dans le navigateur reste à effectuer : l'outil échoue
 avant connexion dans cet environnement.
+
+**Troisième jalon : trace de l'aperçu.** Le test accepte une trace désactivée
+par défaut, bornée en événements et volume. Elle restitue les phases des règles,
+les conditions ignorées, les absences, les indices imbriqués et les durées,
+avec identifiant de test et empreinte du mapping. Les valeurs scalaires sont
+capturées uniquement sur demande. L'éditeur affiche la trace, permet de revenir
+aux règles et propose un export JSON. Voir [Trace.md](Trace.md).
+
+**Vérifié :** 99 tests Java dans Docker, 11 tests JavaScript, puis rejeu des six
+canaux et contrôle de trace via l'API OIE. L'exemple produit 13 événements ;
+l'absence de valeurs par défaut, leur capture explicite et la troncature sont
+vérifiées sans changement du résultat. Le parcours visuel de téléchargement
+reste à vérifier avec un navigateur disponible.
 
 Conserver le compilateur et le runtime repris, puis faire évoluer leurs diagnostics
 et leur débogage à partir des exemples de la spécification :
@@ -258,9 +271,9 @@ et leur débogage à partir des exemples de la spécification :
 La compilation JavaScript du POC est réutilisée. Le compilateur reste un détail
 du runtime ; le JSON demeure le contrat de référence.
 
-Prévoir une **option de trace désactivée par défaut**, utilisable pendant un test
-dans l'éditeur comme sur un message traité par un channel. Préciser son point
-d'activation, sa portée, ses filtres et le mode de récupération des traces.
+Étendre l'**option de trace désactivée par défaut**, déjà disponible dans le test,
+aux messages traités par un channel. Préciser son point d'activation, sa portée,
+ses filtres et le mode de récupération des traces sur ces messages.
 
 Les événements seront structurés et corrélés au channel, au connecteur, au
 message, à la version du mapping et à la règle exécutée. Ils devront permettre
@@ -385,7 +398,5 @@ phase, sans imposer dès maintenant un moteur ou un format unique aux deux usage
 - Ajouter une GitHub Action de build déclenchée sur un tag.
 - Remplacer le package `org.oie.fhir` par `fr.kazepoy`, après vérification des
   accès aux API protégées et de la compatibilité des exports de channels.
-- Déclencher la complétion avec `Ctrl+Espace` et proposer les suggestions adaptées
-  au contexte dans les assistants de code.
-- Ajouter des pastilles d'aide `?` pointant vers les références officielles,
-  FHIR par défaut.
+- Déclencher la complétion avec `Ctrl+Espace` et proposer les suggestions adaptées au contexte dans les assistants de code.
+- Ajouter des pastilles d'aide `?` pointant vers les références officielles FHIR par défaut.

@@ -580,6 +580,30 @@ function mapperDiagnostic(error) {
   return { label, target, kind };
 }
 
+function mapperTraceRows(trace) {
+  return trace.events.map((event) => ({
+    event,
+    label: mapperDiagnostic({ ...event, step: trace.step }).label,
+    duration: `${(Number(event.durationNanos) / 1000000).toFixed(3)} ms`,
+    iterations: (event.iterations || []).map((item) => `rule ${item.ruleIndex}, item ${item.index}`).join(" / ")
+  }));
+}
+
+function mapperTraceExport(trace) {
+  return JSON.stringify(trace, null, 2);
+}
+
+function downloadMapperTrace(trace) {
+  const url = URL.createObjectURL(new Blob([mapperTraceExport(trace)], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `fhir-mapper-trace-${trace.id}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function ProfileMapperEditor({ element, onChange, platform }) {
   const [, rerender] = React.useReducer((x) => x + 1, 0);
   const state = React.useRef(null);
@@ -615,6 +639,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       testResult: null,
       scriptResult: null,
       testing: false,
+      traceOptions: { enabled: false, captureValues: false, maxEvents: 200 },
       versionNotice: "",
       instances: instancesOf([...values.keys(), ...iterations.keys(), ...translations.keys(), ...conditions.keys()]),
       conceptMaps: null,
@@ -891,7 +916,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     st.testResult = null;
     rerender();
     try {
-      const text = await platform.api.post(`${MAPPER_API}/test`, JSON.stringify({ step: element, message: st.sample.message, dataType: st.sample.dataType }), {
+      const text = await platform.api.post(`${MAPPER_API}/test`, JSON.stringify({ step: element, message: st.sample.message, dataType: st.sample.dataType, trace: st.traceOptions }), {
         contentType: "text/plain",
         raw: true,
         timeoutMs: 60000
@@ -1531,6 +1556,16 @@ function ProfileMapperEditor({ element, onChange, platform }) {
               h("button", { type: "button", className: "btn btn-sm", onClick: showScript }, st.scriptResult ? "Hide the script" : "Generated script"),
               h("span", { className: "text-text-faint", style: { fontSize: "11px" } }, "Runs this step on the server and validates what it makes; fhirRef() of earlier steps gives stand-ins.")
             ),
+            h("div", { style: { display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", marginBottom: "6px" } },
+              h("label", null, h("input", { type: "checkbox", checked: st.traceOptions.enabled,
+                onChange: (e) => { st.traceOptions.enabled = e.target.checked; if (!e.target.checked) st.traceOptions.captureValues = false; rerender(); } }), " Trace"),
+              h("label", { title: "Explicitly include scalar values in the trace and its JSON export (256 characters per value)." },
+                h("input", { type: "checkbox", checked: st.traceOptions.captureValues, disabled: !st.traceOptions.enabled,
+                  onChange: (e) => { st.traceOptions.captureValues = e.target.checked; rerender(); } }), " Include scalar values"),
+              h("label", null, "Max events ", h("input", { type: "number", min: 1, max: 1000, value: st.traceOptions.maxEvents,
+                disabled: !st.traceOptions.enabled, style: { width: "80px" },
+                onChange: (e) => { st.traceOptions.maxEvents = Number(e.target.value); rerender(); } }))
+            ),
             h("textarea", {
               rows: 6,
               value: st.sample.message,
@@ -1547,6 +1582,22 @@ function ProfileMapperEditor({ element, onChange, platform }) {
                   "div",
                   { style: { marginTop: "6px" } },
                   testResult.errors.map((e, i) => diagnosticView(e, `e${i}`)),
+                  testResult.trace ? h("details", { style: { marginTop: "8px" } },
+                    h("summary", { style: { cursor: "pointer" } },
+                      `Execution trace: ${testResult.trace.events.length} event(s)${testResult.trace.truncated ? " — truncated" : ""}`),
+                    h("button", { type: "button", className: "btn btn-sm", onClick: () => downloadMapperTrace(testResult.trace) }, "Export trace JSON"),
+                    h("div", { className: "hint" }, testResult.trace.captureValues ? "Scalar values included." : "Runtime values not captured."),
+                    h("ol", { style: { maxHeight: "360px", overflow: "auto", fontSize: "12px" } },
+                      mapperTraceRows(testResult.trace).map(({ event, label, duration, iterations }, index) =>
+                        h("li", { key: index, style: { margin: "6px 0" } },
+                          h("strong", null, `${label} · ${event.status}`),
+                          h("span", { style: { marginLeft: "6px" } }, duration),
+                          event.key && tree ? h("button", { type: "button", className: "btn btn-sm", onClick: () => revealDiagnostic(event) }, "Go to rule") : null,
+                          iterations ? h("div", null, iterations) : null,
+                          event.reason ? h("div", null, event.reason) : null,
+                          event.count !== undefined ? h("div", null, `${event.count} item(s)`) : null,
+                          event.value ? h("pre", { style: { whiteSpace: "pre-wrap", margin: "4px 0" } }, JSON.stringify(event.value)) : null)))
+                    ) : null,
                   testResult.output !== null && testResult.output !== undefined
                     ? h(
                         "div",

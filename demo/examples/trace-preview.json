@@ -1,0 +1,13 @@
+{
+  "step": {
+    "name": "Trace Patient",
+    "action": "resource",
+    "resourceType": "Patient",
+    "profileUrl": "http://hl7.org/fhir/StructureDefinition/Patient",
+    "validateOutput": false,
+    "mappings": "[{\"key\":\"Patient.name\",\"each\":\"msg.names\",\"variable\":\"n\",\"path\":[[\"name\",\"#0\"]]},{\"key\":\"Patient.name\",\"condition\":\"n.use === 'official'\",\"path\":[[\"name\",\"#0\"]]},{\"key\":\"Patient.name.family\",\"type\":\"string\",\"expression\":\"n.family\",\"path\":[[\"name\",\"#0\"],[\"family\"]]},{\"key\":\"Patient.name.use\",\"fixed\":\"official\",\"when\":1,\"path\":[[\"name\",\"#0\"],[\"use\"]]},{\"key\":\"Patient.gender\",\"type\":\"code\",\"expression\":\"msg.gender\",\"path\":[[\"gender\"]]},{\"key\":\"Patient.birthDate\",\"type\":\"date\",\"expression\":\"'19850412'\",\"path\":[[\"birthDate\"]]}]"
+  },
+  "dataType": "JSON",
+  "message": "{\"names\":[{\"use\":\"official\",\"family\":\"Durand\"},{\"use\":\"usual\",\"family\":\"Martin\"}]}",
+  "trace": {"enabled": true, "captureValues": false, "maxEvents": 200}
+}

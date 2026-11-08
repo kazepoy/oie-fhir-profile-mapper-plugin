@@ -260,7 +260,7 @@ Il contient aussi :
 - `phase` : `configuration`, `syntax`, `input`, `execution`, `timeout`, `validation`,
   ou la phase précise d'une règle : `value`, `condition`, `iteration`,
   `translation`, `conversion` ;
-- `operation` : forme de la règle (`value`, `condition`, `iteration`), si connue,
+- `operation` : forme de la règle (`value`, `condition`, `iteration`, `fixed`), si connue,
   indépendamment de la phase d'échec ;
 - `errorType` : nom de l'exception JavaScript d'origine, s'il est disponible
   (`TypeError`, `ReferenceError`, `Error`, etc.) ;
@@ -293,12 +293,14 @@ déployé reste nécessaire pour vérifier références, transports et contexte 
 
 `key` identifie une position d'arbre, pas une règle unique : une itération et
 une condition peuvent partager cette clé. `ruleIndex` les distingue dans cette
-révision du mapping. Il n'existe pas encore d'identifiant stable distinct ni de
-format de trace structuré public. Les marqueurs `//~fhir` relient les erreurs de
+révision du mapping. Il n'existe pas encore d'identifiant stable distinct.
+Les marqueurs `//~fhir` relient les erreurs de
 syntaxe à la règle dans le script généré ; le runtime attache les métadonnées
 de la règle aux erreurs d'expression, de traduction et de conversion.
-Les métadonnées internes de phase/durée ne constituent pas une API de trace.
-Identifiants stables, corrélation et export de trace restent à définir.
+L'API de test accepte désormais une option `trace` et renvoie les événements
+structurés à la demande ; son contrat et son export sont décrits dans
+[Trace.md](Trace.md). Les identifiants stables et la trace des messages déployés
+restent à réaliser. La structure d'une étape et de ses règles est inchangée.
 
 ## 9. Schéma et vérification reproductible
 

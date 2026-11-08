@@ -197,6 +197,30 @@ def main():
         assert json.loads(result["output"]).get("gender") == message.get("optional", {}).get("gender")
     print("OK TypeError signalée ; garde explicite vérifiée avec et sans donnée facultative")
 
+    request = json.loads((EXAMPLES / "trace-preview.json").read_text(encoding="utf-8"))
+    result = json.loads(api("/extensions/fhir-profile-mapper/test", "application/json",
+                            json.dumps(request).encode("utf-8")))
+    assert not result["errors"]
+    trace = result["trace"]
+    assert trace["scope"] == "step-preview" and trace["truncated"] is False
+    assert len(trace["mappingHash"]) == 64 and trace["events"]
+    assert all("value" not in event for event in trace["events"])
+    assert "Durand" not in json.dumps(trace)
+    assert any(e["phase"] == "condition" and e["status"] == "skipped" for e in trace["events"])
+    assert any(e["phase"] == "conversion" and e["status"] == "absent" for e in trace["events"])
+    request["trace"]["enabled"] = False
+    off = json.loads(api("/extensions/fhir-profile-mapper/test", "application/json", json.dumps(request).encode("utf-8")))
+    assert "trace" not in off
+    assert all(off[field] == result[field] for field in ("output", "errors", "issues", "validationPerformed"))
+    request["trace"] = {"enabled": True, "captureValues": True, "maxEvents": 200}
+    captured = json.loads(api("/extensions/fhir-profile-mapper/test", "application/json", json.dumps(request).encode("utf-8")))
+    assert any(e.get("value", {}).get("text") == "Durand" for e in captured["trace"]["events"])
+    request["trace"]["maxEvents"] = 3
+    bounded = json.loads(api("/extensions/fhir-profile-mapper/test", "application/json", json.dumps(request).encode("utf-8")))
+    assert len(bounded["trace"]["events"]) == 3 and bounded["trace"]["truncated"] is True
+    assert bounded["output"] == result["output"]
+    print(f"OK trace : {len(trace['events'])} événements, valeurs sur demande, limite vérifiée, même résultat")
+
 
 if __name__ == "__main__":
     main()

@@ -163,6 +163,13 @@ positionne le focus sur la valeur, condition, itération ou traduction concerné
 L'indice de règle dans la réponse API correspond au tableau `mappings` testé ;
 il ne constitue pas un identifiant stable après modification du mapping.
 
+Cocher **Trace** avant **Run** pour voir les phases d'exécution dans
+**Execution trace**. Les événements permettent aussi de revenir à leur règle.
+**Include scalar values** autorise une capture limitée des valeurs ; elle est
+désactivée par défaut. **Export trace JSON** télécharge la trace de ce test.
+Les options, les limites et la portée de l'aperçu sont précisées dans
+[Trace.md](Trace.md).
+
 ## 10. Limites et vérification
 
 L'administration Swing ne connaît pas cet éditeur. Les limites de construction FHIR restent celles du [README](Reprise-POC.md#limites-conservées), notamment les extensions primitives, contained et certaines formes de slicing.

@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const code = fs.readFileSync(path.join(here, "../web/plugin.js"), "utf8").replace("export function register", "function register");
 const context = vm.createContext({ console });
-vm.runInContext(code + "\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample, mapperDiagnostic };", context);
+vm.runInContext(code + "\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample, mapperDiagnostic, mapperTraceRows, mapperTraceExport };", context);
 const { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample } = context.t;
 
 const el = (id, min, max, types, more = {}) => ({ id, path: id.replace(/:[^.]+/g, ""), min, max, base: { max: more.baseMax ?? max }, type: types.map((t) => (typeof t === "string" ? { code: t } : t)), ...more });
@@ -68,6 +68,17 @@ test("diagnostics show the step, slice path and phase and select the right edito
   assert.equal(context.t.mapperDiagnostic({ ...error, errorType: "TypeError" }).label,
     "Patient · conversion · TypeError · Patient.identifier:ipp.value · line 42");
   assert.deepEqual(plain(context.t.mapperDiagnostic({ message: "old API error" })), { label: "", target: "", kind: "value" });
+});
+
+test("trace rows preserve iteration indices and exports retain the structured trace", () => {
+  const trace = { formatVersion: 1, id: "preview-1", step: { name: "Patient", resourceType: "Patient" },
+    events: [{ phase: "conversion", key: "Patient.name.family", status: "success", durationNanos: 1500000,
+      iterations: [{ ruleIndex: 0, index: 2 }], value: { type: "string", text: "Durand", truncated: false } }] };
+  const rows = context.t.mapperTraceRows(trace);
+  assert.equal(rows[0].label, "Patient · conversion · Patient.name.family");
+  assert.equal(rows[0].duration, "1.500 ms");
+  assert.equal(rows[0].iterations, "rule 0, item 2");
+  assert.deepEqual(JSON.parse(context.t.mapperTraceExport(trace)), trace);
 });
 
 test("the tree hides ids and unsliced extensions unless asked, and opens data types", () => {

@@ -86,12 +86,15 @@ public final class FhirMapperTester {
         out.put("validationPerformed", false);
         FhirProfileMapperStep step = null;
         String phase = "configuration";
+        FhirMapperTrace trace = null;
+        long testStarted = System.nanoTime();
         try {
             Object parsed = FhirJson.parse(requestJson);
             if (!(parsed instanceof Map)) {
                 throw new IllegalArgumentException("The test request is not a JSON object.");
             }
             Map<?, ?> request = (Map<?, ?>) parsed;
+            trace = FhirMapperTrace.from(request.get("trace"), request.get("step"));
             step = FhirProfileMapperStep.fromJson(FhirJson.write(request.get("step")));
             // Preview this step's resource without assembling the other steps or publishing results.
             step.setVariable("");
@@ -103,8 +106,10 @@ public final class FhirMapperTester {
             String result;
             try {
                 Scriptable scope = cx.initStandardObjects();
+                if (trace != null) scope.put("__fhirMapperTrace", scope, Context.javaToJS(trace, scope));
                 Map<String, Object> channelMap = new HashMap<>();
                 phase = "input";
+                long inputStarted = System.nanoTime();
                 scope.put("__message", scope, environment.serialize(dataType, message));
                 scope.put("__dataType", scope, dataType);
                 scope.put("channelMap", scope, Context.javaToJS(channelMap, scope));
@@ -120,6 +125,7 @@ public final class FhirMapperTester {
                 } catch (RuntimeException e) {
                     throw new IllegalArgumentException("The sample message cannot be read as " + dataType + ": " + e.getMessage(), e);
                 }
+                if (trace != null) trace.phase("input", "success", inputStarted, "parsed");
                 for (String function : environment.functions()) {
                     try {
                         cx.evaluateString(scope, function, "code template", 1, null);
@@ -128,6 +134,7 @@ public final class FhirMapperTester {
                     }
                 }
                 phase = "execution";
+                long executionStarted = System.nanoTime();
                 try {
                     Object value = cx.evaluateString(scope, "function doTransform() {\n" + script + "\n}\ndoTransform();\n" + RESULT, "step", 0, null);
                     result = value == null || value instanceof org.mozilla.javascript.Undefined ? null : Context.toString(value);
@@ -138,6 +145,7 @@ public final class FhirMapperTester {
                     errors.add(error(step, null, 0, e.getMessage(), "timeout", null));
                     result = null;
                 }
+                if (trace != null) trace.phase("execution", errors.isEmpty() ? "success" : "error", executionStarted, "preview");
                 if (!text(step.getVariable()).isEmpty()) {
                     Object variable = channelMap.get(step.getVariable().trim());
                     result = variable == null ? null : variable.toString();
@@ -149,8 +157,10 @@ public final class FhirMapperTester {
             if (result != null && (result.trim().startsWith("{") || result.trim().startsWith("<"))) {
                 if (step.isValidateOutput()) {
                     out.put("validationPerformed", true);
+                    long validationStarted = System.nanoTime();
                     try {
                         FhirValidation validation = FhirFacade.validate(result, "", step.getProfiles(), step.getFhirVersion());
+                        if (trace != null) trace.phase("validation", validation.isValid() ? "passed" : "failed", validationStarted, "FHIR");
                         for (Map<String, String> issue : validation.getIssues()) {
                             Map<String, Object> i = new LinkedHashMap<>();
                             i.put("severity", issue.get("severity"));
@@ -160,16 +170,21 @@ public final class FhirMapperTester {
                         }
                     } catch (Exception e) {
                         errors.add(error(step, null, 0, "Validation: " + e.getMessage(), "validation", null));
+                        if (trace != null) trace.phase("validation", "error", validationStarted, "exception");
                     }
+                } else if (trace != null) {
+                    trace.phase("validation", "skipped", System.nanoTime(), "disabled");
                 }
             } else if (result != null && errors.isEmpty()) {
                 errors.add(error(step, null, 0, "The step made no FHIR resource from this message (the inbound message is unchanged).", "execution", null));
             }
         } catch (Exception e) {
             errors.add(error(step, null, 0, e.getMessage(), phase, null));
+            if (trace != null) trace.phase(phase, "error", testStarted, "diagnostic");
         }
         out.put("issues", issues);
         out.put("errors", errors);
+        if (trace != null) out.put("trace", trace.result());
         return FhirJson.write(out);
     }
 

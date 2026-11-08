@@ -82,6 +82,13 @@ Le fichier [typeerror-error.json](../demo/examples/typeerror-error.json) utilise
 ensuite l'expression par `msg.optional && msg.optional.gender` et vérifie les
 deux cas : donnée facultative absente (élément omis) ou présente (élément mappé).
 
+[trace-preview.json](../demo/examples/trace-preview.json) produit un aperçu
+avec une condition ignorée, un élément absent, une date convertie et une
+constante appliquée. Le contrôle compare les résultats avec/sans trace, vérifie
+la capture explicite des valeurs et la troncature à trois événements.
+Dans l'éditeur, activer **Trace**, exécuter le test, puis utiliser
+**Export trace JSON**. Voir le [contrat de trace](Trace.md).
+
 Le script utilise les valeurs de démonstration par défaut. En cas de réglages
 personnalisés, lui transmettre `OIE_PASSWORD` et `OIE_HTTPS_PORT` dans son
 environnement ; il ne lit pas `.env`. Les ports des exemples sont publiés
