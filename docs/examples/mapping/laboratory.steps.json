@@ -1,0 +1,23 @@
+[
+  {
+    "action": "createBundle",
+    "resourceType": "Bundle",
+    "bundleName": "laboratory",
+    "bundleType": "transaction",
+    "validateOutput": true
+  },
+  {
+    "action": "resource",
+    "resourceType": "Patient",
+    "refName": "'patient'",
+    "bundleTargets": "[{\"name\":\"laboratory\"}]",
+    "mappings": "[{\"key\":\"Patient.id\",\"type\":\"id\",\"expression\":\"msg.patient.id\",\"path\":[[\"id\"]]}]"
+  },
+  {
+    "action": "resource",
+    "resourceType": "Observation",
+    "refName": "'observation'",
+    "bundleTargets": "[{\"name\":\"laboratory\"}]",
+    "mappings": "[{\"key\":\"Observation\",\"each\":\"msg.observations\",\"variable\":\"ob\",\"path\":[]},{\"key\":\"Observation.status\",\"type\":\"code\",\"expression\":\"'final'\",\"path\":[[\"status\"]]},{\"key\":\"Observation.code.coding.code\",\"type\":\"code\",\"expression\":\"ob.code\",\"path\":[[\"code\"],[\"coding\",\"#0\"],[\"code\"]]},{\"key\":\"Observation.code.coding.system\",\"fixed\":\"urn:example:lab-codes\",\"when\":2,\"path\":[[\"code\"],[\"coding\",\"#0\"],[\"system\"]]},{\"key\":\"Observation.subject.reference\",\"type\":\"string\",\"expression\":\"fhirRef('patient')\",\"path\":[[\"subject\"],[\"reference\"]]},{\"key\":\"Observation.valueQuantity.value\",\"type\":\"decimal\",\"expression\":\"ob.value\",\"path\":[[\"valueQuantity\"],[\"value\"]]}]"
+  }
+]

@@ -1,6 +1,6 @@
 # FHIR Profile Mapper : mappings, code généré et exécution
 
-Ce document décrit le contrat exécuté par le serveur. Le fonctionnement de l'interface qui prépare ce contrat est décrit dans [Le mapper graphique](Mappeur-graphique.md).
+Ce document décrit l'implémentation du [contrat de mapping](Specification-mapping.md). Le fonctionnement de l'interface qui prépare ce contrat est décrit dans [Le mapper graphique](Mappeur-graphique.md).
 
 ## 1. Les deux étages
 
@@ -209,8 +209,8 @@ Au déploiement, `FhirMapperLifecycle` repère la dernière étape explicite act
 La finalisation :
 
 1. vérifie les réservations de références et les destinations des résultats ;
-2. valide les ressources seules et tous les Bundles contre leurs profils/version, y compris les résultats destinés à une variable ;
-3. publie les variables seulement si l'ensemble est valide ;
+2. valide les ressources seules et les Bundles dont `validateOutput` est actif contre leurs profils/version, y compris les résultats destinés à une variable ;
+3. publie les variables seulement si tous les contrôles et validations demandés réussissent ;
 4. renvoie l'unique résultat principal, s'il existe, vers `tmp` ou `msg` selon le template OIE.
 
 Si tous les résultats vont dans des variables, le message source n'est pas remplacé. Un échec de validation empêche la publication des autres résultats. La validation de sortie du type de données FHIR, si activée, demeure un contrôle supplémentaire du message principal.

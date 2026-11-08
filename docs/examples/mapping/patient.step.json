@@ -1,0 +1,8 @@
+{
+  "action": "resource",
+  "resourceType": "Patient",
+  "fhirVersion": "R4",
+  "profileUrl": "http://hl7.org/fhir/StructureDefinition/Patient",
+  "validateOutput": true,
+  "mappings": "[{\"key\":\"Patient.id\",\"type\":\"id\",\"expression\":\"msg.patient.id\",\"path\":[[\"id\"]]},{\"key\":\"Patient.name.family\",\"type\":\"string\",\"expression\":\"msg.patient.family\",\"path\":[[\"name\",\"#0\"],[\"family\"]]},{\"key\":\"Patient.birthDate\",\"type\":\"date\",\"expression\":\"msg.patient.birthDate\",\"path\":[[\"birthDate\"]]}]"
+}

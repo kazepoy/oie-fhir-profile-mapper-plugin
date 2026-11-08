@@ -38,6 +38,7 @@ COPY --from=plugins /extensions/datatype-fhir/datatype-fhir-shared.jar /engine/d
 COPY --from=plugins /extensions/datatype-fhir/lib/datatype-fhir-engine.jar /engine/datatype-fhir-engine.jar
 COPY pom.xml assembly.xml LICENSE ./
 COPY src ./src
+COPY docs/examples/mapping ./docs/examples/mapping
 COPY webadmin ./webadmin
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -ntp install:install-file -Dfile=/engine/server-api.jar \

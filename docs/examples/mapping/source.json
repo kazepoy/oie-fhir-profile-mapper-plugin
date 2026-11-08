@@ -1,0 +1,7 @@
+{
+  "patient": {"id": "patient-42", "family": "Durand", "birthDate": "19850412"},
+  "observations": [
+    {"code": "GLU", "value": "6.80"},
+    {"code": "K", "value": "4.10"}
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FHIR Profile Mapper — contrat existant 0.1.0",
+  "$comment": "MPL-2.0. Schéma de rédaction ; non appliqué automatiquement par le runtime. Décoder mappings et bundleTargets et valider leurs contentSchema séparément.",
+  "type": "object",
+  "required": ["action", "resourceType"],
+  "properties": {
+    "__type": {"const": "org.oie.fhir.mapper.FhirProfileMapperStep"},
+    "name": {"type": "string"},
+    "sequenceNumber": {"type": "string"},
+    "enabled": {"$ref": "#/$defs/boolean"},
+    "action": {"enum": ["resource", "createBundle"]},
+    "resourceType": {"type": "string", "pattern": "^[A-Z][A-Za-z0-9]*$"},
+    "fhirVersion": {"enum": ["R4", "R4B", "R5"], "default": "R4"},
+    "profiles": {"type": "string", "default": ""},
+    "profileUrl": {"type": "string", "default": ""},
+    "profileVersion": {"type": "string", "default": ""},
+    "addMetaProfile": {"$ref": "#/$defs/boolean", "default": true},
+    "validateOutput": {"$ref": "#/$defs/boolean", "default": true},
+    "setLastUpdated": {"$ref": "#/$defs/boolean", "default": false},
+    "variable": {"type": "string", "default": ""},
+    "bundleName": {"type": "string", "default": ""},
+    "bundleType": {"enum": ["transaction", "batch", "collection", "document", "message"], "default": "transaction"},
+    "refName": {"type": "string", "default": ""},
+    "bundleTargets": {
+      "type": "string", "default": "[]", "contentMediaType": "application/json",
+      "contentSchema": {"$ref": "#/$defs/targets"}
+    },
+    "mappings": {
+      "type": "string", "default": "[]", "contentMediaType": "application/json",
+      "contentSchema": {"$ref": "#/$defs/mappings"}
+    },
+    "terminologyServer": {"type": "string", "default": ""},
+    "terminologyAuthorization": {"type": "string", "default": ""},
+    "terminologyCacheSeconds": {"$ref": "#/$defs/integer", "default": 300},
+    "terminologyTimeoutSeconds": {"$ref": "#/$defs/integer", "default": 10}
+  },
+  "not": {"anyOf": [
+    {"required": ["output"]}, {"required": ["bundleProfile"]},
+    {"required": ["requestMethod"]}, {"required": ["requestUrl"]}, {"required": ["ifNoneExist"]}
+  ]},
+  "if": {"properties": {"action": {"const": "createBundle"}}},
+  "then": {
+    "required": ["bundleName"],
+    "properties": {"resourceType": {"const": "Bundle"}, "bundleName": {"$ref": "#/$defs/nonblank"}}
+  },
+  "else": {"properties": {"bundleName": {"const": ""}}},
+  "$defs": {
+    "nonblank": {"type": "string", "pattern": "\\S"},
+    "boolean": {"enum": [true, false, "true", "false"]},
+    "integer": {"oneOf": [{"type": "integer"}, {"type": "string", "pattern": "^[+-]?[0-9]+$"}]},
+    "segment": {
+      "type": "array", "minItems": 1, "maxItems": 2,
+      "prefixItems": [{"$ref": "#/$defs/nonblank"}, {"$ref": "#/$defs/nonblank"}], "items": false
+    },
+    "path": {"type": "array", "items": {"$ref": "#/$defs/segment"}},
+    "translation": {
+      "type": "object", "required": ["conceptMap"], "additionalProperties": false,
+      "properties": {
+        "conceptMap": {"$ref": "#/$defs/nonblank"},
+        "source": {"type": "string"}, "target": {"type": "string"},
+        "unmapped": {"enum": ["none", "source", "fixed", "function", "error"], "default": "none"},
+        "value": {"type": "string"}, "keepSource": {"type": "boolean", "default": false}
+      },
+      "if": {"required": ["unmapped"], "properties": {"unmapped": {"enum": ["fixed", "function"]}}},
+      "then": {"required": ["value"], "properties": {"value": {"$ref": "#/$defs/nonblank"}}}
+    },
+    "rule": {
+      "type": "object", "required": ["path"], "additionalProperties": false,
+      "properties": {
+        "key": {"$ref": "#/$defs/nonblank"}, "element": {"$ref": "#/$defs/nonblank"},
+        "path": {"$ref": "#/$defs/path"}, "type": {"type": "string"},
+        "expression": {"$ref": "#/$defs/nonblank"}, "each": {"$ref": "#/$defs/nonblank"},
+        "variable": {"type": "string", "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$"},
+        "condition": {"$ref": "#/$defs/nonblank"},
+        "fixed": true, "when": {"type": "integer", "minimum": 0, "default": 0},
+        "translate": {"$ref": "#/$defs/translation"}
+      },
+      "allOf": [
+        {"anyOf": [{"required": ["key"]}, {"required": ["element"]}]},
+        {"oneOf": [
+          {"required": ["expression"], "properties": {"path": {"minItems": 1}}},
+          {"required": ["each", "variable"]},
+          {"required": ["condition"]},
+          {"required": ["fixed"], "properties": {"path": {"minItems": 1}}}
+        ]}
+      ]
+    },
+    "mappings": {"type": "array", "items": {"$ref": "#/$defs/rule"}},
+    "targets": {
+      "type": "array", "items": {
+        "type": "object", "required": ["name"], "additionalProperties": false,
+        "properties": {
+          "name": {"$ref": "#/$defs/nonblank"},
+          "requestMethod": {"enum": ["POST", "PUT", "PATCH", "DELETE", "GET", "HEAD"], "default": "POST"},
+          "requestUrl": {"type": "string", "default": ""},
+          "ifNoneExist": {"type": "string", "default": ""}
+        }
+      }
+    }
+  }
+}

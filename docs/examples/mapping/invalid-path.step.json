@@ -1,0 +1,5 @@
+{
+  "action": "resource",
+  "resourceType": "Patient",
+  "mappings": "[{\"key\":\"Patient.active\",\"type\":\"boolean\",\"expression\":\"true\",\"path\":[[\"active\",\"#0\",\"extra\"]]}]"
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "action": "createBundle",
+    "resourceType": "Bundle",
+    "bundleName": "laboratory",
+    "bundleType": "collection",
+    "variable": "result",
+    "validateOutput": false
+  },
+  {
+    "action": "resource",
+    "resourceType": "Observation",
+    "bundleTargets": "[{\"name\":\"laboratory\"}]",
+    "mappings": "[{\"key\":\"Observation.subject.reference\",\"type\":\"string\",\"expression\":\"fhirRef('missing-patient', 0, true)\",\"path\":[[\"subject\"],[\"reference\"]]}]"
+  }
+]

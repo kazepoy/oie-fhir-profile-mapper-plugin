@@ -1,0 +1,2 @@
+# Contrôle hors ligne uniquement ; aucune dépendance ajoutée au plugin.
+jsonschema==4.23.0

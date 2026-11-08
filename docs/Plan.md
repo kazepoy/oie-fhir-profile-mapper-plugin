@@ -143,9 +143,21 @@ directs à FHIR Data Type doivent rester confinés à l'adaptateur.
 
 ## Étape 3 — Spécifier le format JSON et les règles d'exécution
 
-Rédiger `docs/Specification-mapping.md` à partir du format et du runtime repris
-du POC, avant de faire évoluer leur contrat.
-La spécification devra définir :
+**État : contrat existant documenté et vérifié.** La
+[spécification](Specification-mapping.md), son
+[schéma JSON](schemas/mapping-step.schema.json) et ses
+[exemples exécutables](examples/mapping/) décrivent le format repris du POC,
+sans modifier son exécution. Le contrôleur hors ligne valide aussi le contenu
+JSON des chaînes `mappings` et `bundleTargets` ; ses tests couvrent les six exports
+de démo. Quatre tests Java exécutent les exemples valides et invalides publiés.
+
+Le contrat conserve les fragments par étape OIE, les expressions Rhino et le
+réglage de validation par ressource seule ou Bundle. Il ne possède pas encore
+de champ de version du format, d'identifiant unique de règle ni de trace
+structurée publique. Le jalon suivant doit définir ces évolutions explicitement,
+en particulier le traitement des erreurs aujourd'hui assimilées à une absence.
+
+La spécification couvre :
 
 - version du format et version FHIR cible ;
 - sources, ressources, Bundles et destinations des résultats ;
@@ -159,12 +171,12 @@ La spécification devra définir :
 - dépendances aux profils et versions des packages nécessaires ;
 - ordre d'exécution, finalisation et publication des résultats.
 
-Les choix suivants restent à discuter :
+Les points à reprendre avant une évolution du contrat sont :
 
-- un document pour une transformation complète ou des fragments par étape OIE ;
-- langage et contexte d'évaluation des expressions ;
+- l'éventuel besoin d'un document complet au-delà des fragments par étape existants ;
+- les évolutions éventuelles du langage et du contexte Rhino conservés ;
 - comportement face à un champ source absent et à une expression erronée ;
-- niveau auquel se règle la validation optionnelle ;
+- les limites de l'aperçu isolé face aux dépendances entre étapes ;
 - prise en charge initiale des extensions, du slicing et des autres constructions
   FHIR qui dépassent les capacités du POC.
 
@@ -176,9 +188,10 @@ d'Observations, leurs références et un Bundle ; fournir des exemples valides e
 invalides avec le comportement attendu. Définir un schéma JSON pour les contrôles
 structurels, complété par les règles sémantiques de la spécification.
 
-## Étape 4 — Implémenter le runtime et l'intégration OIE
+## Étape 4 — Faire évoluer les diagnostics et le runtime existant
 
-Construire le minimum nécessaire pour exécuter les exemples de la spécification :
+Conserver le compilateur et le runtime repris, puis faire évoluer leurs diagnostics
+et leur débogage à partir des exemples de la spécification :
 
 - lecture et vérification du contrat JSON ;
 - exécution des règles et fonctions utilitaires ;
@@ -187,9 +200,8 @@ Construire le minimum nécessaire pour exécuter les exemples de la spécificati
 - recours aux services de FHIR Data Type à travers la façade interne ;
 - diagnostics rattachés à la règle et à l'élément concernés.
 
-Examiner la compilation JavaScript du POC avant de choisir entre sa réutilisation
-et une autre forme d'exécution. Le compilateur éventuel reste un détail du
-runtime ; le JSON demeure le contrat de référence.
+La compilation JavaScript du POC est réutilisée. Le compilateur reste un détail
+du runtime ; le JSON demeure le contrat de référence.
 
 Prévoir une **option de trace désactivée par défaut**, utilisable pendant un test
 dans l'éditeur comme sur un message traité par un channel. Préciser son point

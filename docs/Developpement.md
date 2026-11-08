@@ -4,6 +4,11 @@ Le projet reprend le compilateur, le runtime et l'éditeur du POC dans un plugin
 distinct. Les fonctions conservées et les limites sont décrites dans
 [Reprise-POC.md](Reprise-POC.md).
 
+Le contrat actuel, son schéma et les commandes de contrôle hors ligne sont dans
+[Specification-mapping.md](Specification-mapping.md). Les exemples publiés y
+sont exécutés par `MappingSpecificationTest` pendant le build Maven, y compris
+dans l'image Docker de démonstration.
+
 ## Structure
 
 | Chemin | Rôle |
