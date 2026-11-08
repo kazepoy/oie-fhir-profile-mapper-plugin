@@ -9,8 +9,7 @@ JSON, un runtime, des fonctions utilitaires et un éditeur graphique.
 La spécification JSON est le contrat central du projet. L'éditeur et le runtime
 doivent respecter ce même contrat.
 
-Le POC de référence est situé dans
-`/Users/admin/data/aphm-fhir-ws/fhir-datatype-Eclipse-OIE`, sur la branche
+Le POC de référence est situé dans [fhir-datatype-Eclipse-OIE](https://github.com/kazepoy/fhir-datatype-Eclipse-OIE), sur la branche
 `feature/fhir-profile-mapper`. Il sert de base d'analyse et d'exemples ; ses choix
 de format, d'architecture et d'interface restent à examiner.
 
@@ -321,5 +320,14 @@ des seuils convenus.
 
 Étudier un second mapper permettant d'appliquer des transformations FML à partir
 de modèles logiques fournis par une IG, une StructureDefinition ou le format
-interne OIE (a reflechir). Réutiliser les fonctions communes identifiées pendant la première
+interne OIE E4X (à étudier avec la [documentation du contexte de script OIE](https://docs.openintegrationengine.org/engine/script_scope_and_user_api.html)). Réutiliser les fonctions communes identifiées pendant la première
 phase, sans imposer dès maintenant un moteur ou un format unique aux deux usages.
+## Compléments à planifier
+
+- Ajouter une GitHub Action de build déclenchée sur un tag.
+- Remplacer le package `org.oie.fhir` par `fr.kazepoy`, après vérification des
+  accès aux API protégées et de la compatibilité des exports de channels.
+- Déclencher la complétion avec `Ctrl+Espace` et proposer les suggestions adaptées
+  au contexte dans les assistants de code.
+- Ajouter des pastilles d'aide `?` pointant vers les références officielles,
+  FHIR par défaut.

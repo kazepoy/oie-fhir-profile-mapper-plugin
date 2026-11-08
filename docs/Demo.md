@@ -34,7 +34,9 @@ L'image active le niveau `INFO` pour le logger `org.oie.fhir.mapper`.
 
 Les réglages sont dans [compose.yaml](../demo/compose.yaml). Pour les personnaliser,
 copier [.env.example](../demo/.env.example) en `demo/.env` avant le premier lancement.
-Les ports 8443 et 8081 à 8086 doivent être libres. Les conteneurs et volumes utilisent le projet
+Les ports 8443 et 8081 à 8099 doivent être libres. L'administration utilise
+`OIE_BIND_ADDRESS` ; la plage des exemples est publiée sur toutes les interfaces.
+Les conteneurs et volumes utilisent le projet
 Compose `fhir-profile-mapper-demo`.
 
 ## Rejouer les exemples
@@ -67,8 +69,11 @@ date de naissance : réponse HTTP vide, message OIE en `ERROR` mentionnant
 `birthDate`. Ce dernier message d'erreur est donc attendu après le contrôle.
 
 Le script utilise les valeurs de démonstration par défaut. En cas de réglages
-personnalisés, lui transmettre `OIE_PASSWORD`, `OIE_HTTPS_PORT` et les variables
-de ports de `.env.example` dans son environnement ; il ne lit pas `.env`.
+personnalisés, lui transmettre `OIE_PASSWORD` et `OIE_HTTPS_PORT` dans son
+environnement ; il ne lit pas `.env`. Les ports des exemples sont publiés
+directement de 8081 à 8099. Si ce mappage est modifié dans Compose, le script
+accepte `ORU_PORT`, `PATIENT_PORT`, `LAB_BUNDLES_PORT`, `SQL_PATIENT_PORT`,
+`CSV_PATIENTS_PORT` et `CSV_COLLECTION_PORT` pour choisir les ports hôte.
 `DEMO_HOST` et `OIE_API` permettent de choisir l'hôte et l'URL de l'API.
 Il accepte le certificat autosigné et ignore les proxys pour cette démo locale.
 
@@ -96,7 +101,8 @@ docker compose run --rm -e OIE_INIT_FORCE=true oie-init
 
 Cette commande remplace les canaux portant les identifiants des exports fournis.
 L'init refuse les imports signalés invalides par OIE et les erreurs de déploiement.
-Ajouter les ports des futurs listeners à `oie-app.ports` si nécessaire.
+Les futurs listeners peuvent utiliser les ports 8081 à 8099 déjà publiés.
+Au-delà de cette plage, compléter `oie-app.ports`.
 
 ```sh
 docker compose stop  # arrêter en conservant les conteneurs et les données

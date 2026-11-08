@@ -2,8 +2,8 @@
   "id": "fhir-profile-mapper",
   "name": "FHIR Profile Mapper",
   "version": "${project.version}",
-  "author": "OIE FHIR Profile Mapper",
-  "description": "Graphical FHIR profile mapper and runtime, extracted from the POC.",
+  "author": "kazepoy",
+  "description": "Graphical FHIR profile mapper and runtime.",
   "oie": { "apiMin": "4.7" },
   "client": { "entry": "web/plugin.js" }
 }

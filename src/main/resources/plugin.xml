@@ -1,6 +1,6 @@
 <pluginMetaData path="fhir-profile-mapper">
   <name>FHIR Profile Mapper</name>
-  <author>OIE FHIR Profile Mapper</author>
+  <author>kazepoy</author>
   <pluginVersion>${project.version}</pluginVersion>
   <mirthVersion>${oie.version}</mirthVersion>
   <description>Mapper graphique de profils FHIR, runtime et services de test. Requiert FHIR Data Type 1.5.1.</description>
