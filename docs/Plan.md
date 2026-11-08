@@ -29,11 +29,10 @@ La suite conserve le runtime et l'éditeur existants :
 4. **Stabilisation et livraison** : compatibilité de l'adaptateur FHIR Data Type,
    migration du namespace vers `fr.kazepoy` avec compatibilité des exports,
    GitHub Action de build sur tag et vérification de l'archive installable.
-5. **Mesures et charge** : temps et mémoire avec/sans validation et trace,
-   puis débit, latence, concurrence et exécution prolongée avec seuils convenus.
 
-Chaque livraison reste limitée, démontrable et committée séparément. Le mapper
-FML demeure une phase ultérieure, indépendante de ces jalons.
+Chaque livraison reste limitée, démontrable et committée séparément.
+Les performances et tests de charge, comme le mapper FML, sont mis de côté
+dans des phases ultérieures, hors des jalons actuels.
 
 Le POC de référence est situé dans [fhir-datatype-Eclipse-OIE](https://github.com/kazepoy/fhir-datatype-Eclipse-OIE), sur la branche
 `feature/fhir-profile-mapper`. Il sert de base d'analyse et d'exemples ; ses choix
@@ -62,6 +61,8 @@ de format, d'architecture et d'interface restent à examiner.
   été repris et ajoutés à l'init de la démo.
 - Le second mapper, orienté modèles logiques et FML, sera traité dans une phase
   ultérieure.
+- Les mesures de performance et les tests de charge sont également reportés
+  à une phase ultérieure ; ils ne conditionnent pas les jalons actuels.
 
 ## Étape 1 — Préparer la démonstration
 
@@ -356,7 +357,7 @@ les vérifier et les tester, expliquer un résultat depuis les règles et la tra
 puis modifier une règle et relire le résultat dans l'éditeur. Une modification
 ciblée doit préserver les autres étapes et réglages du channel.
 
-## Étape 6 — Ajouter les exemples et mesurer
+## Étape 6 — Vérifier les exemples
 
 **Exemples repris et rejoués.** Les six canaux de la démo couvrent :
 
@@ -366,8 +367,15 @@ ciblée doit préserver les autres étapes et réglages du channel.
 4. Une collection de Patients et plusieurs Bundles partageant des ressources.
 
 Ils sont inclus dans l'init ; le script `demo/examples/check.py` vérifie leurs
-résultats et les exemples d'erreur de l'API de test. Les mesures et tests de
-charge ci-dessous restent à réaliser.
+résultats et les exemples d'erreur de l'API de test.
+
+**Vérifier :** résultats attendus pour les messages valides et diagnostics pour
+les cas invalides sur les versions retenues.
+
+## Phase ultérieure — Performances et charge
+
+Cette phase est mise de côté, au même titre que le mapper FML. Elle sera reprise
+séparément après les jalons fonctionnels actuels.
 
 Mesurer séparément le temps et la mémoire de l'édition des profils, du mapping
 sans validation et du mapping avec validation. Identifier ce qui vient du mapper,
@@ -382,8 +390,7 @@ avec et sans validation FHIR et trace. Inclure une exécution prolongée pour
 détecter une croissance mémoire ou une dégradation des performances.
 Définir les scénarios et seuils d'acceptation avant ces tests.
 
-**Vérifier :** résultats attendus pour les messages valides, diagnostics pour les
-cas invalides et mesures reproductibles sur les versions retenues. Sous charge,
+**Vérifier :** mesures reproductibles sur les versions retenues. Sous charge,
 vérifier aussi l'isolation des messages, l'intégrité des résultats et le respect
 des seuils convenus.
 
