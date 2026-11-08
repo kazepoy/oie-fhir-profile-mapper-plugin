@@ -12,7 +12,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const code = fs.readFileSync(path.join(here, "../web/plugin.js"), "utf8").replace("export function register", "function register");
 const catalog = JSON.parse(fs.readFileSync(path.join(here, "../../src/main/resources/org/oie/fhir/mapper/mapper-functions.json"), "utf8"));
 const context = vm.createContext({ console, crypto: { randomUUID } });
-vm.runInContext(code + `\nMAPPER_FUNCTIONS = ${JSON.stringify(catalog)};\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample, mapperDiagnostic, mapperTraceRows, mapperTraceExport, mapperSourcePaths, mapperHelpUrl, mapperJsonImport, mapperRuleIds, mapperCompletionContext, MapperExpression, setReact: value => React = value };`, context);
+vm.runInContext(code + `\nMAPPER_FUNCTIONS = ${JSON.stringify(catalog)};\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample, mapperDiagnostic, mapperTraceRows, mapperTraceExport, mapperSourcePaths, mapperHelpUrl, mapperJsonImport, mapperRuleIds, mapperCompletionContext, MapperExpression, ProfileMapperEditor, setReact: value => React = value };`, context);
 const { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample } = context.t;
 
 const el = (id, min, max, types, more = {}) => ({ id, path: id.replace(/:[^.]+/g, ""), min, max, base: { max: more.baseMax ?? max }, type: types.map((t) => (typeof t === "string" ? { code: t } : t)), ...more });
@@ -56,6 +56,32 @@ const tree = (keys = [], showAll = false) => makeTree(patient, { version: "R4", 
 // Objects of the vm context have other prototypes: compare them as plain JSON.
 const plain = (x) => JSON.parse(JSON.stringify(x));
 const labels = (t, node) => (t.children(node) || []).map((n) => n.label);
+
+test("expanded tree branches keep their auxiliary rows and descendants together when folded", () => {
+  const state = { values: new Map(), iterations: new Map([["Patient.name", { expression: "msg.names", variable: "n" }]]),
+    conditions: new Map([["Patient.name", "n.active"]]), translations: new Map(), expanded: new Set(["Patient", "Patient.name"]),
+    instances: new Map(), rootIndex: patient, sourcePaths: [], showAll: false, filter: "all", unresolved: [], tests: new Map(),
+    sample: { dataType: "JSON", message: "{}" }, traceOptions: { enabled: false }, jsonDraft: "", loading: false };
+  const element = { action: "resource", resourceType: "Patient", profileUrl: patient.sd.url, mappings: "[]", bundleTargets: "[]" };
+  const render = () => {
+    let firstRef = true;
+    context.t.setReact({ createElement: (tag, props, ...children) => ({ tag, props: props || {}, children }),
+      useReducer: () => [0, () => {}], useRef: value => { const current = firstRef ? state : value; firstRef = false; return { current }; }, useEffect: () => {} });
+    return context.t.ProfileMapperEditor({ element, onChange: () => {}, platform: { store: { getState: () => null } } });
+  };
+  const all = (node) => Array.isArray(node) ? node.flatMap(all) : node && typeof node === "object" ? [node, ...all(node.children || [])] : [];
+  const opened = all(render());
+  const name = opened.find(node => node.tag === "tbody" && node.props["aria-label"] === "Patient.name");
+  const keys = all(name).filter(node => node.tag === "tr").map(node => node.props.key);
+  assert.deepEqual(keys, ["Patient.name", "Patient.name/each", "Patient.name/condition", "Patient.name.family", "Patient.name.given"]);
+  assert.equal(name.props.className, "mapper-branch-open");
+  assert.ok(all(name).some(node => node.props.className === "mapper-tree-guides"));
+  assert.ok(opened.some(node => node.tag === "a" && node.props.className === "mapper-help"));
+  state.expanded.delete("Patient.name");
+  const closed = all(render());
+  assert.ok(!closed.some(node => node.props.key === "Patient.name.family"));
+  assert.ok(closed.some(node => node.props["data-owner"] === "Patient.name"));
+});
 
 test("Ctrl+Space opens completion without a prefix, including scoped variables and sample paths", () => {
   const root = { key: "Patient" }, name = { key: "Patient.name", parent: root }, family = { key: "Patient.name.family", parent: name };

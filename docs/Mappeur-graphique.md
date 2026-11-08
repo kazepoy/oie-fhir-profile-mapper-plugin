@@ -16,6 +16,13 @@ L'onglet Generated Script et les contrôles d'étape utilisent le même compilat
 
 Source principale : [webadmin/web/plugin.js](../webadmin/web/plugin.js). L'étape est enregistrée par `registerProfileMapper()` ; son composant est `ProfileMapperEditor`.
 
+Le tableau est compact : les champs et l'aide FHIR ont une hauteur bornée, sans
+modifier la densité des autres écrans de Web Admin. Les branches ouvertes sont
+regroupées sur un fond légèrement teinté avec une bordure gauche et des limites
+de bloc. Des guides verticaux, des raccords et une indentation de 20 px rendent
+les niveaux visibles ; les parents ouverts sont en gras. Les lignes de
+condition, répétition et traduction restent dans le bloc de leur élément.
+
 ## 2. Choisir l'action
 
 Le même type de step propose deux actions.

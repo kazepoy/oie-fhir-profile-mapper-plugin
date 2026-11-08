@@ -33,6 +33,22 @@ const MAPPER_STYLES = `
 .fhir-profile-mapper .mapper-functions [role=option] { padding: 6px 8px; cursor: pointer; border-radius: 4px; font-size: 12px; white-space: normal; }
 .fhir-profile-mapper .mapper-functions [aria-selected=true] { background: #dbeafe; color: #1e293b; }
 .fhir-profile-mapper .mapper-functions code { display: block; overflow-wrap: anywhere; }
+.fhir-profile-mapper table.mapper-tree td { padding: 3px 8px; }
+.fhir-profile-mapper .mapper-tree input:not([type=checkbox]), .fhir-profile-mapper .mapper-tree select { box-sizing: border-box; height: 26px; min-height: 26px; padding: 2px 6px; line-height: 20px; }
+.fhir-profile-mapper .mapper-tree .mapper-expression { padding: 0; min-height: 0; vertical-align: middle; }
+.fhir-profile-mapper .mapper-tree .btn { height: 22px; min-height: 22px; line-height: 18px; font-size: 11px; }
+.fhir-profile-mapper .mapper-help { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex: 0 0 16px; width: 16px; height: 16px; min-height: 0; padding: 0; margin: 0; border: 1px solid currentColor; border-radius: 50%; font-size: 11px; line-height: 1; text-decoration: none; }
+.fhir-profile-mapper .mapper-help:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 2px; }
+.fhir-profile-mapper .mapper-tree tbody > tr > td:first-child { position: relative; border-left: 2px solid transparent; }
+.fhir-profile-mapper .mapper-tree .mapper-branch-open > tr > td { background: color-mix(in srgb, var(--accent, #2563eb) 4%, var(--bg2, white)); }
+.fhir-profile-mapper .mapper-tree .mapper-branch-open > tr > td:first-child { border-left-color: color-mix(in srgb, var(--accent, #2563eb) 40%, transparent); }
+.fhir-profile-mapper .mapper-tree .mapper-branch-open > tr:first-child > td { border-top: 1px solid color-mix(in srgb, var(--accent, #2563eb) 25%, transparent); background: color-mix(in srgb, var(--accent, #2563eb) 8%, var(--bg2, white)); }
+.fhir-profile-mapper .mapper-tree .mapper-branch-open > tr:last-child > td { border-bottom: 1px solid color-mix(in srgb, var(--accent, #2563eb) 25%, transparent); }
+.fhir-profile-mapper .mapper-node-open .mapper-node-label { font-weight: 600; }
+.fhir-profile-mapper .mapper-tree tr:focus-within > td, .fhir-profile-mapper .mapper-tree .mapper-branch-open tr:focus-within > td { background: color-mix(in srgb, var(--accent, #2563eb) 12%, var(--bg2, white)); }
+.fhir-profile-mapper .mapper-tree-guides { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.fhir-profile-mapper .mapper-tree-guides i { position: absolute; top: -1px; bottom: -1px; border-left: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 45%, transparent); }
+.fhir-profile-mapper .mapper-tree-guides b { position: absolute; top: 50%; width: 20px; border-top: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 45%, transparent); }
 .fhir-profile-mapper .bundle-routing { padding: 14px; border: 1px solid #93c5fd; border-radius: 8px; background: color-mix(in srgb, #3b82f6 7%, var(--bg, white)); }
 .fhir-profile-mapper .bundle-routing-title { margin-bottom: 4px; font-weight: 600; }
 .fhir-profile-mapper .bundle-target { margin-top: 10px; padding: 12px; border: 1px solid #bfdbfe; border-radius: 6px; background: var(--bg, white); }
@@ -1163,20 +1179,31 @@ function ProfileMapperEditor({ element, onChange, platform }) {
   };
 
   const rows = [];
+  const rowGroups = [];
+  const guides = (node, auxiliary = false) => {
+    const levels = [];
+    for (let parent = auxiliary ? node : node.parent; parent && parent.depth > 0; parent = parent.parent) levels.push(parent.depth);
+    return h("span", { className: "mapper-tree-guides", "aria-hidden": true },
+      levels.map((depth) => h("i", { key: depth, style: { left: `${depth * 20 + 11}px` } })),
+      levels.length ? h("b", { style: { left: `${(auxiliary ? node.depth + 1 : node.depth) * 20 - 9}px` } }) : null);
+  };
   const blocked = st.loading || st.unresolved.length > 0;
+  const addNode = (child, list) => {
+    if (!visible(child)) return;
+    rows.push(row(child, list));
+    if (st.iterations.has(child.key)) rows.push(iterationRow(child));
+    if (st.conditions.has(child.key)) rows.push(conditionRow(child));
+    if (st.translations.has(child.key)) rows.push(translationRow(child));
+    if (st.expanded.has(child.key)) addRows(child);
+  };
   const addRows = (node) => {
     const list = tree.children(node);
     if (list === null) {
-      rows.push(h("tr", { key: node.key + "/loading" }, h("td", { colSpan: 3, style: { paddingLeft: `${(node.depth + 1) * 16 + 8}px` } }, h("span", { className: "text-text-faint" }, "Loading…"))));
+      rows.push(h("tr", { key: node.key + "/loading" }, h("td", { colSpan: 3, style: { paddingLeft: `${(node.depth + 1) * 20 + 26}px` } }, guides(node, true), h("span", { className: "text-text-faint" }, "Loading…"))));
       return;
     }
     for (const child of list) {
-      if (!visible(child)) continue;
-      rows.push(row(child, list));
-      if (st.iterations.has(child.key)) rows.push(iterationRow(child));
-      if (st.conditions.has(child.key)) rows.push(conditionRow(child));
-      if (st.translations.has(child.key)) rows.push(translationRow(child));
-      if (st.expanded.has(child.key)) addRows(child);
+      addNode(child, list);
     }
   };
   const row = (node, siblings) => {
@@ -1197,10 +1224,11 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     // mapping keeps its room, and the actions sit next to it, where they cannot push it away.
     return h(
       "tr",
-      { key: node.key, ref: diagnosticRef(node.key, "value"), title: node.short ? `${node.key}: ${node.short}` : node.key },
+      { key: node.key, className: open ? "mapper-node-open" : undefined, "data-depth": node.depth, ref: diagnosticRef(node.key, "value"), title: node.short ? `${node.key}: ${node.short}` : node.key },
       h(
         "td",
-        { style: { paddingLeft: `${node.depth * 16}px` } },
+        { style: { paddingLeft: `${node.depth * 20}px` } },
+        guides(node),
         h(
           "div",
           { style: { display: "flex", alignItems: "center", gap: "4px", minWidth: 0 } },
@@ -1209,16 +1237,18 @@ function ProfileMapperEditor({ element, onChange, platform }) {
             {
               type: "button",
               className: "btn btn-sm",
+              "aria-expanded": canExpand ? open : undefined,
+              "aria-label": `${open ? "Collapse" : "Expand"} ${node.key}`,
               style: { flex: "none", visibility: canExpand ? "visible" : "hidden", minWidth: "22px", padding: "0 4px" },
               onClick: () => toggle(node)
             },
             open ? "▾" : "▸"
           ),
-          h("span", { style: { ...ellipsis, minWidth: 0, fontWeight: node.mustSupport ? 600 : 400 } }, node.label + (node.instance ? ` [${node.instance}]` : "")),
+          h("span", { className: "mapper-node-label", style: { ...ellipsis, minWidth: 0, fontWeight: node.mustSupport || open ? 600 : 400 } }, node.label + (node.instance ? ` [${node.instance}]` : "")),
           h("span", { className: "text-text-faint", style: { flex: "none", fontSize: "11px" } }, `${node.min ?? 0}..${node.max ?? "*"}`),
           node.mustSupport ? h("span", { title: "Must Support", style: { flex: "none", color: "#c2410c", fontSize: "11px" } }, "S") : null,
-          h("a", { href: mapperHelpUrl(version, element.resourceType, node.key), target: "_blank", rel: "noopener noreferrer",
-            title: "Official FHIR definition", "aria-label": `FHIR help for ${node.key}`, style: { border: "1px solid currentColor", borderRadius: "50%", padding: "0 4px", textDecoration: "none" } }, "?")
+          h("a", { className: "mapper-help", href: mapperHelpUrl(version, element.resourceType, node.key), target: "_blank", rel: "noopener noreferrer",
+            title: "Official FHIR definition", "aria-label": `FHIR help for ${node.key}` }, "?")
         )
       ),
       h("td", { className: "text-text-faint", style: { ...ellipsis, fontSize: "11px" }, title: types }, types),
@@ -1261,7 +1291,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
   };
 
   const subRow = (node, suffix, children) =>
-    h("tr", { key: `${node.key}/${suffix}`, ref: diagnosticRef(node.key, suffix) }, h("td", { colSpan: 3, style: { paddingLeft: `${node.depth * 16 + 30}px`, background: "rgba(37, 99, 235, 0.05)" } }, h("div", { style: { display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" } }, children)));
+    h("tr", { key: `${node.key}/${suffix}`, ref: diagnosticRef(node.key, suffix), "data-owner": node.key }, h("td", { colSpan: 3, style: { paddingLeft: `${node.depth * 20 + 34}px` } }, guides(node, true), h("div", { style: { display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" } }, children)));
   const mono = { fontFamily: "monospace", fontSize: "12px" };
 
   const iterationRow = (node) => {
@@ -1394,7 +1424,14 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     );
     if (st.iterations.has(tree.root.key)) rows.push(iterationRow(tree.root));
     if (st.conditions.has(tree.root.key)) rows.push(conditionRow(tree.root));
-    addRows(tree.root);
+    rowGroups.push(h("tbody", { key: "root" }, rows.splice(0)));
+    const children = tree.children(tree.root);
+    if (children) for (const child of children) {
+      if (!visible(child)) continue;
+      addNode(child, children);
+      const grouped = st.expanded.has(child.key) || st.iterations.has(child.key) || st.conditions.has(child.key) || st.translations.has(child.key);
+      rowGroups.push(h("tbody", { key: child.key, className: grouped ? "mapper-branch-open" : undefined, "aria-label": child.key }, rows.splice(0)));
+    }
   }
   const check = tree ? completeness(tree, parseMappings(element.mappings)) : { required: [], mustSupport: [] };
   if (createBundle) check.required = check.required.filter((k) => k !== "Bundle.type");
@@ -1659,10 +1696,10 @@ function ProfileMapperEditor({ element, onChange, platform }) {
             { className: "dt-wrap border border-line rounded", style: { maxHeight: "none", overflowX: "auto", overflowY: "visible" } },
             h(
               "table",
-              { className: "dt", style: { tableLayout: "fixed", width: "100%", minWidth: "720px" } },
+              { className: "dt mapper-tree", style: { tableLayout: "fixed", width: "100%", minWidth: "720px" } },
               h("colgroup", null, h("col", { style: { width: "36%" } }), h("col", { style: { width: "14%" } }), h("col", { style: { width: "50%" } })),
               h("thead", null, h("tr", null, h("th", null, "Element"), h("th", null, "Type"), h("th", null, "Mapping"))),
-              h("tbody", null, rows)
+              rowGroups
             )
           ),
           check.required.length || check.mustSupport.length

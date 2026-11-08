@@ -421,3 +421,9 @@ Cette phase est mise de côté, comme les performances et la charge et le mapper
 FML : compatibilité approfondie de l'adaptateur FHIR Data Type, migration du
 namespace vers `fr.kazepoy` avec compatibilité des exports, GitHub Action de
 build sur tag et vérification des releases installables.
+
+## Retours d'usage à traiter
+
+- Étudier une présentation de l'étape en onglets : propriétés, mapper et test.
+- Clarifier l'intérêt de « Mapping JSON — import / export » dans l'interface.
+- Corriger le raccourci `Ctrl+Espace`, signalé comme inactif dans les zones de saisie.
