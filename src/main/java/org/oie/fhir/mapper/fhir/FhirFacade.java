@@ -16,6 +16,13 @@ public final class FhirFacade {
     public static String jsonToXml(String json, boolean namespace) { return FhirDataTypeAdapter.jsonToXml(json, namespace); }
     public static String toJson(String xml, String version) throws Exception { return FhirDataTypeAdapter.toJson(xml, version); }
     public static String toXml(String json, String version) throws Exception { return FhirDataTypeAdapter.toXml(json, version); }
+    public static String toXml(String json) throws Exception { return toXml(json, "R4"); }
+    public static String lookup(String server, String profiles, String system, String code) throws Exception {
+        return FhirTerminology.lookup(server, profiles, system, code, "R4", "");
+    }
+    public static boolean validateCode(String server, String profiles, String valueSet, String system, String code) throws Exception {
+        return FhirTerminology.validateCode(server, profiles, valueSet, system, code, "R4", "");
+    }
     public static FhirValidation validate(String json, String profile, String profiles, String version) throws Exception {
         return FhirDataTypeAdapter.validate(json, profile, profiles, version);
     }

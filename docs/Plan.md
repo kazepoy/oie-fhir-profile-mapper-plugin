@@ -68,8 +68,9 @@ sources et installe l'extension avec les deux prérequis.
 dans l'API OIE, message `FHIR Profile Mapper started.` dans les logs, services
 sains et init terminé sans canal importé. La démo est lancée sur 8443.
 
-Le runtime, l'éditeur et l'adaptateur FHIR Data Type restent à réaliser dans les
-étapes suivantes.
+Le runtime, l'éditeur et l'adaptateur FHIR Data Type ont ensuite été repris du
+POC dans le plugin distinct ; leur contrat et leur ergonomie restent à faire
+évoluer suivant les étapes ci-dessous.
 
 ## Étape 2 — Vérifier et isoler l'intégration avec FHIR Data Type
 
@@ -88,6 +89,11 @@ ses fonctions et ses exemples. Elle ne repart pas d'un mapper réduit.
 Chaque jalon vérifié fait l'objet d'un commit distinct et d'un retour concret.
 La formalisation du format existant et les améliorations du débogage et de
 l'ergonomie suivent cette reprise fonctionnelle, par changements ciblés.
+
+**Reprise du compilateur, runtime et éditeur :** 74 tests Java et 9 tests de
+l'éditeur passent. Dans la démo, l'API charge un snapshot Patient via le chargeur
+du datatype officiel, puis exécute et valide un mapping XML vers Patient.
+La validation est optionnelle ; les six channels restent à rejouer.
 
 Définir une façade limitée aux services nécessaires au mapper. L'adaptateur
 FHIR Data Type sera le seul endroit connaissant les classes, signatures et

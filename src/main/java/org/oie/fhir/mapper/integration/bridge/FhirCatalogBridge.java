@@ -31,6 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.hl7.fhir.common.hapi.validation.support.PrePopulatedValidationSupport;
+import org.hl7.fhir.common.hapi.validation.support.CommonCodeSystemsTerminologyService;
+import org.hl7.fhir.common.hapi.validation.support.InMemoryTerminologyServerValidationSupport;
 import org.hl7.fhir.common.hapi.validation.support.SnapshotGeneratingValidationSupport;
 import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain;
 import org.hl7.fhir.instance.model.api.IBaseResource;
@@ -75,6 +77,8 @@ public final class FhirCatalogBridge {
             List<IValidationSupport> supports = new ArrayList<>();
             if (profiles != null) supports.add(profiles);
             supports.add(base);
+            supports.add(new CommonCodeSystemsTerminologyService(ctx));
+            supports.add(new InMemoryTerminologyServerValidationSupport(ctx));
             supports.add(new SnapshotGeneratingValidationSupport(ctx));
             return new Catalog(ctx, new ValidationSupportChain(supports), profiles);
         }
@@ -95,9 +99,19 @@ public final class FhirCatalogBridge {
 
     public void clearCaches() { conceptMaps.clear(); }
 
-    public String listProfiles(Map<String, String> options) throws Exception {
+    @FunctionalInterface
+    private interface CatalogWork<T> { T call(Catalog catalog) throws Exception; }
+
+    private <T> T withCatalog(Map<String, String> options, CatalogWork<T> work) throws Exception {
         return withEngineClassLoader(() -> {
-            Catalog cached = catalog(options);
+            Catalog catalog = catalog(options);
+            try { return work.call(catalog); }
+            finally { catalog.chain.stop(); }
+        });
+    }
+
+    public String listProfiles(Map<String, String> options) throws Exception {
+        return withCatalog(options, cached -> {
             if (cached.profiles == null) {
                 return "[]";
             }
@@ -121,8 +135,7 @@ public final class FhirCatalogBridge {
     }
 
     public String structureDefinition(String url, Map<String, String> options) throws Exception {
-        return withEngineClassLoader(() -> {
-            Catalog cached = catalog(options);
+        return withCatalog(options, cached -> {
             String canonical = url.trim().contains("/") ? url.trim() : "http://hl7.org/fhir/StructureDefinition/" + url.trim();
             IBaseResource sd = cached.chain.fetchStructureDefinition(canonical);
             if (sd == null) {
@@ -247,16 +260,16 @@ public final class FhirCatalogBridge {
     }
 
     public String lookup(String system, String code, Map<String, String> options) throws Exception {
-        return withEngineClassLoader(() -> {
-            ValidationSupportChain chain = catalog(options).chain;
+        return withCatalog(options, cached -> {
+            ValidationSupportChain chain = cached.chain;
             IValidationSupport.LookupCodeResult result = chain.lookupCode(new ValidationSupportContext(chain), new LookupCodeRequest(text(system), text(code)));
             return result != null && result.isFound() ? result.getCodeDisplay() : null;
         });
     }
 
     public boolean validateCode(String valueSet, String system, String code, Map<String, String> options) throws Exception {
-        return withEngineClassLoader(() -> {
-            ValidationSupportChain chain = catalog(options).chain;
+        return withCatalog(options, cached -> {
+            ValidationSupportChain chain = cached.chain;
             IValidationSupport.CodeValidationResult result = chain.validateCode(new ValidationSupportContext(chain), new ConceptValidationOptions(),
                     text(system).isEmpty() ? null : text(system), text(code), null, text(valueSet));
             return result != null && result.isOk();

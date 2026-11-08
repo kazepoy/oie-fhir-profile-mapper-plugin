@@ -3,9 +3,12 @@
   <author>OIE FHIR Profile Mapper</author>
   <pluginVersion>${project.version}</pluginVersion>
   <mirthVersion>${oie.version}</mirthVersion>
-  <description>Socle du plugin de mapping FHIR. Requiert FHIR Data Type. Le runtime et l'éditeur seront ajoutés ensuite.</description>
+  <description>Mapper graphique de profils FHIR, runtime et services de test. Requiert FHIR Data Type 1.5.1.</description>
   <serverClasses>
     <string>org.oie.fhir.mapper.server.FhirProfileMapperPlugin</string>
+    <string>org.oie.fhir.mapper.server.FhirMapperChannelPlugin</string>
   </serverClasses>
-  <library type="SERVER" path="fhir-profile-mapper-server.jar" />
+  <library type="SHARED" path="fhir-profile-mapper-server.jar" />
+  <apiProvider type="SERVLET_INTERFACE" name="org.oie.fhir.mapper.FhirProfileServletInterface" />
+  <apiProvider type="SERVER_CLASS" name="org.oie.fhir.mapper.server.FhirProfileServlet" />
 </pluginMetaData>

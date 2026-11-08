@@ -26,4 +26,10 @@
       <destName>fhir-profile-mapper-bridge.jar</destName>
     </file>
   </files>
+  <fileSets>
+    <fileSet>
+      <directory>${project.build.outputDirectory}/webadmin</directory>
+      <outputDirectory>/webadmin</outputDirectory>
+    </fileSet>
+  </fileSets>
 </assembly>

@@ -32,15 +32,22 @@ WORKDIR /build
 # L'API OIE n'est pas publiée sur Maven Central : utiliser celle de l'image cible.
 COPY --from=oie-engine /opt/engine/server-lib/mirth-server.jar /engine/server-api.jar
 COPY --from=oie-engine /opt/engine/server-lib/donkey/donkey-model.jar /engine/donkey-model.jar
+COPY --from=oie-engine /opt/engine/server-lib/donkey/donkey-server.jar /engine/donkey-server.jar
+COPY --from=oie-engine /opt/engine/server-lib/mirth-client-core.jar /engine/client-core.jar
 COPY --from=plugins /extensions/datatype-fhir/datatype-fhir-shared.jar /engine/datatype-fhir-api.jar
 COPY --from=plugins /extensions/datatype-fhir/lib/datatype-fhir-engine.jar /engine/datatype-fhir-engine.jar
 COPY pom.xml assembly.xml LICENSE ./
 COPY src ./src
+COPY webadmin ./webadmin
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -ntp install:install-file -Dfile=/engine/server-api.jar \
       -DgroupId=com.mirth.connect -DartifactId=server-api -Dversion=4.7.0 -Dpackaging=jar \
     && mvn -B -ntp install:install-file -Dfile=/engine/donkey-model.jar \
       -DgroupId=com.mirth.connect -DartifactId=donkey-model -Dversion=4.7.0 -Dpackaging=jar \
+    && mvn -B -ntp install:install-file -Dfile=/engine/donkey-server.jar \
+      -DgroupId=com.mirth.connect -DartifactId=donkey-server -Dversion=4.7.0 -Dpackaging=jar \
+    && mvn -B -ntp install:install-file -Dfile=/engine/client-core.jar \
+      -DgroupId=com.mirth.connect -DartifactId=client-core -Dversion=4.7.0 -Dpackaging=jar \
     && mvn -B -ntp install:install-file -Dfile=/engine/datatype-fhir-api.jar \
       -DgroupId=com.matthy.oie -DartifactId=datatype-fhir-api -Dversion=1.5.1 -Dpackaging=jar \
     && mvn -B -ntp install:install-file -Dfile=/engine/datatype-fhir-engine.jar \
