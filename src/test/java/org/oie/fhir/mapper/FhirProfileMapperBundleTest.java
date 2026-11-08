@@ -154,8 +154,8 @@ public class FhirProfileMapperBundleTest {
         Map<?, ?> r = parse(run(step("Patient", mappings)));
         assertFalse(r.containsKey("name"));
         assertEquals("female", r.get("gender"));
-        // a TypeError in a condition is false
-        assertFalse(parse(run(step("Patient", mappings.replace("msg['PID']['PID.8']['PID.8.1'].toString() == 'X'", "msg['NK1'][3]['NK1.2'] == 'X'")))).containsKey("name"));
+        // An optional repetition is checked explicitly before it is accessed.
+        assertFalse(parse(run(step("Patient", mappings.replace("msg['PID']['PID.8']['PID.8.1'].toString() == 'X'", "msg['NK1'].length() > 3 && msg['NK1'][3]['NK1.2'] == 'X'")))).containsKey("name"));
     }
 
     @Test

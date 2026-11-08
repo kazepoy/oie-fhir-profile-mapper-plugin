@@ -183,7 +183,7 @@ public final class FhirMapperTester {
         if (diagnostic == null && script != null && "syntax".equals(phase)) {
             diagnostic = FhirProfileMapperStep.diagnosticAt(script, line);
         }
-        for (String field : List.of("key", "ruleIndex", "path", "expression", "operation")) {
+        for (String field : List.of("key", "ruleIndex", "path", "expression", "operation", "errorType")) {
             Object value = diagnostic == null ? null : diagnostic.get(field);
             e.put(field, value == null ? FhirJson.NULL : value);
         }

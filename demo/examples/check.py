@@ -175,6 +175,28 @@ def main():
     assert error["path"] == [["active"]] and error["expression"] == "'invalide'"
     print("OK diagnostic : Patient.active, règle 0, conversion, expression 'invalide'")
 
+    request = json.loads((EXAMPLES / "typeerror-error.json").read_text(encoding="utf-8"))
+    for validation in (False, True):
+        request["step"]["validateOutput"] = validation
+        result = json.loads(api("/extensions/fhir-profile-mapper/test", "application/json",
+                                json.dumps(request).encode("utf-8")))
+        assert result["output"] is None and result["validationPerformed"] is False
+        assert len(result["errors"]) == 1
+        error = result["errors"][0]
+        assert error["errorType"] == "TypeError" and error["phase"] == "value"
+        assert error["key"] == "Patient.gender" and error["expression"] == "msg.optional.gender"
+    request["step"]["validateOutput"] = False
+    mappings = json.loads(request["step"]["mappings"])
+    mappings[0]["expression"] = "msg.optional && msg.optional.gender"
+    request["step"]["mappings"] = json.dumps(mappings)
+    for message in ({}, {"optional": {"gender": "female"}}):
+        request["message"] = json.dumps(message)
+        result = json.loads(api("/extensions/fhir-profile-mapper/test", "application/json",
+                                json.dumps(request).encode("utf-8")))
+        assert not result["errors"]
+        assert json.loads(result["output"]).get("gender") == message.get("optional", {}).get("gender")
+    print("OK TypeError signalée ; garde explicite vérifiée avec et sans donnée facultative")
+
 
 if __name__ == "__main__":
     main()

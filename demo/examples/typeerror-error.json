@@ -1,0 +1,13 @@
+{
+  "step": {
+    "name": "Patient TypeError",
+    "sequenceNumber": "0",
+    "action": "resource",
+    "resourceType": "Patient",
+    "profileUrl": "http://hl7.org/fhir/StructureDefinition/Patient",
+    "validateOutput": false,
+    "mappings": "[{\"key\":\"Patient.gender\",\"type\":\"code\",\"expression\":\"msg.optional.gender\",\"path\":[[\"gender\"]]}]"
+  },
+  "dataType": "JSON",
+  "message": "{}"
+}

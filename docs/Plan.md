@@ -9,6 +9,31 @@ JSON, un runtime, des fonctions utilitaires et un éditeur graphique.
 La spécification JSON est le contrat central du projet. L'éditeur et le runtime
 doivent respecter ce même contrat.
 
+## Suite des jalons
+
+Le socle, la reprise du POC, les six exemples, la spécification et les diagnostics
+par règle sont livrés. Le traitement explicite des erreurs d'expression complète
+ce socle. La suite conserve le runtime et l'éditeur existants :
+
+1. **Trace activable** : d'abord dans l'API de test, puis dans les channels et
+   l'éditeur ; export JSON, volume borné, capture des valeurs explicite,
+   corrélation au message et à la révision du mapping. Définir les identifiants
+   stables et le versionnement nécessaires à cette corrélation.
+2. **Assistants de code** : catalogue commun au runtime et à l'éditeur,
+   complétion contextuelle avec `Ctrl+Espace`, signatures, exemples, variables
+   d'itération et liens d'aide vers les références officielles.
+3. **Parcours éditeur et agents IA** : créer, lire, modifier, vérifier, tester et
+   expliquer un mapping/channel, puis le rouvrir dans l'éditeur sans perte.
+   Terminer les vérifications visuelles et les tests des parcours complets.
+4. **Stabilisation et livraison** : compatibilité de l'adaptateur FHIR Data Type,
+   migration du namespace vers `fr.kazepoy` avec compatibilité des exports,
+   GitHub Action de build sur tag et vérification de l'archive installable.
+5. **Mesures et charge** : temps et mémoire avec/sans validation et trace,
+   puis débit, latence, concurrence et exécution prolongée avec seuils convenus.
+
+Chaque livraison reste limitée, démontrable et committée séparément. Le mapper
+FML demeure une phase ultérieure, indépendante de ces jalons.
+
 Le POC de référence est situé dans [fhir-datatype-Eclipse-OIE](https://github.com/kazepoy/fhir-datatype-Eclipse-OIE), sur la branche
 `feature/fhir-profile-mapper`. Il sert de base d'analyse et d'exemples ; ses choix
 de format, d'architecture et d'interface restent à examiner.
@@ -32,8 +57,8 @@ de format, d'architecture et d'interface restent à examiner.
   sans dépendre d'un état conservé uniquement dans l'interface graphique.
 - Le socle de démonstration sera dans `demo/`, avec l'administration sur le
   **port 8443** : OIE 4.7.0, Web Support / Web Admin 1.3.0 et FHIR Data Type 1.5.1.
-- Aucun exemple du POC n'est importé dans ce socle. L'init permettra d'ajouter des
-  exemples ensuite.
+- Le socle initial ne contenait aucun exemple ; les six canaux du POC ont ensuite
+  été repris et ajoutés à l'init de la démo.
 - Le second mapper, orienté modèles logiques et FML, sera traité dans une phase
   ultérieure.
 
@@ -153,8 +178,8 @@ de démo. Quatre tests Java exécutent les exemples valides et invalides publié
 Le contrat conserve les fragments par étape OIE, les expressions Rhino et le
 réglage de validation par ressource seule ou Bundle. Il ne possède pas encore
 de champ de version du format, d'identifiant unique de règle ni de trace
-structurée publique. Le jalon suivant doit définir ces évolutions explicitement,
-en particulier le traitement des erreurs aujourd'hui assimilées à une absence.
+structurée publique. Les évolutions du diagnostic et du traitement des erreurs
+sont détaillées à l'étape 4 ; le versionnement et la trace restent à définir.
 
 La spécification couvre :
 
@@ -202,8 +227,21 @@ conversion booléenne impossible, indépendamment de la validation FHIR.
 l'éditeur. Après redémarrage de la démo, le rejeu des six canaux et le contrôle
 du diagnostic structuré via l'API OIE passent.
 
-Le traitement des `TypeError` est conservé pour ce jalon. Il reste à définir
-son évolution explicite, puis la trace activable et les identifiants stables.
+**Deuxième jalon : erreurs d'expression explicites.** Les `TypeError` arrêtent
+désormais le traitement avec un diagnostic sur la valeur, condition ou itération
+concernée, avec et sans validation FHIR. Le champ `errorType` restitue le nom de
+l'exception JavaScript d'origine. Une valeur explicitement absente reste omise ;
+les accès facultatifs doivent être gardés. La migration depuis le comportement
+du POC est décrite dans la [spécification](Specification-mapping.md#migration-des-accès-facultatifs).
+Les tests couvrent aussi l'absence de publication des ressources déjà construites
+lorsqu'une règle suivante échoue. La trace activable et les identifiants stables
+restent à réaliser.
+
+**Vérifié :** 89 tests Java dans le build Docker et 10 tests JavaScript. Les six
+canaux sont rejoués dans OIE sans modification de leurs exports. L'API vérifie
+la `TypeError` avec et sans validation, puis une garde explicite avec source
+facultative absente et présente. Trois accès facultatifs des tests hérités du
+POC ont été gardés explicitement ; les résultats attendus sont conservés.
 La vérification visuelle dans le navigateur reste à effectuer : l'outil échoue
 avant connexion dans cet environnement.
 
@@ -307,14 +345,16 @@ ciblée doit préserver les autres étapes et réglages du channel.
 
 ## Étape 6 — Ajouter les exemples et mesurer
 
-Adapter progressivement les exemples du POC au nouveau plugin :
+**Exemples repris et rejoués.** Les six canaux de la démo couvrent :
 
 1. Une ligne SQL XML vers un Patient.
 2. Un ORU HL7 v2 vers un Patient, puis un Bundle de laboratoire.
 3. Un CSV nettoyé à la source puis mappé en destination.
 4. Une collection de Patients et plusieurs Bundles partageant des ressources.
 
-Les ajouter à l'init de la démo lorsqu'ils sont compatibles avec le nouveau mapper.
+Ils sont inclus dans l'init ; le script `demo/examples/check.py` vérifie leurs
+résultats et les exemples d'erreur de l'API de test. Les mesures et tests de
+charge ci-dessous restent à réaliser.
 
 Mesurer séparément le temps et la mémoire de l'édition des profils, du mapping
 sans validation et du mapping avec validation. Identifier ce qui vient du mapper,

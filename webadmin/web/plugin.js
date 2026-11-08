@@ -573,7 +573,7 @@ function mapperSample(platform, element) {
 
 function mapperDiagnostic(error) {
   const step = error.step || {};
-  const label = [step.name || (step.sequenceNumber ? `Step ${step.sequenceNumber}` : ""), error.phase, error.key,
+  const label = [step.name || (step.sequenceNumber ? `Step ${step.sequenceNumber}` : ""), error.phase, error.errorType, error.key,
     error.line ? `line ${error.line}` : ""].filter(Boolean).join(" · ");
   const target = Array.isArray(error.path) ? [step.resourceType || "", ...error.path.map(([name, instance]) => name + (instance === undefined ? "" : `[${instance}]`))].filter(Boolean).join(".") : "";
   const kind = error.operation === "iteration" ? "each" : error.operation === "condition" ? "condition" : error.phase === "translation" ? "translate" : "value";

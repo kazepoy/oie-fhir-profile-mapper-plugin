@@ -65,6 +65,8 @@ test("diagnostics show the step, slice path and phase and select the right edito
   assert.equal(context.t.mapperDiagnostic({ ...error, operation: "condition", phase: "syntax" }).kind, "condition");
   assert.equal(context.t.mapperDiagnostic({ ...error, operation: "iteration" }).kind, "each");
   assert.equal(context.t.mapperDiagnostic({ ...error, phase: "translation" }).kind, "translate");
+  assert.equal(context.t.mapperDiagnostic({ ...error, errorType: "TypeError" }).label,
+    "Patient · conversion · TypeError · Patient.identifier:ipp.value · line 42");
   assert.deepEqual(plain(context.t.mapperDiagnostic({ message: "old API error" })), { label: "", target: "", kind: "value" });
 });
 

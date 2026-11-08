@@ -76,6 +76,12 @@ Ce test d'API ne crée pas de message de channel. La même erreur peut être ess
 dans l'éditeur en saisissant `'invalide'` comme expression de `Patient.active` :
 le bouton **Go to rule** ramène au champ concerné.
 
+Le fichier [typeerror-error.json](../demo/examples/typeerror-error.json) utilise
+`msg.optional.gender` avec une source vide. Il doit renvoyer un diagnostic
+`TypeError` de phase `value`, avec et sans validation FHIR. Le contrôle remplace
+ensuite l'expression par `msg.optional && msg.optional.gender` et vérifie les
+deux cas : donnée facultative absente (élément omis) ou présente (élément mappé).
+
 Le script utilise les valeurs de démonstration par défaut. En cas de réglages
 personnalisés, lui transmettre `OIE_PASSWORD` et `OIE_HTTPS_PORT` dans son
 environnement ; il ne lit pas `.env`. Les ports des exemples sont publiés

@@ -120,15 +120,40 @@ complètent le contexte ; la portée de l'aperçu est précisée au §8.
 | `undefined`, `null`, texte vide après trim | Aucune valeur écrite. |
 | `false`, `0` | Valeurs conservées, selon le type cible. |
 | Objet ou tableau JavaScript | Utilisé comme valeur complexe ; pas de conversion récursive selon un profil. |
-| `TypeError` dans une valeur | Élément absent. |
-| `TypeError` dans une condition | Condition fausse. |
-| `TypeError` dans `each` | Zéro itération. |
+| `TypeError` dans une valeur | Arrêt avec diagnostic de phase `value`. |
+| `TypeError` dans une condition | Arrêt avec diagnostic de phase `condition`. |
+| `TypeError` dans `each` | Arrêt avec diagnostic de phase `iteration`. |
 | Autre erreur d'expression | Arrêt avec un message nommant la règle. |
 | Conversion booléenne, entière ou décimale impossible | Arrêt, même si la validation FHIR est désactivée. |
 
-Le traitement des `TypeError` est une **limite héritée**, pas une distinction
-fiable entre donnée absente et erreur de programmation. Sa modification sera
-un changement explicite du contrat, testé sur les exemples existants.
+Une expression qui **renvoie** une absence n'est pas une expression qui **lève**
+une exception. Toutes les exceptions d'expression arrêtent le traitement,
+indépendamment de `validateOutput`. Le diagnostic contient `errorType: "TypeError"`
+pour cette classe d'erreur, ainsi que la règle et l'expression concernées.
+
+### Migration des accès facultatifs
+
+Ce comportement remplace volontairement celui du POC et des premières révisions
+du plugin : les `TypeError` y étaient interprétées comme une valeur absente,
+une condition fausse ou zéro itération. Les exports restent lisibles sans
+changement de structure JSON, mais les expressions qui dépendaient de ce
+comportement doivent rendre leurs accès facultatifs explicites. Il n'y a pas
+de mode de compatibilité qui masquerait de nouveau ces erreurs.
+
+Avec une source JSON, remplacer un accès non gardé comme `msg.optional.gender`
+par `msg.optional == null ? undefined : msg.optional.gender` ; la forme
+`msg.optional && msg.optional.gender` convient aussi si `optional` est un objet.
+Pour une liste facultative, renvoyer explicitement `undefined`, `null` ou `[]`
+quand elle manque. Une condition absente évaluée à `undefined` ou `null` reste
+fausse, sans lever d'exception.
+
+Avec E4X, contrôler la longueur avant d'accéder à une répétition :
+`msg['PID']['PID.3'].length() > 2 ? msg['PID']['PID.3'][2]['PID.3.1'].toString() : undefined`.
+De même, `fhirFind` peut renvoyer `undefined` : vérifier le résultat avant de
+lire ses propriétés. Éviter les replis génériques qui transformeraient aussi
+des valeurs utiles comme `0` ou `false` en absence.
+
+### Conversions
 
 Les scalaires textuels sont trimés. Les booléens reconnaissent sans tenir compte
 de la casse `true/t/y/yes/1` et `false/f/n/no/0`. Les types entiers vérifient une
@@ -237,6 +262,8 @@ Il contient aussi :
   `translation`, `conversion` ;
 - `operation` : forme de la règle (`value`, `condition`, `iteration`), si connue,
   indépendamment de la phase d'échec ;
+- `errorType` : nom de l'exception JavaScript d'origine, s'il est disponible
+  (`TypeError`, `ReferenceError`, `Error`, etc.) ;
 - `ruleIndex` : position de la règle dans le tableau `mappings`, à partir de zéro ;
 - `path` : chemin déclaré par la règle, avec ses marqueurs d'instance ;
 - `expression` : texte de l'expression de cette règle.

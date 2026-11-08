@@ -47,15 +47,24 @@ public class FhirMapperTesterTest {
     }
 
     private static Map<?, ?> diagnostic(String mappings) {
-        Map<String, Object> config = (Map<String, Object>) FhirJson.parse(step(mappings));
-        config.put("validateOutput", false);
-        config.put("sequenceNumber", "7");
-        config.put("bundleTargets", "[{\"name\":\"preview\"}]");
-        Map<?, ?> result = (Map<?, ?>) FhirJson.parse(FhirMapperTester.test(FhirJson.write(Map.of(
-                "step", config, "dataType", "JSON", "message", "{}")), ENVIRONMENT));
+        return diagnostic(mappings, false);
+    }
+
+    private static Map<?, ?> diagnostic(String mappings, boolean validation) {
+        Map<?, ?> result = preview(mappings, "{}", validation);
         List<?> errors = (List<?>) result.get("errors");
         assertEquals(result.toString(), 1, errors.size());
+        assertEquals(FhirJson.NULL, result.get("output"));
         return (Map<?, ?>) errors.get(0);
+    }
+
+    private static Map<?, ?> preview(String mappings, String message, boolean validation) {
+        Map<String, Object> config = (Map<String, Object>) FhirJson.parse(step(mappings));
+        config.put("validateOutput", validation);
+        config.put("sequenceNumber", "7");
+        config.put("bundleTargets", "[{\"name\":\"preview\"}]");
+        return (Map<?, ?>) FhirJson.parse(FhirMapperTester.test(FhirJson.write(Map.of(
+                "step", config, "dataType", "JSON", "message", message)), ENVIRONMENT));
     }
 
     @Test public void aRuntimeDiagnosticPreservesSlicesAndTheOriginalExpression() {
@@ -109,17 +118,66 @@ public class FhirMapperTesterTest {
         assertEquals("broken(", error.get("expression"));
     }
 
-    @Test public void rootRulesHaveDiagnosticsAndTypeErrorsKeepTheirExistingBehavior() {
+    @Test public void rootRulesHaveDiagnostics() {
         Map<?, ?> error = diagnostic("[{\"key\":\"Patient\",\"each\":\"missingList()\",\"variable\":\"p\",\"path\":[]}]");
         assertEquals("iteration", error.get("phase"));
         assertEquals("[]", error.get("path").toString());
         error = diagnostic("[{\"key\":\"Patient\",\"condition\":\"missingCondition()\",\"path\":[]}]");
         assertEquals("condition", error.get("phase"));
-        Map<String, Object> config = (Map<String, Object>) FhirJson.parse(step("[" + value("Patient.gender", "code", "msg.absent.value", "[[\"gender\"]]") + "]"));
-        config.put("validateOutput", false);
-        Map<?, ?> result = (Map<?, ?>) FhirJson.parse(FhirMapperTester.test(FhirJson.write(Map.of(
-                "step", config, "dataType", "JSON", "message", "{}")), ENVIRONMENT));
+    }
+
+    @Test public void typeErrorsAreReportedInValuesConditionsAndIterationsWithOrWithoutValidation() {
+        String expression = "msg.absent.value";
+        String[] rules = {
+                value("Patient.gender", "code", expression, "[[\"gender\"]]"),
+                "{\"key\":\"Patient\",\"condition\":\"" + expression + "\",\"path\":[]}",
+                "{\"key\":\"Patient\",\"each\":\"" + expression + "\",\"variable\":\"p\",\"path\":[]}"
+        };
+        String[] phases = {"value", "condition", "iteration"};
+        for (boolean validation : new boolean[] {false, true}) {
+            for (int i = 0; i < rules.length; i++) {
+                Map<?, ?> error = diagnostic("[" + rules[i] + "]", validation);
+                assertEquals("TypeError", error.get("errorType"));
+                assertEquals(phases[i], error.get("phase"));
+                assertEquals(expression, error.get("expression"));
+                assertEquals("0", error.get("ruleIndex").toString());
+            }
+        }
+    }
+
+    @Test public void aTypeErrorInAnIterationBodyIsAttributedToItsValueRule() {
+        String mappings = "[{\"key\":\"Patient.name\",\"each\":\"[{}]\",\"variable\":\"n\",\"path\":[[\"name\",\"#0\"]]},"
+                + value("Patient.name.family", "string", "n.absent.value", "[[\"name\",\"#0\"],[\"family\"]]") + "]";
+        Map<?, ?> error = diagnostic(mappings);
+        assertEquals("TypeError", error.get("errorType"));
+        assertEquals("value", error.get("phase"));
+        assertEquals("Patient.name.family", error.get("key"));
+        assertEquals("1", error.get("ruleIndex").toString());
+    }
+
+    @Test public void explicitMissingValuesAndGuardsKeepOmissionDistinctFromFalseAndZero() {
+        for (String expression : new String[] {"undefined", "null", "''", "'   '", "msg.absent && msg.absent.value"}) {
+            Map<?, ?> result = preview("[" + value("Patient.gender", "code", expression, "[[\"gender\"]]") + "]", "{}", false);
+            assertEquals(result.toString(), "[]", result.get("errors").toString());
+            Map<?, ?> output = (Map<?, ?>) FhirJson.parse(result.get("output").toString());
+            assertEquals("Patient", output.get("resourceType"));
+            assertTrue(output.toString(), !output.containsKey("gender"));
+        }
+        Map<?, ?> result = preview("[" + value("Patient.active", "boolean", "false", "[[\"active\"]]") + ","
+                + value("Patient.multipleBirthInteger", "integer", "0", "[[\"multipleBirthInteger\"]]") + "]", "{}", false);
+        Map<?, ?> output = (Map<?, ?>) FhirJson.parse(result.get("output").toString());
+        assertEquals(Boolean.FALSE, output.get("active"));
+        assertEquals("0", output.get("multipleBirthInteger").toString());
+        result = preview("[{\"key\":\"Patient.name\",\"each\":\"msg.absent\",\"variable\":\"n\",\"path\":[[\"name\",\"#0\"]]},"
+                + value("Patient.name.family", "string", "n.value", "[[\"name\",\"#0\"],[\"family\"]]") + "]", "{}", false);
         assertEquals("[]", result.get("errors").toString());
+        output = (Map<?, ?>) FhirJson.parse(result.get("output").toString());
+        assertTrue(output.toString(), !output.containsKey("name"));
+        result = preview("[{\"key\":\"Patient.name\",\"condition\":\"msg.absent\",\"path\":[[\"name\",\"#0\"]]},"
+                + value("Patient.name.family", "string", "'ignored'", "[[\"name\",\"#0\"],[\"family\"]]") + "]", "{}", false);
+        assertEquals("[]", result.get("errors").toString());
+        output = (Map<?, ?>) FhirJson.parse(result.get("output").toString());
+        assertTrue(output.toString(), !output.containsKey("name"));
     }
 
     @Test public void errorsOutsideARuleAreNotAttributedToThePreviousOne() {

@@ -32,13 +32,19 @@ le channel, reste un contrôle supplémentaire indépendant.
   discriminants de slicing `type`, `profile` et `exists`.
 - Traduction locale sans `dependsOn`/`product` ni traduction inverse.
 - Test isolé d'une étape : les références vers les autres étapes sont simulées.
-- Les `TypeError` d'expressions sont encore assimilées à des valeurs absentes,
-  comme dans le POC. Leur traitement explicite fera l'objet d'une évolution du
-  contrat et de tests dédiés.
 - Un template JSON natif impose la précision des nombres JavaScript.
 
 L'intégration du catalogue avec le datatype utilise des points internes de sa
 version 1.5.1 : voir [Integration-FHIR-Data-Type.md](Integration-FHIR-Data-Type.md).
+
+## Évolution des erreurs d'expression
+
+Les `TypeError` ne sont plus masquées comme dans le POC : elles arrêtent le
+traitement avec le contexte de la règle, même sans validation FHIR. Les valeurs
+explicitement absentes restent omises. Les anciens accès facultatifs doivent
+être gardés ; voir la [migration](Specification-mapping.md#migration-des-accès-facultatifs).
+Ce changement concerne le comportement des expressions, pas la structure des
+exports JSON/XML.
 
 ## Vérifier
 

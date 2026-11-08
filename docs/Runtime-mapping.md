@@ -164,8 +164,11 @@ Les expressions voient la source conservée par la première étape FHIR, même 
 ## 6. Valeurs absentes, conversions et erreurs
 
 - Une expression donnant `undefined`, `null` ou une chaîne vide n'ajoute pas l'élément.
-- Un `TypeError` pendant l'expression de valeur est traité comme une absence. Dans une condition, il vaut faux ; dans une expression de liste, il donne zéro itération. Cela facilite les segments/répétitions absents, mais peut aussi masquer une erreur de chemin : tester les mappings et valider le résultat reste nécessaire.
-- Les autres erreurs d'expression arrêtent le traitement en nommant l'élément.
+- Toute exception d'expression, y compris une `TypeError`, arrête le traitement
+  avec un diagnostic sur la règle. Une condition fausse ou une liste absente
+  doit résulter d'un retour explicite, pas d'une exception interceptée.
+  Les accès facultatifs du POC qui dépendaient des exceptions masquées doivent
+  être adaptés : voir la [migration](Specification-mapping.md#migration-des-accès-facultatifs).
 - Les booléens, entiers, dates et heures sont convertis. Une valeur incompatible provoque une erreur ; les contraintes FHIR détaillées sont ensuite vérifiées si la validation est activée.
 - Les dates HL7 v2 sont converties vers FHIR. Un `instant` doit inclure une heure ; sans fuseau source, le fuseau du serveur est utilisé.
 - Un décimal est conservé sous une représentation interne dédiée. Le sérialiseur du runtime préserve sa précision et ses zéros finaux. Un template JSON natif impose les limites des nombres JavaScript.

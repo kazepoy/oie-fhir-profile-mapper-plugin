@@ -11,10 +11,11 @@
     var FhirTools = Packages.org.oie.fhir.mapper.fhir.FhirFacade;
     var FhirTerminology = Packages.org.oie.fhir.mapper.fhir.FhirFacade;
 
-    function failure(diagnostic, phase, message) {
+    function failure(diagnostic, phase, message, cause) {
         var context = {};
         for (var key in (diagnostic || {})) context[key] = diagnostic[key];
         context.phase = phase;
+        context.errorType = cause.name ? String(cause.name) : null;
         var result = new Error(message);
         result.fhirMapperDiagnostic = JSON.stringify(context);
         return result;
@@ -592,30 +593,26 @@
         // terminologyServer, profiles, fhirVersion, authorization, cacheSeconds, timeoutSeconds of the step
         options: {},
 
-        // Sets the value of an element; the expression runs here, so a TypeError (a missing segment
-        // or repetition in the source, e.g. msg['PID']['PID.3'][1] of one PID.3) is "no value".
+        // An absent result omits the element; every exception, including TypeError, is an error.
         // translation: null, or {conceptMap, source, target, unmapped, value, keepSource, fallback}.
         set: function (root, path, type, expression, element, translation, diagnostic) {
             var value;
             try {
                 value = expression();
             } catch (e) {
-                if (e instanceof TypeError) {
-                    return;
-                }
-                throw failure(diagnostic, 'value', 'FHIR Profile Mapper, ' + element + ': ' + e.message);
+                throw failure(diagnostic, 'value', 'FHIR Profile Mapper, ' + element + ': ' + e.message, e);
             }
             if (translation) {
                 try {
                     value = translateValue(value, translation, type, element, this.options);
                 } catch (e) {
-                    throw failure(diagnostic, 'translation', 'FHIR Profile Mapper, ' + element + ': ' + e.message);
+                    throw failure(diagnostic, 'translation', 'FHIR Profile Mapper, ' + element + ': ' + e.message, e);
                 }
             }
             try {
                 value = convert(value, type, element);
             } catch (e) {
-                throw failure(diagnostic, 'conversion', 'FHIR Profile Mapper, ' + element + ': ' + e.message);
+                throw failure(diagnostic, 'conversion', 'FHIR Profile Mapper, ' + element + ': ' + e.message, e);
             }
             if (value === undefined) {
                 return;
@@ -662,29 +659,23 @@
             }
         },
 
-        // Whether a condition holds; a TypeError (a missing segment) is false.
+        // Whether a condition holds; exceptions are never interpreted as a false condition.
         when: function (expression, element, diagnostic) {
             try {
                 return !!expression();
             } catch (e) {
-                if (e instanceof TypeError) {
-                    return false;
-                }
-                throw failure(diagnostic, 'condition', 'FHIR Profile Mapper, condition of ' + element + ': ' + e.message);
+                throw failure(diagnostic, 'condition', 'FHIR Profile Mapper, condition of ' + element + ': ' + e.message, e);
             }
         },
 
         // Runs body(item, index) for each item of the list the expression gives; nothing when it
-        // gives nothing (or a TypeError: a missing segment).
+        // gives nothing. Exceptions are reported with the iteration's context.
         each: function (expression, body, element, diagnostic) {
             var list;
             try {
                 list = expression();
             } catch (e) {
-                if (e instanceof TypeError) {
-                    return;
-                }
-                throw failure(diagnostic, 'iteration', 'FHIR Profile Mapper, for each ' + element + ': ' + e.message);
+                throw failure(diagnostic, 'iteration', 'FHIR Profile Mapper, for each ' + element + ': ' + e.message, e);
             }
             var all = items(list);
             for (var i = 0; i < all.length; i++) {

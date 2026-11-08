@@ -151,6 +151,11 @@ public class FhirNamedBundleTest {
         p.setMappings("[" + field("managingOrganization", "Reference", "({reference:fhirRef('missing', 0, true)})") + "]");
         fails("unresolved reference missing", bundle("one", "collection", "result"), p);
     }
+    @Test public void aTypeErrorPreventsPublishingPreviouslyBuiltResources() throws Exception {
+        FhirProfileMapperStep broken = patient("one");
+        broken.setMappings("[" + field("active", "boolean", "({}).missing.value") + "]");
+        fails("FHIR Profile Mapper, X.active", bundle("one", "collection", "result"), patient("one"), broken);
+    }
     @Test public void repeatedMessagesDoNotShareResources() throws Exception {
         FhirProfileMapperStep create = bundle("one", "collection", "");
         String a = run(new HashMap<>(), create, patient("one"));

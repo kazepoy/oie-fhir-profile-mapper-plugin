@@ -37,6 +37,16 @@ Content-Type: text/plain; charset=UTF-8
 
 < ./diagnostic-error.json
 
+### Une donnée facultative absente exige une garde explicite dans l'expression
+# msg.optional.gender lève une TypeError ; msg.optional && msg.optional.gender omet l'élément.
+POST {{oie}}/extensions/fhir-profile-mapper/test
+Authorization: {{auth}}
+X-Requested-With: OpenAPI
+Accept: application/json
+Content-Type: text/plain; charset=UTF-8
+
+< ./typeerror-error.json
+
 ### Une ligne SQL XML de la table métier patient vers ExampleLabPatient
 POST {{sqlPatient}}
 Content-Type: application/xml; charset=UTF-8

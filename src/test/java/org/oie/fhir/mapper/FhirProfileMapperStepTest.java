@@ -50,7 +50,7 @@ public class FhirProfileMapperStepTest {
     private static final String MAPPINGS = "["
             + "{\"element\":\"Patient.identifier:ipp.value\",\"type\":\"string\",\"expression\":\"msg['PID']['PID.3'][0]['PID.3.1'].toString()\",\"path\":[[\"identifier\",\"ipp#0\"],[\"value\"]]},"
             + "{\"element\":\"Patient.identifier:ins.value\",\"type\":\"string\",\"expression\":\"msg['PID']['PID.3'][1]['PID.3.1']\",\"path\":[[\"identifier\",\"ins#0\"],[\"value\"]]},"
-            + "{\"element\":\"Patient.identifier:third.value\",\"type\":\"string\",\"expression\":\"msg['PID']['PID.3'][2]['PID.3.1'].toString()\",\"path\":[[\"identifier\",\"third#0\"],[\"value\"]]},"
+            + "{\"element\":\"Patient.identifier:third.value\",\"type\":\"string\",\"expression\":\"msg['PID']['PID.3'].length() > 2 ? msg['PID']['PID.3'][2]['PID.3.1'].toString() : undefined\",\"path\":[[\"identifier\",\"third#0\"],[\"value\"]]},"
             + "{\"element\":\"Patient.name.family\",\"type\":\"string\",\"expression\":\"msg['PID']['PID.5']['PID.5.1']['PID.5.1.1']\",\"path\":[[\"name\",\"#0\"],[\"family\"]]},"
             + "{\"element\":\"Patient.name.given\",\"type\":\"string\",\"expression\":\"msg['PID']['PID.5']['PID.5.2']\",\"path\":[[\"name\",\"#0\"],[\"given\",\"#0\"]]},"
             + "{\"element\":\"Patient.name.given[1]\",\"type\":\"string\",\"expression\":\"msg['PID']['PID.5']['PID.5.3']\",\"path\":[[\"name\",\"#0\"],[\"given\",\"#1\"]]},"
@@ -188,7 +188,7 @@ public class FhirProfileMapperStepTest {
                 + "{\"key\":\"Patient.telecom\",\"each\":\"msg['PID']['PID.13']\",\"variable\":\"t\",\"path\":[[\"telecom\",\"#0\"]]},"
                 + "{\"key\":\"Patient.telecom.value\",\"type\":\"string\",\"expression\":\"t['PID.13.1']\",\"path\":[[\"telecom\",\"#0\"],[\"value\"]]},"
                 + "{\"key\":\"Patient.telecom.system\",\"fixed\":\"phone\",\"when\":1,\"path\":[[\"telecom\",\"#0\"],[\"system\"]]},"
-                + "{\"key\":\"Patient.contact\",\"each\":\"msg['NK1'][5]['NK1.2']\",\"variable\":\"c\",\"path\":[[\"contact\",\"#0\"]]},"
+                + "{\"key\":\"Patient.contact\",\"each\":\"msg['NK1'].length() > 5 ? msg['NK1'][5]['NK1.2'] : []\",\"variable\":\"c\",\"path\":[[\"contact\",\"#0\"]]},"
                 + "{\"key\":\"Patient.contact.name.text\",\"type\":\"string\",\"expression\":\"c.toString()\",\"path\":[[\"contact\",\"#0\"],[\"name\"],[\"text\"]]},"
                 + "{\"key\":\"Patient.gender\",\"type\":\"code\",\"expression\":\"'male'\",\"path\":[[\"gender\"]]}"
                 + "]"));
