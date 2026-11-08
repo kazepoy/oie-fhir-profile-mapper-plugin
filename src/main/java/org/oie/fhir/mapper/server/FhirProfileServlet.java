@@ -17,6 +17,8 @@ import javax.ws.rs.core.SecurityContext;
 
 import com.mirth.connect.client.core.ClientException;
 import org.oie.fhir.mapper.FhirProfileServletInterface;
+import org.oie.fhir.mapper.FhirProfileMapperStep;
+import org.oie.fhir.mapper.util.FhirJson;
 import org.oie.fhir.mapper.fhir.FhirFacade;
 import com.mirth.connect.model.codetemplates.CodeTemplate;
 import com.mirth.connect.model.codetemplates.CodeTemplateProperties.CodeTemplateType;
@@ -35,6 +37,22 @@ public class FhirProfileServlet extends MirthServlet implements FhirProfileServl
 
     public FhirProfileServlet(@Context HttpServletRequest request, @Context SecurityContext sc) {
         super(request, sc);
+    }
+
+    @Override
+    public String getFunctions() { return FhirProfileMapperStep.functionCatalog(); }
+
+    @Override
+    public String getSource(String request) throws ClientException {
+        try {
+            Object parsed = FhirJson.parse(request);
+            if (!(parsed instanceof Map)) throw new IllegalArgumentException("The source request must be an object.");
+            Map<?, ?> fields = (Map<?, ?>) parsed;
+            String type = fields.get("dataType") == null ? "HL7V2" : fields.get("dataType").toString().toUpperCase();
+            if (!List.of("HL7V2", "XML", "JSON", "RAW").contains(type)) throw new IllegalArgumentException("Unsupported source data type.");
+            String message = fields.get("message") == null ? "" : fields.get("message").toString();
+            return FhirJson.write(Map.of("dataType", "HL7V2".equals(type) ? "XML" : type, "message", SERVER.serialize(type, message)));
+        } catch (Exception e) { throw new ClientException(e.getMessage(), e); }
     }
 
     @Override

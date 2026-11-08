@@ -79,6 +79,12 @@ quatre formes, enregistrées séparément :
 | Condition | `condition` | Exécuter les règles descendantes si l'expression est vraie. |
 | Constante/pattern | `fixed`, `when` facultatif | Compléter les conteneurs construits sans écraser une valeur mappée. |
 
+`id` est un identifiant de règle optionnel, unique dans l'étape, composé de
+1 à 128 caractères (`A-Z`, `a-z`, chiffres, `_`, `.`, `:`, `-`, avec une lettre
+ou un chiffre en premier). Il est conservé pendant les modifications et renvoyé
+comme `ruleId` dans les diagnostics et traces. Les anciens exports sans id
+restent acceptés. Voir le [parcours éditeur et IA](Assistants-et-IA.md).
+
 Chaque segment de `path` est `[nom]` pour une propriété simple ou
 `[nom, instance]` pour une entrée répétée. `#0`, `#1` et `ipp#0` sont des marqueurs
 d'instance/slice, jamais des propriétés du JSON FHIR. Le nom est le nom FHIR
@@ -265,6 +271,7 @@ Il contient aussi :
 - `errorType` : nom de l'exception JavaScript d'origine, s'il est disponible
   (`TypeError`, `ReferenceError`, `Error`, etc.) ;
 - `ruleIndex` : position de la règle dans le tableau `mappings`, à partir de zéro ;
+- `ruleId` : identifiant stable `id` de la règle, s'il existe ;
 - `path` : chemin déclaré par la règle, avec ses marqueurs d'instance ;
 - `expression` : texte de l'expression de cette règle.
 
@@ -293,14 +300,15 @@ déployé reste nécessaire pour vérifier références, transports et contexte 
 
 `key` identifie une position d'arbre, pas une règle unique : une itération et
 une condition peuvent partager cette clé. `ruleIndex` les distingue dans cette
-révision du mapping. Il n'existe pas encore d'identifiant stable distinct.
+révision du mapping. Le champ optionnel `id` identifie la règle entre révisions.
 Les marqueurs `//~fhir` relient les erreurs de
 syntaxe à la règle dans le script généré ; le runtime attache les métadonnées
 de la règle aux erreurs d'expression, de traduction et de conversion.
 L'API de test accepte désormais une option `trace` et renvoie les événements
 structurés à la demande ; son contrat et son export sont décrits dans
-[Trace.md](Trace.md). Les identifiants stables et la trace des messages déployés
-restent à réaliser. La structure d'une étape et de ses règles est inchangée.
+[Trace.md](Trace.md). La trace des messages déployés reste à réaliser.
+Les API `GET /functions` (catalogue) et `POST /source` (sérialisation du message
+exemple par OIE) complètent l'assistance ; voir [Assistants-et-IA.md](Assistants-et-IA.md).
 
 ## 9. Schéma et vérification reproductible
 

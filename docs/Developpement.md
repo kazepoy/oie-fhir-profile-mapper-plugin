@@ -9,6 +9,10 @@ Le contrat actuel, son schéma et les commandes de contrôle hors ligne sont dan
 sont exécutés par `MappingSpecificationTest` pendant le build Maven, y compris
 dans l'image Docker de démonstration.
 
+Les assistants, les API de catalogue et de sérialisation, les ids de règles et
+le parcours d'édition des exports XML sont décrits dans
+[Assistants-et-IA.md](Assistants-et-IA.md).
+
 ## Structure
 
 | Chemin | Rôle |

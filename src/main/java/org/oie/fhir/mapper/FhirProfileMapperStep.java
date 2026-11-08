@@ -67,6 +67,13 @@ public class FhirProfileMapperStep extends Step {
 
     public static final String PLUGIN_POINT = "FHIR Profile Mapper";
 
+    public static String functionCatalog() {
+        try (InputStream in = FhirProfileMapperStep.class.getResourceAsStream("mapper-functions.json")) {
+            if (in == null) throw new IllegalStateException("mapper-functions.json is missing.");
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) { throw new UncheckedIOException(e); }
+    }
+
     private static final String RUNTIME_RESOURCE = "profile-mapper-runtime.js";
     /** Before the code of each element in the script, so that an error line leads to the element. */
     private static final String KEY_COMMENT = "//@ ";
@@ -208,8 +215,13 @@ public class FhirProfileMapperStep extends Step {
         Map<String, Map<?, ?>> iterations = new HashMap<>();
         Map<String, String> conditions = new HashMap<>();
         Map<String, Integer> depths = new HashMap<>();
+        Set<String> ruleIds = new HashSet<>();
         for (Object entry : entries) {
             Map<?, ?> m = entry(entry);
+            if (m.containsKey("id") && (!(m.get("id") instanceof String)
+                    || !text(m.get("id")).matches("[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}") || !ruleIds.add(text(m.get("id"))))) {
+                throw error("rule ids must be valid and unique: " + text(m.get("id")));
+            }
             String key = key(m);
             boolean root = ((List<?>) m.get("path")).isEmpty();
             if (m.containsKey("each") && !text(m.get("each")).trim().isEmpty()) {
@@ -417,6 +429,7 @@ public class FhirProfileMapperStep extends Step {
                 if (entries.get(i) == rule) { diagnostic.put("ruleIndex", i); break; }
             }
             diagnostic.put("key", key(rule));
+            diagnostic.put("ruleId", rule.get("id") == null ? FhirJson.NULL : rule.get("id"));
             diagnostic.put("path", rule.get("path"));
             String field = "iteration".equals(phase) ? "each" : "condition".equals(phase) ? "condition" : "expression";
             diagnostic.put("expression", rule.containsKey(field) ? rule.get(field) : FhirJson.NULL);

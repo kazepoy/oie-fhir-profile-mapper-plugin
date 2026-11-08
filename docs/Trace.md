@@ -54,8 +54,9 @@ de règle ni une version sémantique du format. L'ordre des propriétés, les es
 des chaînes JSON imbriquées ou les métadonnées OIE peuvent la faire changer.
 Elle ne verrouille ni le message source, ni les profils, ni les fonctions du
 serveur. Le couple `mappingHash`/`ruleIndex` relie un événement à la règle de
-cette représentation précise. Des identifiants stables entre révisions restent
-à concevoir pour la trace des channels et les modifications par agents IA.
+cette représentation précise. Lorsqu'une règle possède un `id`, l'événement
+porte aussi `ruleId`, conservé entre révisions par l'éditeur et les agents.
+Les anciens mappings sans id continuent d'utiliser `ruleIndex` et l'empreinte.
 
 ## Événements
 

@@ -6,11 +6,13 @@ import fs from "node:fs";
 import vm from "node:vm";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { randomUUID } from "node:crypto";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const code = fs.readFileSync(path.join(here, "../web/plugin.js"), "utf8").replace("export function register", "function register");
-const context = vm.createContext({ console });
-vm.runInContext(code + "\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample, mapperDiagnostic, mapperTraceRows, mapperTraceExport };", context);
+const catalog = JSON.parse(fs.readFileSync(path.join(here, "../../src/main/resources/org/oie/fhir/mapper/mapper-functions.json"), "utf8"));
+const context = vm.createContext({ console, crypto: { randomUUID } });
+vm.runInContext(code + `\nMAPPER_FUNCTIONS = ${JSON.stringify(catalog)};\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample, mapperDiagnostic, mapperTraceRows, mapperTraceExport, mapperSourcePaths, mapperHelpUrl, mapperJsonImport, mapperRuleIds, mapperCompletionContext, MapperExpression, setReact: value => React = value };`, context);
 const { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample } = context.t;
 
 const el = (id, min, max, types, more = {}) => ({ id, path: id.replace(/:[^.]+/g, ""), min, max, base: { max: more.baseMax ?? max }, type: types.map((t) => (typeof t === "string" ? { code: t } : t)), ...more });
@@ -54,6 +56,49 @@ const tree = (keys = [], showAll = false) => makeTree(patient, { version: "R4", 
 // Objects of the vm context have other prototypes: compare them as plain JSON.
 const plain = (x) => JSON.parse(JSON.stringify(x));
 const labels = (t, node) => (t.children(node) || []).map((n) => n.label);
+
+test("Ctrl+Space opens completion without a prefix, including scoped variables and sample paths", () => {
+  const root = { key: "Patient" }, name = { key: "Patient.name", parent: root }, family = { key: "Patient.name.family", parent: name };
+  const iterations = new Map([[root.key, { variable: "p", expression: "msg['patients']" }], [name.key, { variable: "n", expression: "p['names']" }]]);
+  const scope = context.t.mapperCompletionContext(family, iterations, ['msg["patients"][0]["id"]']);
+  assert.deepEqual(plain(scope.variables), ["n", "nIndex", "p", "pIndex"]);
+  const menu = functionCompletion("", 0, 0, scope, true);
+  assert.ok(menu.items.some((fn) => fn.name === "nIndex"));
+  assert.ok(menu.items.some((fn) => fn.name === 'p["id"]'));
+  const each = context.t.mapperCompletionContext(name, iterations, [], "iteration");
+  assert.deepEqual(plain(each.variables), ["p", "pIndex"]);
+  assert.equal(functionCompletion("'unfinished", 11, 11, scope, true), null);
+  assert.ok(functionCompletion("uuid", 4, 4, scope, true).items.some((fn) => fn.name === "fhirUuid"));
+  const updates = [];
+  context.t.setReact({ createElement: (tag, props, ...children) => ({ tag, props, children }), useRef: value => ({ current: value }),
+    useId: () => "completion", useState: value => [value, next => updates.push(next)], useLayoutEffect: () => {} });
+  const field = context.t.MapperExpression({ value: "", onChange: () => {}, completionContext: scope });
+  let prevented = false;
+  field.children[0].props.onKeyDown({ ctrlKey: true, code: "Space", nativeEvent: { isComposing: false },
+    target: { value: "", selectionStart: 0, selectionEnd: 0 }, preventDefault: () => prevented = true, stopPropagation: () => {} });
+  assert.ok(prevented);
+  assert.ok(updates[0].items.length);
+});
+
+test("FHIR help uses the selected release and a core definition anchor rather than an IG slice", () => {
+  assert.equal(context.t.mapperHelpUrl("R4B", "Patient", "Patient.identifier:ipp.value"), "https://hl7.org/fhir/R4B/patient-definitions.html#Patient.identifier");
+  assert.equal(context.t.mapperHelpUrl("R5", "Patient", "Patient.deceased[x].deceasedDateTime"), "https://hl7.org/fhir/R5/patient-definitions.html#Patient.deceased%5Bx%5D");
+});
+
+test("source suggestions use sample structure and JSON round trips preserve rules and OIE identity", () => {
+  assert.deepEqual(plain(context.t.mapperSourcePaths({ dataType: "JSON", message: '{"rows":[{"ipp":"001"}]}' })), ['msg["rows"]', 'msg["rows"][0]', 'msg["rows"][0]["ipp"]']);
+  const original = { __type: "org.oie.fhir.mapper.FhirProfileMapperStep", sequenceNumber: "2", enabled: false,
+    action: "resource", resourceType: "Patient", mappings: JSON.stringify([{ id: "stable-1", key: "Patient.active", type: "boolean", expression: "true", path: [["active"]] }]), bundleTargets: "[]", customMetadata: "kept" };
+  const edited = context.t.mapperJsonImport(original, JSON.stringify({ ...original, sequenceNumber: "99", enabled: true, mappings: original.mappings.replace('true', 'false') }));
+  assert.equal(edited.sequenceNumber, "2"); assert.equal(edited.enabled, false); assert.equal(edited.customMetadata, "kept");
+  assert.equal(JSON.parse(edited.mappings)[0].id, "stable-1");
+  const reopened = context.t.mapperJsonImport(original, JSON.stringify(edited));
+  assert.equal(reopened.mappings, edited.mappings);
+  assert.throws(() => context.t.mapperJsonImport(original, '{"mappings":[]}'));
+  const rules = JSON.parse(original.mappings);
+  assert.equal(context.t.mapperRuleIds([{ ...rules[0], expression: "false" }], rules)[0].id, "stable-1");
+  assert.throws(() => context.t.mapperRuleIds([rules[0], rules[0]]));
+});
 
 test("diagnostics show the step, slice path and phase and select the right editor field", () => {
   const error = { step: { name: "Patient", resourceType: "Patient" }, key: "Patient.identifier:ipp.value",

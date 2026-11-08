@@ -46,6 +46,23 @@ public class FhirMapperTesterTest {
         return "{\"key\":\"" + key + "\",\"type\":\"" + type + "\",\"expression\":" + FhirJson.write(expression) + ",\"path\":" + path + "}";
     }
 
+    @Test public void thePublishedFunctionCatalogueMatchesTheActualRuntime() {
+        List<?> catalog = (List<?>) FhirJson.parse(org.oie.fhir.mapper.FhirProfileMapperStep.functionCatalog());
+        String expression = catalog.stream().map(item -> "typeof " + ((Map<?, ?>) item).get("name") + " === 'function'")
+                .collect(java.util.stream.Collectors.joining(" && "));
+        Map<?, ?> result = preview("[" + value("Patient.active", "boolean", expression, "[[\"active\"]]") + "]", "{}", false);
+        assertEquals("[]", result.get("errors").toString());
+        assertTrue(result.get("output").toString(), result.get("output").toString().contains("\"active\":true"));
+    }
+
+    @Test public void stableRuleIdsSurviveDiagnosticsAndDuplicateIdsAreRejected() {
+        String rule = value("Patient.gender", "code", "msg.absent.value", "[[\"gender\"]]");
+        rule = rule.replace("{\"key\"", "{\"id\":\"patient-gender\",\"key\"");
+        assertEquals("patient-gender", diagnostic("[" + rule + "]").get("ruleId"));
+        Map<?, ?> result = (Map<?, ?>) FhirJson.parse(FhirMapperTester.script(step("[" + rule + "," + rule + "]")));
+        assertTrue(result.get("errors").toString(), result.get("errors").toString().contains("unique"));
+    }
+
     private static Map<?, ?> diagnostic(String mappings) {
         return diagnostic(mappings, false);
     }

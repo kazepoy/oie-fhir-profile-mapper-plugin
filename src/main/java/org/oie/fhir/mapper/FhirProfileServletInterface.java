@@ -28,6 +28,19 @@ import com.mirth.connect.client.core.api.MirthOperation;
 @Path("/extensions/fhir-profile-mapper")
 public interface FhirProfileServletInterface extends BaseServletInterface {
 
+    @GET
+    @Path("/functions")
+    @Produces(MediaType.APPLICATION_JSON)
+    @MirthOperation(name = "getFhirMapperFunctions", display = "Get mapper functions", permission = Permissions.CHANNELS_MANAGE)
+    String getFunctions() throws ClientException;
+
+    @POST
+    @Path("/source")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
+    @MirthOperation(name = "getFhirMapperSource", display = "Read mapper sample", permission = Permissions.CHANNELS_MANAGE)
+    String getSource(String request) throws ClientException;
+
     /**
      * The resource profiles in the packages, as a JSON array of objects with url, name, title and type.
      *

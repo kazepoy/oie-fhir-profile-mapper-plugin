@@ -34,6 +34,10 @@ def errors(step):
         })
         for error in validator.iter_errors(content):
             yield f"$.{field} (décodé){error.json_path[1:]}: {error.message}"
+        if field == "mappings" and isinstance(content, list):
+            ids = [rule["id"] for rule in content if isinstance(rule, dict) and isinstance(rule.get("id"), str)]
+            if len(ids) != len(set(ids)):
+                yield "$.mappings : les ids de règle doivent être uniques dans une étape."
 
 
 def main():

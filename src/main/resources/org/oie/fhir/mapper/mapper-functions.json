@@ -1,0 +1,365 @@
+[
+  {
+    "name": "fhirUuid",
+    "signature": "fhirUuid()",
+    "description": "A random UUID, without the urn:uuid: prefix.",
+    "example": "fhirUuid()",
+    "returnType": "string",
+    "contexts": [
+      "value",
+      "reference"
+    ],
+    "origin": "mapper",
+    "parameters": []
+  },
+  {
+    "name": "fhirRef",
+    "signature": "fhirRef(name, index = 0, reserve = false)",
+    "description": "The fullUrl under this Reference Name, shared across the selected Bundles. reserve=true reserves a forward reference, checked at completion.",
+    "example": "fhirRef('patient')",
+    "returnType": "string | undefined",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "mapper",
+    "parameters": [
+      {
+        "name": "name",
+        "optional": false
+      },
+      {
+        "name": "index",
+        "optional": true
+      },
+      {
+        "name": "reserve",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "fhirRefs",
+    "signature": "fhirRefs(name)",
+    "description": "All fullUrls added under this Reference Name, or an empty array.",
+    "example": "fhirRefs('obs-0')",
+    "returnType": "string[]",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "mapper",
+    "parameters": [
+      {
+        "name": "name",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "fhirFind",
+    "signature": "fhirFind(list, fn)",
+    "description": "The first item for which fn(item, index) is true, or undefined.",
+    "example": "fhirFind(msg['PID']['PID.3'], function (cx) { return cx['PID.3.5'] == 'PI'; })",
+    "returnType": "item | undefined",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "mapper",
+    "parameters": [
+      {
+        "name": "list",
+        "optional": false
+      },
+      {
+        "name": "fn",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "fhirFilter",
+    "signature": "fhirFilter(list, fn)",
+    "description": "An array of items for which fn(item, index) is true.",
+    "example": "fhirFilter(msg['OBX'], function (obx) { return obx['OBX.2'].toString() != 'ED'; })",
+    "returnType": "item[]",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "mapper",
+    "parameters": [
+      {
+        "name": "list",
+        "optional": false
+      },
+      {
+        "name": "fn",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "hl7Following",
+    "signature": "hl7Following(seg, name, stop)",
+    "description": "Following segments of this name. Stops at the same segment type by default; [] removes that limit.",
+    "example": "hl7Following(obr, 'OBX', ['OBR', 'ORC'])",
+    "returnType": "XML[]",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "mapper",
+    "parameters": [
+      {
+        "name": "seg",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "optional": false
+      },
+      {
+        "name": "stop",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "hl7Preceding",
+    "signature": "hl7Preceding(seg, name, stop)",
+    "description": "The closest preceding segment of this name, or undefined. Optional stop works as in hl7Following.",
+    "example": "hl7Preceding(obx, 'OBR', [])",
+    "returnType": "XML | undefined",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "mapper",
+    "parameters": [
+      {
+        "name": "seg",
+        "optional": false
+      },
+      {
+        "name": "name",
+        "optional": false
+      },
+      {
+        "name": "stop",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "hl7Ordinal",
+    "signature": "hl7Ordinal(seg)",
+    "description": "The segment's index among segments of the same name, starting at 0.",
+    "example": "hl7Ordinal(obr)",
+    "returnType": "integer",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "mapper",
+    "parameters": [
+      {
+        "name": "seg",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "$c",
+    "signature": "$c(key, value?)",
+    "description": "Read channelMap, or write when value is supplied.",
+    "example": "$c('key')",
+    "returnType": "any",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "OIE",
+    "parameters": [
+      {
+        "name": "key",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "$s",
+    "signature": "$s(key, value?)",
+    "description": "Read sourceMap, or write when value is supplied.",
+    "example": "$s('key')",
+    "returnType": "any",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "OIE",
+    "parameters": [
+      {
+        "name": "key",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "$co",
+    "signature": "$co(key, value?)",
+    "description": "Read connectorMap, or write when value is supplied.",
+    "example": "$co('key')",
+    "returnType": "any",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "OIE",
+    "parameters": [
+      {
+        "name": "key",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "$r",
+    "signature": "$r(key, value?)",
+    "description": "Read responseMap, or write when value is supplied.",
+    "example": "$r('key')",
+    "returnType": "any",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "OIE",
+    "parameters": [
+      {
+        "name": "key",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "$g",
+    "signature": "$g(key, value?)",
+    "description": "Read globalMap, or write when value is supplied.",
+    "example": "$g('key')",
+    "returnType": "any",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "OIE",
+    "parameters": [
+      {
+        "name": "key",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "$gc",
+    "signature": "$gc(key, value?)",
+    "description": "Read globalChannelMap, or write when value is supplied.",
+    "example": "$gc('key')",
+    "returnType": "any",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "OIE",
+    "parameters": [
+      {
+        "name": "key",
+        "optional": false
+      },
+      {
+        "name": "value",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "$cfg",
+    "signature": "$cfg(key)",
+    "description": "Read configurationMap.",
+    "example": "$cfg('key')",
+    "returnType": "any",
+    "contexts": [
+      "value",
+      "condition",
+      "iteration",
+      "reference",
+      "translation"
+    ],
+    "origin": "OIE",
+    "parameters": [
+      {
+        "name": "key",
+        "optional": false
+      }
+    ]
+  }
+]

@@ -68,6 +68,7 @@
     "rule": {
       "type": "object", "required": ["path"], "additionalProperties": false,
       "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$"},
         "key": {"$ref": "#/$defs/nonblank"}, "element": {"$ref": "#/$defs/nonblank"},
         "path": {"$ref": "#/$defs/path"}, "type": {"type": "string"},
         "expression": {"$ref": "#/$defs/nonblank"}, "each": {"$ref": "#/$defs/nonblank"},

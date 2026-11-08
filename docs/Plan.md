@@ -18,20 +18,19 @@ La suite conserve le runtime et l'éditeur existants :
 1. **Étendre la trace aux channels** : l'API de test, l'affichage dans l'éditeur,
    l'export JSON, les bornes et la capture explicite des valeurs sont livrés.
    Ajouter les références réelles, la finalisation/publication des résultats et
-   la corrélation au message déployé. Définir les identifiants stables et le
-   versionnement nécessaires à cette corrélation.
-2. **Assistants de code** : catalogue commun au runtime et à l'éditeur,
+   la corrélation au message déployé. Utiliser les ids de règles optionnels
+   livrés et définir le versionnement nécessaire à cette corrélation.
+2. **Assistants de code — livrés** : catalogue commun au runtime et à l'éditeur,
    complétion contextuelle avec `Ctrl+Espace`, signatures, exemples, variables
    d'itération et liens d'aide vers les références officielles.
-3. **Parcours éditeur et agents IA** : créer, lire, modifier, vérifier, tester et
+3. **Parcours éditeur et agents IA — livrés techniquement** : créer, lire, modifier, vérifier, tester et
    expliquer un mapping/channel, puis le rouvrir dans l'éditeur sans perte.
-   Terminer les vérifications visuelles et les tests des parcours complets.
-4. **Stabilisation et livraison** : compatibilité de l'adaptateur FHIR Data Type,
-   migration du namespace vers `fr.kazepoy` avec compatibilité des exports,
-   GitHub Action de build sur tag et vérification de l'archive installable.
+   Le parcours via API et les modifications ciblées sont vérifiés ; le contrôle
+   visuel complet dans le navigateur reste à effectuer.
+
 
 Chaque livraison reste limitée, démontrable et committée séparément.
-Les performances et tests de charge, comme le mapper FML, sont mis de côté
+La stabilisation et livraison, les performances et tests de charge, comme le mapper FML, sont mis de côté
 dans des phases ultérieures, hors des jalons actuels.
 
 Le POC de référence est situé dans [fhir-datatype-Eclipse-OIE](https://github.com/kazepoy/fhir-datatype-Eclipse-OIE), sur la branche
@@ -179,7 +178,8 @@ de démo. Quatre tests Java exécutent les exemples valides et invalides publié
 
 Le contrat conserve les fragments par étape OIE, les expressions Rhino et le
 réglage de validation par ressource seule ou Bundle. Il ne possède pas encore
-de champ de version du format ni d'identifiant stable unique de règle. Les
+de champ de version du format. Les ids de règles optionnels sont désormais
+acceptés et conservés par l'éditeur et les outils. Les
 évolutions des diagnostics, des erreurs et de la trace d'aperçu sont détaillées
 à l'étape 4 ; le versionnement du mapping et la trace des channels restent à définir.
 
@@ -236,7 +236,8 @@ l'exception JavaScript d'origine. Une valeur explicitement absente reste omise ;
 les accès facultatifs doivent être gardés. La migration depuis le comportement
 du POC est décrite dans la [spécification](Specification-mapping.md#migration-des-accès-facultatifs).
 Les tests couvrent aussi l'absence de publication des ressources déjà construites
-lorsqu'une règle suivante échoue. Les identifiants stables restent à réaliser.
+lorsqu'une règle suivante échoue. Les ids de règles optionnels ont ensuite été
+ajoutés dans le jalon assistants et parcours IA.
 
 **Vérifié :** 89 tests Java dans le build Docker et 10 tests JavaScript. Les six
 canaux sont rejoués dans OIE sans modification de leurs exports. L'API vérifie
@@ -294,6 +295,20 @@ Sur un échec, retrouver la règle et la cause à partir de la trace ; vérifier
 que l'activation de la trace ne change pas le résultat d'un même traitement.
 
 ## Étape 5 — Construire l'éditeur graphique
+
+**Assistants et parcours éditeur/IA :** catalogue commun publié par le serveur,
+`Ctrl+Espace`, suggestions de fonctions, variables et chemins du message exemple,
+portées imbriquées, signatures et types de retour, pastilles d'aide officielle
+FHIR, import/export JSON d'une étape avec compilation avant application et ids
+stables optionnels. L'outil `tools/channel_mapping.py` extrait, explique et modifie
+une étape d'un export de channel en préservant le reste du fichier. Voir
+[Assistants-et-IA.md](Assistants-et-IA.md). Vérifié : 101 tests Java, 14 tests
+JavaScript et 8 tests Python. Le parcours réel a créé, modifié, déployé et relu
+un channel temporaire, vérifié le Patient produit et la trace de ses règles,
+puis supprimé ce seul channel. Les nouvelles API de catalogue et de sérialisation
+HL7 sont vérifiées. La vérification visuelle complète
+reste à effectuer lorsque l'outil navigateur sera disponible.
+
 
 Concevoir l'interface à partir du contrat JSON et des usages observés dans le POC :
 
@@ -400,10 +415,9 @@ des seuils convenus.
 de modèles logiques fournis par une IG, une StructureDefinition ou le format
 interne OIE E4X (à étudier avec la [documentation du contexte de script OIE](https://docs.openintegrationengine.org/engine/script_scope_and_user_api.html)). Réutiliser les fonctions communes identifiées pendant la première
 phase, sans imposer dès maintenant un moteur ou un format unique aux deux usages.
-## Compléments à planifier
+## Phase ultérieure — Stabilisation et livraison
 
-- Ajouter une GitHub Action de build déclenchée sur un tag.
-- Remplacer le package `org.oie.fhir` par `fr.kazepoy`, après vérification des
-  accès aux API protégées et de la compatibilité des exports de channels.
-- Déclencher la complétion avec `Ctrl+Espace` et proposer les suggestions adaptées au contexte dans les assistants de code.
-- Ajouter des pastilles d'aide `?` pointant vers les références officielles FHIR par défaut.
+Cette phase est mise de côté, comme les performances et la charge et le mapper
+FML : compatibilité approfondie de l'adaptateur FHIR Data Type, migration du
+namespace vers `fr.kazepoy` avec compatibilité des exports, GitHub Action de
+build sur tag et vérification des releases installables.
