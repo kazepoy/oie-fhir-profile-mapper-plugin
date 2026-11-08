@@ -50,3 +50,12 @@ node --test webadmin/test/
 Les tests Java exécutent les scripts générés dans Rhino, les tests JavaScript
 couvrent la logique de l'éditeur. La démonstration vérifie ensuite les chargeurs,
 API et channels réellement utilisés par OIE.
+
+Les six exports de canaux, leur IG et leurs messages d'entrée sont repris dans
+`demo/`. Les classes des étapes de mapping ont changé de namespace ; les
+propriétés du datatype conservent celui du plugin officiel. Le
+[guide de la démo](Demo.md) décrit leur rejeu automatisé et les résultats attendus.
+
+L'initialisation du plugin autorise explicitement sa classe d'étape dans le
+sérialiseur XML OIE. Le test `ChannelSerializationTest` couvre l'import/export
+et les anciens exports sans `validateOutput` : leur validation reste activée.

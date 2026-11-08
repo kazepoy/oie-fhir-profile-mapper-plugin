@@ -154,7 +154,7 @@ Ces routes demandent la permission Manage Channels. Le test est exécuté sur le
 
 **Test with a sample message** exécute l'étape seule. Son type et son contenu initiaux viennent du template entrant du transformeur concerné ; en destination, prévoir le message déjà nettoyé par la source. Les modifications du message de test sont mémorisées par channel, connecteur et transformeur de réponse éventuel. Il ne simule pas les autres étapes ni l'intégralité des Bundles nommés. Les références aux autres étapes utilisent des valeurs de remplacement. Une itération sur la ressource est montrée sous forme de collection de prévisualisation. Pour certifier les deux Bundles de laboratoire, envoyer un message au channel déployé et inspecter les deux résultats.
 
-**Generated script** montre la compilation réelle. **Validate Step** vérifie la configuration de l'étape ; un test de message vérifie aussi le comportement des expressions et la validation de leur résultat.
+**Generated script** montre la compilation réelle. **Validate Step** vérifie la configuration de l'étape ; un test de message vérifie aussi le comportement des expressions et, si elle est activée, la validation FHIR de leur résultat.
 
 ## 10. Limites et vérification
 

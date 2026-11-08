@@ -1,0 +1,696 @@
+<channel version="4.7.0">
+  <id>aa431dca-b805-4ac6-8dbd-e272b6fc4c18</id>
+  <nextMetaDataId>3</nextMetaDataId>
+  <name>ORU R01 vers deux Bundles labo FHIR</name>
+  <description>Un ORU^R01 construit une fois les ressources de laboratoire et les ajoute à labo-transaction (réponse HTTP sur /labo/, 8083) et labo-document (variable bundleDocument et destination Document labo FHIR). Identités et références communes ; requêtes seulement dans la transaction.</description>
+  <revision>1</revision>
+  <sourceConnector version="4.7.0">
+    <metaDataId>0</metaDataId>
+    <name>sourceConnector</name>
+    <properties class="com.mirth.connect.connectors.http.HttpReceiverProperties" version="4.7.0">
+      <pluginProperties />
+      <listenerConnectorProperties version="4.7.0">
+        <host>0.0.0.0</host>
+        <port>8083</port>
+      </listenerConnectorProperties>
+      <sourceConnectorProperties version="4.7.0">
+        <responseVariable>d1</responseVariable>
+        <respondAfterProcessing>true</respondAfterProcessing>
+        <processBatch>false</processBatch>
+        <firstResponse>false</firstResponse>
+        <processingThreads>1</processingThreads>
+        <resourceIds class="linked-hash-map">
+          <entry>
+            <string>Default Resource</string>
+            <string>[Default Resource]</string>
+          </entry>
+        </resourceIds>
+        <queueBufferSize>1000</queueBufferSize>
+      </sourceConnectorProperties>
+      <xmlBody>false</xmlBody>
+      <parseMultipart>false</parseMultipart>
+      <includeMetadata>false</includeMetadata>
+      <binaryMimeTypes>application/.*(?&lt;!json|xml)|image/.*|video/.*|audio/.*</binaryMimeTypes>
+      <binaryMimeTypesRegex>true</binaryMimeTypesRegex>
+      <responseContentType>application/fhir+json; charset=UTF-8</responseContentType>
+      <responseDataTypeBinary>false</responseDataTypeBinary>
+      <responseStatusCode>200</responseStatusCode>
+      <responseHeaders class="linked-hash-map" />
+      <responseHeadersVariable />
+      <useResponseHeadersVariable>false</useResponseHeadersVariable>
+      <charset>UTF-8</charset>
+      <contextPath>/labo</contextPath>
+      <timeout>30000</timeout>
+      <staticResources />
+    </properties>
+    <transformer version="4.7.0">
+      <elements>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
+          <name>Début chronométrage transformation</name>
+          <sequenceNumber>0</sequenceNumber>
+          <enabled>true</enabled>
+          <script>channelMap.put('__demoEtape', 'TRANSFORMATION');
+channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        <org.oie.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+          <name>Bundle transaction labo</name>
+          <sequenceNumber>1</sequenceNumber>
+          <enabled>true</enabled>
+          <fhirVersion>R4</fhirVersion>
+          <profiles>/fhir-ig</profiles>
+          <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleOruBundle</profileUrl>
+          <profileVersion />
+          <resourceType>Bundle</resourceType>
+          <addMetaProfile>true</addMetaProfile>
+          <setLastUpdated>false</setLastUpdated>
+          <variable />
+          <action>createBundle</action>
+          <bundleName>labo-transaction</bundleName>
+          <bundleType>transaction</bundleType>
+          <refName />
+          <terminologyServer>n/a</terminologyServer>
+          <terminologyAuthorization />
+          <terminologyCacheSeconds>300</terminologyCacheSeconds>
+          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
+          <mappings>[{"key": "Bundle.identifier.system", "element": "Bundle.identifier.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/sid/message-control-id'", "path": [["identifier"], ["system"]]}, {"key": "Bundle.identifier.value", "element": "Bundle.identifier.value", "type": "string", "expression": "msg['MSH']['MSH.10']['MSH.10.1'].toString()", "path": [["identifier"], ["value"]]}, {"key": "Bundle.timestamp", "element": "Bundle.timestamp", "type": "instant", "expression": "msg['MSH']['MSH.7']['MSH.7.1'].toString()", "path": [["timestamp"]]}, {"key": "Bundle.type", "element": "Bundle.type", "fixed": "transaction", "when": 0, "path": [["type"]]}]</mappings>
+          <bundleTargets>[]</bundleTargets>
+        </org.oie.fhir.mapper.FhirProfileMapperStep>
+        <org.oie.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+          <name>Bundle document labo</name>
+          <sequenceNumber>2</sequenceNumber>
+          <enabled>true</enabled>
+          <fhirVersion>R4</fhirVersion>
+          <profiles>/fhir-ig</profiles>
+          <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabDocument</profileUrl>
+          <profileVersion />
+          <resourceType>Bundle</resourceType>
+          <addMetaProfile>true</addMetaProfile>
+          <setLastUpdated>false</setLastUpdated>
+          <variable>bundleDocument</variable>
+          <action>createBundle</action>
+          <bundleName>labo-document</bundleName>
+          <bundleType>document</bundleType>
+          <refName />
+          <terminologyServer>n/a</terminologyServer>
+          <terminologyAuthorization />
+          <terminologyCacheSeconds>300</terminologyCacheSeconds>
+          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
+          <mappings>[{"key": "Bundle.identifier.system", "element": "Bundle.identifier.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/sid/lab-document'", "path": [["identifier"], ["system"]]}, {"key": "Bundle.identifier.value", "element": "Bundle.identifier.value", "type": "string", "expression": "msg['MSH']['MSH.10']['MSH.10.1'].toString()", "path": [["identifier"], ["value"]]}, {"key": "Bundle.timestamp", "element": "Bundle.timestamp", "type": "instant", "expression": "msg['MSH']['MSH.7']['MSH.7.1'].toString()", "path": [["timestamp"]]}, {"key": "Bundle.type", "element": "Bundle.type", "fixed": "document", "when": 0, "path": [["type"]]}]</mappings>
+          <bundleTargets>[]</bundleTargets>
+        </org.oie.fhir.mapper.FhirProfileMapperStep>
+        <org.oie.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+          <name>Composition du document labo</name>
+          <sequenceNumber>3</sequenceNumber>
+          <enabled>true</enabled>
+          <fhirVersion>R4</fhirVersion>
+          <profiles>/fhir-ig</profiles>
+          <profileUrl>http://hl7.org/fhir/StructureDefinition/Composition</profileUrl>
+          <profileVersion />
+          <resourceType>Composition</resourceType>
+          <addMetaProfile>true</addMetaProfile>
+          <setLastUpdated>false</setLastUpdated>
+          <variable />
+          <action>resource</action>
+          <bundleType>transaction</bundleType>
+          <refName>'composition'</refName>
+          <terminologyServer>n/a</terminologyServer>
+          <terminologyAuthorization />
+          <terminologyCacheSeconds>300</terminologyCacheSeconds>
+          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
+          <mappings>[{"key": "Composition.status", "element": "Composition.status", "type": "code", "expression": "'final'", "path": [["status"]]}, {"key": "Composition.type", "element": "Composition.type", "type": "CodeableConcept", "expression": "({coding:[{system:'http://loinc.org',code:'11502-2',display:'Laboratory report'}]})", "path": [["type"]]}, {"key": "Composition.date", "element": "Composition.date", "type": "dateTime", "expression": "msg['MSH']['MSH.7']['MSH.7.1'].toString()", "path": [["date"]]}, {"key": "Composition.title", "element": "Composition.title", "type": "string", "expression": "'Compte rendu de laboratoire'", "path": [["title"]]}, {"key": "Composition.subject.reference", "element": "Composition.subject.reference", "type": "string", "expression": "fhirRef('patient')", "path": [["subject"], ["reference"]]}, {"key": "Composition.author.reference", "element": "Composition.author.reference", "type": "string", "expression": "fhirRef('laboratoire', 0, true)", "path": [["author", "#0"], ["reference"]]}, {"key": "Composition.section", "each": "msg['OBR']", "variable": "sectionObr", "path": [["section", "#0"]]}, {"key": "Composition.section.title", "element": "Composition.section.title", "type": "string", "expression": "sectionObr['OBR.4']['OBR.4.2'].toString() || 'Résultats de laboratoire'", "path": [["section", "#0"], ["title"]]}, {"key": "Composition.section.entry.reference", "element": "Composition.section.entry.reference", "type": "string", "expression": "fhirRef('report-' + sectionObrIndex, 0, true)", "path": [["section", "#0"], ["entry", "#0"], ["reference"]]}]</mappings>
+          <bundleTargets>[{"name": "labo-document"}]</bundleTargets>
+        </org.oie.fhir.mapper.FhirProfileMapperStep>
+        <org.oie.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+          <name>Laboratoire auteur</name>
+          <sequenceNumber>4</sequenceNumber>
+          <enabled>true</enabled>
+          <fhirVersion>R4</fhirVersion>
+          <profiles>/fhir-ig</profiles>
+          <profileUrl>http://hl7.org/fhir/StructureDefinition/Organization</profileUrl>
+          <profileVersion />
+          <resourceType>Organization</resourceType>
+          <addMetaProfile>true</addMetaProfile>
+          <setLastUpdated>false</setLastUpdated>
+          <variable />
+          <action>resource</action>
+          <bundleType>transaction</bundleType>
+          <refName>'laboratoire'</refName>
+          <terminologyServer>n/a</terminologyServer>
+          <terminologyAuthorization />
+          <terminologyCacheSeconds>300</terminologyCacheSeconds>
+          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
+          <mappings>[{"key": "Organization.active", "element": "Organization.active", "type": "boolean", "expression": "true", "path": [["active"]]}, {"key": "Organization.name", "element": "Organization.name", "type": "string", "expression": "'Laboratoire de démonstration'", "path": [["name"]]}]</mappings>
+          <bundleTargets>[{"name": "labo-document"}]</bundleTargets>
+        </org.oie.fhir.mapper.FhirProfileMapperStep>
+        <org.oie.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+          <name>Patient</name>
+          <sequenceNumber>5</sequenceNumber>
+          <enabled>true</enabled>
+          <fhirVersion>R4</fhirVersion>
+          <profiles>/fhir-ig</profiles>
+          <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient</profileUrl>
+          <profileVersion />
+          <resourceType>Patient</resourceType>
+          <addMetaProfile>true</addMetaProfile>
+          <setLastUpdated>false</setLastUpdated>
+          <variable />
+          <action>resource</action>
+          <bundleType>transaction</bundleType>
+          <refName>'patient'</refName>
+          <terminologyServer>n/a</terminologyServer>
+          <terminologyAuthorization />
+          <terminologyCacheSeconds>300</terminologyCacheSeconds>
+          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
+          <mappings>[{"key": "Patient.identifier:ipp.value", "element": "Patient.identifier:ipp.value", "type": "string", "expression": "fhirFind(msg['PID']['PID.3'], function (cx) { return cx['PID.3.5'] == 'PI'; })['PID.3.1'].toString()", "path": [["identifier", "ipp#0"], ["value"]]}, {"key": "Patient.name", "each": "msg['PID']['PID.5']", "variable": "n", "path": [["name", "#0"]]}, {"key": "Patient.name.use", "element": "Patient.name.use", "type": "code", "expression": "({L: 'official', D: 'usual', M: 'maiden'})[n['PID.5.7'].toString()]", "path": [["name", "#0"], ["use"]]}, {"key": "Patient.name.family", "element": "Patient.name.family", "type": "string", "expression": "n['PID.5.1'].toString()", "path": [["name", "#0"], ["family"]]}, {"key": "Patient.name.given", "element": "Patient.name.given", "type": "string", "expression": "n['PID.5.2'].toString()", "path": [["name", "#0"], ["given", "#0"]]}, {"key": "Patient.name.given[1]", "element": "Patient.name.given[1]", "type": "string", "expression": "n['PID.5.3'].toString()", "path": [["name", "#0"], ["given", "#1"]]}, {"key": "Patient.name.prefix", "element": "Patient.name.prefix", "type": "string", "expression": "n['PID.5.5'].toString()", "path": [["name", "#0"], ["prefix", "#0"]]}, {"key": "Patient.telecom", "each": "msg['PID']['PID.13']", "variable": "t", "path": [["telecom", "#0"]]}, {"key": "Patient.telecom.system", "element": "Patient.telecom.system", "type": "code", "expression": "t['PID.13.3'].toString() == 'Internet' ? 'email' : 'phone'", "path": [["telecom", "#0"], ["system"]]}, {"key": "Patient.telecom.value", "element": "Patient.telecom.value", "type": "string", "expression": "t['PID.13.4'].toString() || t['PID.13.12'].toString()", "path": [["telecom", "#0"], ["value"]]}, {"key": "Patient.telecom.use", "element": "Patient.telecom.use", "type": "code", "expression": "({CP: 'mobile', PH: 'home'})[t['PID.13.3'].toString()]", "path": [["telecom", "#0"], ["use"]]}, {"key": "Patient.gender", "element": "Patient.gender", "type": "code", "expression": "msg['PID']['PID.8']['PID.8.1'].toString()", "path": [["gender"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0001-to-gender", "source": "http://terminology.hl7.org/CodeSystem/v2-0001", "target": "", "unmapped": "none", "keepSource": false}}, {"key": "Patient.birthDate", "element": "Patient.birthDate", "type": "date", "expression": "msg['PID']['PID.7']['PID.7.1'].toString()", "path": [["birthDate"]]}, {"key": "Patient.address.line", "element": "Patient.address.line", "type": "string", "expression": "msg['PID']['PID.11']['PID.11.1'].toString()", "path": [["address", "#0"], ["line", "#0"]]}, {"key": "Patient.address.line[1]", "element": "Patient.address.line[1]", "type": "string", "expression": "msg['PID']['PID.11']['PID.11.2'].toString()", "path": [["address", "#0"], ["line", "#1"]]}, {"key": "Patient.address.city", "element": "Patient.address.city", "type": "string", "expression": "msg['PID']['PID.11']['PID.11.3'].toString()", "path": [["address", "#0"], ["city"]]}, {"key": "Patient.address.postalCode", "element": "Patient.address.postalCode", "type": "string", "expression": "msg['PID']['PID.11']['PID.11.5'].toString()", "path": [["address", "#0"], ["postalCode"]]}, {"key": "Patient.address.country", "element": "Patient.address.country", "type": "string", "expression": "msg['PID']['PID.11']['PID.11.6'].toString()", "path": [["address", "#0"], ["country"]]}, {"key": "Patient.identifier:ipp.system", "element": "Patient.identifier:ipp.system", "fixed": "http://example.org/fhir/oru2fhir/sid/ipp", "when": 1, "path": [["identifier", "ipp#0"], ["system"]]}]</mappings>
+          <bundleTargets>[{"name": "labo-transaction", "requestMethod": "PUT", "requestUrl": "'Patient?identifier=http://example.org/fhir/oru2fhir/sid/ipp|' + fhirFind(msg['PID']['PID.3'], function (cx) { return cx['PID.3.5'] == 'PI'; })['PID.3.1']", "ifNoneExist": ""}, {"name": "labo-document"}]</bundleTargets>
+        </org.oie.fhir.mapper.FhirProfileMapperStep>
+        <org.oie.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+          <name>Encounter</name>
+          <sequenceNumber>6</sequenceNumber>
+          <enabled>true</enabled>
+          <fhirVersion>R4</fhirVersion>
+          <profiles>/fhir-ig</profiles>
+          <profileUrl>Encounter</profileUrl>
+          <profileVersion />
+          <resourceType>Encounter</resourceType>
+          <addMetaProfile>false</addMetaProfile>
+          <setLastUpdated>false</setLastUpdated>
+          <variable />
+          <action>resource</action>
+          <bundleType>transaction</bundleType>
+          <refName>'encounter'</refName>
+          <terminologyServer>n/a</terminologyServer>
+          <terminologyAuthorization />
+          <terminologyCacheSeconds>300</terminologyCacheSeconds>
+          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
+          <mappings>[{"key": "Encounter", "condition": "msg['PV1'].length() &gt; 0", "path": []}, {"key": "Encounter.identifier.system", "element": "Encounter.identifier.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/sid/visit'", "path": [["identifier", "#0"], ["system"]]}, {"key": "Encounter.identifier.value", "element": "Encounter.identifier.value", "type": "string", "expression": "msg['PV1']['PV1.19']['PV1.19.1'].toString()", "path": [["identifier", "#0"], ["value"]]}, {"key": "Encounter.status", "element": "Encounter.status", "type": "code", "expression": "msg['PV1']['PV1.45']['PV1.45.1'].toString() ? 'finished' : 'in-progress'", "path": [["status"]]}, {"key": "Encounter.class.system", "element": "Encounter.class.system", "type": "uri", "expression": "'http://terminology.hl7.org/CodeSystem/v3-ActCode'", "path": [["class"], ["system"]]}, {"key": "Encounter.class.code", "element": "Encounter.class.code", "type": "code", "expression": "({I: 'IMP', O: 'AMB', E: 'EMER'})[msg['PV1']['PV1.2']['PV1.2.1'].toString()]", "path": [["class"], ["code"]]}, {"key": "Encounter.subject.reference", "element": "Encounter.subject.reference", "type": "string", "expression": "fhirRef('patient', 0, true)", "path": [["subject"], ["reference"]]}, {"key": "Encounter.period.start", "element": "Encounter.period.start", "type": "dateTime", "expression": "msg['PV1']['PV1.44']['PV1.44.1'].toString()", "path": [["period"], ["start"]]}, {"key": "Encounter.period.end", "element": "Encounter.period.end", "type": "dateTime", "expression": "msg['PV1']['PV1.45']['PV1.45.1'].toString()", "path": [["period"], ["end"]]}]</mappings>
+          <bundleTargets>[{"name": "labo-transaction", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": "'identifier=http://example.org/fhir/oru2fhir/sid/visit|' + msg['PV1']['PV1.19']['PV1.19.1']"}, {"name": "labo-document"}]</bundleTargets>
+        </org.oie.fhir.mapper.FhirProfileMapperStep>
+        <org.oie.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+          <name>ServiceRequest</name>
+          <sequenceNumber>7</sequenceNumber>
+          <enabled>true</enabled>
+          <fhirVersion>R4</fhirVersion>
+          <profiles>/fhir-ig</profiles>
+          <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabServiceRequest</profileUrl>
+          <profileVersion />
+          <resourceType>ServiceRequest</resourceType>
+          <addMetaProfile>true</addMetaProfile>
+          <setLastUpdated>false</setLastUpdated>
+          <variable />
+          <action>resource</action>
+          <bundleType>transaction</bundleType>
+          <refName>'sr-' + obrIndex</refName>
+          <terminologyServer>n/a</terminologyServer>
+          <terminologyAuthorization />
+          <terminologyCacheSeconds>300</terminologyCacheSeconds>
+          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
+          <mappings>[{"key": "ServiceRequest", "each": "msg['OBR']", "variable": "obr", "path": []}, {"key": "ServiceRequest.identifier.type.coding.system", "element": "ServiceRequest.identifier.type.coding.system", "type": "uri", "expression": "'http://terminology.hl7.org/CodeSystem/v2-0203'", "path": [["identifier", "#0"], ["type"], ["coding", "#0"], ["system"]]}, {"key": "ServiceRequest.identifier.type.coding.code", "element": "ServiceRequest.identifier.type.coding.code", "type": "code", "expression": "'PLAC'", "path": [["identifier", "#0"], ["type"], ["coding", "#0"], ["code"]]}, {"key": "ServiceRequest.identifier.value", "element": "ServiceRequest.identifier.value", "type": "string", "expression": "obr['OBR.2']['OBR.2.1'].toString()", "path": [["identifier", "#0"], ["value"]]}, {"key": "ServiceRequest.identifier[1].type.coding.system", "element": "ServiceRequest.identifier[1].type.coding.system", "type": "uri", "expression": "'http://terminology.hl7.org/CodeSystem/v2-0203'", "path": [["identifier", "#1"], ["type"], ["coding", "#0"], ["system"]]}, {"key": "ServiceRequest.identifier[1].type.coding.code", "element": "ServiceRequest.identifier[1].type.coding.code", "type": "code", "expression": "'FILL'", "path": [["identifier", "#1"], ["type"], ["coding", "#0"], ["code"]]}, {"key": "ServiceRequest.identifier[1].value", "element": "ServiceRequest.identifier[1].value", "type": "string", "expression": "obr['OBR.3']['OBR.3.1'].toString()", "path": [["identifier", "#1"], ["value"]]}, {"key": "ServiceRequest.status", "element": "ServiceRequest.status", "type": "code", "expression": "hl7Preceding(obr, 'ORC')['ORC.5']['ORC.5.1'].toString()", "path": [["status"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0038-to-request-status", "source": "http://terminology.hl7.org/CodeSystem/v2-0038", "target": "", "unmapped": "none", "keepSource": false}}, {"key": "ServiceRequest.intent", "element": "ServiceRequest.intent", "type": "code", "expression": "'order'", "path": [["intent"]]}, {"key": "ServiceRequest.code.coding.system", "element": "ServiceRequest.code.coding.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/CodeSystem/lab-codes'", "path": [["code"], ["coding", "#0"], ["system"]]}, {"key": "ServiceRequest.code.coding.code", "element": "ServiceRequest.code.coding.code", "type": "code", "expression": "obr['OBR.4']['OBR.4.1'].toString()", "path": [["code"], ["coding", "#0"], ["code"]]}, {"key": "ServiceRequest.code.coding.display", "element": "ServiceRequest.code.coding.display", "type": "string", "expression": "obr['OBR.4']['OBR.4.2'].toString()", "path": [["code"], ["coding", "#0"], ["display"]]}, {"key": "ServiceRequest.code.text", "element": "ServiceRequest.code.text", "type": "string", "expression": "obr['OBR.4']['OBR.4.2'].toString()", "path": [["code"], ["text"]]}, {"key": "ServiceRequest.subject.reference", "element": "ServiceRequest.subject.reference", "type": "string", "expression": "fhirRef('patient')", "path": [["subject"], ["reference"]]}, {"key": "ServiceRequest.encounter.reference", "element": "ServiceRequest.encounter.reference", "type": "string", "expression": "fhirRef('encounter')", "path": [["encounter"], ["reference"]]}, {"key": "ServiceRequest.authoredOn", "element": "ServiceRequest.authoredOn", "type": "dateTime", "expression": "hl7Preceding(obr, 'ORC')['ORC.9']['ORC.9.1'].toString()", "path": [["authoredOn"]]}, {"key": "ServiceRequest.requester.display", "element": "ServiceRequest.requester.display", "type": "string", "expression": "(obr['OBR.16']['OBR.16.3'] + ' ' + obr['OBR.16']['OBR.16.2']).trim()", "path": [["requester"], ["display"]]}]</mappings>
+          <bundleTargets>[{"name": "labo-transaction", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": ""}, {"name": "labo-document"}]</bundleTargets>
+        </org.oie.fhir.mapper.FhirProfileMapperStep>
+        <org.oie.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+          <name>Specimen</name>
+          <sequenceNumber>8</sequenceNumber>
+          <enabled>true</enabled>
+          <fhirVersion>R4</fhirVersion>
+          <profiles>/fhir-ig</profiles>
+          <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabSpecimen</profileUrl>
+          <profileVersion />
+          <resourceType>Specimen</resourceType>
+          <addMetaProfile>true</addMetaProfile>
+          <setLastUpdated>false</setLastUpdated>
+          <variable />
+          <action>resource</action>
+          <bundleType>transaction</bundleType>
+          <refName>'spm-' + hl7Ordinal(hl7Preceding(spm, 'OBR', []))</refName>
+          <terminologyServer>n/a</terminologyServer>
+          <terminologyAuthorization />
+          <terminologyCacheSeconds>300</terminologyCacheSeconds>
+          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
+          <mappings>[{"key": "Specimen", "each": "msg['SPM']", "variable": "spm", "path": []}, {"key": "Specimen.identifier.value", "element": "Specimen.identifier.value", "type": "string", "expression": "spm['SPM.2']['SPM.2.1']['SPM.2.1.1'].toString()", "path": [["identifier", "#0"], ["value"]]}, {"key": "Specimen.type.coding.system", "element": "Specimen.type.coding.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/CodeSystem/lab-codes'", "path": [["type"], ["coding", "#0"], ["system"]]}, {"key": "Specimen.type.coding.code", "element": "Specimen.type.coding.code", "type": "code", "expression": "spm['SPM.4']['SPM.4.1'].toString()", "path": [["type"], ["coding", "#0"], ["code"]]}, {"key": "Specimen.type.coding.display", "element": "Specimen.type.coding.display", "type": "string", "expression": "spm['SPM.4']['SPM.4.2'].toString()", "path": [["type"], ["coding", "#0"], ["display"]]}, {"key": "Specimen.type.text", "element": "Specimen.type.text", "type": "string", "expression": "spm['SPM.4']['SPM.4.2'].toString()", "path": [["type"], ["text"]]}, {"key": "Specimen.subject.reference", "element": "Specimen.subject.reference", "type": "string", "expression": "fhirRef('patient')", "path": [["subject"], ["reference"]]}, {"key": "Specimen.receivedTime", "element": "Specimen.receivedTime", "type": "dateTime", "expression": "spm['SPM.18']['SPM.18.1'].toString()", "path": [["receivedTime"]]}, {"key": "Specimen.request.reference", "element": "Specimen.request.reference", "type": "string", "expression": "fhirRef('sr-' + hl7Ordinal(hl7Preceding(spm, 'OBR', [])))", "path": [["request", "#0"], ["reference"]]}, {"key": "Specimen.collection.collectedDateTime", "element": "Specimen.collection.collectedDateTime", "type": "dateTime", "expression": "spm['SPM.17']['SPM.17.1'].toString()", "path": [["collection"], ["collectedDateTime"]]}]</mappings>
+          <bundleTargets>[{"name": "labo-transaction", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": ""}, {"name": "labo-document"}]</bundleTargets>
+        </org.oie.fhir.mapper.FhirProfileMapperStep>
+        <org.oie.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+          <name>Observation</name>
+          <sequenceNumber>9</sequenceNumber>
+          <enabled>true</enabled>
+          <fhirVersion>R4</fhirVersion>
+          <profiles>/fhir-ig</profiles>
+          <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabObservation</profileUrl>
+          <profileVersion />
+          <resourceType>Observation</resourceType>
+          <addMetaProfile>true</addMetaProfile>
+          <setLastUpdated>false</setLastUpdated>
+          <variable />
+          <action>resource</action>
+          <bundleType>transaction</bundleType>
+          <refName>'obs-' + hl7Ordinal(hl7Preceding(obx, 'OBR', []))</refName>
+          <terminologyServer>n/a</terminologyServer>
+          <terminologyAuthorization />
+          <terminologyCacheSeconds>300</terminologyCacheSeconds>
+          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
+          <mappings>[{"key": "Observation", "each": "msg['OBX']", "variable": "obx", "path": []}, {"key": "Observation", "condition": "obx['OBX.2']['OBX.2.1'].toString() != 'ED'", "path": []}, {"key": "Observation.basedOn.reference", "element": "Observation.basedOn.reference", "type": "string", "expression": "fhirRef('sr-' + hl7Ordinal(hl7Preceding(obx, 'OBR', [])))", "path": [["basedOn", "#0"], ["reference"]]}, {"key": "Observation.status", "element": "Observation.status", "type": "code", "expression": "obx['OBX.11']['OBX.11.1'].toString()", "path": [["status"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0085-to-observation-status", "source": "http://terminology.hl7.org/CodeSystem/v2-0085", "target": "", "unmapped": "fixed", "keepSource": false, "value": "unknown"}}, {"key": "Observation.code.coding.system", "element": "Observation.code.coding.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/CodeSystem/lab-codes'", "path": [["code"], ["coding", "#0"], ["system"]]}, {"key": "Observation.code.coding.code", "element": "Observation.code.coding.code", "type": "code", "expression": "obx['OBX.3']['OBX.3.1'].toString()", "path": [["code"], ["coding", "#0"], ["code"]]}, {"key": "Observation.code.coding.display", "element": "Observation.code.coding.display", "type": "string", "expression": "obx['OBX.3']['OBX.3.2'].toString()", "path": [["code"], ["coding", "#0"], ["display"]]}, {"key": "Observation.code.coding[1]", "element": "Observation.code.coding[1]", "type": "Coding", "expression": "obx['OBX.3']['OBX.3.1'].toString()", "path": [["code"], ["coding", "#1"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/lab-codes-to-loinc", "source": "http://example.org/fhir/oru2fhir/CodeSystem/lab-codes", "target": "", "unmapped": "none", "keepSource": false}}, {"key": "Observation.code.text", "element": "Observation.code.text", "type": "string", "expression": "obx['OBX.3']['OBX.3.2'].toString()", "path": [["code"], ["text"]]}, {"key": "Observation.subject.reference", "element": "Observation.subject.reference", "type": "string", "expression": "fhirRef('patient')", "path": [["subject"], ["reference"]]}, {"key": "Observation.encounter.reference", "element": "Observation.encounter.reference", "type": "string", "expression": "fhirRef('encounter')", "path": [["encounter"], ["reference"]]}, {"key": "Observation.effectiveDateTime", "element": "Observation.effectiveDateTime", "type": "dateTime", "expression": "obx['OBX.14']['OBX.14.1'].toString()", "path": [["effectiveDateTime"]]}, {"key": "Observation.issued", "element": "Observation.issued", "type": "instant", "expression": "obx['OBX.19']['OBX.19.1'].toString()", "path": [["issued"]]}, {"key": "Observation.performer.display", "element": "Observation.performer.display", "type": "string", "expression": "(obx['OBX.16']['OBX.16.3'] + ' ' + obx['OBX.16']['OBX.16.2']).trim()", "path": [["performer", "#0"], ["display"]]}, {"key": "Observation.value[x].valueQuantity", "condition": "obx['OBX.2']['OBX.2.1'].toString() == 'NM'", "path": [["valueQuantity"]]}, {"key": "Observation.value[x].valueQuantity.value", "element": "Observation.value[x].valueQuantity.value", "type": "decimal", "expression": "obx['OBX.5']['OBX.5.1'].toString()", "path": [["valueQuantity"], ["value"]]}, {"key": "Observation.value[x].valueQuantity.unit", "element": "Observation.value[x].valueQuantity.unit", "type": "string", "expression": "obx['OBX.6']['OBX.6.1'].toString()", "path": [["valueQuantity"], ["unit"]]}, {"key": "Observation.value[x].valueQuantity.system", "element": "Observation.value[x].valueQuantity.system", "type": "uri", "expression": "'http://unitsofmeasure.org'", "path": [["valueQuantity"], ["system"]]}, {"key": "Observation.value[x].valueQuantity.code", "element": "Observation.value[x].valueQuantity.code", "type": "code", "expression": "obx['OBX.6']['OBX.6.1'].toString()", "path": [["valueQuantity"], ["code"]]}, {"key": "Observation.value[x].valueString", "condition": "['ST', 'TX', 'FT'].indexOf(obx['OBX.2']['OBX.2.1'].toString()) &gt;= 0", "path": [["valueString"]]}, {"key": "Observation.value[x].valueString", "element": "Observation.value[x].valueString", "type": "string", "expression": "obx['OBX.5']['OBX.5.1'].toString()", "path": [["valueString"]]}, {"key": "Observation.interpretation", "element": "Observation.interpretation", "type": "CodeableConcept", "expression": "obx['OBX.8']['OBX.8.1'].toString()", "path": [["interpretation", "#0"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0078-to-interpretation", "source": "http://terminology.hl7.org/CodeSystem/v2-0078", "target": "", "unmapped": "none", "keepSource": false}}, {"key": "Observation.specimen.reference", "element": "Observation.specimen.reference", "type": "string", "expression": "fhirRef('spm-' + hl7Ordinal(hl7Preceding(obx, 'OBR', [])))", "path": [["specimen"], ["reference"]]}, {"key": "Observation.referenceRange", "condition": "obx['OBX.7']['OBX.7.1'].toString().indexOf('-') &gt; 0", "path": [["referenceRange", "#0"]]}, {"key": "Observation.referenceRange.low.value", "element": "Observation.referenceRange.low.value", "type": "decimal", "expression": "obx['OBX.7']['OBX.7.1'].toString().split('-')[0]", "path": [["referenceRange", "#0"], ["low"], ["value"]]}, {"key": "Observation.referenceRange.low.unit", "element": "Observation.referenceRange.low.unit", "type": "string", "expression": "obx['OBX.6']['OBX.6.1'].toString()", "path": [["referenceRange", "#0"], ["low"], ["unit"]]}, {"key": "Observation.referenceRange.low.system", "element": "Observation.referenceRange.low.system", "type": "uri", "expression": "'http://unitsofmeasure.org'", "path": [["referenceRange", "#0"], ["low"], ["system"]]}, {"key": "Observation.referenceRange.low.code", "element": "Observation.referenceRange.low.code", "type": "code", "expression": "obx['OBX.6']['OBX.6.1'].toString()", "path": [["referenceRange", "#0"], ["low"], ["code"]]}, {"key": "Observation.referenceRange.high.value", "element": "Observation.referenceRange.high.value", "type": "decimal", "expression": "obx['OBX.7']['OBX.7.1'].toString().split('-')[1]", "path": [["referenceRange", "#0"], ["high"], ["value"]]}, {"key": "Observation.referenceRange.high.unit", "element": "Observation.referenceRange.high.unit", "type": "string", "expression": "obx['OBX.6']['OBX.6.1'].toString()", "path": [["referenceRange", "#0"], ["high"], ["unit"]]}, {"key": "Observation.referenceRange.high.system", "element": "Observation.referenceRange.high.system", "type": "uri", "expression": "'http://unitsofmeasure.org'", "path": [["referenceRange", "#0"], ["high"], ["system"]]}, {"key": "Observation.referenceRange.high.code", "element": "Observation.referenceRange.high.code", "type": "code", "expression": "obx['OBX.6']['OBX.6.1'].toString()", "path": [["referenceRange", "#0"], ["high"], ["code"]]}, {"key": "Observation.category:laboratory", "element": "Observation.category:laboratory", "fixed": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}, "when": 0, "path": [["category", "laboratory#0"]]}]</mappings>
+          <bundleTargets>[{"name": "labo-transaction", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": ""}, {"name": "labo-document"}]</bundleTargets>
+        </org.oie.fhir.mapper.FhirProfileMapperStep>
+        <org.oie.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+          <name>DiagnosticReport</name>
+          <sequenceNumber>10</sequenceNumber>
+          <enabled>true</enabled>
+          <fhirVersion>R4</fhirVersion>
+          <profiles>/fhir-ig</profiles>
+          <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabDiagnosticReport</profileUrl>
+          <profileVersion />
+          <resourceType>DiagnosticReport</resourceType>
+          <addMetaProfile>true</addMetaProfile>
+          <setLastUpdated>false</setLastUpdated>
+          <variable />
+          <action>resource</action>
+          <bundleType>transaction</bundleType>
+          <refName>'report-' + obrIndex</refName>
+          <terminologyServer>n/a</terminologyServer>
+          <terminologyAuthorization />
+          <terminologyCacheSeconds>300</terminologyCacheSeconds>
+          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
+          <mappings>[{"key": "DiagnosticReport", "each": "msg['OBR']", "variable": "obr", "path": []}, {"key": "DiagnosticReport.identifier.type.coding.system", "element": "DiagnosticReport.identifier.type.coding.system", "type": "uri", "expression": "'http://terminology.hl7.org/CodeSystem/v2-0203'", "path": [["identifier", "#0"], ["type"], ["coding", "#0"], ["system"]]}, {"key": "DiagnosticReport.identifier.type.coding.code", "element": "DiagnosticReport.identifier.type.coding.code", "type": "code", "expression": "'FILL'", "path": [["identifier", "#0"], ["type"], ["coding", "#0"], ["code"]]}, {"key": "DiagnosticReport.identifier.value", "element": "DiagnosticReport.identifier.value", "type": "string", "expression": "obr['OBR.3']['OBR.3.1'].toString()", "path": [["identifier", "#0"], ["value"]]}, {"key": "DiagnosticReport.basedOn.reference", "element": "DiagnosticReport.basedOn.reference", "type": "string", "expression": "fhirRef('sr-' + obrIndex)", "path": [["basedOn", "#0"], ["reference"]]}, {"key": "DiagnosticReport.status", "element": "DiagnosticReport.status", "type": "code", "expression": "obr['OBR.25']['OBR.25.1'].toString()", "path": [["status"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0123-to-report-status", "source": "http://terminology.hl7.org/CodeSystem/v2-0123", "target": "", "unmapped": "fixed", "keepSource": false, "value": "unknown"}}, {"key": "DiagnosticReport.code.coding.system", "element": "DiagnosticReport.code.coding.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/CodeSystem/lab-codes'", "path": [["code"], ["coding", "#0"], ["system"]]}, {"key": "DiagnosticReport.code.coding.code", "element": "DiagnosticReport.code.coding.code", "type": "code", "expression": "obr['OBR.4']['OBR.4.1'].toString()", "path": [["code"], ["coding", "#0"], ["code"]]}, {"key": "DiagnosticReport.code.coding.display", "element": "DiagnosticReport.code.coding.display", "type": "string", "expression": "obr['OBR.4']['OBR.4.2'].toString()", "path": [["code"], ["coding", "#0"], ["display"]]}, {"key": "DiagnosticReport.code.text", "element": "DiagnosticReport.code.text", "type": "string", "expression": "obr['OBR.4']['OBR.4.2'].toString()", "path": [["code"], ["text"]]}, {"key": "DiagnosticReport.subject.reference", "element": "DiagnosticReport.subject.reference", "type": "string", "expression": "fhirRef('patient')", "path": [["subject"], ["reference"]]}, {"key": "DiagnosticReport.encounter.reference", "element": "DiagnosticReport.encounter.reference", "type": "string", "expression": "fhirRef('encounter')", "path": [["encounter"], ["reference"]]}, {"key": "DiagnosticReport.effectiveDateTime", "element": "DiagnosticReport.effectiveDateTime", "type": "dateTime", "expression": "obr['OBR.7']['OBR.7.1'].toString()", "path": [["effectiveDateTime"]]}, {"key": "DiagnosticReport.issued", "element": "DiagnosticReport.issued", "type": "instant", "expression": "obr['OBR.22']['OBR.22.1'].toString()", "path": [["issued"]]}, {"key": "DiagnosticReport.specimen", "each": "fhirRefs('spm-' + obrIndex)", "variable": "sref", "path": [["specimen", "#0"]]}, {"key": "DiagnosticReport.specimen.reference", "element": "DiagnosticReport.specimen.reference", "type": "string", "expression": "sref", "path": [["specimen", "#0"], ["reference"]]}, {"key": "DiagnosticReport.result", "each": "fhirRefs('obs-' + obrIndex)", "variable": "ref", "path": [["result", "#0"]]}, {"key": "DiagnosticReport.result.reference", "element": "DiagnosticReport.result.reference", "type": "string", "expression": "ref", "path": [["result", "#0"], ["reference"]]}, {"key": "DiagnosticReport.presentedForm", "each": "hl7Following(obr, 'OBX', ['OBR', 'ORC'])", "variable": "ed", "path": [["presentedForm", "#0"]]}, {"key": "DiagnosticReport.presentedForm", "condition": "ed['OBX.2']['OBX.2.1'].toString() == 'ED'", "path": [["presentedForm", "#0"]]}, {"key": "DiagnosticReport.presentedForm.contentType", "element": "DiagnosticReport.presentedForm.contentType", "type": "code", "expression": "ed['OBX.5']['OBX.5.2'] + '/' + ed['OBX.5']['OBX.5.3']", "path": [["presentedForm", "#0"], ["contentType"]]}, {"key": "DiagnosticReport.presentedForm.data", "element": "DiagnosticReport.presentedForm.data", "type": "base64Binary", "expression": "(function (d) { return d + ['', '', '==', '='][d.length % 4]; })(ed['OBX.5']['OBX.5.5'].toString())", "path": [["presentedForm", "#0"], ["data"]]}, {"key": "DiagnosticReport.presentedForm.title", "element": "DiagnosticReport.presentedForm.title", "type": "string", "expression": "ed['OBX.3']['OBX.3.2'].toString()", "path": [["presentedForm", "#0"], ["title"]]}, {"key": "DiagnosticReport.category:lab", "element": "DiagnosticReport.category:lab", "fixed": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v2-0074", "code": "LAB"}]}, "when": 0, "path": [["category", "lab#0"]]}]</mappings>
+          <bundleTargets>[{"name": "labo-transaction", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": ""}, {"name": "labo-document"}]</bundleTargets>
+        </org.oie.fhir.mapper.FhirProfileMapperStep>
+        <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
+          <name>Fin chronométrage transformation</name>
+          <sequenceNumber>11</sequenceNumber>
+          <enabled>true</enabled>
+          <script>var end = channelMap.get('__fhirMapperBuildFinishedNano') || java.lang.System.nanoTime();
+var elapsed = Number(end) - Number(channelMap.get('__demoTransfoDebut'));
+channelMap.put('TRANSFO_MS', Math.round(elapsed / 1000) / 1000);
+channelMap.put('__demoEtape', 'VALIDATION_FHIR_SORTIE');</script>
+        </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+      </elements>
+      <inboundDataType>HL7V2</inboundDataType>
+      <outboundDataType>FHIR</outboundDataType>
+      <inboundProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DataTypeProperties" version="4.7.0">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="4.7.0">
+          <handleRepetitions>true</handleRepetitions>
+          <handleSubcomponents>true</handleSubcomponents>
+          <useStrictParser>false</useStrictParser>
+          <useStrictValidation>false</useStrictValidation>
+          <stripNamespaces>false</stripNamespaces>
+          <segmentDelimiter>\r</segmentDelimiter>
+          <convertLineBreaks>true</convertLineBreaks>
+        </serializationProperties>
+        <deserializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2DeserializationProperties" version="4.7.0">
+          <useStrictParser>false</useStrictParser>
+          <useStrictValidation>false</useStrictValidation>
+          <segmentDelimiter>\r</segmentDelimiter>
+        </deserializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2BatchProperties" version="4.7.0">
+          <splitType>MSH_Segment</splitType>
+          <batchScript />
+        </batchProperties>
+        <responseGenerationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseGenerationProperties" version="4.7.0">
+          <segmentDelimiter>\r</segmentDelimiter>
+          <successfulACKCode>AA</successfulACKCode>
+          <successfulACKMessage />
+          <errorACKCode>AE</errorACKCode>
+          <errorACKMessage>An Error Occurred Processing Message.</errorACKMessage>
+          <rejectedACKCode>AR</rejectedACKCode>
+          <rejectedACKMessage>Message Rejected.</rejectedACKMessage>
+          <msh15ACKAccept>false</msh15ACKAccept>
+          <dateFormat>yyyyMMddHHmmss.SSS</dateFormat>
+        </responseGenerationProperties>
+        <responseValidationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2ResponseValidationProperties" version="4.7.0">
+          <successfulACKCode>AA,CA</successfulACKCode>
+          <errorACKCode>AE,CE</errorACKCode>
+          <rejectedACKCode>AR,CR</rejectedACKCode>
+          <validateMessageControlId>true</validateMessageControlId>
+          <originalMessageControlId>Destination_Encoded</originalMessageControlId>
+          <originalIdMapVariable />
+        </responseValidationProperties>
+      </inboundProperties>
+      <outboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
+          <fhirVersion>R4</fhirVersion>
+          <transformerFormat>XML</transformerFormat>
+          <stripNamespaces>true</stripNamespaces>
+          <outputFormat>JSON</outputFormat>
+          <prettyPrint>true</prettyPrint>
+          <validateInbound>true</validateInbound>
+          <validateOutbound>true</validateOutbound>
+          <invalidMessages>Reject</invalidMessages>
+          <failOn>Errors</failOn>
+          <profiles>/fhir-ig</profiles>
+          <requiredProfile />
+          <unknownCodeSystems>Warning</unknownCodeSystems>
+          <anyExtensionsAllowed>true</anyExtensionsAllowed>
+          <terminologyServer />
+        </serializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
+          <splitType>Bundle_Entry</splitType>
+          <batchScript />
+        </batchProperties>
+      </outboundProperties>
+    </transformer>
+    <filter version="4.7.0">
+      <elements />
+    </filter>
+    <transportName>HTTP Listener</transportName>
+    <mode>SOURCE</mode>
+    <enabled>true</enabled>
+    <waitForPrevious>true</waitForPrevious>
+  </sourceConnector>
+  <destinationConnectors>
+    <connector version="4.7.0">
+      <metaDataId>1</metaDataId>
+      <name>Réponse FHIR</name>
+      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
+        <pluginProperties />
+        <destinationConnectorProperties version="4.7.0">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable />
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <script>// Bundle renvoyé : labo-transaction (type transaction).
+// Le transformeur Source le publie dans le message sortant via l'étape
+// "Bundle transaction labo" (Result destination = Outbound message).
+// Cette destination conserve ce message : Encoded contient la transaction.
+return connectorMessage.getEncodedData();</script>
+      </properties>
+      <transformer version="4.7.0">
+        <elements />
+        <inboundDataType>FHIR</inboundDataType>
+        <outboundDataType>FHIR</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
+            <fhirVersion>R4</fhirVersion>
+            <transformerFormat>XML</transformerFormat>
+            <stripNamespaces>true</stripNamespaces>
+            <outputFormat>JSON</outputFormat>
+            <prettyPrint>true</prettyPrint>
+            <validateInbound>false</validateInbound>
+            <validateOutbound>false</validateOutbound>
+            <invalidMessages>Reject</invalidMessages>
+            <failOn>Errors</failOn>
+            <profiles />
+            <requiredProfile />
+            <unknownCodeSystems>Warning</unknownCodeSystems>
+            <anyExtensionsAllowed>true</anyExtensionsAllowed>
+            <terminologyServer />
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
+            <splitType>Bundle_Entry</splitType>
+            <batchScript />
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
+            <fhirVersion>R4</fhirVersion>
+            <transformerFormat>XML</transformerFormat>
+            <stripNamespaces>true</stripNamespaces>
+            <outputFormat>JSON</outputFormat>
+            <prettyPrint>true</prettyPrint>
+            <validateInbound>false</validateInbound>
+            <validateOutbound>false</validateOutbound>
+            <invalidMessages>Reject</invalidMessages>
+            <failOn>Errors</failOn>
+            <profiles />
+            <requiredProfile />
+            <unknownCodeSystems>Warning</unknownCodeSystems>
+            <anyExtensionsAllowed>true</anyExtensionsAllowed>
+            <terminologyServer />
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
+            <splitType>Bundle_Entry</splitType>
+            <batchScript />
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="4.7.0">
+        <elements />
+        <inboundDataType>RAW</inboundDataType>
+        <outboundDataType>RAW</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
+            <splitType>JavaScript</splitType>
+            <batchScript />
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
+            <splitType>JavaScript</splitType>
+            <batchScript />
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="4.7.0">
+        <elements />
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="4.7.0">
+      <metaDataId>2</metaDataId>
+      <name>Document labo FHIR</name>
+      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
+        <pluginProperties />
+        <destinationConnectorProperties version="4.7.0">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable />
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <script>// Bundle renvoyé : labo-document (type document).
+// Le transformeur Source le conserve dans la Channel Map : bundleDocument.
+// Dans le transformeur de CETTE destination, l'étape "Utiliser le Bundle document"
+// sélectionne ce Bundle avec : msg = channelMap.get('bundleDocument');
+// Ce Writer renvoie le document transformé (Encoded). Raw reste la transaction reçue.
+return connectorMessage.getEncodedData();</script>
+      </properties>
+      <transformer version="4.7.0">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
+            <name>Utiliser le Bundle document</name>
+            <sequenceNumber>0</sequenceNumber>
+            <enabled>true</enabled>
+            <script>msg = channelMap.get('bundleDocument');</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundDataType>FHIR</inboundDataType>
+        <outboundDataType>FHIR</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
+            <fhirVersion>R4</fhirVersion>
+            <transformerFormat>XML</transformerFormat>
+            <stripNamespaces>true</stripNamespaces>
+            <outputFormat>JSON</outputFormat>
+            <prettyPrint>true</prettyPrint>
+            <validateInbound>false</validateInbound>
+            <validateOutbound>false</validateOutbound>
+            <invalidMessages>Reject</invalidMessages>
+            <failOn>Errors</failOn>
+            <profiles />
+            <requiredProfile />
+            <unknownCodeSystems>Warning</unknownCodeSystems>
+            <anyExtensionsAllowed>true</anyExtensionsAllowed>
+            <terminologyServer />
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
+            <splitType>Bundle_Entry</splitType>
+            <batchScript />
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
+            <fhirVersion>R4</fhirVersion>
+            <transformerFormat>XML</transformerFormat>
+            <stripNamespaces>true</stripNamespaces>
+            <outputFormat>JSON</outputFormat>
+            <prettyPrint>true</prettyPrint>
+            <validateInbound>false</validateInbound>
+            <validateOutbound>true</validateOutbound>
+            <invalidMessages>Reject</invalidMessages>
+            <failOn>Errors</failOn>
+            <profiles>/fhir-ig</profiles>
+            <requiredProfile>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabDocument</requiredProfile>
+            <unknownCodeSystems>Warning</unknownCodeSystems>
+            <anyExtensionsAllowed>true</anyExtensionsAllowed>
+            <terminologyServer />
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
+            <splitType>Bundle_Entry</splitType>
+            <batchScript />
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="4.7.0">
+        <elements />
+        <inboundDataType>RAW</inboundDataType>
+        <outboundDataType>RAW</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
+            <splitType>JavaScript</splitType>
+            <batchScript />
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
+            <splitType>JavaScript</splitType>
+            <batchScript />
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="4.7.0">
+        <elements />
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+  </destinationConnectors>
+  <preprocessingScript>// Réinitialisé pour chaque message, y compris après retraitement.
+channelMap.put('TOTAL_MS', 0);
+channelMap.remove('TRANSFO_MS');
+channelMap.put('ERREUR_ETAPE', 'OK');
+channelMap.put('__demoEtape', 'LECTURE_HL7');
+channelMap.remove('__fhirMapperPhase');
+channelMap.remove('__fhirMapperBuildFinishedNano');
+channelMap.remove('__fhirMapperValidationNanos');
+return message;</preprocessingScript>
+  <postprocessingScript>// Exécuté après les destinations, aussi après une erreur de lecture/transformation/validation.
+var source = message.getConnectorMessages().get(java.lang.Integer.valueOf(0));
+var total = Math.max(0, java.lang.System.currentTimeMillis() - source.getReceivedDate().getTimeInMillis());
+var errorLabel = 'OK';
+var connectors = message.getConnectorMessages().values().iterator();
+while (connectors.hasNext()) {
+    var cm = connectors.next();
+    var error = cm.getProcessingError() || cm.getResponseError() || cm.getPostProcessorError();
+    if (error) {
+        var stage = cm.getMetaDataId() == 0
+            ? String(source.getChannelMap().get('__fhirMapperPhase') == 'VALIDATION' ? 'VALIDATION_FHIR_SORTIE' : (source.getChannelMap().get('__demoEtape') || 'LECTURE_HL7'))
+            : 'SORTIE / ' + cm.getConnectorName();
+        var details = String(error);
+        var issue = /(?:^|\n)(?:error|fatal)\s+@?\s*([^\r\n]+)/i.exec(details);
+        var cause = /DETAILS:\s*([^\r\n]+)/.exec(details);
+        details = cause ? cause[1] : issue ? issue[1] : details.split(/\r?\n/)[0];
+        errorLabel = (stage + ': ' + details).substring(0, 255);
+        break;
+    }
+}
+
+// OIE enregistre les métadonnées avant le postprocesseur : mettre à jour la ligne source
+// via son DAO pour conserver le temps complet et les erreurs survenues en sortie.
+var values = new java.util.HashMap();
+values.put('TOTAL_MS', new java.math.BigDecimal(String(total)));
+var transfo = source.getChannelMap().get('TRANSFO_MS');
+var finished = source.getChannelMap().get('__fhirMapperBuildFinishedNano');
+if (transfo == null &amp;&amp; finished != null) {
+    transfo = Math.round((Number(finished) - Number(source.getChannelMap().get('__demoTransfoDebut'))) / 1000) / 1000;
+}
+if (transfo != null) {
+    values.put('TRANSFO_MS', new java.math.BigDecimal(String(transfo)));
+}
+values.put('ERREUR_ETAPE', errorLabel);
+var record = new Packages.com.mirth.connect.donkey.model.message.ConnectorMessage();
+record.setChannelId(channelId);
+record.setMessageId(message.getMessageId());
+record.setMetaDataId(0);
+record.setMetaDataMap(values);
+var dao = Packages.com.mirth.connect.donkey.server.Donkey.getInstance().getDaoFactory().getDao();
+var committed = false;
+try {
+    dao.storeMetaData(record, dao.getMetaDataColumns(channelId));
+    dao.commit();
+    committed = true;
+} finally {
+    try {
+        if (!committed) dao.rollback();
+    } finally {
+        dao.close();
+    }
+}
+return;</postprocessingScript>
+  <deployScript>return;</deployScript>
+  <undeployScript>return;</undeployScript>
+  <properties version="4.7.0">
+    <clearGlobalChannelMap>true</clearGlobalChannelMap>
+    <messageStorageMode>DEVELOPMENT</messageStorageMode>
+    <encryptData>false</encryptData>
+    <encryptAttachments>false</encryptAttachments>
+    <encryptCustomMetaData>false</encryptCustomMetaData>
+    <removeContentOnCompletion>false</removeContentOnCompletion>
+    <removeOnlyFilteredOnCompletion>false</removeOnlyFilteredOnCompletion>
+    <removeAttachmentsOnCompletion>false</removeAttachmentsOnCompletion>
+    <initialState>STARTED</initialState>
+    <storeAttachments>true</storeAttachments>
+    <metaDataColumns>
+      <com.mirth.connect.donkey.model.channel.MetaDataColumn>
+        <name>TOTAL_MS</name>
+        <type>NUMBER</type>
+        <mappingName>TOTAL_MS</mappingName>
+      </com.mirth.connect.donkey.model.channel.MetaDataColumn>
+      <com.mirth.connect.donkey.model.channel.MetaDataColumn>
+        <name>TRANSFO_MS</name>
+        <type>NUMBER</type>
+        <mappingName>TRANSFO_MS</mappingName>
+      </com.mirth.connect.donkey.model.channel.MetaDataColumn>
+      <com.mirth.connect.donkey.model.channel.MetaDataColumn>
+        <name>ERREUR_ETAPE</name>
+        <type>STRING</type>
+        <mappingName>ERREUR_ETAPE</mappingName>
+      </com.mirth.connect.donkey.model.channel.MetaDataColumn>
+    </metaDataColumns>
+    <attachmentProperties version="4.7.0">
+      <type>None</type>
+      <properties />
+    </attachmentProperties>
+    <resourceIds class="linked-hash-map">
+      <entry>
+        <string>Default Resource</string>
+        <string>[Default Resource]</string>
+      </entry>
+    </resourceIds>
+  </properties>
+  <exportData>
+    <metadata>
+      <enabled>true</enabled>
+      <lastModified>
+        <time>1787000000000</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <pruningSettings>
+        <archiveEnabled>true</archiveEnabled>
+        <pruneErroredMessages>false</pruneErroredMessages>
+      </pruningSettings>
+      <userId>1</userId>
+    </metadata>
+  </exportData>
+</channel>

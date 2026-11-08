@@ -1,0 +1,2 @@
+# HL7 wire fixtures use CR segment separators; preserve their exact bytes.
+demo/examples/*.er7 -text -diff

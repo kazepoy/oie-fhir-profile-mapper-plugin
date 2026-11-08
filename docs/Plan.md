@@ -90,10 +90,18 @@ Chaque jalon vérifié fait l'objet d'un commit distinct et d'un retour concret.
 La formalisation du format existant et les améliorations du débogage et de
 l'ergonomie suivent cette reprise fonctionnelle, par changements ciblés.
 
-**Reprise du compilateur, runtime et éditeur :** 74 tests Java et 9 tests de
+**Reprise du compilateur, runtime et éditeur :** 75 tests Java et 9 tests de
 l'éditeur passent. Dans la démo, l'API charge un snapshot Patient via le chargeur
 du datatype officiel, puis exécute et valide un mapping XML vers Patient.
-La validation est optionnelle ; les six channels restent à rejouer.
+La validation est optionnelle. Les six channels sont importés, déployés et
+rejoués : ORU vers Patient et Bundles, XML SQL, CSV par ligne et collection.
+Le [contrôle reproductible](../demo/examples/check.py) vérifie aussi les références,
+les ressources communes aux deux Bundles, les dix messages du batch et le refus
+d'un Patient sans date de naissance. Voir le [guide de la démo](Demo.md).
+
+La vérification visuelle de l'édition dans l'administration web reste à effectuer :
+l'outil navigateur de cet environnement échoue avant connexion (`sandboxPolicy`
+absent). Les tests de logique de l'éditeur et les appels réels de son API passent.
 
 Définir une façade limitée aux services nécessaires au mapper. L'adaptateur
 FHIR Data Type sera le seul endroit connaissant les classes, signatures et

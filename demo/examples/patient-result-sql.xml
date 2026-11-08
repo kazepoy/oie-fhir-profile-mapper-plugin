@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<result>
+  <id_patient>1042</id_patient>
+  <ipp>000123456</ipp>
+  <nom_naissance>Durand</nom_naissance>
+  <prenom>Élodie</prenom>
+  <date_naissance>1985-04-12</date_naissance>
+  <sexe>F</sexe>
+  <actif>1</actif>
+</result>

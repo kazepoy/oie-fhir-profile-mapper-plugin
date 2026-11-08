@@ -1,0 +1,11 @@
+id_patient;ipp;nom_naissance;prenom;date_naissance;sexe;actif
+2001;000200001;  Durand  ; Élodie ;19850412; f ;1
+2002;000200002; Martin ;  Hugo;19781103;m;1
+2003;000200003; Ben Salah  ; Inès ;20000229; f;1
+2004;000200004;  Müller; Léon  ;19600229;M ;1
+2005;000200005; Le Gall ;  Camille ;19951231;i;1
+2006;000200006; Moreau  ; Chloé ;19900708;F;1
+2007;000200007;  Lefèvre ; Raphaël  ;19820615; m ;1
+2008;000200008; Petit ;  Anaïs ;19740321;f;1
+2009;000200009; Roux  ; Gabriel ;19690930; M;1
+2010;000200010;  Nguyen ; Maëlys  ;20011205;f ;0
