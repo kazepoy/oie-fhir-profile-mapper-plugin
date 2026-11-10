@@ -1,0 +1,100 @@
+# Construit l'extension et la publie dans une release GitHub lors d'un tag vX.Y.Z.
+# Un lancement manuel construit seulement l'archive, disponible comme artefact.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  OIE_VERSION: 4.7.0
+  OIE_SHA256: ab08558873dc6be1e474afaacc46efe94d29c945cd3381c10d0ae548ecb429de
+  DATATYPE_FHIR_VERSION: 1.5.1
+  DATATYPE_FHIR_ASSET: https://api.github.com/repos/matthydehoog/fhir-datatype-Eclipse-OIE/releases/assets/684674339
+  DATATYPE_FHIR_SHA256: 11792ed53a01feb52a226b5b19b4dbdae58f183eb4075a3569fda7eaa6124458
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      # L'API OIE et FHIR Data Type ne sont pas publiés sur Maven Central :
+      # les jars sont extraits des archives officielles, vérifiées par empreinte.
+      - name: Restore provided jars
+        id: jars
+        uses: actions/cache@v4
+        with:
+          path: provided-jars
+          key: provided-jars-oie-${{ env.OIE_VERSION }}-fhir-${{ env.DATATYPE_FHIR_VERSION }}
+
+      - name: Download provided jars
+        if: steps.jars.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p provided-jars dl
+          curl -fsSL --retry 3 -o dl/oie.tar.gz \
+            "https://github.com/OpenIntegrationEngine/engine/releases/download/v${OIE_VERSION}/oie_unix_${OIE_VERSION//./_}.tar.gz"
+          echo "${OIE_SHA256}  dl/oie.tar.gz" | sha256sum -c -
+          tar xzf dl/oie.tar.gz -C dl \
+            oie/server-lib/mirth-server.jar \
+            oie/server-lib/mirth-client-core.jar \
+            oie/server-lib/donkey/donkey-model.jar \
+            oie/server-lib/donkey/donkey-server.jar
+          cp dl/oie/server-lib/mirth-server.jar provided-jars/server-api.jar
+          cp dl/oie/server-lib/mirth-client-core.jar provided-jars/client-core.jar
+          cp dl/oie/server-lib/donkey/donkey-model.jar provided-jars/donkey-model.jar
+          cp dl/oie/server-lib/donkey/donkey-server.jar provided-jars/donkey-server.jar
+          curl -fsSL --retry 3 -H 'Accept: application/octet-stream' -o dl/datatype-fhir.zip "${DATATYPE_FHIR_ASSET}"
+          echo "${DATATYPE_FHIR_SHA256}  dl/datatype-fhir.zip" | sha256sum -c -
+          unzip -q -j dl/datatype-fhir.zip datatype-fhir/datatype-fhir-shared.jar datatype-fhir/lib/datatype-fhir-engine.jar -d dl
+          cp dl/datatype-fhir-shared.jar provided-jars/datatype-fhir-api.jar
+          cp dl/datatype-fhir-engine.jar provided-jars/datatype-fhir-engine.jar
+          rm -rf dl
+
+      - name: Install provided jars
+        run: |
+          set -euo pipefail
+          install() {
+            mvn -B -ntp -q install:install-file -Dfile="provided-jars/$3.jar" \
+              -DgroupId="$1" -DartifactId="$3" -Dversion="$2" -Dpackaging=jar
+          }
+          for a in server-api donkey-model donkey-server client-core; do
+            install com.mirth.connect "$OIE_VERSION" "$a"
+          done
+          for a in datatype-fhir-api datatype-fhir-engine; do
+            install com.matthy.oie "$DATATYPE_FHIR_VERSION" "$a"
+          done
+
+      - name: Set version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: mvn -B -ntp -q versions:set -DnewVersion="${GITHUB_REF_NAME#v}" -DgenerateBackupPoms=false
+
+      - name: Build
+        run: mvn -B -ntp package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fhir-profile-mapper
+          path: target/fhir-profile-mapper-*.zip
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd target
+          sha256sum fhir-profile-mapper-*.zip > SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" fhir-profile-mapper-*.zip SHA256SUMS \
+            --title "$GITHUB_REF_NAME" --generate-notes \
+            $([[ "$GITHUB_REF_NAME" == *-* ]] && echo --prerelease)

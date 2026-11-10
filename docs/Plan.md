@@ -419,8 +419,16 @@ phase, sans imposer dès maintenant un moteur ou un format unique aux deux usage
 
 Cette phase est mise de côté, comme les performances et la charge et le mapper
 FML : compatibilité approfondie de l'adaptateur FHIR Data Type, migration du
-namespace vers `fr.kazepoy` avec compatibilité des exports, GitHub Action de
-build sur tag et vérification des releases installables.
+namespace vers `fr.kazepoy` avec compatibilité des exports et vérification des
+releases installables.
+
+**Livré par anticipation :** la [GitHub Action](../.github/workflows/release.yml)
+construit l'extension sur un tag `vX.Y.Z` et publie le ZIP et son `SHA256SUMS`
+dans une release GitHub ; un tag contenant `-` produit une pré-release. Les jars
+OIE et FHIR Data Type non publiés sur Maven Central sont extraits des archives
+officielles vérifiées par empreinte, puis mis en cache. Un lancement manuel
+construit l'archive sans publier. Les étapes ont été rejouées dans un conteneur
+Maven Java 17 vierge : 101 tests Java et archive versionnée depuis le tag.
 
 ## Retours d'usage à traiter
 
