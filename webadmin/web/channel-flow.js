@@ -288,6 +288,15 @@ export function arrowPaths(edge) {
 
 // Mouse wheels scroll by lines or by whole notches (wheelDelta multiple of 120)
 // on one axis; trackpads send small pixel deltas, often on both axes.
+/**
+ * The view at actual size: a diagram that fits stays centered; a larger one starts at its
+ * left or top edge, where a message enters, with a margin, instead of overflowing both sides.
+ */
+export function actualSizeView(stageWidth, stageHeight, boxWidth, boxHeight, margin = 24) {
+  const offset = (stage, box) => stage + 2 * margin <= box ? (box - stage) / 2 : margin;
+  return { s: 1, x: offset(stageWidth, boxWidth), y: offset(stageHeight, boxHeight) };
+}
+
 export function isMouseWheel(event) {
   if (event.deltaMode === 1) return true;
   const notch = event.wheelDeltaY ?? event.wheelDelta;
@@ -601,6 +610,12 @@ function ChannelFlow({ channel, platform, onChange, nav }) {
     view.current = { s, x: (box.clientWidth - el.offsetWidth * s) / 2, y: Math.max(0, (box.clientHeight - el.offsetHeight * s) / 2) };
     apply();
   };
+  const actualSize = () => {
+    const el = stage.current, box = vp.current;
+    if (!el || !box) return;
+    view.current = actualSizeView(el.offsetWidth, el.offsetHeight, box.clientWidth, box.clientHeight);
+    apply();
+  };
   const zoomAt = (factor, cx = vp.current.clientWidth / 2, cy = vp.current.clientHeight / 2) => {
     const v = view.current, s = clamp(v.s * factor);
     view.current = { s, x: cx - (cx - v.x) * s / v.s, y: cy - (cy - v.y) * s / v.s };
@@ -699,6 +714,7 @@ function ChannelFlow({ channel, platform, onChange, nav }) {
     if (event.key === "+" || event.key === "=") animated(() => zoomAt(1.25))();
     else if (event.key === "-") animated(() => zoomAt(0.8))();
     else if (event.key === "0") animated(fit)();
+    else if (event.key === "1") animated(actualSize)();
   };
   const types = menu?.mode === "add" ? elementTypes(platform, menu.tile.target) : [];
   const rows = menu ? (menu.mode === "add" ? types.length : menu.tile.items.length) : 0;
@@ -717,7 +733,7 @@ function ChannelFlow({ channel, platform, onChange, nav }) {
         h("output", { ref: zoomOut }, "100%"),
         h("button", { type: "button", "aria-label": "Zoom in", onClick: animated(() => zoomAt(1.25)) }, "+"),
         h("button", { type: "button", onClick: animated(fit) }, "Fit"),
-        h("button", { type: "button", onClick: animated(() => zoomAt(1 / view.current.s)) }, "100%"))),
+        h("button", { type: "button", onClick: animated(actualSize), title: "Actual size, from the start of the flow" }, "100%"))),
     h("div", { className: "oflow-vp", ref: vp, tabIndex: 0, onKeyDown: keys, "aria-label": "Channel flow diagram" },
       h("div", { className: "oflow-stage", ref: stage },
         h("svg", { className: "oflow-wires", ref: wires, "aria-hidden": true }),

@@ -159,7 +159,7 @@ channelMap.put('__demoEtape', 'VALIDATION_FHIR_SORTIE');</script>
   <destinationConnectors>
     <connector version="4.7.0">
       <metaDataId>1</metaDataId>
-      <name>Réponse FHIR</name>
+      <name>Serveur FHIR (Patient)</name>
       <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
         <pluginProperties />
         <destinationConnectorProperties version="4.7.0">

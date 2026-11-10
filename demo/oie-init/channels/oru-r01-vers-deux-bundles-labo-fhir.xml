@@ -2,7 +2,7 @@
   <id>aa431dca-b805-4ac6-8dbd-e272b6fc4c18</id>
   <nextMetaDataId>3</nextMetaDataId>
   <name>ORU R01 vers deux Bundles labo FHIR</name>
-  <description>Un ORU^R01 construit une fois les ressources de laboratoire et les ajoute à labo-transaction (réponse HTTP sur /labo/, 8083) et labo-document (variable bundleDocument et destination Document labo FHIR). Identités et références communes ; requêtes seulement dans la transaction.</description>
+  <description>Un ORU^R01 construit une fois les ressources de laboratoire et les ajoute à deux Bundles : labo-transaction (Serveur FHIR, réponse HTTP sur /labo/, 8083) et labo-document (variable bundleDocument). Deux chaînes en parallèle : le serveur FHIR, et l'entrepôt documentaire suivi de l'archive PCA/PRA, qui n'archive que les documents acceptés (fichiers dans appdata/archive-pca). Identités et références communes ; requêtes seulement dans la transaction.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -359,7 +359,7 @@ channelMap.put('__demoEtape', 'VALIDATION_FHIR_SORTIE');</script>
   <destinationConnectors>
     <connector version="4.7.0">
       <metaDataId>1</metaDataId>
-      <name>Réponse FHIR</name>
+      <name>Serveur FHIR (transaction labo)</name>
       <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
         <pluginProperties />
         <destinationConnectorProperties version="4.7.0">
@@ -464,7 +464,7 @@ return connectorMessage.getEncodedData();</script>
     </connector>
     <connector version="4.7.0">
       <metaDataId>2</metaDataId>
-      <name>Document labo FHIR</name>
+      <name>Entrepôt documentaire</name>
       <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
         <pluginProperties />
         <destinationConnectorProperties version="4.7.0">
@@ -569,6 +569,131 @@ return connectorMessage.getEncodedData();</script>
       </responseTransformer>
       <filter version="4.7.0">
         <elements />
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>false</waitForPrevious>
+    </connector>
+    <connector version="4.7.0">
+      <metaDataId>3</metaDataId>
+      <name>Archive PCA/PRA</name>
+      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
+        <pluginProperties />
+        <destinationConnectorProperties version="4.7.0">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable />
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <script>// Archive de secours (PCA/PRA), simulée : après l'entrepôt documentaire, dans la
+// même chaîne, le document labo est écrit dans appdata/archive-pca, un fichier par
+// message. Le filtre n'archive que les documents acceptés par l'entrepôt (d2).
+var dir = java.nio.file.Paths.get('appdata', 'archive-pca');
+java.nio.file.Files.createDirectories(dir);
+var file = dir.resolve('labo-document-' + connectorMessage.getMessageId() + '.json');
+java.nio.file.Files.write(file, new java.lang.String(connectorMessage.getEncodedData()).getBytes('UTF-8'));
+return 'Archivé : ' + file;</script>
+      </properties>
+      <transformer version="4.7.0">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
+            <name>Utiliser le Bundle document</name>
+            <sequenceNumber>0</sequenceNumber>
+            <enabled>true</enabled>
+            <script>msg = channelMap.get('bundleDocument');</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundDataType>FHIR</inboundDataType>
+        <outboundDataType>FHIR</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
+            <fhirVersion>R4</fhirVersion>
+            <transformerFormat>XML</transformerFormat>
+            <stripNamespaces>true</stripNamespaces>
+            <outputFormat>JSON</outputFormat>
+            <prettyPrint>true</prettyPrint>
+            <validateInbound>false</validateInbound>
+            <validateOutbound>false</validateOutbound>
+            <invalidMessages>Reject</invalidMessages>
+            <failOn>Errors</failOn>
+            <profiles />
+            <requiredProfile />
+            <unknownCodeSystems>Warning</unknownCodeSystems>
+            <anyExtensionsAllowed>true</anyExtensionsAllowed>
+            <terminologyServer />
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
+            <splitType>Bundle_Entry</splitType>
+            <batchScript />
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
+            <fhirVersion>R4</fhirVersion>
+            <transformerFormat>XML</transformerFormat>
+            <stripNamespaces>true</stripNamespaces>
+            <outputFormat>JSON</outputFormat>
+            <prettyPrint>true</prettyPrint>
+            <validateInbound>false</validateInbound>
+            <validateOutbound>false</validateOutbound>
+            <invalidMessages>Reject</invalidMessages>
+            <failOn>Errors</failOn>
+            <profiles>/fhir-ig</profiles>
+            <requiredProfile>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabDocument</requiredProfile>
+            <unknownCodeSystems>Warning</unknownCodeSystems>
+            <anyExtensionsAllowed>true</anyExtensionsAllowed>
+            <terminologyServer />
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
+            <splitType>Bundle_Entry</splitType>
+            <batchScript />
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="4.7.0">
+        <elements />
+        <inboundDataType>RAW</inboundDataType>
+        <outboundDataType>RAW</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
+            <splitType>JavaScript</splitType>
+            <batchScript />
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
+            <splitType>JavaScript</splitType>
+            <batchScript />
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="4.7.0">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule version="4.7.0">
+            <name>Document accepté par l'entrepôt</name>
+            <sequenceNumber>0</sequenceNumber>
+            <enabled>true</enabled>
+            <operator>NONE</operator>
+            <script>// N'archiver que les documents acceptés par l'entrepôt documentaire.
+var accepted = $r('d2');
+return accepted != null &amp;&amp; String(accepted.getStatus()) == 'SENT';</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
       </filter>
       <transportName>JavaScript Writer</transportName>
       <mode>DESTINATION</mode>

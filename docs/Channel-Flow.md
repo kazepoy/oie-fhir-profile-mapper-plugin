@@ -36,7 +36,9 @@ Flow s’ouvre à chaque entrée dans l’éditeur du canal, y compris au retour
 s’il y a plusieurs chaînes, sinon Line. Le choix est mémorisé dans le navigateur.
 
 Zoom : molette de souris (autour du pointeur), pincement, boutons `−` / `+`, *Fit*,
-*100%*, ou touches `+`, `-`, `0` quand le schéma a le focus. Le défilement à deux
+*100%*, ou touches `+`, `-`, `0` (Fit), `1` (100%) quand le schéma a le focus. *100%*
+affiche la taille réelle à partir du début du schéma (bord gauche et haut, là où entre
+le message) ; un schéma qui tient dans la vue reste centré. Le défilement à deux
 doigts sur un pavé tactile et le glisser déplacent le schéma.
 
 Un filtre, un transformer ou une response affiche ses 5 premières étapes ; la hauteur

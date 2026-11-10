@@ -140,7 +140,7 @@ for each (var row in msg['row']) {
   <destinationConnectors>
     <connector version="4.7.0">
       <metaDataId>1</metaDataId>
-      <name>Bundle collection FHIR</name>
+      <name>Entrepôt FHIR (collection)</name>
       <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
         <pluginProperties />
         <destinationConnectorProperties version="4.7.0">

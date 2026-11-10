@@ -164,7 +164,11 @@ def main():
     assert document["entry"][0]["resource"]["resourceType"] == "Composition"
     shared = {e["fullUrl"]: e["resource"] for e in document["entry"]}
     assert all(shared[e["fullUrl"]] == e["resource"] for e in transaction["entry"])
-    print("OK deux Bundles : transaction 12, document 14, mêmes ressources et identités")
+    # L'archive PCA/PRA suit l'entrepôt documentaire dans sa chaîne et reçoit le même document.
+    archive = connector(message, 3)
+    assert encoded(message, 3) == document
+    assert "archive-pca/labo-document-" in archive.findtext("response/content")
+    print("OK deux Bundles : transaction 12, document 14, mêmes ressources et identités ; document archivé")
 
     patient = json.loads(post("SQL_PATIENT_PORT", 8084, "sql-patient", "patient-result-sql.xml", "application/xml"))
     assert patient["id"] == "metier-1042" and patient["identifier"][0]["value"] == "000123456"

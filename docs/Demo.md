@@ -63,14 +63,21 @@ HTTP et lit les messages via l'API OIE, sans modifier les canaux.
 |---|---|---|
 | 8081 | `/oru/` | Bundle transaction de 12 ressources, ou 4 pour l'ORU minimal |
 | 8082 | `/patient/` | Patient conforme au profil d'exemple |
-| 8083 | `/labo/` | Transaction de 12 ressources et document de 14, identités partagées |
+| 8083 | `/labo/` | Transaction de 12 ressources et document de 14, identités partagées, document archivé |
 | 8084 | `/sql-patient/` | Ligne XML SQL vers Patient, accents et zéros initiaux conservés |
 | 8085 | `/csv-patients/` | Dix messages Patient après nettoyage du CSV ; dernier Patient en réponse HTTP |
 | 8086 | `/csv-patients-collection/` | Un Bundle collection contenant les dix Patients |
 
+Les destinations portent le nom du système visé, simulé par un JavaScript Writer :
+*Serveur FHIR*, *Entrepôt FHIR*, *Entrepôt documentaire*, *Archive PCA/PRA*. Le canal
+labo montre aussi deux chaînes de destinations dans **Flow** et **Flows** : le serveur
+FHIR reçoit la transaction en parallèle de l'entrepôt documentaire, suivi de l'archive
+PCA/PRA. Un filtre n'archive le document que si l'entrepôt l'a accepté ; l'archive
+l'écrit dans `appdata/archive-pca/labo-document-<message>.json`.
+
 Le document du canal labo est conservé dans `channelMap["bundleDocument"]`
-et dans le contenu *Encoded* de sa deuxième destination. Le script vérifie
-ses références et l'identité des douze ressources communes à la transaction.
+et dans le contenu *Encoded* de l'entrepôt documentaire et de l'archive. Le script
+vérifie ses références et l'identité des douze ressources communes à la transaction.
 Il vérifie aussi la traduction locale GLU vers LOINC et le refus de l'ORU sans
 date de naissance : réponse HTTP vide, message OIE en `ERROR` mentionnant
 `birthDate`. Ce dernier message d'erreur est donc attendu après le contrôle.

@@ -1,7 +1,7 @@
 // Tests of the Channel Flow model, step creation and arrow routing (web/channel-flow.js).
 import test from "node:test";
 import assert from "node:assert/strict";
-import { flowModel, destinationChains, pickLayout, addElement, elementTypes, layoutEdges, arrowPaths, hasScript } from "../web/channel-flow.js";
+import { flowModel, destinationChains, pickLayout, addElement, elementTypes, layoutEdges, arrowPaths, hasScript, actualSizeView } from "../web/channel-flow.js";
 
 // The few Web Admin helpers the module uses, with the engine's wire shapes.
 const oie = {
@@ -136,4 +136,10 @@ test("a mouse wheel zooms while a two-finger trackpad scroll pans", async () => 
   assert.equal(isMouseWheel({ deltaMode: 0, deltaX: 0, deltaY: -100, wheelDeltaY: 120 }), true);
   assert.equal(isMouseWheel({ deltaMode: 0, deltaX: 0, deltaY: 4, wheelDeltaY: -12 }), false);
   assert.equal(isMouseWheel({ deltaMode: 0, deltaX: 2, deltaY: 30, wheelDeltaY: -120 }), false);
+});
+
+test("100% shows a large diagram from its start and centers one that fits", () => {
+  assert.deepEqual(actualSizeView(2400, 900, 1100, 700), { s: 1, x: 24, y: 24 });
+  assert.deepEqual(actualSizeView(600, 400, 1100, 700), { s: 1, x: 250, y: 150 });
+  assert.deepEqual(actualSizeView(2400, 300, 1100, 700), { s: 1, x: 24, y: 200 });
 });
