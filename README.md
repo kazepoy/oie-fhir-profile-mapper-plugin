@@ -44,11 +44,14 @@ Administration: <https://localhost:8443/oie-webadmin/> (`admin` /
 
 Detailed documentation is in French:
 
-- [Development and installation](docs/Developpement.md)
+- [Development, installation and releases](docs/Developpement.md)
+- [Mapping format and execution](docs/Specification-mapping.md)
 - [Graphical mapper](docs/Mappeur-graphique.md)
-- [Flow and Flows](docs/Channel-Flow.md)
+- [Execution traces](docs/Trace.md) (step tests and processed messages)
 - [Code assistants and AI workflow](docs/Assistants-et-IA.md)
-- [Test traces](docs/Trace.md)
+- [Flow and Flows](docs/Channel-Flow.md)
+- [FHIR Data Type integration](docs/Integration-FHIR-Data-Type.md)
+- [Demo](docs/Demo.md)
 - [Project plan](docs/Plan.md)
 
 License: [Mozilla Public License 2.0](LICENSE).

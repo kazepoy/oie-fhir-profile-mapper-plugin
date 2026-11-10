@@ -8,8 +8,7 @@
 // JSON text and XML the step writes.
 (function () {
     var global = this;
-    var FhirTools = Packages.org.oie.fhir.mapper.fhir.FhirFacade;
-    var FhirTerminology = Packages.org.oie.fhir.mapper.fhir.FhirFacade;
+    var FhirFacade = Packages.org.oie.fhir.mapper.fhir.FhirFacade;
     // A step preview injects its collector. A deployed message shares one collector between the
     // traced steps of its transformer (state().trace); an untraced step records nothing.
     var preview = typeof __fhirMapperTrace === 'undefined' ? null : __fhirMapperTrace;
@@ -395,7 +394,7 @@
             return undefined;
         }
         var source = translation.source || '';
-        var match = FhirTerminology.translate(options.terminologyServer, options.profiles, translation.conceptMap, source, code, translation.target || '',
+        var match = FhirFacade.translate(options.terminologyServer, options.profiles, translation.conceptMap, source, code, translation.target || '',
                 options.fhirVersion, options.authorization || '', options.cacheSeconds, options.timeoutSeconds);
         var c;
         if (match !== null && match !== undefined) {
@@ -966,7 +965,7 @@
                     targets[b.target] = true;
                     var encoded = json(b.resource);
                     if (b.options.validateOutput !== false) {
-                        var result = Packages.org.oie.fhir.mapper.fhir.FhirFacade.validate(
+                        var result = FhirFacade.validate(
                             encoded, b.options.requiredProfile, b.options.profiles, b.options.fhirVersion);
                         if (!result.isValid()) {
                             messageEvent('validation', 'failed', step, subject);

@@ -1,9 +1,28 @@
-# Spécification du format de mapping existant
+# Format et exécution des mappings
 
-Ce document fixe le contrat repris du POC dans le plugin **0.1.0-SNAPSHOT**.
-Il décrit ce qui est exécuté aujourd'hui. Le [guide du runtime](Runtime-mapping.md)
-détaille les mécanismes et les fonctions ; le [guide graphique](Mappeur-graphique.md)
-décrit leur édition. Les exemples ci-dessous sont exécutés dans les tests Java.
+Ce document fixe le contrat d'une étape FHIR Profile Mapper et la façon dont il
+est exécuté. Le [guide de l'éditeur](Mappeur-graphique.md) décrit sa saisie. Les
+exemples ci-dessous sont exécutés dans les tests Java.
+
+```text
+Profil FHIR + saisie dans l'éditeur
+        │
+        ▼
+Propriétés de l'étape + mappings JSON
+        │ FhirProfileMapperStep.getScript()
+        ▼
+JavaScript généré + runtime embarqué
+        │ moteur JavaScript d'OIE
+        ▼
+Ressources et Bundles FHIR (validation selon validateOutput)
+```
+
+L'éditeur n'écrit pas de JavaScript : il enregistre une description déclarative.
+[FhirProfileMapperStep.java](../src/main/java/org/oie/fhir/mapper/FhirProfileMapperStep.java)
+la contrôle et la compile ; [profile-mapper-runtime.js](../src/main/resources/org/oie/fhir/mapper/profile-mapper-runtime.js)
+fournit les conversions, itérations, traductions, l'assemblage des Bundles et la
+publication ; [FhirMapperLifecycle.java](../src/main/java/org/oie/fhir/mapper/FhirMapperLifecycle.java)
+repère au déploiement la dernière étape de chaque transformeur.
 
 ## 1. Unité du contrat et compatibilité
 
@@ -61,7 +80,15 @@ des entiers sérialisés en texte. Dans un nouveau JSON, préférer les types na
 Ces accommodements ne s'étendent pas aux booléens des règles (`keepSource`).
 
 Une cible contient `name`, puis éventuellement `requestMethod` (`POST` par
-défaut), `requestUrl` et `ifNoneExist` (expressions JavaScript, vides par défaut).
+défaut), `requestUrl` et `ifNoneExist` (expressions JavaScript, vides par défaut) :
+
+```json
+[
+  {"name":"labo-transaction","requestMethod":"PUT","requestUrl":"'Patient?identifier=' + msg['PID']['PID.3'][0]['PID.3.1']"},
+  {"name":"labo-document"}
+]
+```
+
 Méthodes acceptées : `POST`, `PUT`, `PATCH`, `DELETE`, `GET`, `HEAD`. Les noms
 des cibles doivent être uniques dans l'étape. Les anciennes propriétés communes
 `output`, `bundleProfile`, `requestMethod`, `requestUrl` et `ifNoneExist` sont
@@ -80,6 +107,16 @@ quatre formes, enregistrées séparément :
 | Itération | `each`, `variable` | Une exécution des règles descendantes par item. |
 | Condition | `condition` | Exécuter les règles descendantes si l'expression est vraie. |
 | Constante/pattern | `fixed`, `when` facultatif | Compléter les conteneurs construits sans écraser une valeur mappée. |
+
+```json
+[
+  {"key":"Patient.birthDate","type":"date","expression":"msg['PID']['PID.7']['PID.7.1'].toString()","path":[["birthDate"]]},
+  {"key":"Patient.name","each":"msg['PID']['PID.5']","variable":"n","path":[["name","#0"]]},
+  {"key":"Patient.name","condition":"n['PID.5.7'].toString() == 'L'","path":[["name","#0"]]},
+  {"key":"Patient.name.family","type":"string","expression":"n['PID.5.1']['PID.5.1.1'].toString()","path":[["name","#0"],["family"]]},
+  {"key":"Patient.identifier:ipp.system","fixed":"urn:ipp","when":1,"path":[["identifier","ipp#0"],["system"]]}
+]
+```
 
 `id` est un identifiant de règle optionnel, unique dans l'étape, composé de
 1 à 128 caractères (`A-Z`, `a-z`, chiffres, `_`, `.`, `:`, `-`, avec une lettre
@@ -120,7 +157,7 @@ Les expressions utilisent le JavaScript Rhino d'OIE, avec E4X pour les messages
 XML/HL7 v2. `msg` est la source vue par la **première étape FHIR du transformeur**,
 après les éventuelles étapes précédentes de nettoyage. Les étapes suivantes
 retrouvent cette source même après une publication FHIR. Les variables et
-fonctions OIE et les [fonctions du mapper](Runtime-mapping.md#8-fonctions-disponibles-dans-les-expressions)
+fonctions OIE et les [fonctions du mapper](#fonctions-des-expressions)
 complètent le contexte ; la portée de l'aperçu est précisée au §8.
 
 | Résultat ou erreur | Comportement actuel |
@@ -208,10 +245,41 @@ est vide : `POST` utilise le type de ressource ; les autres méthodes utilisent
 ne produisent pas de requête d'entrée. Le mapping d'un Bundle ne transporte
 aucun résultat vers un serveur FHIR : les destinations OIE assurent ce transport.
 
-Pour un `document`, Composition en tête, identifiant et timestamp sont des
-contraintes FHIR, vérifiées si la validation est active ; de même pour
-MessageHeader en tête d'un `message`. Les contrôles internes de références et
-de destinations ne remplacent pas la validation FHIR du Bundle.
+| Type | Règles prises en compte |
+|---|---|
+| `transaction`, `batch` | Requête de chaque entrée : méthode, URL, création conditionnelle éventuelle. |
+| `collection` | Aucune requête. |
+| `document` | Aucune requête ; Composition en tête, identifiant et timestamp (contraintes FHIR). |
+| `message` | Aucune requête ; MessageHeader en tête. |
+
+La requête est une fonction différée : pour un document, la méthode et l'URL
+éventuellement enregistrées ne sont pas évaluées. Les contraintes FHIR de chaque
+type sont vérifiées par la validation, si elle est active ; les contrôles internes
+de références et de destinations ne la remplacent pas.
+
+### Fonctions des expressions
+
+| Fonction | Contrat |
+|---|---|
+| `fhirUuid()` | UUID aléatoire sans préfixe `urn:uuid:`. |
+| `fhirRef(name, index, reserve)` | `fullUrl` d'une entrée nommée des Bundles sélectionnés ; indice 0 par défaut ; `undefined` si absente. |
+| `fhirRefs(name)` | Références connues sous ce nom ; ne prédit pas une itération future. |
+| `fhirFind(list, fn)` | Premier élément satisfaisant `fn(item, index)`, ou `undefined`. |
+| `fhirFilter(list, fn)` | Éléments satisfaisant cette condition. |
+| `hl7Following(seg, name, stop)` | Segments suivants du type demandé, jusqu'au prochain segment `stop`. |
+| `hl7Preceding(seg, name, stop)` | Segment précédent le plus proche du type demandé. |
+| `hl7Ordinal(seg)` | Indice du segment parmi ceux de même type, à partir de 0. |
+
+Pour une référence anticipée, `fhirRef('patient', 0, true)` réserve l'URN dans les
+cibles sélectionnées ; une entrée `patient` doit la remplir avant publication,
+sinon le Bundle échoue avec le nom et l'indice. Une construction partagée reprend
+une réservation existante : la même identité sert dans tous les Bundles.
+
+Les fonctions `hl7…` attendent un segment du XML HL7 v2 plat d'OIE ; la limite par
+défaut est un segment du type de départ, `[]` la retire. Le catalogue complet,
+avec signatures et exemples, est servi par `GET /functions` ([assistants](Assistants-et-IA.md)).
+Les méthodes Java `FhirFacade.validate`, `toJson`, `toXml`, `translate`, `lookup`
+et `validateCode` restent accessibles via `Packages.org.oie.fhir.mapper.fhir.FhirFacade`.
 
 ## 6. Ordre d'exécution et publication
 
@@ -233,6 +301,32 @@ bord que des expressions pourraient elles-mêmes produire dans les maps OIE.
 Une étape JavaScript placée après la dernière étape FHIR ne participe pas à
 l'assemblage. Les étapes FHIR à actions explicites imbriquées dans un Iterator
 OIE sont refusées : utiliser les itérations du mapper.
+
+### Code généré
+
+Chaque étape est une fonction immédiatement exécutée (forme simplifiée) :
+
+```javascript
+(function () {
+    var __fhir = /* runtime embarqué */;
+    __fhir.options = /* version, profils, terminologie */;
+    __fhir.traceStep(null);              // ou les métadonnées de l'étape tracée
+    __fhir.selectBundles(['labo-transaction', 'labo-document']);
+    var __out = (function (msg) {         // msg : la source conservée du transformeur
+        var __res = {resourceType: 'Patient'};
+        __fhir.set(__res, [['birthDate']], 'date', function () {
+            return msg['PID']['PID.7']['PID.7.1'].toString();
+        }, 'Patient.birthDate', null);
+        __fhir.addToBundles('patient', __fhir.finish(__res), [/* requêtes différées */]);
+    })(__fhir.source(msg));
+    // Après la dernière étape FHIR du transformeur : __fhir.completeBundles().
+})();
+```
+
+Chaque règle est précédée d'un marqueur `//~fhir` portant ses métadonnées de
+diagnostic. Avec `traceMessages`, le corps est entouré d'un `try`/`finally` qui
+termine l'étape dans la trace ; le `scriptHash` est calculé sur le script sans
+cette instrumentation ([Trace](Trace.md#trace-des-messages-traités)).
 
 ## 7. Validation et dépendances
 

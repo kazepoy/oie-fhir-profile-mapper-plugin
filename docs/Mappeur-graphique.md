@@ -1,6 +1,6 @@
 # FHIR Profile Mapper : l'éditeur graphique
 
-Ce document décrit l'étage de saisie et la construction du contrat de mapping. Le format de ce contrat, sa compilation Java et les règles exécutées sont décrits dans [Mappings, code généré et exécution](Runtime-mapping.md).
+Ce document décrit l'étage de saisie et la construction du contrat de mapping. Le format de ce contrat, sa compilation Java et les règles exécutées sont décrits dans [Format et exécution des mappings](Specification-mapping.md).
 
 ## 1. Responsabilité de l'éditeur
 
@@ -100,7 +100,7 @@ Dans les champs d'expression, saisir `fhir` ou `hl7` ouvre les propositions des 
 
 L'aide existe dans les valeurs, itérations, conditions, noms de référence, expressions de requête et repli de traduction. Elle ne constitue pas une analyse complète de JavaScript : la syntaxe et les paramètres effectifs sont contrôlés lors de la compilation et du test serveur.
 
-La portée et les limites de `fhirRef`, `fhirRefs`, `fhirFind`, `fhirFilter`, `fhirUuid` et des trois fonctions `hl7…` figurent dans la [référence du runtime](Runtime-mapping.md#8-fonctions-disponibles-dans-les-expressions).
+La portée et les limites de `fhirRef`, `fhirRefs`, `fhirFind`, `fhirFilter`, `fhirUuid` et des trois fonctions `hl7…` figurent dans la [spécification](Specification-mapping.md#fonctions-des-expressions).
 
 ## 6. Répétitions, conditions et traductions
 
@@ -146,7 +146,7 @@ Le composant conserve notamment les valeurs, itérations, conditions et traducti
 
 Le résultat est sérialisé dans `element.mappings`. La compilation couvre aussi les éléments temporairement masqués, afin qu'un filtre d'affichage ne supprime pas un mapping enregistré. L’action, le nom du Bundle créé, le tableau `bundleTargets` et les paramètres de sortie sont des propriétés de l’étape, distinctes du tableau de mappings. Le tableau des cibles est sérialisé en JSON ; chaque cible possède ses éventuels paramètres de requête.
 
-Le détail du format JSON, des chemins de slices/répétitions et de la génération des portées JavaScript figure dans [le contrat d'exécution](Runtime-mapping.md#3-format-des-mappings).
+Le détail du format JSON, des chemins de slices/répétitions et de la génération des portées JavaScript figure dans [la spécification](Specification-mapping.md#3-règles-chemins-et-portées).
 
 ## 9. Contrôles et échanges serveur
 
@@ -183,7 +183,7 @@ Les options, les limites et la portée de l'aperçu sont précisées dans
 
 ## 10. Limites et vérification
 
-L'administration Swing ne connaît pas cet éditeur. Les limites de construction FHIR restent celles du [README](Reprise-POC.md#limites-conservées), notamment les extensions primitives, contained et certaines formes de slicing.
+L'administration Swing ne connaît pas cet éditeur. Ne sont pas pris en charge : les extensions primitives, les ressources `contained`, les sous-slices et les discriminants de slicing `type`, `profile` et `exists` ; la traduction locale sans `dependsOn`/`product` ni traduction inverse.
 
 Les [tests de l'éditeur](../webadmin/test/profile-mapper.test.mjs) se lancent avec :
 

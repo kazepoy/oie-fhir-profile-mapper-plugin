@@ -1,5 +1,16 @@
 # Intégration avec FHIR Data Type
 
+## Origine et namespace
+
+Le compilateur, le runtime, l'éditeur et les tests viennent du POC
+`kazepoy/fhir-datatype-Eclipse-OIE` (branche `feature/fhir-profile-mapper`, commit
+`1df2c4054f5fc93b5dc348a1e43f572dd1cd5f16`, MPL 2.0). L'étape est désormais
+`org.oie.fhir.mapper.FhirProfileMapperStep` et les routes de l'éditeur sont sous
+`/api/extensions/fhir-profile-mapper`. Le plugin n'enregistre pas de second type
+de données FHIR : il utilise le datatype officiel. L'initialisation autorise la
+classe de l'étape dans le sérialiseur XML d'OIE ; `ChannelSerializationTest`
+couvre l'import/export et les anciens exports sans `validateOutput`.
+
 ## Contrat et isolation
 
 Le reste du mapper appelle `org.oie.fhir.mapper.fhir.FhirFacade`. Les résultats

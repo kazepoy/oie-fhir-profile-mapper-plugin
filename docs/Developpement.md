@@ -1,17 +1,7 @@
 # Développement et installation
 
-Le projet reprend le compilateur, le runtime et l'éditeur du POC dans un plugin
-distinct. Les fonctions conservées et les limites sont décrites dans
-[Reprise-POC.md](Reprise-POC.md).
-
-Le contrat actuel, son schéma et les commandes de contrôle hors ligne sont dans
-[Specification-mapping.md](Specification-mapping.md). Les exemples publiés y
-sont exécutés par `MappingSpecificationTest` pendant le build Maven, y compris
-dans l'image Docker de démonstration.
-
-Les assistants, les API de catalogue et de sérialisation, les ids de règles et
-le parcours d'édition des exports XML sont décrits dans
-[Assistants-et-IA.md](Assistants-et-IA.md).
+Le format des mappings, son schéma et les exemples exécutés par
+`MappingSpecificationTest` sont dans [Specification-mapping.md](Specification-mapping.md).
 
 ## Structure
 
@@ -21,10 +11,12 @@ le parcours d'édition des exports XML sont décrits dans
 | `src/main/java/org/oie/fhir/mapper/` | Compilateur des étapes et métadonnées de déploiement |
 | `src/main/java/org/oie/fhir/mapper/server/` | Cycle de vie, API et exécution des tests de l'éditeur |
 | `src/main/java/org/oie/fhir/mapper/integration/` | Adaptateur du datatype et pont de catalogue |
-| `webadmin/` | Éditeur graphique et ses tests Node |
+| `webadmin/` | Éditeur, onglet Flow, vue Flows et leurs tests Node |
+| `tools/` | Outils Python : contrôle du schéma, édition d'une étape dans un export de channel |
 | `src/main/resources/plugin.xml` | Descripteur de l'extension, versionné depuis le POM |
 | `assembly.xml` | Assemblage du ZIP installable |
-| `demo/` | OIE, Web Admin, FHIR Data Type et compilation du mapper dans Docker |
+| `demo/` | OIE, Web Admin, FHIR Data Type, RBAC et compilation du mapper dans Docker |
+| `.github/workflows/release.yml` | Build et release GitHub sur tag |
 | `docs/` | Plan de conception et documentation technique |
 
 Les appels à FHIR Data Type passent par la [façade et l'adaptateur](Integration-FHIR-Data-Type.md).
@@ -61,6 +53,7 @@ mvn install:install-file \
   -DgroupId=com.matthy.oie -DartifactId=datatype-fhir-engine -Dversion=1.5.1 -Dpackaging=jar
 mvn clean package
 node --test webadmin/test/
+python3 -m unittest discover -s tools/tests
 ```
 
 Le résultat est `target/fhir-profile-mapper-0.1.0-SNAPSHOT.zip` :
@@ -79,6 +72,15 @@ fhir-profile-mapper/
 
 Ce ZIP peut aussi être installé dans *Settings > Extensions* d'OIE 4.7.0, suivi
 d'un redémarrage. FHIR Data Type 1.5.1 est requis pour les services FHIR.
+
+## Publier une release
+
+Pousser un tag `vX.Y.Z` : la [GitHub Action](../.github/workflows/release.yml)
+construit l'extension avec la version du tag, lance les tests Java et publie le
+ZIP et son `SHA256SUMS` dans une release. Un tag contenant `-` (`v0.2.0-rc1`)
+donne une pré-release. Les JAR OIE et FHIR Data Type sont extraits des archives
+officielles, vérifiées par empreinte. Un lancement manuel construit le ZIP sans
+le publier.
 
 Le projet est sous [Mozilla Public License 2.0](../LICENSE). Le texte de licence
 est inclus dans le ZIP d'extension et dans le JAR sous `META-INF/LICENSE`.
