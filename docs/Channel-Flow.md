@@ -89,6 +89,21 @@ destination attend la précédente). Les cartes sont alignées d’une ligne à 
   configuration des canaux.
 - *Lifetime* affiche les compteurs cumulés ; le champ de filtre restreint par nom.
 
+### Droits (plugin Role Based Access Control)
+
+Flows n’a pas d’accès propre : elle lit `channels/statuses`, `channelgroups` et
+`channels` avec la session de l’utilisateur, comme le Dashboard. Vérifié avec RBAC
+1.3.0 dans la démo :
+
+- un rôle restreint à deux canaux ne voit que ces deux lignes ; un groupe n’affiche
+  que ses canaux autorisés et les totaux ne comptent que ceux-là ;
+- un compteur ouvre Messages pour un canal autorisé ; Messages d’un autre canal
+  est refusé par le serveur (403) ;
+- sans `viewDashboard`, l’entrée **Flows** disparaît du menu ; l’URL directe affiche
+  `Missing permission: viewDashboard`, sans donnée ;
+- **Edit** reste affiché sans `manageChannels` : l’éditeur répond alors *Access
+  denied*. Flows ne consulte pas les droits pour masquer ce lien.
+
 Le Dashboard de Web Admin n’accepte pas de troisième mode à côté des cartes et du
 tableau : Flows est une vue à part (`registerView` et `registerNavItem`).
 Code : [flow-dashboard.js](../webadmin/web/flow-dashboard.js), tests :

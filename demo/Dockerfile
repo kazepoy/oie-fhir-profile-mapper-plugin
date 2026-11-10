@@ -20,6 +20,13 @@ RUN curl --fail --silent --show-error --location --max-time 300 \
       --output /tmp/datatype-fhir.zip \
     && echo '11792ed53a01feb52a226b5b19b4dbdae58f183eb4075a3569fda7eaa6124458  /tmp/datatype-fhir.zip' | sha256sum -c -
 
+# Role Based Access Control 1.3.0 (diridium-com), pour OIE 4.7.0 : contrôle des droits
+# par rôle et par canal, côté serveur et dans l'administration web.
+RUN curl --fail --silent --show-error --location --max-time 300 \
+      https://github.com/diridium-com/role-based-access-control/releases/download/v1.3.0/rbac-1.3.0.zip \
+      --output /tmp/rbac.zip \
+    && echo 'f540cc77ebfadda88147f07fce412caff41abf30ad302ddca61f0b3f422d0cfd  /tmp/rbac.zip' | sha256sum -c -
+
 FROM ${BUSYBOX_IMAGE} AS plugins
 COPY --from=downloads /tmp/*.zip /downloads/
 
@@ -61,4 +68,4 @@ COPY --from=plugins --chown=engine:engine /extensions/ /opt/engine/extensions/
 COPY --from=mapper --chown=engine:engine /extensions/ /opt/engine/extensions/
 # OIE ne journalise que les erreurs par défaut pour les loggers non configurés.
 RUN printf '\nlogger.fhirProfileMapper.name = org.oie.fhir.mapper\nlogger.fhirProfileMapper.level = INFO\n' >> conf/log4j2.properties
-LABEL org.opencontainers.image.title="OIE 4.7.0, Web Support, FHIR Data Type et FHIR Profile Mapper"
+LABEL org.opencontainers.image.title="OIE 4.7.0, Web Support, FHIR Data Type, RBAC et FHIR Profile Mapper"

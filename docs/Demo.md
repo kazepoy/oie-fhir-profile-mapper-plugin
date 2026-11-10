@@ -5,10 +5,12 @@ Environnement de démonstration du plugin de mapping :
 - Open Integration Engine **4.7.0** et PostgreSQL **18.3** ;
 - Web Support **1.3.0**, avec l'administration web **1.3.0** ;
 - FHIR Data Type **1.5.1**, dans sa version officielle ;
+- [Role Based Access Control](https://github.com/diridium-com/role-based-access-control) **1.3.0**
+  (diridium-com), qui remplace l'autorisation « tout permis » d'OIE par des rôles ;
 - FHIR Profile Mapper **0.1.0-SNAPSHOT**, compilé depuis les sources du projet.
 
-Web Support et FHIR Data Type sont téléchargés au build, avec vérification de
-leur SHA-256. Le mapper est compilé avec Maven à partir de l'API de l'image OIE
+Web Support, FHIR Data Type et RBAC sont téléchargés au build, avec vérification
+de leur SHA-256. Le mapper est compilé avec Maven à partir de l'API de l'image OIE
 cible, puis installé dans cette même image. Le compilateur, le runtime et
 l'éditeur graphique sont repris du POC. L'initialisation importe et déploie les
 six canaux de référence, avec leur IG de démonstration montée dans `/fhir-ig`.
@@ -28,8 +30,11 @@ Le premier build compile OIE depuis ses sources et peut prendre plusieurs minute
 
 Administration : <https://localhost:8443/oie-webadmin/> (certificat autosigné).
 Compte : `admin`, mot de passe : `demo-fhir-mapper-admin`.
-Dans *Settings > Extensions*, vérifier la présence de Web Support, FHIR Data Type
-et FHIR Profile Mapper. Le journal OIE doit contenir `FHIR Profile Mapper started.`.
+Dans *Settings > Extensions*, vérifier la présence de Web Support, FHIR Data Type,
+Role-Based Access Control et FHIR Profile Mapper. Au premier démarrage avec RBAC,
+les comptes existants reçoivent le rôle *Administrator* ; un compte créé ensuite
+n'a aucun rôle tant qu'il ne lui en est pas attribué un (onglet *Role-Based Access
+Control* de *Settings*, ou `POST /api/extensions/rbac/users/{id}/role/{roleId}`). Le journal OIE doit contenir `FHIR Profile Mapper started.`.
 L'image active le niveau `INFO` pour le logger `org.oie.fhir.mapper`.
 
 Les réglages sont dans [compose.yaml](../demo/compose.yaml). Pour les personnaliser,
