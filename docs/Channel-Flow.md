@@ -75,10 +75,11 @@ canaux, *Default Group* en dernier. Chaque canal se lit sur une ligne, de gauche
 droite : canal et état, source, puis ses chaînes de destinations (*then* quand une
 destination attend la précédente). Les cartes sont alignées d’une ligne à l’autre.
 
-- Chaque carte donne ses compteurs : Received, Filtered, Queued, Errored pour la
-  source ; Sent, Queued, Filtered, Errored pour une destination. Une carte avec des
-  erreurs a une bordure rouge, une carte avec une file d’attente une bordure ambre.
-  Un connecteur arrêté est en pointillés.
+- Chaque carte donne ses compteurs dans le même ordre que les totaux du canal :
+  statut principal (Received pour la source, Sent pour une destination), puis
+  Filtered, Queued, Errored. Une carte avec des erreurs a une bordure rouge, une
+  carte avec une file d’attente une bordure ambre. Un connecteur arrêté est en
+  pointillés.
 - Un clic sur le titre d’une carte ouvre Messages filtré sur ce connecteur
   (`/messages/<canal>?metaDataId=<n>`). Un clic sur un compteur ajoute son statut
   (Filtered, Queued, Sent, Errored ; Received = tous les statuts) : Messages n’a pas

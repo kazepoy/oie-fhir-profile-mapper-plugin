@@ -8,7 +8,7 @@ const h = (...args) => R.createElement(...args);
 const REFRESH_MS = 5000;
 const STATUS = ["RECEIVED", "FILTERED", "QUEUED", "SENT", "ERROR"];
 const SOURCE_COUNTERS = [["RECEIVED", "Received"], ["FILTERED", "Filtered"], ["QUEUED", "Queued"], ["ERROR", "Errored"]];
-const DEST_COUNTERS = [["SENT", "Sent"], ["QUEUED", "Queued"], ["FILTERED", "Filtered"], ["ERROR", "Errored"]];
+const DEST_COUNTERS = [["SENT", "Sent"], ["FILTERED", "Filtered"], ["QUEUED", "Queued"], ["ERROR", "Errored"]];
 const DEFAULT_GROUP = "Default Group";
 
 /* ---------------------------------------------------------------- model */
