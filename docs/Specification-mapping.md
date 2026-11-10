@@ -351,7 +351,9 @@ Les routes existantes sont préfixées par `/api/extensions/fhir-profile-mapper`
 `POST /script` reçoit une étape JSON ; `POST /test` reçoit
 `{"step": {...}, "message": "...", "dataType": "JSON"}`. Le corps HTTP est
 `text/plain`, la réponse `application/json`, avec l'authentification OIE et
-`X-Requested-With: OpenAPI`. Types sources : `HL7V2` (défaut), `XML`, `JSON`, `RAW`.
+`X-Requested-With: OpenAPI`. `/test` exige la permission d'extension **Test FHIR
+mapper steps**, car il exécute le code de l'étape sur le serveur ; les autres routes
+exigent **Edit FHIR mappings** ([permissions](Mappeur-graphique.md#9-contrôles-et-échanges-serveur)). Types sources : `HL7V2` (défaut), `XML`, `JSON`, `RAW`.
 
 `/script` renvoie `script` et `errors`. `/test` renvoie `output` (texte ou null),
 `validationPerformed`, `issues` et `errors`. Un diagnostic conserve `key` (ou

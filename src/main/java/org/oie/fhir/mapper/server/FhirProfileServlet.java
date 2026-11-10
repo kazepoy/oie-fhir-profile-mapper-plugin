@@ -36,7 +36,9 @@ import com.mirth.connect.util.ConfigurationProperty;
 public class FhirProfileServlet extends MirthServlet implements FhirProfileServletInterface {
 
     public FhirProfileServlet(@Context HttpServletRequest request, @Context SecurityContext sc) {
-        super(request, sc);
+        // The extension name makes the operations ExtensionOperations, which an authorization
+        // plugin matches against the permissions of FhirProfileMapperPlugin.
+        super(request, sc, PLUGIN_NAME);
     }
 
     @Override

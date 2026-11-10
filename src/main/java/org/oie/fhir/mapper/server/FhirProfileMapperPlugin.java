@@ -16,6 +16,7 @@ import com.mirth.connect.model.ExtensionPermission;
 import com.mirth.connect.plugins.ServicePlugin;
 import com.mirth.connect.model.converters.ObjectXMLSerializer;
 import org.oie.fhir.mapper.FhirProfileMapperStep;
+import org.oie.fhir.mapper.FhirProfileServletInterface;
 
 public final class FhirProfileMapperPlugin implements ServicePlugin {
 
@@ -23,7 +24,7 @@ public final class FhirProfileMapperPlugin implements ServicePlugin {
 
     @Override
     public String getPluginPointName() {
-        return "FHIR Profile Mapper";
+        return FhirProfileServletInterface.PLUGIN_NAME;
     }
 
     @Override
@@ -40,9 +41,27 @@ public final class FhirProfileMapperPlugin implements ServicePlugin {
         return new Properties();
     }
 
+    /**
+     * An authorization plugin such as Role Based Access Control enforces only the permissions a
+     * plugin declares here: without them every route of the editor would be open to any user with
+     * a role. The engine's own controller allows everything, as for the other extensions.
+     */
     @Override
     public ExtensionPermission[] getExtensionPermissions() {
-        return new ExtensionPermission[0];
+        String name = getPluginPointName();
+        return new ExtensionPermission[] {
+            new ExtensionPermission(name, FhirProfileServletInterface.PERMISSION_EDIT,
+                    "Use the FHIR Profile Mapper editor: profiles, StructureDefinitions, ConceptMaps and translations "
+                            + "(called from the OIE server), function catalogue and generated script.",
+                    new String[] { "getFhirMapperFunctions", "getFhirMapperSource", "getFhirProfiles", "getFhirStructure",
+                            "getFhirConceptMaps", "translateFhirCode", "getFhirMapperScript" },
+                    new String[0]),
+            new ExtensionPermission(name, FhirProfileServletInterface.PERMISSION_TEST,
+                    "Run a FHIR Profile Mapper step on a sample message. The step's code runs on the server with access to "
+                            + "Java, the configuration map and the code templates: grant it only to users who may deploy channels.",
+                    new String[] { "testFhirMapper" },
+                    new String[0])
+        };
     }
 
     @Override

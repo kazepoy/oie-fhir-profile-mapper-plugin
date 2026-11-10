@@ -161,7 +161,14 @@ Les contrôles locaux signalent la configuration incohérente et les éléments 
 | `script` | Compiler la configuration d'une étape et relever ses erreurs de syntaxe. |
 | `test` | Exécuter une étape sur un message exemple et valider la ressource obtenue. |
 
-Ces routes demandent la permission Manage Channels. Le test est exécuté sur le serveur avec les maps et code templates accessibles au channel, dans une exécution limitée à dix secondes.
+Le plugin déclare deux permissions, appliquées par un plugin d'autorisation comme [RBAC](https://github.com/diridium-com/role-based-access-control) et accordées à tous sans lui :
+
+| Permission | Routes |
+|---|---|
+| **Edit FHIR mappings** | `profiles`, `structure`, `conceptMaps`, `translate`, `script`, `functions`, `source` |
+| **Test FHIR mapper steps** | `test` |
+
+Le test exécute le code de l'étape sur le serveur, avec l'accès à Java, à la configuration map et aux code templates, comme un channel déployé : n'accorder **Test FHIR mapper steps** qu'aux utilisateurs autorisés à déployer. Sans cette permission, l'onglet **Test** l'indique. L'exécution est limitée à dix secondes.
 
 L'onglet **Test** exécute l'étape seule. Son type et son contenu initiaux viennent du template entrant du transformeur concerné ; en destination, prévoir le message déjà nettoyé par la source. Les modifications du message de test sont mémorisées par channel, connecteur et transformeur de réponse éventuel. Il ne simule pas les autres étapes ni l'intégralité des Bundles nommés. Les références aux autres étapes utilisent des valeurs de remplacement. Une itération sur la ressource est montrée sous forme de collection de prévisualisation. Pour certifier les deux Bundles de laboratoire, envoyer un message au channel déployé et inspecter les deux résultats.
 

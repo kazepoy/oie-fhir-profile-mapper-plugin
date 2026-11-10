@@ -1078,7 +1078,10 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       });
       st.testResult = JSON.parse(text);
     } catch (e) {
-      st.testResult = { output: null, issues: [], errors: [{ key: null, line: null, message: errorText(e) }] };
+      const message = errorText(e);
+      st.testResult = { output: null, issues: [], errors: [{ key: null, line: null, message: e?.status === 403 || /Test FHIR mapper steps/.test(message)
+        ? "Testing a step runs its code on the server, like a deployed channel: it requires the permission “Test FHIR mapper steps”."
+        : message }] };
     }
     st.testing = false;
     rerender();

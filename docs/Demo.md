@@ -34,7 +34,9 @@ Dans *Settings > Extensions*, vérifier la présence de Web Support, FHIR Data T
 Role-Based Access Control et FHIR Profile Mapper. Au premier démarrage avec RBAC,
 les comptes existants reçoivent le rôle *Administrator* ; un compte créé ensuite
 n'a aucun rôle tant qu'il ne lui en est pas attribué un (onglet *Role-Based Access
-Control* de *Settings*, ou `POST /api/extensions/rbac/users/{id}/role/{roleId}`). Le journal OIE doit contenir `FHIR Profile Mapper started.`.
+Control* de *Settings*, ou `POST /api/extensions/rbac/users/{id}/role/{roleId}`).
+Pour éditer et tester des mappings, un rôle doit aussi avoir les permissions
+**Edit FHIR mappings** et **Test FHIR mapper steps** du plugin. Le journal OIE doit contenir `FHIR Profile Mapper started.`.
 L'image active le niveau `INFO` pour le logger `org.oie.fhir.mapper`.
 
 Les réglages sont dans [compose.yaml](../demo/compose.yaml). Pour les personnaliser,
