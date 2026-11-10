@@ -52,6 +52,9 @@ Flows sous RBAC) ont été faites dans un navigateur (Playwright, Chromium headl
 
 ## Phases ultérieures
 
+- **Extraire Flow et Flows** dans un plugin séparé : ces vues valent pour tout
+  channel et n'ont aucun lien avec FHIR (`channel-flow.js`, `flow-dashboard.js`,
+  leurs tests et [leur doc](Channel-Flow.md)).
 - **Stabilisation et livraison** : compatibilité approfondie de l'adaptateur FHIR
   Data Type, migration du namespace vers `fr.kazepoy` avec compatibilité des
   exports, vérification des releases installables à chaque version.
