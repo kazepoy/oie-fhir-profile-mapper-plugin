@@ -299,7 +299,7 @@ que l'activation de la trace ne change pas le résultat d'un même traitement.
 **Assistants et parcours éditeur/IA :** catalogue commun publié par le serveur,
 `Ctrl+Espace`, suggestions de fonctions, variables et chemins du message exemple,
 portées imbriquées, signatures et types de retour, pastilles d'aide officielle
-FHIR, import/export JSON d'une étape avec compilation avant application et ids
+FHIR, édition en JSON d'une étape avec compilation avant application et ids
 stables optionnels. L'outil `tools/channel_mapping.py` extrait, explique et modifie
 une étape d'un export de channel en préservant le reste du fichier. Voir
 [Assistants-et-IA.md](Assistants-et-IA.md). Vérifié : 101 tests Java, 14 tests
@@ -436,7 +436,7 @@ produit le Patient, la trace et le diagnostic de conversion attendus.
 
 ## Retours d'usage à traiter
 
-- Présentation de l'étape en onglets Properties, Mapper et Test — réalisée sur la branche `feat/step-tabs`.
-- Clarifier l'intérêt de « Mapping JSON — import / export » dans l'interface.
+- Présentation de l'étape en onglets Properties, Mapper et Test — livrée.
+- « Mapping JSON — import / export » renommé **Edit as JSON**, avec une phrase d'usage.
 - Raccourci `Ctrl+Espace` inactif — corrigé : macOS le réserve par défaut au
   changement de source de saisie ; `Alt+Espace` (`⌥+Espace`) ouvre aussi les suggestions.

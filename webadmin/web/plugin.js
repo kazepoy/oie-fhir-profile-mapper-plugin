@@ -1457,7 +1457,15 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     }
   }
   const check = tree ? completeness(tree, parseMappings(element.mappings)) : { required: [], mustSupport: [] };
-  if (createBundle) check.required = check.required.filter((k) => k !== "Bundle.type");
+  // A Bundle step sets its type; its entries come from the resource steps that select it.
+  const entryKey = (k) => k === "Bundle.entry" || k.startsWith("Bundle.entry.") || k.startsWith("Bundle.entry:");
+  if (createBundle) {
+    check.required = check.required.filter((k) => k !== "Bundle.type" && !entryKey(k));
+    check.mustSupport = check.mustSupport.filter((k) => !entryKey(k));
+  }
+  const entryNote = createBundle && tree
+    ? h("div", { className: "hint", style: { marginTop: "6px" } }, "Bundle.entry is filled by the resource steps that select this Bundle in “Add to Bundles”.")
+    : null;
   const testResult = st.testResult;
 
   const profileOptions = (st.profileList || []).map((p) => h("option", { key: p.url, value: p.url }, `${p.title || p.name || p.url} (${p.type})`));
@@ -1630,7 +1638,8 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       )
     ),
     h("details", { style: { marginTop: "10px" } },
-      h("summary", { style: { cursor: "pointer" } }, "Mapping JSON — import / export"),
+      h("summary", { style: { cursor: "pointer" } }, "Edit as JSON"),
+      h("div", { className: "hint", style: { margin: "6px 0" } }, "The whole step — properties and rules — as text: copy it to another step or channel, paste a mapping written by hand or by an AI agent, or make bulk edits. Validate and apply compiles it on the server first."),
       h("div", { className: "mapper-actions" },
         h("button", { type: "button", className: "btn btn-sm", onClick: () => { st.jsonDraft = JSON.stringify(element, null, 2); rerender(); } }, "Read current step"),
         h("button", { type: "button", className: "btn btn-sm", disabled: st.loading || !st.jsonDraft.trim(), onClick: async () => {
@@ -1736,7 +1745,8 @@ function ProfileMapperEditor({ element, onChange, platform }) {
                 check.required.length ? h("div", { style: { color: "#b91c1c" } }, `Required, not mapped: ${check.required.join(", ")}`) : null,
                 check.mustSupport.length ? h("div", { style: { color: "#b45309" } }, `Must Support, not mapped: ${check.mustSupport.join(", ")}`) : null
               )
-            : h("div", { className: "hint", style: { marginTop: "6px", color: "#15803d" } }, "Every required element below the mapped ones has a mapping or a fixed value.")
+            : h("div", { className: "hint", style: { marginTop: "6px", color: "#15803d" } }, "Every required element below the mapped ones has a mapping or a fixed value."),
+          entryNote
         )
       : h("div", { className: "hint" }, st.loading ? "Loading the target profile…" : "Load a target profile in Properties to map its elements.");
   const testPanel = tree

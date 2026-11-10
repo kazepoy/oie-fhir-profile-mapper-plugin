@@ -38,7 +38,7 @@ et dans OIE.
 
 ## Modifier une étape en JSON
 
-Dans l'onglet **Properties**, **Mapping JSON — import / export**, puis **Read current step**, fournit l'objet
+Dans l'onglet **Properties**, **Edit as JSON**, puis **Read current step**, fournit l'objet
 utilisé par l'éditeur. Après modification, **Validate and apply** vérifie le JSON
 et compile son script sur le serveur avant d'appliquer les changements à cette
 étape. Le numéro de séquence et l'état activé sont conservés. Le channel doit

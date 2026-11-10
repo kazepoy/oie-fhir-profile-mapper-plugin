@@ -6,7 +6,9 @@ Ce document décrit l'étage de saisie et la construction du contrat de mapping.
 
 L'éditeur fournit une étape **FHIR Profile Mapper** dans l'administration web d'OIE. Il aide à sélectionner un profil, parcourir ses éléments et décrire comment construire une ressource ou un Bundle.
 
-L'étape est présentée en trois onglets : **Properties** (action, profil, terminologie, Bundles, options et import/export JSON), **Mapper** (arbre des éléments et leurs règles) et **Test** (message exemple, trace et script généré). Une étape qui a déjà des règles s'ouvre sur **Mapper**, une nouvelle étape sur **Properties**. Un compteur rouge sur **Mapper** signale les éléments requis non mappés, un `!` sur **Test** l'échec du dernier test. **Go to rule** ramène sur **Mapper** et sélectionne le champ concerné. Les erreurs et avertissements de l'étape restent visibles au-dessus des onglets.
+L'étape est présentée en trois onglets : **Properties** (action, profil, terminologie, Bundles, options et édition en JSON), **Mapper** (arbre des éléments et leurs règles) et **Test** (message exemple, trace et script généré). Une étape qui a déjà des règles s'ouvre sur **Mapper**, une nouvelle étape sur **Properties**. Un compteur rouge sur **Mapper** signale les éléments requis non mappés, un `!` sur **Test** l'échec du dernier test. **Go to rule** ramène sur **Mapper** et sélectionne le champ concerné. Les erreurs et avertissements de l'étape restent visibles au-dessus des onglets.
+
+Dans une étape **Create a Bundle**, `Bundle.entry` n'est pas signalé comme requis non mappé : les entrées viennent des étapes de ressource qui sélectionnent ce Bundle dans **Add to Bundles**.
 
 Il **ne transforme pas les messages métier dans le navigateur**. Il construit une configuration et un tableau de mappings JSON. Le serveur compile ces mappings en JavaScript avec `FhirProfileMapperStep.getScript()` ; OIE exécute ce JavaScript lors du traitement du message.
 
