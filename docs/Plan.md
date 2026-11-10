@@ -429,9 +429,14 @@ OIE et FHIR Data Type non publiés sur Maven Central sont extraits des archives
 officielles vérifiées par empreinte, puis mis en cache. Un lancement manuel
 construit l'archive sans publier. Les étapes ont été rejouées dans un conteneur
 Maven Java 17 vierge : 101 tests Java et archive versionnée depuis le tag.
+La pré-release `v0.1.0-rc2` a été installée par `POST /api/extensions/_install`
+dans une instance OIE 4.7.0 isolée, avec Web Support 1.3.0 et FHIR Data Type
+1.5.1 : après redémarrage, l'extension est active en 0.1.0-rc2 et l'API de test
+produit le Patient, la trace et le diagnostic de conversion attendus.
 
 ## Retours d'usage à traiter
 
 - Étudier une présentation de l'étape en onglets : propriétés, mapper et test.
 - Clarifier l'intérêt de « Mapping JSON — import / export » dans l'interface.
-- Corriger le raccourci `Ctrl+Espace`, signalé comme inactif dans les zones de saisie.
+- Raccourci `Ctrl+Espace` inactif — corrigé : macOS le réserve par défaut au
+  changement de source de saisie ; `Alt+Espace` (`⌥+Espace`) ouvre aussi les suggestions.

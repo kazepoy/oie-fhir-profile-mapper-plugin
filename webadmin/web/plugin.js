@@ -178,6 +178,18 @@ function mapperCompletionContext(node, iterationMap, paths, role = "value") {
   return { role, variables, paths: [...new Set([...paths, ...aliases])], targetType: node?.code };
 }
 
+/**
+ * Ctrl+Space opens the suggestions; macOS keeps it by default to switch input
+ * sources, so Alt/Option+Space does the same everywhere.
+ */
+function isCompletionShortcut(e) {
+  return (e.code === "Space" || e.key === " " || e.key === "\u00a0") && !e.metaKey && !e.shiftKey && e.ctrlKey !== e.altKey;
+}
+
+const COMPLETION_HINT = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "")
+  ? "⌥Space (or ⌃Space) for suggestions"
+  : "Ctrl+Space or Alt+Space for suggestions";
+
 function MapperExpression({ style, onChange, completionContext = {}, ...props }) {
   const input = React.useRef(null);
   const popup = React.useRef(null);
@@ -243,7 +255,7 @@ function MapperExpression({ style, onChange, completionContext = {}, ...props })
   return h("span", { className: "mapper-expression", style },
     h("input", {
       ...props, ref: input, type: "text", autoComplete: "off", role: "combobox", "aria-label": props["aria-label"] || "JavaScript expression",
-      title: props.title || `${completionContext.role || "value"}${completionContext.targetType ? ` → FHIR ${completionContext.targetType}` : ""}. Ctrl+Space for suggestions.`,
+      title: props.title || `${completionContext.role || "value"}${completionContext.targetType ? ` → FHIR ${completionContext.targetType}` : ""}. ${COMPLETION_HINT}.`,
       "aria-autocomplete": "list", "aria-expanded": !!menu, "aria-controls": id, "aria-activedescendant": menu ? `${id}-${active}` : undefined,
       style: { ...style, flex: undefined, width: "100%", minWidth: 0 },
       onChange: (e) => { onChange(e); update(e.target); },
@@ -251,7 +263,7 @@ function MapperExpression({ style, onChange, completionContext = {}, ...props })
       onBlur: () => setMenu(null),
       onKeyDown: (e) => {
         if (e.nativeEvent.isComposing) return;
-        if (e.ctrlKey && (e.code === "Space" || e.key === " ")) { e.preventDefault(); e.stopPropagation(); update(e.target, true); return; }
+        if (isCompletionShortcut(e)) { e.preventDefault(); e.stopPropagation(); update(e.target, true); return; }
         if (!menu) return;
         if (e.key === "ArrowDown" || e.key === "ArrowUp") {
           e.preventDefault();
@@ -1689,7 +1701,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
               }),
               " extensions & ids"
             ),
-            h("span", { className: "hint text-text-faint", style: { fontSize: "11px" } }, "Ctrl+Space: functions, scoped variables and sample paths. ↑/↓ to choose, Enter/Tab to insert, Esc to close. Guard optional values.")
+            h("span", { className: "hint text-text-faint", style: { fontSize: "11px" } }, `${COMPLETION_HINT}: functions, scoped variables and sample paths. ↑/↓ to choose, Enter/Tab to insert, Esc to close. Guard optional values.`)
           ),
           h(
             "div",

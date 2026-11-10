@@ -2,7 +2,9 @@
 
 ## Dans l'éditeur
 
-`Ctrl+Espace` ouvre les suggestions, même sans préfixe. Le catalogue présente
+`Ctrl+Espace` ou `Alt+Espace` (`⌥+Espace` sur macOS) ouvre les suggestions, même
+sans préfixe. macOS réserve par défaut `Ctrl+Espace` au changement de source de
+saisie : la page ne reçoit alors pas ce raccourci. Le catalogue présente
 signatures, paramètres, types de retour, descriptions et exemples insérables.
 La recherche explicite porte aussi sur les descriptions. Les flèches sélectionnent,
 Entrée/Tab insèrent, Échap ferme. Le texte hors de la sélection reste conservé.

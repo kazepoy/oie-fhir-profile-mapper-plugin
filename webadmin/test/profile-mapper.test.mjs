@@ -12,7 +12,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const code = fs.readFileSync(path.join(here, "../web/plugin.js"), "utf8").replace("export async function register", "async function register");
 const catalog = JSON.parse(fs.readFileSync(path.join(here, "../../src/main/resources/org/oie/fhir/mapper/mapper-functions.json"), "utf8"));
 const context = vm.createContext({ console, crypto: { randomUUID } });
-vm.runInContext(code + `\nMAPPER_FUNCTIONS = ${JSON.stringify(catalog)};\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample, mapperDiagnostic, mapperTraceRows, mapperTraceExport, mapperSourcePaths, mapperHelpUrl, mapperJsonImport, mapperRuleIds, mapperCompletionContext, MapperExpression, ProfileMapperEditor, setReact: value => React = value };`, context);
+vm.runInContext(code + `\nMAPPER_FUNCTIONS = ${JSON.stringify(catalog)};\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample, mapperDiagnostic, mapperTraceRows, mapperTraceExport, mapperSourcePaths, mapperHelpUrl, mapperJsonImport, mapperRuleIds, mapperCompletionContext, isCompletionShortcut, MapperExpression, ProfileMapperEditor, setReact: value => React = value };`, context);
 const { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample } = context.t;
 
 const el = (id, min, max, types, more = {}) => ({ id, path: id.replace(/:[^.]+/g, ""), min, max, base: { max: more.baseMax ?? max }, type: types.map((t) => (typeof t === "string" ? { code: t } : t)), ...more });
@@ -81,6 +81,16 @@ test("expanded tree branches keep their auxiliary rows and descendants together 
   const closed = all(render());
   assert.ok(!closed.some(node => node.props.key === "Patient.name.family"));
   assert.ok(closed.some(node => node.props["data-owner"] === "Patient.name"));
+});
+
+test("Ctrl+Space and Alt/Option+Space open completion; macOS keeps Ctrl+Space for input sources", () => {
+  const key = (more) => ({ code: "Space", key: " ", ctrlKey: false, altKey: false, metaKey: false, shiftKey: false, ...more });
+  assert.equal(context.t.isCompletionShortcut(key({ ctrlKey: true })), true);
+  assert.equal(context.t.isCompletionShortcut(key({ altKey: true, key: "\u00a0" })), true);
+  assert.equal(context.t.isCompletionShortcut(key({})), false);
+  assert.equal(context.t.isCompletionShortcut(key({ metaKey: true })), false);
+  assert.equal(context.t.isCompletionShortcut(key({ ctrlKey: true, altKey: true })), false);
+  assert.equal(context.t.isCompletionShortcut(key({ ctrlKey: true, code: "KeyA", key: "a" })), false);
 });
 
 test("Ctrl+Space opens completion without a prefix, including scoped variables and sample paths", () => {
