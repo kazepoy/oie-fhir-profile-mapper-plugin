@@ -1865,6 +1865,19 @@ function registerProfileMapper(platform) {
   });
 }
 
-export function register(platform) {
+export async function register(platform, context) {
   registerProfileMapper(platform);
+  // Channel Flow and the Flows view ship as separate assets: a WAR loads this
+  // entry from a blob URL, so relative imports cannot reach them.
+  if (!context?.getAssetText) return;
+  for (const asset of ["web/channel-flow.js", "web/flow-dashboard.js"]) {
+    try {
+      const source = await context.getAssetText(asset);
+      const url = URL.createObjectURL(new Blob([source], { type: "text/javascript" }));
+      try { (await import(url)).register(platform); }
+      finally { URL.revokeObjectURL(url); }
+    } catch (error) {
+      console.error(`[fhir-profile-mapper] ${asset} is unavailable:`, error);
+    }
+  }
 }

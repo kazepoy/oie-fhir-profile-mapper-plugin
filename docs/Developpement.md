@@ -73,6 +73,8 @@ fhir-profile-mapper/
   lib/fhir-profile-mapper-bridge.jar
   webadmin/plugin.json
   webadmin/web/plugin.js
+  webadmin/web/channel-flow.js
+  webadmin/web/flow-dashboard.js
 ```
 
 Ce ZIP peut aussi être installé dans *Settings > Extensions* d'OIE 4.7.0, suivi
