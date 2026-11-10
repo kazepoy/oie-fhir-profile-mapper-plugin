@@ -1635,6 +1635,23 @@ function ProfileMapperEditor({ element, onChange, platform }) {
             )
           )
         )
+      ),
+      h(
+        "div",
+        { className: "mapper-wide" },
+        field(
+          "Trace",
+          h("div", { className: "mapper-checks" },
+            h("label", { className: "check" },
+              h("input", { type: "checkbox", checked: asBool(element.traceMessages, false),
+                onChange: (e) => { element.traceMessages = e.target.checked; if (!e.target.checked) element.traceCaptureValues = false; onChange(); rerender(); } }),
+              " Trace processed messages"),
+            h("label", { className: "check", title: "Also record the scalar values of this step's rules (256 characters per value). They may contain patient data." },
+              h("input", { type: "checkbox", checked: asBool(element.traceCaptureValues, false), disabled: !asBool(element.traceMessages, false),
+                onChange: (e) => { element.traceCaptureValues = e.target.checked; onChange(); rerender(); } }),
+              " Include scalar values")),
+          "Each message processed by the deployed channel keeps this step's events, and the finalization of its Bundles, in the connector map (fhirMapperTrace). Off by default; redeploy to apply."
+        )
       )
     ),
     h("details", { style: { marginTop: "10px" } },
@@ -1913,7 +1930,9 @@ function registerProfileMapper(platform) {
       terminologyAuthorization: "",
       terminologyCacheSeconds: 300,
       terminologyTimeoutSeconds: 10,
-      mappings: "[]"
+      mappings: "[]",
+      traceMessages: false,
+      traceCaptureValues: false
     }),
     validate: (el) => {
       if (!["createBundle", "resource"].includes(el.action)) return "Choose the action: create a Bundle or build a resource.";

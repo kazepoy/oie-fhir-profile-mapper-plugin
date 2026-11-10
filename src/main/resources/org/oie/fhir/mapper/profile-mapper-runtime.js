@@ -10,11 +10,37 @@
     var global = this;
     var FhirTools = Packages.org.oie.fhir.mapper.fhir.FhirFacade;
     var FhirTerminology = Packages.org.oie.fhir.mapper.fhir.FhirFacade;
-    var trace = typeof __fhirMapperTrace === 'undefined' ? null : __fhirMapperTrace;
-    var traceIterations = [];
+    // A step preview injects its collector. A deployed message shares one collector between the
+    // traced steps of its transformer (state().trace); an untraced step records nothing.
+    var preview = typeof __fhirMapperTrace === 'undefined' ? null : __fhirMapperTrace;
+
+    // Active iteration indices, shared by the steps' runtimes: fhirRef belongs to the first one.
+    function iterationStack() {
+        var s = state();
+        return s.iterations || (s.iterations = []);
+    }
+
+    function tracer() {
+        if (preview) return preview;
+        var t = global.__fhirProfileMapper && global.__fhirProfileMapper.trace;
+        return t && t.step ? t.collector : null;
+    }
+
+    // Finalization and publication belong to the message: traced when any of its steps is.
+    function messageTracer() {
+        if (preview) return preview;
+        var t = global.__fhirProfileMapper && global.__fhirProfileMapper.trace;
+        return t ? t.collector : null;
+    }
+
+    function capturing() {
+        if (preview) return preview.captureValues();
+        var t = global.__fhirProfileMapper && global.__fhirProfileMapper.trace;
+        return !!(t && t.step && t.capture);
+    }
 
     function started() {
-        return trace ? java.lang.System.nanoTime() : 0;
+        return tracer() || messageTracer() ? java.lang.System.nanoTime() : 0;
     }
 
     // Capture scalars only. Never inspect an arbitrary object's getters or call its toString().
@@ -31,17 +57,45 @@
         return out;
     }
 
-    function event(diagnostic, phase, status, start, value, details) {
-        if (!trace || !diagnostic || !trace.isRecording()) return;
+    function record(collector, diagnostic, phase, status, start, value, details, withValue) {
+        if (!collector || !collector.isRecording()) return;
         var out = {};
+        var t = global.__fhirProfileMapper && global.__fhirProfileMapper.trace;
+        if (!preview && t && t.step) out.step = t.step;
         for (var key in (diagnostic || {})) out[key] = diagnostic[key];
         out.phase = phase;
         out.status = status;
         out.durationNanos = Math.max(0, java.lang.System.nanoTime() - start);
-        out.iterations = traceIterations.slice();
+        out.iterations = iterationStack().slice();
         if (details) for (var key in details) out[key] = details[key];
-        if (trace.captureValues()) out.value = traceValue(value);
-        trace.record(JSON.stringify(out));
+        if (withValue && capturing()) out.value = traceValue(value);
+        collector.record(JSON.stringify(out));
+    }
+
+    // A rule's operation.
+    function event(diagnostic, phase, status, start, value, details) {
+        if (diagnostic) record(tracer(), diagnostic, phase, status, start, value, details, true);
+    }
+
+    // An operation of the traced step that no single rule declares (Bundles, references).
+    function stepEvent(phase, status, start, details) {
+        var s = global.__fhirProfileMapper;
+        var rule = null;
+        if (s && s.rule) {
+            rule = {};
+            for (var key in s.rule) if (key !== 'operation') rule[key] = s.rule[key];
+        }
+        record(tracer(), rule, phase, status, start, undefined, details, false);
+    }
+
+    // Finalization and publication of the message's results.
+    function messageEvent(phase, status, start, details) {
+        record(messageTracer(), null, phase, status, start, undefined, details, false);
+    }
+
+    function saveTrace() {
+        var t = global.__fhirProfileMapper && global.__fhirProfileMapper.trace;
+        if (t && typeof connectorMap !== 'undefined') connectorMap.put(t.key, String(t.collector.json()));
     }
 
     function failure(diagnostic, phase, message, cause, start) {
@@ -518,9 +572,11 @@
         // The fullUrl (urn:uuid:...) of a resource an earlier FHIR Profile Mapper step added to the
         // Bundle under that reference name; index for a step that made several (0 by default).
         global.fhirRef = function (name, index, reserve) {
+            var start = started();
             var list = references(name);
             index = index === undefined ? 0 : Number(index);
             if (index < 0 || index % 1 !== 0) throw new Error('FHIR Profile Mapper: fhirRef index must be a nonnegative integer.');
+            var status = list[index] ? 'resolved' : reserve ? 'reserved' : 'missing';
             if (reserve) {
                 if (!list[index]) list[index] = uuid();
                 var active = state().active;
@@ -530,6 +586,7 @@
                     target[index] = list[index];
                 }
             }
+            stepEvent('reference', status, start, {name: String(name), index: index, fullUrl: list[index] || null, bundles: state().active.slice()});
             return list[index];
         };
         // All fullUrls added under a reference name, in order (an empty array for none).
@@ -632,10 +689,15 @@
         set: function (root, path, type, expression, element, translation, diagnostic) {
             var value;
             var start = started();
+            var s = state();
+            var outer = s.rule;
+            s.rule = diagnostic;
             try {
                 value = expression();
             } catch (e) {
                 throw failure(diagnostic, 'value', 'FHIR Profile Mapper, ' + element + ': ' + e.message, e, start);
+            } finally {
+                s.rule = outer;
             }
             event(diagnostic, 'value', value === undefined || value === null ? 'absent' : 'success', start, value);
             if (translation) {
@@ -735,12 +797,13 @@
             }
             var all = items(list);
             event(diagnostic, 'iteration', all.length ? 'ready' : 'empty', start, undefined, {count: all.length});
+            var tracing = !!tracer();
             for (var i = 0; i < all.length; i++) {
-                if (trace) traceIterations.push({ruleIndex: diagnostic ? diagnostic.ruleIndex : null, index: i});
+                if (tracing) iterationStack().push({ruleIndex: diagnostic ? diagnostic.ruleIndex : null, index: i});
                 try {
                     body(all[i], i);
                 } finally {
-                    if (trace) traceIterations.pop();
+                    if (tracing) iterationStack().pop();
                 }
             }
         },
@@ -779,6 +842,8 @@
         addToBundles: function (refName, resource, requests) {
             var active = state().active;
             var fullUrl;
+            var reserved = false;
+            var start = started();
             var i;
             // Reuse a forward reservation made in any selected Bundle, without evaluating the
             // resource mapping again. Different identities under the same name/index are ambiguous.
@@ -788,7 +853,7 @@
                 var existing = refName && b.refs[refName] && b.refs[refName][index];
                 if (existing && fullUrl && existing !== fullUrl)
                     throw new Error('FHIR Profile Mapper: conflicting reservations for resource ' + refName + '.');
-                if (existing) fullUrl = existing;
+                if (existing) { fullUrl = existing; reserved = true; }
             }
             if (!fullUrl) fullUrl = uuid();
             for (i = 0; i < active.length; i++) {
@@ -806,6 +871,46 @@
                 }
                 b.resource.entry.push(entry);
             }
+            stepEvent('bundle-entry', 'added', start, {bundles: active.slice(), resourceType: String(resource.resourceType),
+                refName: refName === null || refName === undefined ? null : String(refName), fullUrl: fullUrl, reserved: reserved});
+        },
+
+        // Joins this step to its message's trace (info), or leaves it (null).
+        traceStep: function (info) {
+            var s = state();
+            if (!info) {
+                if (s.trace) s.trace.step = null;
+                return;
+            }
+            if (!s.trace) {
+                var response = typeof global.response !== 'undefined';
+                var cm = typeof connectorMessage !== 'undefined' ? connectorMessage : null;
+                var id = typeof channelId !== 'undefined' ? String(channelId) : null;
+                var revision = id ? Packages.org.oie.fhir.mapper.FhirMapperLifecycle.revision(id) : -1;
+                var context = {
+                    channel: {id: id, name: typeof channelName !== 'undefined' ? String(channelName) : null, revision: revision >= 0 ? revision : null},
+                    connector: {metaDataId: cm ? Number(cm.getMetaDataId()) : null, name: cm && cm.getConnectorName() ? String(cm.getConnectorName()) : null,
+                        transformer: response ? 'response' : 'transformer'},
+                    messageId: cm ? Number(cm.getMessageId()) : null,
+                    serverId: cm && cm.getServerId() ? String(cm.getServerId()) : null
+                };
+                s.trace = {collector: Packages.org.oie.fhir.mapper.server.FhirMapperTrace.forMessage(JSON.stringify(context)),
+                    key: response ? 'fhirMapperResponseTrace' : 'fhirMapperTrace', step: null, capture: false};
+            }
+            s.trace.collector.step(JSON.stringify(info));
+            s.trace.step = info.sequenceNumber;
+            s.trace.capture = !!info.captureValues;
+            s.trace.started = java.lang.System.nanoTime();
+        },
+
+        // Ends a traced step and writes the trace so far: also kept when a later step fails.
+        traceEnd: function (failure) {
+            var t = state().trace;
+            if (!t || !t.step) return;
+            stepEvent('step', failure ? 'error' : 'success', t.started,
+                failure ? {errorType: failure.name ? String(failure.name) : failure.javaException ? String(failure.javaException.getClass().getSimpleName()) : null} : null);
+            t.step = null;
+            saveTrace();
         },
 
         // Called automatically after the last named mapper of this connector. Publish only after
@@ -819,9 +924,14 @@
             var started = java.lang.System.nanoTime();
             channelMap.put('__fhirMapperBuildFinishedNano', started);
             channelMap.put('__fhirMapperPhase', 'VALIDATION');
+            var phase = 'references';
+            var subject = null;
+            var step;
             try {
                 for (var name in s.bundles) {
                     var b = s.bundles[name];
+                    step = java.lang.System.nanoTime();
+                    subject = {bundle: name};
                     for (var ref in b.refs) {
                         for (var i = 0; i < b.refs[ref].length; i++) {
                             if (b.refs[ref][i] && i >= (b.counts[ref] || 0))
@@ -841,6 +951,7 @@
                         }
                     }
                     checkReferences(b.resource, 'Bundle');
+                    messageEvent('references', 'passed', step, {bundle: name, entries: b.resource.entry.length});
                     b.name = name;
                     results.push(b);
                 }
@@ -848,24 +959,44 @@
                 for (var r = 0; r < results.length; r++) {
                     var b = results[r];
                     var label = b.name ? 'Bundle ' + b.name : b.resource.resourceType;
+                    subject = b.name ? {bundle: b.name} : {resourceType: String(b.resource.resourceType)};
+                    phase = 'validation';
+                    step = java.lang.System.nanoTime();
                     if (has(targets, b.target)) throw new Error('FHIR Profile Mapper, ' + label + ': duplicate output ' + (b.target || 'outbound message') + '.');
                     targets[b.target] = true;
                     var encoded = json(b.resource);
                     if (b.options.validateOutput !== false) {
                         var result = Packages.org.oie.fhir.mapper.fhir.FhirFacade.validate(
                             encoded, b.options.requiredProfile, b.options.profiles, b.options.fhirVersion);
-                        if (!result.isValid()) throw new Error('FHIR Profile Mapper, ' + label + ': ' + result.summary());
+                        if (!result.isValid()) {
+                            messageEvent('validation', 'failed', step, subject);
+                            subject = null;
+                            throw new Error('FHIR Profile Mapper, ' + label + ': ' + result.summary());
+                        }
+                        messageEvent('validation', 'passed', step, subject);
+                    } else {
+                        messageEvent('validation', 'skipped', step, {bundle: subject.bundle, resourceType: subject.resourceType, reason: 'disabled'});
                     }
-                    ready.push({bundle: b, encoded: encoded});
+                    ready.push({bundle: b, encoded: encoded, subject: subject});
                 }
+                // Published only once every result passed: a failure publishes nothing.
+                phase = 'publication';
+                subject = null;
                 for (var n = 0; n < ready.length; n++) {
                     var item = ready[n];
+                    step = java.lang.System.nanoTime();
                     if (item.bundle.target) channelMap.put(item.bundle.target, item.encoded);
                     else output = item.bundle.resource;
+                    messageEvent('publication', 'published', step, {bundle: item.subject.bundle, resourceType: item.subject.resourceType,
+                        target: item.bundle.target ? 'channelMap' : 'outbound-message', variable: item.bundle.target || null});
                 }
                 return output;
+            } catch (e) {
+                if (subject) messageEvent(phase, 'error', step, {bundle: subject.bundle, resourceType: subject.resourceType, errorType: e.name ? String(e.name) : null});
+                throw e;
             } finally {
                 channelMap.put('__fhirMapperValidationNanos', java.lang.System.nanoTime() - started);
+                saveTrace();
             }
         },
 

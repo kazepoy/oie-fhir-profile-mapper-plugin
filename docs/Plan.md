@@ -15,18 +15,19 @@ Le socle, la reprise du POC, les six exemples, la spécification, les diagnostic
 par règle, les erreurs d'expression explicites et la trace d'aperçu sont livrés.
 La suite conserve le runtime et l'éditeur existants :
 
-1. **Étendre la trace aux channels** : l'API de test, l'affichage dans l'éditeur,
-   l'export JSON, les bornes et la capture explicite des valeurs sont livrés.
-   Ajouter les références réelles, la finalisation/publication des résultats et
-   la corrélation au message déployé. Utiliser les ids de règles optionnels
-   livrés et définir le versionnement nécessaire à cette corrélation.
+1. **Étendre la trace aux channels — livré** : activation par étape
+   (`traceMessages`), une trace par message et transformer de connecteur dans
+   son `connectorMap`, références réelles, ajouts aux Bundles, finalisation et
+   publication, corrélation au channel (révision déployée), au connecteur et au
+   message, versionnement par `scriptHash` des étapes et `ruleId`. Voir
+   [Trace.md](Trace.md#trace-des-messages-traités).
 2. **Assistants de code — livrés** : catalogue commun au runtime et à l'éditeur,
    complétion contextuelle avec `Ctrl+Espace`, signatures, exemples, variables
    d'itération et liens d'aide vers les références officielles.
-3. **Parcours éditeur et agents IA — livrés techniquement** : créer, lire, modifier, vérifier, tester et
+3. **Parcours éditeur et agents IA — livrés** : créer, lire, modifier, vérifier, tester et
    expliquer un mapping/channel, puis le rouvrir dans l'éditeur sans perte.
-   Le parcours via API et les modifications ciblées sont vérifiés ; le contrôle
-   visuel complet dans le navigateur reste à effectuer.
+   Le parcours via API, les modifications ciblées et leur relecture dans
+   l'éditeur du navigateur sont vérifiés.
 
 
 Chaque livraison reste limitée, démontrable et committée séparément.
@@ -124,9 +125,8 @@ Le [contrôle reproductible](../demo/examples/check.py) vérifie aussi les réf�
 les ressources communes aux deux Bundles, les dix messages du batch et le refus
 d'un Patient sans date de naissance. Voir le [guide de la démo](Demo.md).
 
-La vérification visuelle de l'édition dans l'administration web reste à effectuer :
-l'outil navigateur de cet environnement échoue avant connexion (`sandboxPolicy`
-absent). Les tests de logique de l'éditeur et les appels réels de son API passent.
+L'édition dans l'administration web a ensuite été vérifiée dans un navigateur
+(Playwright et Chromium headless) : modification d'une règle, test, diagnostic.
 
 Définir une façade limitée aux services nécessaires au mapper. L'adaptateur
 FHIR Data Type sera le seul endroit connaissant les classes, signatures et
@@ -244,8 +244,7 @@ canaux sont rejoués dans OIE sans modification de leurs exports. L'API vérifie
 la `TypeError` avec et sans validation, puis une garde explicite avec source
 facultative absente et présente. Trois accès facultatifs des tests hérités du
 POC ont été gardés explicitement ; les résultats attendus sont conservés.
-La vérification visuelle dans le navigateur reste à effectuer : l'outil échoue
-avant connexion dans cet environnement.
+Le diagnostic et « Go to rule » ont ensuite été vérifiés dans le navigateur.
 
 **Troisième jalon : trace de l'aperçu.** Le test accepte une trace désactivée
 par défaut, bornée en événements et volume. Elle restitue les phases des règles,
@@ -257,8 +256,22 @@ aux règles et propose un export JSON. Voir [Trace.md](Trace.md).
 **Vérifié :** 99 tests Java dans Docker, 11 tests JavaScript, puis rejeu des six
 canaux et contrôle de trace via l'API OIE. L'exemple produit 13 événements ;
 l'absence de valeurs par défaut, leur capture explicite et la troncature sont
-vérifiées sans changement du résultat. Le parcours visuel de téléchargement
-reste à vérifier avec un navigateur disponible.
+vérifiées sans changement du résultat. Le téléchargement de l'export a ensuite
+été vérifié dans le navigateur.
+
+**Quatrième jalon : trace des messages traités.** Une étape cochée **Trace
+processed messages** ajoute ses événements à la trace de son message, écrite
+dans le `connectorMap` (`fhirMapperTrace`). Les références réelles (`resolved`,
+`reserved`, `missing`), les ajouts aux Bundles, le contrôle des références, la
+validation et la publication y figurent ; un échec garde la trace partielle et ne
+publie rien. L'enveloppe porte le channel et sa révision déployée, le connecteur,
+le message et le `scriptHash` de chaque étape tracée.
+
+**Vérifié :** 109 tests Java, 31 tests JavaScript et 8 tests Python ; rejeu des
+six canaux avec contrôle de la trace du dernier message ORU (références
+manquantes du message minimal comprises). Dans le navigateur : activation dans
+**Properties**, enregistrement, redéploiement, envoi, lecture dans **Messages >
+Mappings**, y compris pour un message rejeté par la validation.
 
 Conserver le compilateur et le runtime repris, puis faire évoluer leurs diagnostics
 et leur débogage à partir des exemples de la spécification :
@@ -306,8 +319,8 @@ une étape d'un export de channel en préservant le reste du fichier. Voir
 JavaScript et 8 tests Python. Le parcours réel a créé, modifié, déployé et relu
 un channel temporaire, vérifié le Patient produit et la trace de ses règles,
 puis supprimé ce seul channel. Les nouvelles API de catalogue et de sérialisation
-HL7 sont vérifiées. La vérification visuelle complète
-reste à effectuer lorsque l'outil navigateur sera disponible.
+HL7 sont vérifiées. Dans le navigateur, une règle et la trace modifiées par
+`channel_mapping.py` puis importées par l'API ont été relues dans l'éditeur.
 
 
 Concevoir l'interface à partir du contrat JSON et des usages observés dans le POC :

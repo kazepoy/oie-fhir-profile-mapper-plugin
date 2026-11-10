@@ -41,6 +41,8 @@ passent par la [façade interne](Integration-FHIR-Data-Type.md).
 | `addMetaProfile` | `true` : ajouter `profileUrl` dans `meta.profile` si non vide. |
 | `validateOutput` | `true`, y compris pour les anciens exports XML où cette propriété manque. Voir §7. |
 | `setLastUpdated` | `false` ; si activé, renseigner `meta.lastUpdated` à l'exécution. |
+| `traceMessages` | `false` ; si activé, les messages traités par le channel déployé tracent cette étape (voir [Trace.md](Trace.md#trace-des-messages-traités)). |
+| `traceCaptureValues` | `false` ; avec `traceMessages`, inclure les valeurs scalaires de cette étape dans la trace. |
 | `variable` | Vide : résultat principal ; sinon nom littéral d'une variable de Channel Map contenant le JSON résultat. Concerne une ressource seule ou une création de Bundle. |
 | `bundleName` | Nom littéral, non vide et unique pour une création de Bundle ; vide sur une ressource. |
 | `bundleType` | `transaction` par défaut ; également `batch`, `collection`, `document`, `message`. Défini par la création. |
@@ -306,7 +308,8 @@ syntaxe à la règle dans le script généré ; le runtime attache les métadonn
 de la règle aux erreurs d'expression, de traduction et de conversion.
 L'API de test accepte désormais une option `trace` et renvoie les événements
 structurés à la demande ; son contrat et son export sont décrits dans
-[Trace.md](Trace.md). La trace des messages déployés reste à réaliser.
+[Trace.md](Trace.md). Les messages traités par un channel déployé sont tracés
+étape par étape avec `traceMessages`, dans le `connectorMap` de chaque message.
 Les API `GET /functions` (catalogue) et `POST /source` (sérialisation du message
 exemple par OIE) complètent l'assistance ; voir [Assistants-et-IA.md](Assistants-et-IA.md).
 

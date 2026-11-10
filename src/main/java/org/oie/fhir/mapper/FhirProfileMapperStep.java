@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -109,6 +112,8 @@ public class FhirProfileMapperStep extends Step {
     private int terminologyCacheSeconds = 300;
     private int terminologyTimeoutSeconds = 10;
     private String mappings = "[]";
+    private boolean traceMessages = false;
+    private boolean traceCaptureValues = false;
 
     public FhirProfileMapperStep() {}
 
@@ -133,6 +138,8 @@ public class FhirProfileMapperStep extends Step {
         terminologyCacheSeconds = props.getTerminologyCacheSeconds();
         terminologyTimeoutSeconds = props.getTerminologyTimeoutSeconds();
         mappings = props.getMappings();
+        traceMessages = props.isTraceMessages();
+        traceCaptureValues = props.isTraceCaptureValues();
     }
 
     /** The resource, or an iteration or condition: what its entries are and in which order. */
@@ -298,6 +305,7 @@ public class FhirProfileMapperStep extends Step {
                 .append(", timeoutSeconds: ").append(terminologyTimeoutSeconds > 0 ? terminologyTimeoutSeconds : 10)
                 .append(", authorization: ").append(text(terminologyAuthorization).isEmpty() ? "''" : "String((function () {\nreturn (" + text(terminologyAuthorization) + ");\n})())")
                 .append("};\n");
+        int traceAt = sb.length();
         if (!preview) {
             List<String> names = new ArrayList<>();
             for (BundleTarget target : targets) names.add(target.name());
@@ -386,8 +394,36 @@ public class FhirProfileMapperStep extends Step {
         } else {
             sb.append("channelMap.put(").append(FhirJson.write(target)).append(", __fhir.json(__out));\n");
         }
+        if (!preview) traceDeployed(sb, traceAt);
         sb.append("})();\n");
         return sb.toString();
+    }
+
+    /**
+     * Wraps a deployed step's body so that it joins its message's trace, or leaves it. The hash of
+     * the script before this wrapping names the version of the mappings that ran.
+     */
+    private void traceDeployed(StringBuilder sb, int at) {
+        if (!traceMessages) {
+            sb.insert(at, "__fhir.traceStep(null);\n");
+            return;
+        }
+        String hash;
+        try {
+            hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest((sb + "})();\n").getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+        Map<String, Object> info = new LinkedHashMap<>();
+        info.put("sequenceNumber", text(getSequenceNumber()));
+        info.put("name", text(getName()));
+        info.put("action", text(action));
+        info.put("resourceType", text(resourceType).trim());
+        if ("createBundle".equals(text(action))) info.put("bundleName", text(bundleName));
+        info.put("scriptHash", hash);
+        info.put("captureValues", traceCaptureValues);
+        sb.insert(at, "__fhir.traceStep(" + FhirJson.write(info) + ");\nvar __failure = null;\ntry {\n");
+        sb.append("} catch (__e) {\n__failure = __e;\nthrow __e;\n} finally {\n__fhir.traceEnd(__failure);\n}\n");
     }
 
     /** The element whose code is at a line (1-based) of the script, or null. */
@@ -477,6 +513,8 @@ public class FhirProfileMapperStep extends Step {
         step.setTerminologyCacheSeconds(integer(m, "terminologyCacheSeconds", 300));
         step.setTerminologyTimeoutSeconds(integer(m, "terminologyTimeoutSeconds", 10));
         step.setMappings(string(m, "mappings", "[]"));
+        step.setTraceMessages("true".equals(string(m, "traceMessages", "false")));
+        step.setTraceCaptureValues("true".equals(string(m, "traceCaptureValues", "false")));
         return step;
     }
 
@@ -691,6 +729,16 @@ public class FhirProfileMapperStep extends Step {
     }
 
     public boolean isValidateOutput() { return !Boolean.FALSE.equals(validateOutput); }
+
+    /** Whether the messages processed by this step add its events to their connector's trace. */
+    public boolean isTraceMessages() { return traceMessages; }
+
+    public void setTraceMessages(boolean traceMessages) { this.traceMessages = traceMessages; }
+
+    /** Whether this step's events of processed messages include scalar values. */
+    public boolean isTraceCaptureValues() { return traceCaptureValues; }
+
+    public void setTraceCaptureValues(boolean traceCaptureValues) { this.traceCaptureValues = traceCaptureValues; }
 
     public void setValidateOutput(boolean validateOutput) { this.validateOutput = validateOutput; }
 

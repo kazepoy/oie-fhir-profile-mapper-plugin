@@ -33,7 +33,9 @@
     "terminologyServer": {"type": "string", "default": ""},
     "terminologyAuthorization": {"type": "string", "default": ""},
     "terminologyCacheSeconds": {"$ref": "#/$defs/integer", "default": 300},
-    "terminologyTimeoutSeconds": {"$ref": "#/$defs/integer", "default": 10}
+    "terminologyTimeoutSeconds": {"$ref": "#/$defs/integer", "default": 10},
+    "traceMessages": {"$ref": "#/$defs/boolean", "default": false},
+    "traceCaptureValues": {"$ref": "#/$defs/boolean", "default": false}
   },
   "not": {"anyOf": [
     {"required": ["output"]}, {"required": ["bundleProfile"]},

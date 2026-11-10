@@ -157,6 +157,12 @@ Chaque étape est encapsulée dans une fonction immédiatement exécutée. Voici
 })();
 ```
 
+Une étape sans trace appelle `__fhir.traceStep(null)` juste après ses options. Avec
+`traceMessages`, cet appel reçoit les métadonnées de l'étape et son `scriptHash`,
+et le reste du corps est entouré d'un `try`/`finally` qui termine l'étape dans la
+trace et l'écrit dans le `connectorMap`. L'empreinte est calculée sur le script
+sans cette instrumentation (voir [Trace.md](Trace.md#trace-des-messages-traités)).
+
 L'état de travail est propre au **message et au transformeur**. Il contient la source initiale, les Bundles nommés, leurs références et les ressources seules en attente de publication. Ce n'est pas la Global Map OIE. Deux destinations et un transformeur de réponse disposent de contextes distincts.
 
 Les expressions voient la source conservée par la première étape FHIR, même si une sortie FHIR est produite ensuite. Une étape de création initialise son conteneur ; une étape de ressource retrouve ses cibles par leurs noms, jamais par leurs profils. Le corps de la ressource est évalué une seule fois par item, puis copié dans les cibles avec un même fullUrl. Les copies ne partagent pas d’objet mutable ; les requêtes restent propres aux entrées.

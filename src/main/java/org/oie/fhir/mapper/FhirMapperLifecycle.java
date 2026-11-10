@@ -16,6 +16,7 @@ import com.mirth.connect.model.IteratorStep;
 /** Deployment metadata only: the message's Bundles themselves stay in its JavaScript scope. */
 public final class FhirMapperLifecycle {
     private static final Map<String, Map<String, String>> LAST = new ConcurrentHashMap<>();
+    private static final Map<String, Integer> REVISIONS = new ConcurrentHashMap<>();
 
     private FhirMapperLifecycle() {}
 
@@ -55,6 +56,13 @@ public final class FhirMapperLifecycle {
             }
         }
         LAST.put(channel.getId(), last);
+        REVISIONS.put(channel.getId(), channel.getRevision());
+    }
+
+    /** The revision of the deployed channel, or -1: traces name the version of the mappings that ran. */
+    public static int revision(String channelId) {
+        Integer revision = channelId == null ? null : REVISIONS.get(channelId);
+        return revision == null ? -1 : revision;
     }
 
     public static boolean isLast(String channelId, int connectorId, String sequence, boolean response) {
@@ -62,7 +70,7 @@ public final class FhirMapperLifecycle {
         return last != null && sequence.equals(last.get(connectorId + ":" + response));
     }
 
-    public static void undeploy(String channelId) { LAST.remove(channelId); }
+    public static void undeploy(String channelId) { LAST.remove(channelId); REVISIONS.remove(channelId); }
 
     private static boolean containsExplicit(List<Step> steps) {
         for (Step step : steps) {

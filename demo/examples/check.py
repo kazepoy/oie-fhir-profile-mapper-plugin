@@ -104,11 +104,52 @@ def check_patient(patient, row):
     assert patient["active"] == (row["actif"].strip() == "1")
 
 
+def connector_trace(message, meta_data_id=0, key="fhirMapperTrace"):
+    """La trace d'un message traité, dans le connectorMap de son connecteur."""
+    for entry in message.find("connectorMessages"):
+        connector = entry.find("connectorMessage")
+        if connector.findtext("metaDataId") != str(meta_data_id):
+            continue
+        for item in connector.findall("connectorMapContent/content/entry"):
+            values = [child.text for child in item]
+            if values and values[0] == key:
+                return json.loads(values[1])
+    return None
+
+
+def check_message_trace():
+    """Le canal ORU trace ses étapes Patient et Observation (traceMessages)."""
+    message = messages("oru")[0]
+    trace = connector_trace(message)
+    assert trace, "trace absente du connectorMap du message ORU"
+    assert trace["scope"] == "channel-message" and trace["channel"]["id"] == CHANNELS["oru"]
+    assert trace["messageId"] == int(message.findtext("messageId")) and trace["connector"]["metaDataId"] == 0
+    assert trace["truncated"] is False
+    assert [s["name"] for s in trace["steps"]] == ["Patient", "Observation"]
+    assert all(len(s["scriptHash"]) == 64 for s in trace["steps"])
+    events = trace["events"]
+    assert {e.get("step") for e in events} == {s["sequenceNumber"] for s in trace["steps"]} | {None}
+    assert all("value" not in e for e in events)
+    references = [e for e in events if e["phase"] == "reference"]
+    entries = [e for e in events if e["phase"] == "bundle-entry"]
+    patient = next(e["fullUrl"] for e in entries if e["refName"] == "patient")
+    # Le dernier message est le minimal : sans PV1 ni SPM, ces références manquent et
+    # expliquent l'absence d'Observation.encounter et d'Observation.specimen.
+    status = {e["name"]: e["status"] for e in references}
+    assert status == {"patient": "resolved", "sr-0": "resolved", "encounter": "missing", "spm-0": "missing"}, status
+    assert any(e["name"] == "patient" and e["fullUrl"] == patient for e in references)
+    finals = [(e["phase"], e["status"]) for e in events if e.get("step") is None]
+    assert finals == [("references", "passed"), ("validation", "passed"), ("publication", "published")], finals
+    print(f"OK trace du message {trace['messageId']} : {len(events)} événements, "
+          f"{len(references)} références réelles, finalisation et publication")
+
+
 def main():
     for filename, count in [("oru-r01-labo.er7", 12), ("oru-r01-minimal.er7", 4)]:
         value = json.loads(post("ORU_PORT", 8081, "oru", filename, "text/plain"))
         bundle(value, "transaction", count)
     print("OK ORU → transactions de 12 et 4 ressources, références résolues")
+    check_message_trace()
 
     patient = json.loads(post("PATIENT_PORT", 8082, "patient", "oru-r01-minimal.er7", "text/plain"))
     assert patient["resourceType"] == "Patient" and patient["birthDate"] == "1980-02-15"

@@ -1,9 +1,13 @@
-# Trace d'un test de mapping
+# Trace d'exécution des mappings
 
-La trace observe l'**aperçu d'une seule étape** exécuté par `POST /test`.
-Elle est désactivée par défaut. Elle n'est pas encore activable sur les messages
-des channels déployés et n'assemble pas les étapes voisines. Les références
-de cet aperçu restent simulées, comme pour un test sans trace.
+La trace existe sous deux formes, désactivées par défaut et de même format
+d'événements :
+
+- la trace d'un **test**, qui observe l'aperçu d'une seule étape exécuté par
+  `POST /test`. Ses références restent simulées, comme pour un test sans trace ;
+- la trace des **messages traités** par un channel déployé, qui suit les étapes
+  tracées d'un connecteur, les références réelles, la finalisation des Bundles
+  et la publication des résultats (voir [Trace des messages](#trace-des-messages-traités)).
 
 ## Activation et export
 
@@ -113,7 +117,78 @@ La collecte est propre au test et n'est conservée ni dans une map globale ni
 dans les journaux serveur. Les opérations internes de `meta.profile` et
 `meta.lastUpdated` sans règle déclarative ne sont pas tracées individuellement.
 La résolution des références réelles, la finalisation de plusieurs Bundles et
-la publication des destinations nécessitent la future trace des channels.
+la publication relèvent de la trace des messages traités.
+
+## Trace des messages traités
+
+### Activation et portée
+
+Dans l'onglet **Properties** d'une étape, **Trace processed messages** inclut
+cette étape dans la trace des messages traités ; **Include scalar values**
+autorise la capture de ses valeurs scalaires. Ces réglages sont enregistrés
+dans l'étape (`traceMessages`, `traceCaptureValues`, `false` par défaut) et
+prennent effet au **redéploiement** du channel.
+
+Le filtre est l'étape : seules les étapes tracées enregistrent leurs règles,
+leurs références et leurs ajouts aux Bundles. Une étape non tracée entre deux
+étapes tracées n'ajoute rien. La finalisation (contrôle des références,
+validation et publication) est tracée dès qu'une étape du transformer l'est.
+La capture des valeurs reste décidée étape par étape.
+
+### Stockage et récupération
+
+Chaque message traité reçoit **une trace par transformer de connecteur**, dans
+son `connectorMap` : `fhirMapperTrace` pour le transformer, `fhirMapperResponseTrace`
+pour le transformer de réponse. La trace est réécrite à la fin de chaque étape
+tracée et de la finalisation : un message en erreur garde la trace partielle
+jusqu'à l'échec. Aucun stockage propre au plugin n'est ajouté.
+
+- Administration web : **Messages**, choisir le message, onglet **Mappings**,
+  variable `fhirMapperTrace` de portée *Connector*.
+- API OIE : `GET /api/channels/{channelId}/messages/{messageId}`, puis
+  `connectorMessages/…/connectorMapContent`. Voir `connector_trace()` dans
+  [check.py](../demo/examples/check.py).
+
+Le mode de stockage des messages du channel doit conserver les maps : c'est le
+cas du mode *Development* utilisé par la démo ; vérifier ce point pour un autre
+mode. Sinon la trace est calculée mais pas conservée. Elle suit l'élagage des
+messages du channel.
+
+### Enveloppe
+
+| Champ | Sens |
+|---|---|
+| `scope` | `channel-message`. |
+| `channel` | `id`, `name` et `revision` du channel **déployé**. |
+| `connector` | `metaDataId`, `name` et `transformer` (`transformer` ou `response`). |
+| `messageId`, `serverId` | Identité du message OIE traité. |
+| `steps` | Étapes tracées dans l'ordre : `sequenceNumber` (numérotation OIE, à partir de 0), `name`, `action`, `resourceType`, `bundleName`, `captureValues` et `scriptHash`. |
+| `maxEvents`, `maxCharacters`, `truncated`, `events` | Comme pour le test ; 1 000 événements au plus par trace. |
+
+**Versionnement.** `channel.revision` désigne la révision déployée ;
+`scriptHash` est le SHA-256 du script compilé de l'étape, avant l'ajout de
+l'instrumentation de trace. Il change dès qu'une règle, une option ou le runtime
+change, et identifie donc exactement ce qui a été exécuté. Les `ruleId` stables
+relient ensuite un événement à sa règle d'une révision à l'autre ; `ruleIndex`
+reste valable pour le `scriptHash` donné.
+
+### Événements supplémentaires
+
+Les événements de règles sont ceux du test, avec le champ `step`
+(`sequenceNumber` de l'étape). S'y ajoutent :
+
+| Phase | Résultats et champs |
+|---|---|
+| `reference` | `resolved`, `reserved` (réservation anticipée) ou `missing` ; `name`, `index`, `fullUrl`, `bundles`, et la règle qui a appelé `fhirRef` (`key`, `ruleIndex`, `ruleId`). |
+| `bundle-entry` | `added` : `bundles`, `resourceType`, `refName`, `fullUrl`, `reserved` si l'identité avait été réservée. |
+| `step` | `success` ou `error` (`errorType`) : durée de l'étape tracée. |
+| `references` | Finalisation, par Bundle : `passed` avec le nombre d'`entries`, ou `error`. |
+| `validation` | Par résultat : `passed`, `failed`, `skipped` (`disabled`), ou `error`. |
+| `publication` | `published` vers `outbound-message` ou `channelMap` (`variable`). Rien n'est publié si un résultat échoue. |
+
+Une référence `missing` explique l'absence d'un élément : dans la démo, le
+message ORU minimal n'a ni PV1 ni SPM, et la trace montre `encounter` et `spm-0`
+manquants pour l'Observation.
 
 ## Vérification
 
@@ -122,7 +197,16 @@ absences, les indices imbriqués, les limites, les décimaux, les erreurs partie
 la validation et l'absence d'inspection des getters. Le test d'arrêt d'une boucle
 infinie vérifie aussi le retour d'une trace partielle.
 
+`FhirMessageTraceTest` couvre la trace des messages : absence sans étape tracée,
+résultat identique avec et sans trace, corrélation (channel, révision, message,
+`scriptHash`), références réelles et indices d'itération, ajouts aux Bundles,
+finalisation et publication, étapes non tracées, consentement aux valeurs par
+étape, trace partielle sur erreur et troncature.
+
 Le [script de rejeu](../demo/examples/check.py) vérifie ces propriétés sur l'API
-OIE, avec l'exemple complet et la troncature à trois événements. Les tests Node
-vérifient les libellés, les indices et la sérialisation de l'export. La
-vérification visuelle du parcours de téléchargement reste distincte.
+OIE, avec l'exemple complet et la troncature à trois événements, puis la trace
+du dernier message ORU du channel de démo, dont les étapes Patient et Observation
+sont tracées. Les tests Node vérifient les libellés, les indices et la
+sérialisation de l'export. Le téléchargement de l'export, l'activation dans
+**Properties** et la lecture dans **Messages > Mappings** ont été vérifiés dans
+le navigateur.

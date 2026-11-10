@@ -89,6 +89,12 @@ la capture explicite des valeurs et la troncature à trois événements.
 Dans l'éditeur, activer **Trace**, exécuter le test, puis utiliser
 **Export trace JSON**. Voir le [contrat de trace](Trace.md).
 
+Le channel *ORU R01 vers Bundle FHIR* trace aussi ses messages traités : ses
+étapes Patient et Observation ont **Trace processed messages**. Après un envoi,
+ouvrir **Messages**, le message, puis **Mappings** : la variable `fhirMapperTrace`
+contient les règles exécutées, les références réelles et la finalisation du
+Bundle. Le contrôle vérifie cette trace sur le dernier message ORU.
+
 Le script utilise les valeurs de démonstration par défaut. En cas de réglages
 personnalisés, lui transmettre `OIE_PASSWORD` et `OIE_HTTPS_PORT` dans son
 environnement ; il ne lit pas `.env`. Les ports des exemples sont publiés

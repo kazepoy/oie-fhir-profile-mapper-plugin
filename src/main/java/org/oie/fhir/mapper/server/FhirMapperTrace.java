@@ -14,13 +14,19 @@ import java.util.UUID;
 
 import org.oie.fhir.mapper.util.FhirJson;
 
-/** One preview's bounded collector. Injected into its Rhino scope only when requested. */
+/**
+ * A bounded trace collector: one step preview (injected into its Rhino scope when requested), or
+ * one processed message of a connector transformer, shared by its traced steps.
+ */
 public final class FhirMapperTrace {
     private static final int MAX_CHARACTERS = 262_144;
+    /** Events kept per connector message: the steps of a transformer share them. */
+    static final int MESSAGE_MAX_EVENTS = 1000;
     private final int maxEvents;
     private final boolean captureValues;
     private final Map<String, Object> result = new LinkedHashMap<>();
     private final List<Object> events = new ArrayList<>();
+    private final List<Object> steps = new ArrayList<>();
     private int characters;
     private boolean truncated;
 
@@ -52,6 +58,40 @@ public final class FhirMapperTrace {
         result.put("maxEvents", maxEvents);
         result.put("maxCharacters", MAX_CHARACTERS);
         result.put("events", events);
+    }
+
+    /** A processed message's trace: context is {channel, connector, messageId, serverId} as JSON. */
+    private FhirMapperTrace(Map<?, ?> context) {
+        maxEvents = MESSAGE_MAX_EVENTS;
+        captureValues = false; // decided per traced step by the runtime
+        result.put("formatVersion", 1);
+        result.put("id", UUID.randomUUID().toString());
+        result.put("scope", "channel-message");
+        for (String key : List.of("channel", "connector", "messageId", "serverId")) {
+            Object value = context.get(key);
+            result.put(key, value == null ? FhirJson.NULL : value);
+        }
+        result.put("steps", steps);
+        result.put("maxEvents", maxEvents);
+        result.put("maxCharacters", MAX_CHARACTERS);
+        result.put("events", events);
+    }
+
+    /** Called by the runtime of the first traced step of a connector message. */
+    public static FhirMapperTrace forMessage(String contextJson) {
+        Object context = FhirJson.parse(contextJson);
+        if (!(context instanceof Map)) throw new IllegalArgumentException("The trace context is not a JSON object.");
+        return new FhirMapperTrace((Map<?, ?>) context);
+    }
+
+    /** Registers a traced step: {sequenceNumber, name, action, resourceType, bundleName, scriptHash, captureValues}. */
+    public void step(String json) {
+        steps.add(FhirJson.parse(json));
+    }
+
+    /** The trace as written to the connector map. */
+    public String json() {
+        return FhirJson.write(result());
     }
 
     static FhirMapperTrace from(Object options, Object step) {
