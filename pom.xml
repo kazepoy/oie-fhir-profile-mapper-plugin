@@ -192,7 +192,8 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
         <configuration>
-          <argLine>-Xmx1g</argLine>
+          <!-- Rhino garde le premier fuseau vu : le fixer pour toute la JVM de test. -->
+          <argLine>-Xmx1g -Duser.timezone=Europe/Paris</argLine>
           <systemPropertyVariables>
             <fhir.engine.direct>true</fhir.engine.direct>
             <fhir.mapper.bridge.direct>true</fhir.mapper.bridge.direct>
