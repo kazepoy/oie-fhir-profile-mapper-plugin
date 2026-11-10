@@ -56,6 +56,13 @@ const MAPPER_STYLES = `
 .fhir-profile-mapper .bundle-choice input[type=checkbox] { width: 16px; height: 16px; margin: 0; flex: none; }
 .fhir-profile-mapper .bundle-request { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; margin-top: 10px; }
 .fhir-profile-mapper .bundle-target .field { margin-top: 8px; }
+.fhir-profile-mapper .mapper-tabs { display: flex; gap: 2px; margin-bottom: 12px; border-bottom: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 35%, transparent); }
+.fhir-profile-mapper .mapper-tabs [role=tab] { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-faint, #64748b); font: inherit; font-weight: 600; cursor: pointer; }
+.fhir-profile-mapper .mapper-tabs [role=tab]:hover { color: var(--text, #1e293b); }
+.fhir-profile-mapper .mapper-tabs [role=tab][aria-selected=true] { color: var(--text, #1e293b); border-bottom-color: var(--accent, #2563eb); }
+.fhir-profile-mapper .mapper-tabs [role=tab]:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: -2px; }
+.fhir-profile-mapper .mapper-tab-badge { min-width: 16px; padding: 0 5px; border-radius: 8px; background: #b91c1c; color: white; font-size: 11px; line-height: 16px; text-align: center; }
+.fhir-profile-mapper .mapper-tab-panel > details:first-child, .fhir-profile-mapper .mapper-tab-panel > .mapper-settings + details { margin-top: 14px; }
 @container (max-width: 640px) {
   .fhir-profile-mapper .mapper-settings { grid-template-columns: minmax(0, 1fr); }
 }
@@ -723,6 +730,7 @@ function downloadMapperTrace(trace) {
 
 function ProfileMapperEditor({ element, onChange, platform }) {
   const [, rerender] = React.useReducer((x) => x + 1, 0);
+  const tabId = React.useId();
   const state = React.useRef(null);
   if (state.current === null) {
     const saved = parseMappings(element.mappings);
@@ -771,7 +779,9 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       profileList: null,
       sourcePaths: [],
       jsonDraft: "",
-      filter: "all"
+      filter: "all",
+      // An existing mapping opens on its rules; a new step on its properties.
+      tab: saved.length ? "mapper" : "properties"
     };
   }
   const st = state.current;
@@ -812,6 +822,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       st.filter = "all";
       for (const node of chain.slice(0, -1)) st.expanded.add(node.key);
       st.pendingDiagnostic = { key: error.key, kind: mapperDiagnostic(error).kind };
+      st.tab = "mapper";
     }
     rerender();
   };
@@ -1451,10 +1462,9 @@ function ProfileMapperEditor({ element, onChange, platform }) {
 
   const profileOptions = (st.profileList || []).map((p) => h("option", { key: p.url, value: p.url }, `${p.title || p.name || p.url} (${p.type})`));
 
-  return h(
-    "div",
-    { className: "fhir-profile-mapper" },
-    h("style", null, MAPPER_STYLES),
+  const propertiesPanel = h(
+    React.Fragment,
+    null,
     h(
       "div",
       { className: "mapper-settings" },
@@ -1635,7 +1645,11 @@ function ProfileMapperEditor({ element, onChange, platform }) {
         } }, "Validate and apply")),
       h("textarea", { rows: 8, value: st.jsonDraft, "aria-label": "Step mapping JSON", style: { width: "100%", fontFamily: "monospace" },
         onChange: (e) => { st.jsonDraft = e.target.value; rerender(); } }),
-      h("div", { className: "hint" }, "Applies to this step only; its OIE sequence and enabled state are preserved. Save the channel to persist changes.")),
+      h("div", { className: "hint" }, "Applies to this step only; its OIE sequence and enabled state are preserved. Save the channel to persist changes."))
+  );
+  const messages = h(
+    React.Fragment,
+    null,
     st.error ? h("div", { className: "hint", style: { color: "#b91c1c", marginTop: "6px" } }, st.error) : null,
     st.notice ? h("div", { className: "hint", style: { color: "#b45309", marginTop: "6px" } }, st.notice) : null,
     st.versionNotice
@@ -1666,11 +1680,12 @@ function ProfileMapperEditor({ element, onChange, platform }) {
           `Cannot find these mapped elements in the profile (editing is blocked so they are not lost): ${st.unresolved.join(", ")}. `,
           h("button", { type: "button", className: "btn btn-sm", onClick: removeUnresolved }, "Remove these mappings")
         )
-      : null,
-    tree
+      : null
+  );
+  const mapperPanel = tree
       ? h(
           "div",
-          { style: { marginTop: "8px" } },
+          null,
           h(
             "div",
             { className: "mapper-toolbar" },
@@ -1721,17 +1736,20 @@ function ProfileMapperEditor({ element, onChange, platform }) {
                 check.required.length ? h("div", { style: { color: "#b91c1c" } }, `Required, not mapped: ${check.required.join(", ")}`) : null,
                 check.mustSupport.length ? h("div", { style: { color: "#b45309" } }, `Must Support, not mapped: ${check.mustSupport.join(", ")}`) : null
               )
-            : h("div", { className: "hint", style: { marginTop: "6px", color: "#15803d" } }, "Every required element below the mapped ones has a mapping or a fixed value."),
-          h(
-            "details",
-            { style: { marginTop: "10px" } },
-            h("summary", { style: { cursor: "pointer", fontWeight: 600 } }, "Test with a sample message"),
+            : h("div", { className: "hint", style: { marginTop: "6px", color: "#15803d" } }, "Every required element below the mapped ones has a mapping or a fixed value.")
+        )
+      : h("div", { className: "hint" }, st.loading ? "Loading the target profile…" : "Load a target profile in Properties to map its elements.");
+  const testPanel = tree
+      ? h(
+            "div",
+            null,
             h(
               "div",
               { style: { display: "flex", gap: "6px", alignItems: "center", margin: "6px 0" } },
               h(
                 "select",
                 {
+                  style: { width: "auto", flex: "none" },
                   value: st.sample.dataType,
                   onChange: (e) => {
                     st.sample.dataType = e.target.value;
@@ -1811,8 +1829,37 @@ function ProfileMapperEditor({ element, onChange, platform }) {
                 )
               : null
           )
-        )
-      : null
+      : h("div", { className: "hint" }, st.loading ? "Loading the target profile…" : "Load a target profile in Properties to test this step.");
+
+  const tabs = [
+    { id: "properties", label: "Properties", panel: propertiesPanel },
+    { id: "mapper", label: "Mapper", panel: mapperPanel,
+      badge: check.required.length ? { text: String(check.required.length), title: `${check.required.length} required element(s) not mapped` } : null },
+    { id: "test", label: "Test", panel: testPanel,
+      badge: testResult?.errors?.length ? { text: "!", title: "The last test failed" } : null }
+  ];
+  const current = tabs.find((t) => t.id === st.tab) || tabs[0];
+  const tabKeys = (e) => {
+    const index = tabs.indexOf(current);
+    const next = e.key === "ArrowRight" ? (index + 1) % tabs.length : e.key === "ArrowLeft" ? (index + tabs.length - 1) % tabs.length
+      : e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : -1;
+    if (next < 0) return;
+    e.preventDefault();
+    st.tab = tabs[next].id;
+    rerender();
+    e.currentTarget.querySelectorAll("[role=tab]")[next]?.focus();
+  };
+  return h(
+    "div",
+    { className: "fhir-profile-mapper" },
+    h("style", null, MAPPER_STYLES),
+    h("div", { className: "mapper-tabs", role: "tablist", "aria-label": "FHIR mapper sections", onKeyDown: tabKeys },
+      tabs.map((t) => h("button", {
+        key: t.id, id: `${tabId}-${t.id}`, type: "button", role: "tab", "aria-selected": t === current, "aria-controls": `${tabId}-panel`,
+        tabIndex: t === current ? 0 : -1, onClick: () => { st.tab = t.id; rerender(); }
+      }, t.label, t.badge ? h("span", { className: "mapper-tab-badge", title: t.badge.title }, t.badge.text) : null))),
+    messages,
+    h("div", { className: "mapper-tab-panel", id: `${tabId}-panel`, role: "tabpanel", "aria-labelledby": `${tabId}-${current.id}` }, current.panel)
   );
 }
 

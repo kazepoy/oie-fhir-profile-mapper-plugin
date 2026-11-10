@@ -7,7 +7,7 @@ de cet aperçu restent simulées, comme pour un test sans trace.
 
 ## Activation et export
 
-Dans **Test with a sample message**, cocher **Trace**, puis **Run**. La liste
+Dans l'onglet **Test**, cocher **Trace**, puis **Run**. La liste
 **Execution trace** montre les phases et résultats ; **Go to rule** ouvre
 l'élément concerné. **Export trace JSON** télécharge la trace de ce test.
 

@@ -6,6 +6,8 @@ Ce document décrit l'étage de saisie et la construction du contrat de mapping.
 
 L'éditeur fournit une étape **FHIR Profile Mapper** dans l'administration web d'OIE. Il aide à sélectionner un profil, parcourir ses éléments et décrire comment construire une ressource ou un Bundle.
 
+L'étape est présentée en trois onglets : **Properties** (action, profil, terminologie, Bundles, options et import/export JSON), **Mapper** (arbre des éléments et leurs règles) et **Test** (message exemple, trace et script généré). Une étape qui a déjà des règles s'ouvre sur **Mapper**, une nouvelle étape sur **Properties**. Un compteur rouge sur **Mapper** signale les éléments requis non mappés, un `!` sur **Test** l'échec du dernier test. **Go to rule** ramène sur **Mapper** et sélectionne le champ concerné. Les erreurs et avertissements de l'étape restent visibles au-dessus des onglets.
+
 Il **ne transforme pas les messages métier dans le navigateur**. Il construit une configuration et un tableau de mappings JSON. Le serveur compile ces mappings en JavaScript avec `FhirProfileMapperStep.getScript()` ; OIE exécute ce JavaScript lors du traitement du message.
 
 ```text
@@ -159,7 +161,7 @@ Les contrôles locaux signalent la configuration incohérente et les éléments 
 
 Ces routes demandent la permission Manage Channels. Le test est exécuté sur le serveur avec les maps et code templates accessibles au channel, dans une exécution limitée à dix secondes.
 
-**Test with a sample message** exécute l'étape seule. Son type et son contenu initiaux viennent du template entrant du transformeur concerné ; en destination, prévoir le message déjà nettoyé par la source. Les modifications du message de test sont mémorisées par channel, connecteur et transformeur de réponse éventuel. Il ne simule pas les autres étapes ni l'intégralité des Bundles nommés. Les références aux autres étapes utilisent des valeurs de remplacement. Une itération sur la ressource est montrée sous forme de collection de prévisualisation. Pour certifier les deux Bundles de laboratoire, envoyer un message au channel déployé et inspecter les deux résultats.
+L'onglet **Test** exécute l'étape seule. Son type et son contenu initiaux viennent du template entrant du transformeur concerné ; en destination, prévoir le message déjà nettoyé par la source. Les modifications du message de test sont mémorisées par channel, connecteur et transformeur de réponse éventuel. Il ne simule pas les autres étapes ni l'intégralité des Bundles nommés. Les références aux autres étapes utilisent des valeurs de remplacement. Une itération sur la ressource est montrée sous forme de collection de prévisualisation. Pour certifier les deux Bundles de laboratoire, envoyer un message au channel déployé et inspecter les deux résultats.
 
 **Generated script** montre la compilation réelle. **Validate Step** vérifie la configuration de l'étape ; un test de message vérifie aussi le comportement des expressions et, si elle est activée, la validation FHIR de leur résultat.
 

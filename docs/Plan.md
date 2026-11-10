@@ -436,7 +436,7 @@ produit le Patient, la trace et le diagnostic de conversion attendus.
 
 ## Retours d'usage à traiter
 
-- Étudier une présentation de l'étape en onglets : propriétés, mapper et test.
+- Présentation de l'étape en onglets Properties, Mapper et Test — réalisée sur la branche `feat/step-tabs`.
 - Clarifier l'intérêt de « Mapping JSON — import / export » dans l'interface.
 - Raccourci `Ctrl+Espace` inactif — corrigé : macOS le réserve par défaut au
   changement de source de saisie ; `Alt+Espace` (`⌥+Espace`) ouvre aussi les suggestions.

@@ -61,12 +61,12 @@ test("expanded tree branches keep their auxiliary rows and descendants together 
   const state = { values: new Map(), iterations: new Map([["Patient.name", { expression: "msg.names", variable: "n" }]]),
     conditions: new Map([["Patient.name", "n.active"]]), translations: new Map(), expanded: new Set(["Patient", "Patient.name"]),
     instances: new Map(), rootIndex: patient, sourcePaths: [], showAll: false, filter: "all", unresolved: [], tests: new Map(),
-    sample: { dataType: "JSON", message: "{}" }, traceOptions: { enabled: false }, jsonDraft: "", loading: false };
+    sample: { dataType: "JSON", message: "{}" }, traceOptions: { enabled: false }, jsonDraft: "", loading: false, tab: "mapper" };
   const element = { action: "resource", resourceType: "Patient", profileUrl: patient.sd.url, mappings: "[]", bundleTargets: "[]" };
   const render = () => {
     let firstRef = true;
     context.t.setReact({ createElement: (tag, props, ...children) => ({ tag, props: props || {}, children }),
-      useReducer: () => [0, () => {}], useRef: value => { const current = firstRef ? state : value; firstRef = false; return { current }; }, useEffect: () => {} });
+      useReducer: () => [0, () => {}], useId: () => "m", useRef: value => { const current = firstRef ? state : value; firstRef = false; return { current }; }, useEffect: () => {} });
     return context.t.ProfileMapperEditor({ element, onChange: () => {}, platform: { store: { getState: () => null } } });
   };
   const all = (node) => Array.isArray(node) ? node.flatMap(all) : node && typeof node === "object" ? [node, ...all(node.children || [])] : [];
@@ -81,6 +81,16 @@ test("expanded tree branches keep their auxiliary rows and descendants together 
   const closed = all(render());
   assert.ok(!closed.some(node => node.props.key === "Patient.name.family"));
   assert.ok(closed.some(node => node.props["data-owner"] === "Patient.name"));
+  // Properties, mapper and test are tabs: only the selected panel is rendered.
+  const tabs = closed.filter(node => node.props.role === "tab");
+  assert.deepEqual(tabs.map(node => node.props.key), ["properties", "mapper", "test"]);
+  assert.deepEqual(tabs.map(node => node.props["aria-selected"]), [false, true, false]);
+  state.tab = "properties";
+  const properties = all(render());
+  assert.ok(!properties.some(node => node.tag === "tbody"));
+  assert.ok(properties.some(node => node.tag === "summary" && node.children.includes("Mapping JSON — import / export")));
+  state.tab = "test";
+  assert.ok(all(render()).some(node => node.tag === "button" && node.children.includes("Run")));
 });
 
 test("Ctrl+Space and Alt/Option+Space open completion; macOS keeps Ctrl+Space for input sources", () => {
