@@ -44,4 +44,6 @@ public final class FhirFacade {
         FhirTerminology.clearCache();
         FhirDataTypeAdapter.clearCaches();
     }
+    public static void startValidatorRelease() { FhirDataTypeAdapter.startValidatorRelease(); }
+    public static void stopValidatorRelease() { FhirDataTypeAdapter.stopValidatorRelease(); }
 }

@@ -37,11 +37,13 @@ références à la spécification après la requête. La lecture des ConceptMaps
 indépendante du chargement de la spécification.
 
 Cette compatibilité repose sur trois méthodes internes du moteur 1.5.1 :
-`validationContext`, `specification` et `loadProfiles`. L'adaptateur utilise aussi
-le mécanisme interne `startPeriodicRelease` pour la libération des validateurs.
-Ces accès sont confinés à l'intégration ; une évolution du datatype exige de
-les revérifier. Ils pourront être remplacés par une API publique si le prérequis
-l'expose ultérieurement.
+`validationContext`, `specification` et `loadProfiles`. Les validateurs construits
+pour le catalogue sont libérés par un minuteur du mapper, qui appelle la méthode
+publique `FhirValidatorUsage.releaseNow`. Ces accès sont confinés à l'intégration ;
+une évolution du datatype exige de les revérifier. Ils pourront être remplacés par
+une API publique si le prérequis l'expose ultérieurement. Le détail et les
+demandes au projet amont sont dans les [limites de la plateforme](limites-plateforme.md)
+([FD-01](limites-plateforme.md#fd-01), [FD-02](limites-plateforme.md#fd-02)).
 
 ## Vérification
 

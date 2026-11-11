@@ -37,6 +37,7 @@ Detailed documentation is in French:
 - [Execution traces](doc/Trace.md) (step tests and processed messages)
 - [Code assistants and AI workflow](doc/Assistants-et-IA.md)
 - [FHIR Data Type integration](doc/Integration-FHIR-Data-Type.md)
+- [Platform limits](doc/limites-plateforme.md) (what the mapper works around, upstream requests)
 - [Demo](doc/Demo.md)
 - [Project plan](doc/Plan.md)
 

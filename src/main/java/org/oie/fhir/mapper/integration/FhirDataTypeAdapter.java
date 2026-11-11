@@ -6,7 +6,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.LogManager;
 import com.mirth.connect.plugins.datatypes.fhir.FhirEngine;
 import com.mirth.connect.plugins.datatypes.fhir.FhirEngineLoader;
 import com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties;
@@ -18,7 +22,9 @@ import org.oie.fhir.mapper.fhir.FhirValidation;
 /** The only entry point into the prerequisite and its isolated class loader. */
 public final class FhirDataTypeAdapter {
     public static final String FHIR_NS = FhirXml.FHIR_NS;
+    static final String RELEASE_THREAD = "FHIR mapper validator release";
     private static Object bridge;
+    private static ScheduledExecutorService release;
 
     private FhirDataTypeAdapter() {}
 
@@ -67,6 +73,40 @@ public final class FhirDataTypeAdapter {
         if (bridge != null) call("clearCaches", new Class<?>[0]);
     }
 
+    /**
+     * FHIR Data Type releases idle validators only once a FHIR channel has run: its serializer
+     * starts the release timer. The mapper builds validators for its own profile sets, so while the
+     * plugin is started it runs the same release pass every minute through the public
+     * {@link FhirValidatorUsage#releaseNow}. A second pass when both timers run is harmless.
+     */
+    public static synchronized void startValidatorRelease() {
+        if (release != null) return;
+        release = Executors.newSingleThreadScheduledExecutor(task -> {
+            Thread thread = new Thread(task, RELEASE_THREAD);
+            thread.setDaemon(true);
+            return thread;
+        });
+        release.scheduleWithFixedDelay(FhirDataTypeAdapter::releaseIdleValidators, 1, 1, TimeUnit.MINUTES);
+    }
+
+    public static synchronized void stopValidatorRelease() {
+        if (release == null) return;
+        release.shutdownNow();
+        release = null;
+    }
+
+    /** Does nothing until the engine is loaded: the pass must not load HAPI on an idle server. */
+    static void releaseIdleValidators() {
+        FhirEngine engine = FhirEngineLoader.loadedEngine();
+        if (engine == null) return;
+        try {
+            FhirValidatorUsage.releaseNow(engine, FhirValidatorUsage.IDLE_MILLIS);
+        } catch (RuntimeException e) {
+            // An exception would cancel the next passes of the timer.
+            LogManager.getLogger(FhirDataTypeAdapter.class).warn("Cannot release idle FHIR validators", e);
+        }
+    }
+
     private static synchronized Object bridge() throws Exception {
         if (bridge == null) {
             FhirEngine engine = FhirEngineLoader.engine();
@@ -81,9 +121,6 @@ public final class FhirDataTypeAdapter {
                 type = Class.forName(name, true, loader);
             }
             bridge = type.getConstructor(Object.class).newInstance(engine);
-            java.lang.reflect.Method release = FhirValidatorUsage.class.getDeclaredMethod("startPeriodicRelease", FhirEngine.class);
-            release.setAccessible(true);
-            release.invoke(null, engine);
         }
         return bridge;
     }

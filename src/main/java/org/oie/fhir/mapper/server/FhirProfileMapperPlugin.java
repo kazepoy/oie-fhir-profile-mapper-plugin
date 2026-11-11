@@ -17,6 +17,7 @@ import com.mirth.connect.plugins.ServicePlugin;
 import com.mirth.connect.model.converters.ObjectXMLSerializer;
 import org.oie.fhir.mapper.FhirProfileMapperStep;
 import org.oie.fhir.mapper.FhirProfileServletInterface;
+import org.oie.fhir.mapper.fhir.FhirFacade;
 
 public final class FhirProfileMapperPlugin implements ServicePlugin {
 
@@ -66,11 +67,13 @@ public final class FhirProfileMapperPlugin implements ServicePlugin {
 
     @Override
     public void start() {
+        FhirFacade.startValidatorRelease();
         logger.info("FHIR Profile Mapper started.");
     }
 
     @Override
     public void stop() {
+        FhirFacade.stopValidatorRelease();
         logger.info("FHIR Profile Mapper stopped.");
     }
 }
