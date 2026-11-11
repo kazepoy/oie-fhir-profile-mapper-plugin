@@ -25,7 +25,7 @@ python3 examples/check.py   # sends messages through the demo channels
 ```
 
 Administration: <https://localhost:8443/oie-webadmin/> (`admin` /
-`demo-fhir-mapper-admin`). See the [demo guide](doc/Demo.md) (in French).
+`demo-oie-password`). See the [demo guide](doc/Demo.md) (in French).
 
 ## Documentation
 

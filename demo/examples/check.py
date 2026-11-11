@@ -19,7 +19,7 @@ EXAMPLES = Path(__file__).resolve().parent
 HOST = os.environ.get("DEMO_HOST", "localhost")
 API = os.environ.get("OIE_API", f"https://{HOST}:{os.environ.get('OIE_HTTPS_PORT', '8443')}/api")
 AUTH = base64.b64encode(
-    f"{os.environ.get('OIE_USER', 'admin')}:{os.environ.get('OIE_PASSWORD', 'demo-fhir-mapper-admin')}".encode()
+    f"{os.environ.get('OIE_USER', 'admin')}:{os.environ.get('OIE_PASSWORD', 'demo-oie-password')}".encode()
 ).decode()
 # La démo locale utilise un certificat autosigné et ne passe pas par un proxy.
 HTTP = urllib.request.build_opener(

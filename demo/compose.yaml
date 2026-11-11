@@ -58,7 +58,7 @@ services:
       SERVER_ID: ${OIE_SERVER_ID:-18a8d2ca-8afb-4fd3-a7a6-7123d38aa468}
       KEYSTORE_STOREPASS: ${OIE_KEYSTORE_STOREPASS:-demo-fhir-mapper-store}
       KEYSTORE_KEYPASS: ${OIE_KEYSTORE_KEYPASS:-demo-fhir-mapper-key}
-      _MP_SERVER_INITIALADMINPASSWORD: ${OIE_PASSWORD:-demo-fhir-mapper-admin}
+      _MP_SERVER_INITIALADMINPASSWORD: ${OIE_PASSWORD:-demo-oie-password}
       TZ: ${TZ:-Europe/Paris}
     configs:
       - source: oie-jvm-options
@@ -89,7 +89,7 @@ services:
     environment:
       OIE_URL: https://oie-app:8443
       OIE_USER: admin
-      OIE_PASSWORD: ${OIE_PASSWORD:-demo-fhir-mapper-admin}
+      OIE_PASSWORD: ${OIE_PASSWORD:-demo-oie-password}
       OIE_INIT_FORCE: ${OIE_INIT_FORCE:-false}
       OIE_SKIP_FIRST_LOGIN: ${OIE_SKIP_FIRST_LOGIN:-true}
     volumes:

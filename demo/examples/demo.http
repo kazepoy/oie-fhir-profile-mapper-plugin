@@ -11,7 +11,7 @@
 @csvPatients = http://localhost:8085/csv-patients/
 @csvCollection = http://localhost:8086/csv-patients-collection/
 @oie = https://localhost:8443/api
-@auth = Basic admin:demo-fhir-mapper-admin
+@auth = Basic admin:demo-oie-password
 @channel = 5d0f6c2a-8b3e-4f1a-9c7d-2e6b1a0f3c48
 @ig = /fhir-ig
 @base = http://example.org/fhir/oru2fhir

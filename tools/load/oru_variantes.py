@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "demo/oie-init/channels/oru-r01-vers-bundle-fhir.xml"
 API = os.environ.get("OIE_API", "https://localhost:8443/api")
 AUTH = base64.b64encode(
-    f"{os.environ.get('OIE_USER', 'admin')}:{os.environ.get('OIE_PASSWORD', 'demo-fhir-mapper-admin')}".encode()
+    f"{os.environ.get('OIE_USER', 'admin')}:{os.environ.get('OIE_PASSWORD', 'demo-oie-password')}".encode()
 ).decode()
 HTTP = urllib.request.build_opener(
     urllib.request.ProxyHandler({}),

@@ -32,7 +32,7 @@ docker compose logs oie-init
 Le premier build compile OIE depuis ses sources et peut prendre plusieurs minutes.
 
 Administration : <https://localhost:8443/oie-webadmin/> (certificat autosigné).
-Compte : `admin`, mot de passe : `demo-fhir-mapper-admin`.
+Compte : `admin`, mot de passe : `demo-oie-password`.
 Dans *Settings > Extensions*, vérifier la présence de Web Support, FHIR Data Type,
 Role-Based Access Control, Flow UI et FHIR Profile Mapper. Au premier démarrage avec RBAC,
 les comptes existants reçoivent le rôle *Administrator* ; un compte créé ensuite
