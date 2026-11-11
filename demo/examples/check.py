@@ -155,6 +155,11 @@ def main():
     assert patient["resourceType"] == "Patient" and patient["birthDate"] == "1980-02-15"
     print("OK ORU → Patient")
 
+    # Le même message lu avec le Strict Parser HL7 v2 : même Patient, chemins HAPI dans le mapping.
+    strict = json.loads(post("STRICT_PATIENT_PORT", 8088, "patient", "oru-r01-minimal.er7", "text/plain"))
+    assert strict == patient, strict
+    print("OK ORU → Patient par le Strict Parser, identique au parser par défaut")
+
     transaction = json.loads(post("LAB_BUNDLES_PORT", 8083, "labo", "oru-r01-labo.er7", "text/plain"))
     message = messages("labo")[0]
     assert encoded(message, 1) == transaction

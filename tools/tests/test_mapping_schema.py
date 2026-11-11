@@ -28,11 +28,14 @@ class MappingSchemaTest(unittest.TestCase):
         invalid = json.loads((EXAMPLES / "invalid-path.step.json").read_text())
         self.assertTrue(any("$.mappings (décodé)" in e for e in errors(invalid)))
 
-    def test_all_six_demo_channels(self):
+    def test_all_seven_demo_channels(self):
         channels = list((ROOT / "demo/oie-init/channels").glob("*.xml"))
-        self.assertEqual(6, len(channels))
+        self.assertEqual(7, len(channels))
         count = 0
         for path in channels:
+            # OIE stocke le nom dans CHANNEL.NAME, varchar(40) : un nom plus long fait échouer l'import.
+            name = ET.parse(path).getroot().findtext("name")
+            self.assertLessEqual(len(name), 40, path.name)
             for node in ET.parse(path).iter("org.oie.fhir.mapper.FhirProfileMapperStep"):
                 step = {child.tag: child.text or "" for child in node}
                 with self.subTest(channel=path.name, step=step.get("name")):

@@ -13,7 +13,8 @@ Web Support, FHIR Data Type et RBAC sont téléchargés au build, avec vérifica
 de leur SHA-256. Le mapper est compilé avec Maven à partir de l'API de l'image OIE
 cible, puis installé dans cette même image. Le compilateur, le runtime et
 l'éditeur graphique sont repris du POC. L'initialisation importe et déploie les
-six canaux de référence, avec leur IG de démonstration montée dans `/fhir-ig`.
+six canaux de référence, avec leur IG de démonstration montée dans `/fhir-ig`, et
+une variante du canal Patient lue avec le Strict Parser HL7 v2 (§ ci-dessous).
 
 ## Lancer
 
@@ -67,6 +68,23 @@ HTTP et lit les messages via l'API OIE, sans modifier les canaux.
 | 8084 | `/sql-patient/` | Ligne XML SQL vers Patient, accents et zéros initiaux conservés |
 | 8085 | `/csv-patients/` | Dix messages Patient après nettoyage du CSV ; dernier Patient en réponse HTTP |
 | 8086 | `/csv-patients-collection/` | Un Bundle collection contenant les dix Patients |
+| 8088 | `/patient/` | Patient par le Strict Parser HL7 v2, identique à celui du port 8082 |
+
+Le canal du port 8088, *ORU R01 vers Patient FHIR (strict)*, reprend celui du
+port 8082 avec **Use Strict Parser** et **Strip Namespaces** dans les propriétés
+HL7 v2 entrantes de la source. `msg` est alors le XML HAPI : segments rangés dans
+les groupes du message et composants nommés d'après leur type. Seuls les chemins
+du mapping changent :
+
+| Élément | Parser par défaut (8082) | Strict Parser (8088) |
+|---|---|---|
+| PID | `msg['PID']` | `msg['ORU_R01.PATIENT_RESULT']['ORU_R01.PATIENT']['PID']` |
+| IPP | `PID.3` → `PID.3.5`, `PID.3.1` | `PID.3` → `CX.5`, `CX.1` |
+| Nom | `n['PID.5.1']`, `n['PID.5.2']` | `n['XPN.1']['FN.1']`, `n['XPN.2']` |
+| Sexe, naissance | `PID.8.1`, `PID.7.1` | `PID.8`, `PID.7` → `TS.1` |
+
+Le Strict Parser rejette en revanche une version HL7 inconnue de HAPI 2.3 (au-delà
+de 2.8.1) et un type de message hors standard.
 
 Les destinations portent le nom du système visé, simulé par un JavaScript Writer :
 *Serveur FHIR*, *Entrepôt FHIR*, *Entrepôt documentaire*, *Archive PCA/PRA*. Le canal

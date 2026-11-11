@@ -5,6 +5,7 @@
 
 @oru = http://localhost:8081/oru/
 @patient = http://localhost:8082/patient/
+@strictPatient = http://localhost:8088/patient/
 @labo = http://localhost:8083/labo/
 @sqlPatient = http://localhost:8084/sql-patient/
 @csvPatients = http://localhost:8085/csv-patients/
@@ -115,6 +116,12 @@ X-Requested-With: OpenAPI
 
 ### 9. Un Patient seul, conforme au profil ExampleLabPatient
 POST {{patient}}
+Content-Type: text/plain; charset=UTF-8
+
+< ./oru-r01-minimal.er7
+
+### 9 bis. Le même Patient, ORU lu avec le Strict Parser HL7 v2 (XML HAPI, groupes et composants typés)
+POST {{strictPatient}}
 Content-Type: text/plain; charset=UTF-8
 
 < ./oru-r01-minimal.er7
