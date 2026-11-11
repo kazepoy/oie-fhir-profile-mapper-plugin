@@ -88,8 +88,8 @@ de 2.8.1) et un type de message hors standard.
 
 Les destinations portent le nom du système visé, simulé par un JavaScript Writer :
 *Serveur FHIR*, *Entrepôt FHIR*, *Entrepôt documentaire*, *Archive PCA/PRA*. Le canal
-labo montre aussi deux chaînes de destinations dans **Flow** et **Flows** : le serveur
-FHIR reçoit la transaction en parallèle de l'entrepôt documentaire, suivi de l'archive
+labo a deux chaînes de destinations : le serveur FHIR
+reçoit la transaction en parallèle de l'entrepôt documentaire, suivi de l'archive
 PCA/PRA. Un filtre n'archive le document que si l'entrepôt l'a accepté ; l'archive
 l'écrit dans `appdata/archive-pca/labo-document-<message>.json`.
 

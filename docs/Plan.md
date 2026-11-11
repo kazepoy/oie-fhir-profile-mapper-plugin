@@ -36,11 +36,10 @@ sous MPL 2.0. L'historique détaillé des jalons est dans l'historique git.
 | Trace du test et des messages traités (références réelles, finalisation, publication, `scriptHash`) | [Trace](Trace.md) |
 | Éditeur en onglets Properties / Mapper / Test, édition en JSON | [Éditeur](Mappeur-graphique.md) |
 | Assistants de code (`Ctrl`/`Alt+Espace`), outils et parcours des agents IA | [Assistants et IA](Assistants-et-IA.md) |
-| Onglet Flow et vue Flows, compatibles RBAC | [Flow et Flows](Channel-Flow.md) |
 | Build et release GitHub sur tag `vX.Y.Z` | [Développement](Developpement.md) |
 
-Les vérifications visuelles (édition, diagnostics, trace, export, parcours IA,
-Flows sous RBAC) ont été faites dans un navigateur (Playwright, Chromium headless).
+Les vérifications visuelles (édition, diagnostics, trace, export, parcours IA)
+ont été faites dans un navigateur (Playwright, Chromium headless).
 
 ## Points ouverts du format
 
@@ -52,9 +51,6 @@ Flows sous RBAC) ont été faites dans un navigateur (Playwright, Chromium headl
 
 ## Phases ultérieures
 
-- **Extraire Flow et Flows** dans un plugin séparé : ces vues valent pour tout
-  channel et n'ont aucun lien avec FHIR (`channel-flow.js`, `flow-dashboard.js`,
-  leurs tests et [leur doc](Channel-Flow.md)).
 - **Stabilisation et livraison** : compatibilité approfondie de l'adaptateur FHIR
   Data Type, migration du namespace vers `fr.kazepoy` avec compatibilité des
   exports, vérification des releases installables à chaque version.
