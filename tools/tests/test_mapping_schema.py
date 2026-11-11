@@ -12,7 +12,7 @@ from tools.check_mapping import SCHEMA, errors
 
 
 ROOT = Path(__file__).resolve().parents[2]
-EXAMPLES = ROOT / "docs/examples/mapping"
+EXAMPLES = ROOT / "doc/examples/mapping"
 
 
 class MappingSchemaTest(unittest.TestCase):

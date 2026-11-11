@@ -17,7 +17,7 @@ Le format des mappings, son schéma et les exemples exécutés par
 | `assembly.xml` | Assemblage du ZIP installable |
 | `demo/` | OIE, Web Admin, FHIR Data Type, RBAC et compilation du mapper dans Docker |
 | `.github/workflows/release.yml` | Build et release GitHub sur tag |
-| `docs/` | Plan de conception et documentation technique |
+| `doc/` | Plan de conception et documentation technique |
 
 Les appels à FHIR Data Type passent par la [façade et l'adaptateur](Integration-FHIR-Data-Type.md).
 Le plugin n'embarque aucune bibliothèque HAPI ni copie du moteur tiers.

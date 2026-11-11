@@ -14,7 +14,7 @@ A transformer step that maps a message onto a FHIR profile: profile tree, slices
 expressions, conditions, iterations, translations, references between resources,
 FHIR validation and per-rule diagnostics.
 
-![FHIR Profile Mapper in a transformer](docs/images/fhir-mapper.png)
+![FHIR Profile Mapper in a transformer](doc/images/fhir-mapper.png)
 
 ## Try it
 
@@ -25,19 +25,19 @@ python3 examples/check.py   # sends messages through the demo channels
 ```
 
 Administration: <https://localhost:8443/oie-webadmin/> (`admin` /
-`demo-fhir-mapper-admin`). See the [demo guide](docs/Demo.md) (in French).
+`demo-fhir-mapper-admin`). See the [demo guide](doc/Demo.md) (in French).
 
 ## Documentation
 
 Detailed documentation is in French:
 
-- [Development, installation and releases](docs/Developpement.md)
-- [Mapping format and execution](docs/Specification-mapping.md)
-- [Graphical mapper](docs/Mappeur-graphique.md)
-- [Execution traces](docs/Trace.md) (step tests and processed messages)
-- [Code assistants and AI workflow](docs/Assistants-et-IA.md)
-- [FHIR Data Type integration](docs/Integration-FHIR-Data-Type.md)
-- [Demo](docs/Demo.md)
-- [Project plan](docs/Plan.md)
+- [Development, installation and releases](doc/Developpement.md)
+- [Mapping format and execution](doc/Specification-mapping.md)
+- [Graphical mapper](doc/Mappeur-graphique.md)
+- [Execution traces](doc/Trace.md) (step tests and processed messages)
+- [Code assistants and AI workflow](doc/Assistants-et-IA.md)
+- [FHIR Data Type integration](doc/Integration-FHIR-Data-Type.md)
+- [Demo](doc/Demo.md)
+- [Project plan](doc/Plan.md)
 
 License: [Mozilla Public License 2.0](LICENSE).

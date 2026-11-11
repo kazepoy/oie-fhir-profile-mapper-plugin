@@ -438,7 +438,7 @@ Depuis la racine du dépôt, Python 3.9 ou ultérieur :
 ```sh
 python3 -m venv /tmp/oie-mapper-schema-venv
 /tmp/oie-mapper-schema-venv/bin/pip install -r tools/requirements.txt
-/tmp/oie-mapper-schema-venv/bin/python tools/check_mapping.py docs/examples/mapping/patient.step.json docs/examples/mapping/laboratory.steps.json
+/tmp/oie-mapper-schema-venv/bin/python tools/check_mapping.py doc/examples/mapping/patient.step.json doc/examples/mapping/laboratory.steps.json
 /tmp/oie-mapper-schema-venv/bin/python -m unittest discover -s tools/tests -v
 mvn -Dtest=MappingSpecificationTest test
 ```
