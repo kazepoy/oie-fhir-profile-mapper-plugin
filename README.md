@@ -5,6 +5,8 @@ A plugin for [Open Integration Engine](https://github.com/OpenIntegrationEngine/
 messages, and shows how messages move through each channel.
 It requires the [**FHIR Data Type**](https://github.com/matthydehoog/fhir-datatype-Eclipse-OIE)
 plugin, version 1.5.1 ([release](https://github.com/matthydehoog/fhir-datatype-Eclipse-OIE/releases/tag/v1.5.1)).
+FHIR Profile Mapper is a separate project, not part of FHIR Data Type: please report
+its issues [here](https://github.com/kazepoy/oie-fhir-profile-mapper-plugin/issues).
 
 ## FHIR Profile Mapper
 
