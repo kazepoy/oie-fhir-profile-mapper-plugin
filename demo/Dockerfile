@@ -27,11 +27,11 @@ RUN curl --fail --silent --show-error --location --max-time 300 \
       --output /tmp/rbac.zip \
     && echo 'f540cc77ebfadda88147f07fce412caff41abf30ad302ddca61f0b3f422d0cfd  /tmp/rbac.zip' | sha256sum -c -
 
-# OIE Flow UI 0.8.0 (kazepoy) : Flows Monitoring et Channel Flow dans l'administration web.
+# OIE Flow UI 0.8.1 (kazepoy) : Flows Monitoring et Channel Flow dans l'administration web.
 RUN curl --fail --silent --show-error --location --max-time 300 \
-      https://github.com/kazepoy/oie-flow-ui-plugin/releases/download/v0.8.0/flow-ui-0.8.0.zip \
+      https://github.com/kazepoy/oie-flow-ui-plugin/releases/download/v0.8.1/flow-ui-0.8.1.zip \
       --output /tmp/flow-ui.zip \
-    && echo '3daa6909fe0e5b6b828b96b53540fde297b9a92f0413bc79753460ad25c56556  /tmp/flow-ui.zip' | sha256sum -c -
+    && echo 'c51b410e25405cefbcf5937256c8236e40af99b25174e647e2f9e1ad7f43b198  /tmp/flow-ui.zip' | sha256sum -c -
 
 FROM ${BUSYBOX_IMAGE} AS plugins
 COPY --from=downloads /tmp/*.zip /downloads/
