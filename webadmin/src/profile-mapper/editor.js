@@ -2,6 +2,7 @@
 import { createExpressionEditor } from "../host/code-editor.js";
 import { monacoItems, scopeDts } from "../fhir/completion.js";
 import { snapshot, restore } from "../fhir/history.js";
+import { cachedFhirSettings, fhirContext, loadFhirSettings } from "../host/settings.js";
 import { normalizeResult } from "../fhir/diagnostics.js";
 import { sourceTree, sourcePaths } from "../fhir/source.js";
 import { createDiff } from "../host/code-editor.js";
@@ -149,7 +150,7 @@ function mapperJsonImport(element, text) {
     if (typeof (merged[field] ?? "[]") !== "string" || !Array.isArray(JSON.parse(merged[field] || "[]")))
       throw new Error(`${field} must be a string containing a JSON array.`);
   }
-  const allowed = new Set(["id", "key", "element", "type", "expression", "path", "each", "variable", "condition", "fixed", "when", "translate"]);
+  const allowed = new Set(["id", "key", "element", "type", "expression", "path", "each", "variable", "condition", "fixed", "when", "translate", "note", "disabled"]);
   for (const rule of JSON.parse(merged.mappings || "[]")) {
     if (!rule || typeof rule !== "object" || !Array.isArray(rule.path)) throw new Error("Every rule needs a path.");
     for (const key of Object.keys(rule)) if (!allowed.has(key)) throw new Error(`Unknown rule property: ${key}`);
@@ -886,6 +887,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       current: null,
       lastPush: 0,
       // An existing mapping opens on its rules; a new step on its properties.
+      settingsReady: !!cachedFhirSettings(),
       tab: saved.length ? "mapper" : "properties"
     };
   }
@@ -914,8 +916,26 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     }, 300);
     return () => { active = false; clearTimeout(timer); };
   }, [st, st.sample.message, st.sample.dataType]);
-  const version = element.fhirVersion || "R4";
-  const profiles = element.profiles || "";
+  // The FHIR contexts of the server; a step that names one takes its version, packages and terminology server.
+  React.useEffect(() => {
+    let active = true;
+    const done = () => { if (active && !st.settingsReady) { st.settingsReady = true; rerender(); } };
+    loadFhirSettings().then(done, done);
+    return () => { active = false; };
+  }, [st]);
+  const shared = fhirContext(element.context);
+  const version = shared ? shared.fhirVersion : element.fhirVersion || "R4";
+  const profiles = shared ? (shared.packages || []).join(";") : element.profiles || "";
+  const txServer = shared ? shared.terminologyServer || "" : element.terminologyServer || "";
+  const setContext = (name) => {
+    element.context = name;
+    element.formatVersion = 2;
+    if (name && !element.validation) element.validation = "inherit";
+    if (!name && element.validation === "inherit") element.validation = asBool(element.validateOutput, true) ? "always" : "off";
+    onChange();
+    state.current = null; // the profile and its lists are read again with the context's packages
+    rerender();
+  };
   const ctx = { version, profiles, instances: st.instances, showAll: st.showAll };
   const tree = st.rootIndex ? makeTree(st.rootIndex, ctx) : null;
   const revealDiagnostic = (error) => {
@@ -956,7 +976,16 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     st.conditions.delete(key);
   };
   // Compiled on the whole tree, also what "extensions & ids" hides, so that no mapping is lost.
-  const compiled = (index, local) => JSON.stringify(mapperRuleIds(compile(makeTree(index, { ...local, showAll: true }), st.values, st.iterations, st.translations, st.conditions), parseMappings(element.mappings)));
+  const compiled = (index, local) => {
+    const previous = parseMappings(element.mappings);
+    const rules = mapperRuleIds(compile(makeTree(index, { ...local, showAll: true }), st.values, st.iterations, st.translations, st.conditions), previous);
+    // What the editor does not edit yet is kept on the rule it belongs to: its note, and that it is disabled.
+    const kept = new Map(previous.filter((rule) => rule.id && (rule.note || rule.disabled)).map((rule) => [rule.id, rule]));
+    return JSON.stringify(rules.map((rule) => {
+      const before = kept.get(rule.id);
+      return before ? { ...rule, ...(before.note ? { note: before.note } : {}), ...(before.disabled ? { disabled: true } : {}) } : rule;
+    }));
+  };
 
   const save = () => {
     if (!tree) return;
@@ -1091,8 +1120,9 @@ function ProfileMapperEditor({ element, onChange, platform }) {
   };
 
   React.useEffect(() => {
-    if (element.profileUrl) load(element.profileUrl);
-  }, [st]);
+    // A step that names a context waits for the settings: its packages come from them.
+    if (element.profileUrl && (!element.context || st.settingsReady)) load(element.profileUrl);
+  }, [st, element.context ? st.settingsReady : true]);
 
   // The transformer editor shows element.script in its Generated Script tab and validates it with
   // Validate Step: the server's script, as a property that is not enumerable, so never saved.
@@ -1299,7 +1329,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
   };
   // The ConceptMaps of the terminology server, or without one (empty or n/a) of the profile packages.
   const loadConceptMaps = async () => {
-    const server = (element.terminologyServer || "").trim();
+    const server = txServer.trim();
     const source = `${server}|${profiles}|${version}`;
     if (st.conceptMaps && st.conceptMaps.source === source) return;
     try {
@@ -1321,7 +1351,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     try {
       const text = await platform.api.get(
         `${MAPPER_API}/translate`,
-        { server: element.terminologyServer || "", profiles, conceptMap: t.conceptMap, system: t.source || "", code: test.code || "", targetSystem: t.target || "", fhirVersion: version },
+        { server: txServer, profiles, conceptMap: t.conceptMap, system: t.source || "", code: test.code || "", targetSystem: t.target || "", fhirVersion: version },
         { raw: true }
       );
       const match = JSON.parse(text);
@@ -1553,7 +1583,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     const test = st.tests.get(node.key) || {};
     const maps = (st.conceptMaps && st.conceptMaps.list) || [];
     const listId = "fhir-profile-mapper-conceptmaps";
-    const localTx = isLocalServer(element.terminologyServer);
+    const localTx = isLocalServer(txServer);
     const needsValue = t.unmapped === "fixed" || t.unmapped === "function";
     return subRow(node, "translate", [
       h("span", { key: "l", title: localTx ? "ConceptMap/$translate locally, on the ConceptMaps of the Profile Packages" : "ConceptMap/$translate on the terminology server" }, localTx ? "⇄ ConceptMap (local)" : "⇄ ConceptMap"),
@@ -1734,11 +1764,19 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       h("option", { value: "createBundle" }, "Create a Bundle"), h("option", { value: "resource" }, "Build a resource")),
       "Bundles are named and created explicitly; results are completed after the last FHIR mapper."),
       createBundle ? field("Bundle Name", text("bundleName", "labo"), "Internal name used by resource steps; separate from the FHIR id and profile URL.") : null,
+      h("div", { className: "mapper-wide" }, field("FHIR context",
+        h("select", { value: element.context || "", "aria-label": "FHIR context", onChange: (e) => setContext(e.target.value) },
+          h("option", { value: "" }, "(none: this step's own packages and terminology server)"),
+          (cachedFhirSettings()?.contexts || []).map((c) => h("option", { key: c.name, value: c.name }, `${c.name} — ${c.fhirVersion}, ${(c.packages || []).join("; ") || "no package"}`)),
+          element.context && !shared && st.settingsReady ? h("option", { value: element.context }, `${element.context} (not defined on this server)`) : null),
+        shared ? `Packages: ${(shared.packages || []).join("; ") || "none"} · terminology: ${shared.terminologyServer || "local"} · validation: ${shared.validation}. Defined in Settings › FHIR Mapper.`
+          : "A context of Settings › FHIR Mapper gives the packages, the terminology server and the validation policy to every step that names it.")),
       field(
         "FHIR Version",
         h(
           "select",
           {
+            disabled: !!shared,
             value: version,
             onChange: (e) => {
               element.fhirVersion = e.target.value;
@@ -1749,7 +1787,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
           ["R4", "R4B", "R5"].map((v) => h("option", { key: v, value: v }, v))
         )
       ),
-      field("Profile Packages", text("profiles", "/profiles"), "Server-side profile files or folders, separated by ';'."),
+      shared ? null : field("Profile Packages", text("profiles", "/profiles"), "Server-side profile files or folders, separated by ';'."),
       h(
         "div",
         { className: "mapper-wide" },
@@ -1778,7 +1816,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
           "Loading another profile keeps the mappings of the elements it also has."
         )
       ),
-      h(
+      shared ? null : h(
         "div",
         { className: "mapper-wide" },
         field(
@@ -1787,7 +1825,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
           "Empty or n/a: translate locally using Profile Packages. Otherwise, enter the terminology server URL as reached by OIE."
         )
       ),
-      h(
+      shared ? null : h(
         "details",
         { className: "mapper-wide" },
         h("summary", { className: "text-text-faint", style: { cursor: "pointer", fontSize: "12px" } }, "Terminology server options"),
@@ -1857,9 +1895,13 @@ function ProfileMapperEditor({ element, onChange, platform }) {
               " Add the profile to meta.profile"
             ),
             h("label", { className: "check" },
-              h("input", { type: "checkbox", checked: asBool(element.validateOutput, true),
-                onChange: (e) => { element.validateOutput = e.target.checked; onChange(); rerender(); } }),
-              bundle && !createBundle ? " Validate this preview (final validation is set on each Bundle)" : " Validate FHIR output"
+              bundle && !createBundle ? "Validate this preview " : "Validate FHIR output ",
+              h("select", { "aria-label": "Validation", style: { width: "auto" },
+                value: element.validation || (asBool(element.validateOutput, true) ? "always" : "off"),
+                onChange: (e) => { element.validation = e.target.value; element.validateOutput = e.target.value !== "off"; element.formatVersion = 2; onChange(); rerender(); } },
+                element.context ? h("option", { value: "inherit" }, `as the context says${shared ? ` (${shared.validation})` : ""}`) : null,
+                h("option", { value: "always" }, "always"), h("option", { value: "off" }, "off")),
+              bundle && !createBundle ? " (final validation is set on each Bundle)" : null
             ),
             h(
               "label",
@@ -2202,6 +2244,9 @@ function registerProfileMapper(platform) {
       terminologyAuthorization: "",
       terminologyCacheSeconds: 300,
       terminologyTimeoutSeconds: 10,
+      formatVersion: 2,
+      context: "",
+      validation: "always",
       mappings: "[]",
       samples: "[]",
       traceMessages: false,

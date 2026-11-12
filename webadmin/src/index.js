@@ -6,6 +6,7 @@ import { bindPlatform } from "./host/platform.js";
 import { installStyles } from "./host/styles.js";
 import { registerMapperReferences } from "./host/references.js";
 import { registerTraceAction } from "./host/message-action.js";
+import { FhirSettingsPanel } from "./settings/panel.js";
 import editorStyles from "./styles/editor.css";
 import { register as registerProfileMapper } from "./profile-mapper/editor.js";
 import { register as registerFml } from "./fml/editor.js";
@@ -15,6 +16,7 @@ export function register(platform) {
   installStyles([editorStyles]);
   registerProfileMapper(platform);
   registerFml(platform);
+  platform.registerSettingsPanel?.({ label: "FHIR Mapper", component: FhirSettingsPanel });
   registerTraceAction();
   registerMapperReferences().catch(error => console.warn("[fhir-mapper] references unavailable:", error));
 }

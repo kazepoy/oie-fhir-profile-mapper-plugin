@@ -33,6 +33,23 @@ public interface FhirProfileServletInterface extends BaseServletInterface {
     String PERMISSION_EDIT = "Edit FHIR mappings";
     /** Run a step on a sample message: its code runs on the server. */
     String PERMISSION_TEST = "Test FHIR mapper steps";
+    /** Change the FHIR contexts of the server. */
+    String PERMISSION_MANAGE = "Manage FHIR mapper settings";
+
+    /** The FHIR contexts of the server: {"contexts": [{name, fhirVersion, packages, terminologyServer, …, validation}]}. */
+    @GET
+    @Path("/settings")
+    @Produces(MediaType.APPLICATION_JSON)
+    @MirthOperation(name = "getFhirMapperSettings", display = "Get the FHIR contexts", permission = PERMISSION_EDIT)
+    String getSettings() throws ClientException;
+
+    /** Replaces the FHIR contexts; answers the saved settings. Deployed channels keep theirs until redeployed. */
+    @POST
+    @Path("/settings")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
+    @MirthOperation(name = "setFhirMapperSettings", display = "Change the FHIR contexts", permission = PERMISSION_MANAGE)
+    String setSettings(String settings) throws ClientException;
 
     @GET
     @Path("/functions")

@@ -33,6 +33,8 @@ public class FhirFmlTransformStep extends Step {
     private String variable = "";
     private Boolean validateOutput = true;
     private String contextVariables = "";
+    /** Name of a FHIR context of the server; blank: this step's own version and locations. */
+    private String context = "";
 
     public FhirFmlTransformStep() {}
 
@@ -45,6 +47,7 @@ public class FhirFmlTransformStep extends Step {
         variable = props.getVariable();
         validateOutput = props.isValidateOutput();
         contextVariables = props.getContextVariables();
+        context = props.getContext();
     }
 
     @Override
@@ -76,8 +79,8 @@ public class FhirFmlTransformStep extends Step {
         sb.append("var __out = String(Packages.org.oie.fhir.fml.FmlFacade.run(")
                 .append(FhirJson.write(text(getName()))).append(", ")
                 .append(FhirJson.write(map)).append(", __source, __format, __context, __variables, ")
-                .append(FhirJson.write(text(fhirVersion).isEmpty() ? "R4" : text(fhirVersion))).append(", ")
-                .append(FhirJson.write(text(profiles))).append(", ")
+                .append(FhirJson.write(effectiveFhirVersion())).append(", ")
+                .append(FhirJson.write(effectiveProfiles())).append(", ")
                 .append(isValidateOutput()).append("));\n");
         String target = text(variable);
         if (target.isEmpty()) {
@@ -120,6 +123,7 @@ public class FhirFmlTransformStep extends Step {
         step.setMapSource(string(m, "mapSource"));
         step.setVariable(string(m, "variable"));
         step.setContextVariables(string(m, "contextVariables"));
+        step.setContext(string(m, "context"));
         Object validate = m.get("validateOutput");
         step.setValidateOutput(validate == null || !"false".equalsIgnoreCase(validate.toString()));
         return step;
@@ -164,6 +168,23 @@ public class FhirFmlTransformStep extends Step {
 
     /** What the engine runs: the step's own map text, else the canonical URL. */
     public String mapReference() { return FmlFacade.mapReference(mapSource, mapUrl); }
+
+    public String getContext() { return context == null ? "" : context; }
+
+    public void setContext(String context) { this.context = context; }
+
+    private org.oie.fhir.mapper.FhirMapperSettings.Context shared() { return org.oie.fhir.mapper.FhirMapperSettings.context(context); }
+
+    /** Version and locations in force: those of the context when the step names one (an unknown name is an error). */
+    public String effectiveFhirVersion() {
+        org.oie.fhir.mapper.FhirMapperSettings.Context c = shared();
+        return c != null ? c.fhirVersion : text(fhirVersion).isEmpty() ? "R4" : text(fhirVersion);
+    }
+
+    public String effectiveProfiles() {
+        org.oie.fhir.mapper.FhirMapperSettings.Context c = shared();
+        return c == null ? text(profiles) : c.packages;
+    }
 
     public String getVariable() { return variable; }
 

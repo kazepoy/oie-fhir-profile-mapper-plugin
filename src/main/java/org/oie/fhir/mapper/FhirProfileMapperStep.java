@@ -116,6 +116,12 @@ public class FhirProfileMapperStep extends Step {
     private boolean traceCaptureValues = false;
     /** Sample messages of the step with their expected results, as a JSON array text; used by the editor and the tools only. */
     private String samples = "[]";
+    /** Version of the step format: absent (1) in older exports, 2 since contexts and the validation policy. */
+    private Integer formatVersion;
+    /** Name of a FHIR context of the server; blank: this step's own packages and terminology settings. */
+    private String context = "";
+    /** inherit (the context decides), always or off; blank in format 1: validateOutput decides. */
+    private String validation = "";
 
     public FhirProfileMapperStep() {}
 
@@ -143,6 +149,9 @@ public class FhirProfileMapperStep extends Step {
         traceMessages = props.isTraceMessages();
         traceCaptureValues = props.isTraceCaptureValues();
         samples = props.getSamples();
+        formatVersion = props.formatVersion;
+        context = props.getContext();
+        validation = props.getValidation();
     }
 
     /** The resource, or an iteration or condition: what its entries are and in which order. */
@@ -228,6 +237,7 @@ public class FhirProfileMapperStep extends Step {
         Set<String> ruleIds = new HashSet<>();
         for (Object entry : entries) {
             Map<?, ?> m = entry(entry);
+            if (disabled(m)) continue;
             if (m.containsKey("id") && (!(m.get("id") instanceof String)
                     || !text(m.get("id")).matches("[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}") || !ruleIds.add(text(m.get("id"))))) {
                 throw error("rule ids must be valid and unique: " + text(m.get("id")));
@@ -277,6 +287,7 @@ public class FhirProfileMapperStep extends Step {
         Set<String> placed = new HashSet<>();
         for (Object entry : entries) {
             Map<?, ?> m = entry(entry);
+            if (disabled(m)) continue;
             String key = key(m);
             if (((List<?>) m.get("path")).isEmpty()) {
                 continue;
@@ -299,9 +310,15 @@ public class FhirProfileMapperStep extends Step {
         sb.append("// FHIR Profile Mapper: ").append(oneLine(profileUrl.isEmpty() ? resourceType : profileUrl)).append('\n');
         sb.append("(function () {\n");
         sb.append("var __fhir = ").append(runtime()).append(";\n");
-        sb.append("__fhir.options = {terminologyServer: ").append(FhirJson.write(text(terminologyServer)))
-                .append(", profiles: ").append(FhirJson.write(text(profiles)))
-                .append(", fhirVersion: ").append(FhirJson.write(text(fhirVersion).isEmpty() ? "R4" : text(fhirVersion)))
+        FhirMapperSettings.Context shared;
+        try { shared = FhirMapperSettings.context(context); }
+        catch (IllegalArgumentException e) { throw error(e.getMessage()); }
+        String terminologyAuthorization = shared == null ? this.terminologyAuthorization : shared.terminologyAuthorization;
+        int terminologyCacheSeconds = shared == null ? this.terminologyCacheSeconds : shared.cacheSeconds;
+        int terminologyTimeoutSeconds = shared == null ? this.terminologyTimeoutSeconds : shared.timeoutSeconds;
+        sb.append("__fhir.options = {terminologyServer: ").append(FhirJson.write(effectiveTerminologyServer()))
+                .append(", profiles: ").append(FhirJson.write(effectiveProfiles()))
+                .append(", fhirVersion: ").append(FhirJson.write(effectiveFhirVersion()))
                 .append(", requiredProfile: ").append(FhirJson.write(text(profileUrl)))
                 .append(", validateOutput: ").append(isValidateOutput())
                 .append(", cacheSeconds: ").append(Math.max(0, terminologyCacheSeconds))
@@ -455,6 +472,7 @@ public class FhirProfileMapperStep extends Step {
     private static Map<?, ?> rule(List<?> entries, String key, String field) {
         Map<?, ?> found = null;
         for (Object entry : entries) {
+            if (entry instanceof Map && disabled((Map<?, ?>) entry)) continue;
             Map<?, ?> m = (Map<?, ?>) entry;
             if (key(m).equals(key) && m.containsKey(field)) found = m;
         }
@@ -519,6 +537,10 @@ public class FhirProfileMapperStep extends Step {
         step.setTraceMessages("true".equals(string(m, "traceMessages", "false")));
         step.setTraceCaptureValues("true".equals(string(m, "traceCaptureValues", "false")));
         step.setSamples(string(m, "samples", "[]"));
+        step.setContext(string(m, "context", ""));
+        step.setValidation(string(m, "validation", ""));
+        int version = integer(m, "formatVersion", 1);
+        step.setFormatVersion(version <= 1 ? null : version);
         return step;
     }
 
@@ -647,6 +669,9 @@ public class FhirProfileMapperStep extends Step {
         return m;
     }
 
+    /** A rule kept in the step but left out of the script. */
+    private static boolean disabled(Map<?, ?> m) { return Boolean.TRUE.equals(m.get("disabled")) || "true".equals(String.valueOf(m.get("disabled"))); }
+
     /** The key of an entry; older entries only have the element. */
     private static String key(Map<?, ?> m) {
         return text(m.get("key")).isEmpty() ? text(m.get("element")) : text(m.get("key"));
@@ -732,7 +757,19 @@ public class FhirProfileMapperStep extends Step {
         return purged;
     }
 
-    public boolean isValidateOutput() { return !Boolean.FALSE.equals(validateOutput); }
+    public boolean isValidateOutput() {
+        switch (text(validation)) {
+            case "always":
+                return true;
+            case "off":
+                return false;
+            case "inherit":
+                FhirMapperSettings.Context c = sharedOrNull();
+                return c == null || !"off".equals(c.validation);
+            default:
+                return !Boolean.FALSE.equals(validateOutput);
+        }
+    }
 
     /** Whether the messages processed by this step add its events to their connector's trace. */
     public boolean isTraceMessages() { return traceMessages; }
@@ -740,6 +777,34 @@ public class FhirProfileMapperStep extends Step {
     public void setTraceMessages(boolean traceMessages) { this.traceMessages = traceMessages; }
 
     /** Whether this step's events of processed messages include scalar values. */
+    public String getContext() { return context == null ? "" : context; }
+
+    public void setContext(String context) { this.context = context; }
+
+    public String getValidation() { return validation == null ? "" : validation; }
+
+    public void setValidation(String validation) { this.validation = validation; }
+
+    public Integer getFormatVersion() { return formatVersion; }
+
+    public void setFormatVersion(Integer formatVersion) { this.formatVersion = formatVersion; }
+
+    /** The context this step names, or null; an unknown name is not an error here (compilation reports it). */
+    private FhirMapperSettings.Context sharedOrNull() {
+        try { return FhirMapperSettings.context(context); }
+        catch (IllegalArgumentException e) { return null; }
+    }
+
+    /** Packages, FHIR version and terminology server in force: those of the context when the step names one. */
+    public String effectiveProfiles() { FhirMapperSettings.Context c = sharedOrNull(); return c == null ? text(profiles) : c.packages; }
+
+    public String effectiveFhirVersion() {
+        FhirMapperSettings.Context c = sharedOrNull();
+        return c != null ? c.fhirVersion : text(fhirVersion).isEmpty() ? "R4" : text(fhirVersion);
+    }
+
+    public String effectiveTerminologyServer() { FhirMapperSettings.Context c = sharedOrNull(); return c == null ? text(terminologyServer) : c.terminologyServer; }
+
     public String getSamples() { return samples == null || samples.isBlank() ? "[]" : samples; }
 
     public void setSamples(String samples) { this.samples = samples; }

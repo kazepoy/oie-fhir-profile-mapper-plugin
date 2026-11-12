@@ -37,10 +37,14 @@ identifie cette classe. Dans l'export XML, le nom de l'élément identifie la cl
 `mappings` et `bundleTargets` sont des **chaînes contenant du JSON**, et non des
 tableaux directement inclus dans l'objet de l'étape.
 
-Il n'existe actuellement **aucun champ de version du format**. La version du
-plugin et la révision de cette spécification identifient le contrat. Ne pas
-inventer un `formatVersion` dans les étapes : sa migration et son interprétation
-restent à définir avant une évolution incompatible. `fhirVersion` désigne
+Le champ `formatVersion` distingue deux formats. **Format 1** : le champ est absent
+(tous les exports antérieurs) ; l'étape porte ses propres packages et réglages de
+terminologie, et `validateOutput` décide de la validation. **Format 2** :
+`formatVersion: 2` ; l'étape peut nommer un **contexte FHIR** du serveur (`context`)
+et choisir sa politique de validation (`validation`) ; ses règles peuvent porter
+`note` et `disabled`. Une étape au format 1 reste lue et exécutée sans changement ;
+l'éditeur écrit `formatVersion: 2` dès qu'on y choisit un contexte ou une politique
+de validation. Il n'y a pas de conversion forcée. `fhirVersion` désigne
 uniquement la version FHIR : `R4` par défaut, `R4B` ou `R5`. Les exemples de
 référence sont vérifiés en R4 ; cela ne constitue pas un rejeu complet en R4B/R5.
 
@@ -62,6 +66,9 @@ passent par la [façade interne](Integration-FHIR-Data-Type.md).
 | `setLastUpdated` | `false` ; si activé, renseigner `meta.lastUpdated` à l'exécution. |
 | `traceMessages` | `false` ; si activé, les messages traités par le channel déployé tracent cette étape (voir [Trace.md](Trace.md#trace-des-messages-traités)). |
 | `traceCaptureValues` | `false` ; avec `traceMessages`, inclure les valeurs scalaires de cette étape dans la trace. |
+| `formatVersion` | Absent : format 1. `2` : `context`, `validation`, `note` et `disabled` sont interprétés. |
+| `context` | Vide par défaut. Nom d'un contexte FHIR du serveur (*Settings › FHIR Mapper*, `GET /settings`) : sa version FHIR, ses packages, son serveur de terminologie (autorisation, cache, délai) **remplacent** `fhirVersion`, `profiles` et `terminology*` de l'étape. Un nom inconnu fait échouer la compilation et le déploiement. Le contexte est lu à la compilation : un canal déployé prend un changement à son redéploiement. |
+| `validation` | Vide (format 1 : `validateOutput` décide), `inherit` (la politique du contexte, `always` sans contexte), `always` ou `off`. |
 | `samples` | Chaîne `"[]"` par défaut ; tableau d'exemples `{id, name, dataType, message, expected}` de l'éditeur et des outils. Sans effet sur le script généré. |
 | `variable` | Vide : résultat principal ; sinon nom littéral d'une variable de Channel Map contenant le JSON résultat. Concerne une ressource seule ou une création de Bundle. |
 | `bundleName` | Nom littéral, non vide et unique pour une création de Bundle ; vide sur une ressource. |
@@ -118,6 +125,10 @@ quatre formes, enregistrées séparément :
   {"key":"Patient.identifier:ipp.system","fixed":"urn:ipp","when":1,"path":[["identifier","ipp#0"],["system"]]}
 ]
 ```
+
+`note` est un texte libre de documentation, sans effet sur le script. `disabled: true`
+garde la règle dans l'étape sans la compiler ; l'éditeur conserve ces deux champs
+sur les règles qu'il réécrit, sans encore permettre de les saisir.
 
 `id` est un identifiant de règle optionnel, unique dans l'étape, composé de
 1 à 128 caractères (`A-Z`, `a-z`, chiffres, `_`, `.`, `:`, `-`, avec une lettre

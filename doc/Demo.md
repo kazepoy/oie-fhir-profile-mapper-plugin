@@ -24,14 +24,14 @@ canaux, avec leur IG de démonstration montée dans `/fhir-ig` et la map FML de
 | Canal | Port | Fonctions montrées |
 |---|---|---|
 | ORU R01 vers Bundle FHIR | 8081 | Bundle nommé, sept étapes, itérations de ressources, références entre étapes (`fhirRef`), traductions ConceptMap, **trace des messages traités** (action *FHIR mapping trace* dans Messages), **exemples enregistrés** sur l'étape Patient |
-| ORU R01 vers Patient FHIR | 8082 | Une ressource seule ; slices, itération, condition, traduction ; **deux exemples avec résultat attendu** (*Run all* dans l'onglet Test) |
+| ORU R01 vers Patient FHIR | 8082 | Une ressource seule, sur le **contexte FHIR `demo-labo`** (installé par l'initialisation, visible dans *Settings › FHIR Mapper*) ; slices, itération, condition, traduction ; **deux exemples avec résultat attendu** (*Run all* dans l'onglet Test) |
 | ORU R01 vers deux Bundles labo FHIR | 8083 | Deux Bundles (transaction et document) qui partagent les mêmes ressources, résultat en variable, chaînes de destinations |
 | SQL XML vers Patient FHIR | 8084 | Source XML, accents et zéros initiaux |
 | CSV patients métier vers Patient FHIR | 8085 | Nettoyage à la source, mapping en destination |
 | CSV patients métier vers collection | 8086 | Bundle `collection` |
 | ORU R01 vers Patient FHIR (FML) | 8087 | Étape **FHIR FML Transform** sur une map fichier (`/fhir-fml/OruR01ToPatient.fml`) |
 | ORU R01 vers Patient FHIR (strict) | 8088 | Strict Parser HL7 v2 : mêmes règles, autres chemins |
-| ORU R01 vers Patient FHIR (FML inline) | 8089 | **Map FML écrite dans l'étape** (onglet Map, *Check*), sans fichier de map |
+| ORU R01 vers Patient FHIR (FML inline) | 8089 | **Map FML écrite dans l'étape** (onglet Map, *Check*), sans fichier de map, sur le contexte `demo-labo` |
 
 Pour voir l'assistance à la saisie : ouvrir le canal du port 8082, son transformeur
 source, l'étape *Patient*, puis **Full screen**. Cliquer un champ pour l'éditer avec

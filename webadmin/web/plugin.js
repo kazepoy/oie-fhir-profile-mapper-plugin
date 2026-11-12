@@ -143,6 +143,131 @@ function registerTraceAction() {
   });
 }
 
+// src/host/settings.js
+var cache = null;
+var request = null;
+var listeners = /* @__PURE__ */ new Set();
+var cachedFhirSettings = () => cache;
+function loadFhirSettings(force = false) {
+  if (force) request = null;
+  if (!request) {
+    request = platform().api.get(`${MAPPER_API}/settings`, {}, { raw: true }).then((text) => {
+      cache = JSON.parse(text);
+      listeners.forEach((listener) => listener(cache));
+      return cache;
+    }).catch((error) => {
+      request = null;
+      throw error;
+    });
+  }
+  return request;
+}
+async function saveFhirSettings(settings) {
+  const text = await platform().api.post(`${MAPPER_API}/settings`, JSON.stringify(settings), { contentType: "text/plain", raw: true });
+  cache = JSON.parse(text);
+  request = Promise.resolve(cache);
+  listeners.forEach((listener) => listener(cache));
+  return cache;
+}
+function fhirContext(name) {
+  const key = String(name || "").trim();
+  return key && cache ? (cache.contexts || []).find((c) => c.name === key) || null : null;
+}
+
+// src/settings/panel.js
+var emptyContext = () => ({ name: "", fhirVersion: "R4", packages: [], terminologyServer: "", terminologyAuthorization: "", cacheSeconds: 300, timeoutSeconds: 10, validation: "always" });
+function errorText(e) {
+  const m = /<detailMessage>([\s\S]*?)<\/detailMessage>/.exec(e && e.body || "");
+  return m ? m[1].replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&") : e && e.message || String(e);
+}
+function FhirSettingsPanel() {
+  const React3 = platform().React;
+  const h3 = React3.createElement;
+  const [contexts, setContexts] = React3.useState(null);
+  const [error, setError] = React3.useState("");
+  const [saving, setSaving] = React3.useState(false);
+  React3.useEffect(() => {
+    loadFhirSettings(true).then((s) => setContexts((s.contexts || []).map((c) => ({ ...emptyContext(), ...c }))), (e) => {
+      setContexts([]);
+      setError(errorText(e));
+    });
+  }, []);
+  if (!contexts) return h3("div", { className: "hint" }, "Loading…");
+  const update = (index, patch) => setContexts(contexts.map((c, i) => i === index ? { ...c, ...patch } : c));
+  const save = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      const saved = await saveFhirSettings({ contexts });
+      setContexts(saved.contexts.map((c) => ({ ...emptyContext(), ...c })));
+      toast("FHIR contexts saved. Redeploy the channels that use a changed context.", "info");
+    } catch (e) {
+      setError(/Manage FHIR mapper settings|403/.test(errorText(e)) || e?.status === 403 ? "Changing the FHIR contexts requires the permission “Manage FHIR mapper settings”." : errorText(e));
+    }
+    setSaving(false);
+  };
+  const field = (label, control, hint) => h3("div", { className: "field" }, h3("label", null, label), control, hint ? h3("div", { className: "hint" }, hint) : null);
+  return h3(
+    "div",
+    { className: "fhir-mapper-settings" },
+    h3("p", { className: "hint" }, "A FHIR context is a named set of profile packages, a terminology server and a validation policy. FHIR Profile Mapper and FHIR FML Transform steps that name a context share them; a step without a context keeps its own. A deployed channel takes a change when it is redeployed."),
+    contexts.map((c, i) => h3(
+      "div",
+      { key: i, className: "panel", style: { marginBottom: "12px" }, "data-context": c.name },
+      h3(
+        "div",
+        { className: "panel-header", style: { display: "flex", alignItems: "center", gap: "8px" } },
+        c.name || "New context",
+        h3("button", { type: "button", className: "btn btn-sm btn-danger", style: { marginLeft: "auto" }, onClick: () => setContexts(contexts.filter((_, n) => n !== i)) }, "Delete")
+      ),
+      h3(
+        "div",
+        { className: "panel-body form-grid" },
+        field("Name", h3("input", { type: "text", value: c.name, placeholder: "labo", "aria-label": "Context name", onChange: (e) => update(i, { name: e.target.value }) }), "Letters, digits, '_', '.', '-'. Steps refer to this name."),
+        field("FHIR version", h3("select", { value: c.fhirVersion, onChange: (e) => update(i, { fhirVersion: e.target.value }) }, ["R4", "R4B", "R5"].map((v) => h3("option", { key: v, value: v }, v)))),
+        h3("div", { className: "span-2" }, field(
+          "Packages and profile files",
+          h3("textarea", {
+            rows: 3,
+            value: (c.packages || []).join("\n"),
+            "aria-label": "Packages",
+            style: { width: "100%", fontFamily: "monospace" },
+            onChange: (e) => update(i, { packages: e.target.value.split("\n") })
+          }),
+          "One path per line, on the OIE server: files, folders or .tgz packages (profiles, ConceptMaps, FML maps)."
+        )),
+        field(
+          "Terminology server",
+          h3("input", { type: "text", value: c.terminologyServer, placeholder: "empty: translate with the packages", onChange: (e) => update(i, { terminologyServer: e.target.value }) }),
+          "Base URL as the OIE server reaches it; empty to translate locally."
+        ),
+        field("Authorization", h3("input", {
+          type: "text",
+          value: c.terminologyAuthorization,
+          placeholder: "'Bearer ' + $cfg('tx.token')",
+          style: { fontFamily: "monospace" },
+          onChange: (e) => update(i, { terminologyAuthorization: e.target.value })
+        }), "JavaScript expression of the Authorization header; empty for none."),
+        field("Cache (seconds)", h3("input", { type: "number", min: 0, value: c.cacheSeconds, onChange: (e) => update(i, { cacheSeconds: Number(e.target.value) }) })),
+        field("Timeout (seconds)", h3("input", { type: "number", min: 1, value: c.timeoutSeconds, onChange: (e) => update(i, { timeoutSeconds: Number(e.target.value) }) })),
+        field("Validation of results", h3(
+          "select",
+          { value: c.validation, onChange: (e) => update(i, { validation: e.target.value }) },
+          h3("option", { value: "always" }, "always"),
+          h3("option", { value: "off" }, "off")
+        ), "For the steps whose validation is “as the context says”.")
+      )
+    )),
+    error ? h3("div", { className: "hint", role: "alert", style: { color: "#b91c1c", marginBottom: "8px" } }, error) : null,
+    h3(
+      "div",
+      { style: { display: "flex", gap: "8px" } },
+      h3("button", { type: "button", className: "btn", onClick: () => setContexts([...contexts, emptyContext()]) }, "New context"),
+      h3("button", { type: "button", className: "btn btn-primary", disabled: saving, onClick: save }, saving ? "Saving…" : "Save contexts")
+    )
+  );
+}
+
 // src/styles/editor.css
 var editor_default = "/* SPDX-License-Identifier: MPL-2.0\n * Styles shared by the two step editors: full screen, the one-line code editor\n * of an expression, and the elements a test or the compiler reported.\n * Colours come from the Web Admin variables, so both themes follow the host.\n */\n.fhir-profile-mapper.mapper-fullscreen, .fhir-fml.mapper-fullscreen { position: fixed; inset: 0; z-index: 900; overflow: auto; padding: 14px 18px; background: var(--bg2, #fff); color: var(--text, #1f2c38); }\n\n.fm-code-editor--line { width: 100%; height: 26px; min-height: 26px !important; border-radius: 4px; overflow: hidden; }\n.fm-code-editor--line .ce-gutter { display: none; }\n.fm-code-editor--line textarea.ce-area { height: 26px; min-height: 26px; padding: 3px 6px; resize: none; white-space: nowrap; overflow: hidden; }\n.fm-code-editor--line .monaco-host { height: 26px; }\n.fm-code-editor--invalid { outline: 1px solid var(--err, #cc3b3b); }\n.mapper-expression-editing { flex: 1 1 auto; min-width: 160px; }\n\n.fhir-profile-mapper .mapper-tree tr.mapper-node-error > td { background: color-mix(in srgb, var(--err, #cc3b3b) 10%, var(--bg2, #fff)); }\n.fhir-profile-mapper .mapper-tree tr.mapper-node-error > td:first-child { border-left-color: var(--err, #cc3b3b); }\n.fhir-profile-mapper .mapper-tree tr.mapper-node-error input[role=combobox] { border-color: var(--err, #cc3b3b); }\n";
 
@@ -693,7 +818,7 @@ function mapperJsonImport(element, text) {
     if (typeof (merged[field] ?? "[]") !== "string" || !Array.isArray(JSON.parse(merged[field] || "[]")))
       throw new Error(`${field} must be a string containing a JSON array.`);
   }
-  const allowed = /* @__PURE__ */ new Set(["id", "key", "element", "type", "expression", "path", "each", "variable", "condition", "fixed", "when", "translate"]);
+  const allowed = /* @__PURE__ */ new Set(["id", "key", "element", "type", "expression", "path", "each", "variable", "condition", "fixed", "when", "translate", "note", "disabled"]);
   for (const rule of JSON.parse(merged.mappings || "[]")) {
     if (!rule || typeof rule !== "object" || !Array.isArray(rule.path)) throw new Error("Every rule needs a path.");
     for (const key of Object.keys(rule)) if (!allowed.has(key)) throw new Error(`Unknown rule property: ${key}`);
@@ -996,7 +1121,7 @@ function fetchSd(platform2, version, profiles, url) {
   }
   return sdPromises.get(key);
 }
-function errorText(e) {
+function errorText2(e) {
   const body = e && e.body || "";
   const m = /<detailMessage>([\s\S]*?)<\/detailMessage>/.exec(body);
   if (m) return m[1].replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
@@ -1036,7 +1161,7 @@ function makeTree(rootIndex, ctx) {
     min: 1,
     max: "1"
   };
-  const cache = /* @__PURE__ */ new Map();
+  const cache2 = /* @__PURE__ */ new Map();
   function makeNode(parent, el, sdx, choiceType, instance, index) {
     const name = lastSegment(el.id).split(":")[0];
     let types = el.type || [];
@@ -1114,7 +1239,7 @@ function makeTree(rootIndex, ctx) {
     return (typeIndex.byParent.get(typeIndex.root.id) || []).map((el) => ({ el, sdx: typeIndex }));
   }
   function children(node) {
-    if (cache.has(node.key)) return cache.get(node.key);
+    if (cache2.has(node.key)) return cache2.get(node.key);
     const elements = childElements(node);
     if (elements === null) return null;
     const list = [];
@@ -1125,7 +1250,7 @@ function makeTree(rootIndex, ctx) {
       list.push(first);
       for (let i = 1; i < count; i++) list.push(makeNode(node, el, sdx, choiceType, i, list.length));
     }
-    cache.set(node.key, list);
+    cache2.set(node.key, list);
     return list;
   }
   const expandable = (node) => node.choice || !!node.typeUrl || !node.choiceType && (node.sdx.byParent.get(node.el.id) || []).length > 0;
@@ -1399,6 +1524,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       current: null,
       lastPush: 0,
       // An existing mapping opens on its rules; a new step on its properties.
+      settingsReady: !!cachedFhirSettings(),
       tab: saved.length ? "mapper" : "properties"
     };
   }
@@ -1415,7 +1541,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       if (active) rerender();
     }).catch((error) => {
       if (active) {
-        st.error = `Function catalogue: ${errorText(error)}`;
+        st.error = `Function catalogue: ${errorText2(error)}`;
         rerender();
       }
     });
@@ -1449,8 +1575,32 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       clearTimeout(timer);
     };
   }, [st, st.sample.message, st.sample.dataType]);
-  const version = element.fhirVersion || "R4";
-  const profiles = element.profiles || "";
+  React.useEffect(() => {
+    let active = true;
+    const done = () => {
+      if (active && !st.settingsReady) {
+        st.settingsReady = true;
+        rerender();
+      }
+    };
+    loadFhirSettings().then(done, done);
+    return () => {
+      active = false;
+    };
+  }, [st]);
+  const shared = fhirContext(element.context);
+  const version = shared ? shared.fhirVersion : element.fhirVersion || "R4";
+  const profiles = shared ? (shared.packages || []).join(";") : element.profiles || "";
+  const txServer = shared ? shared.terminologyServer || "" : element.terminologyServer || "";
+  const setContext = (name) => {
+    element.context = name;
+    element.formatVersion = 2;
+    if (name && !element.validation) element.validation = "inherit";
+    if (!name && element.validation === "inherit") element.validation = asBool(element.validateOutput, true) ? "always" : "off";
+    onChange();
+    state.current = null;
+    rerender();
+  };
   const ctx = { version, profiles, instances: st.instances, showAll: st.showAll };
   const tree = st.rootIndex ? makeTree(st.rootIndex, ctx) : null;
   const revealDiagnostic = (error) => {
@@ -1492,7 +1642,15 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     st.translations.delete(key);
     st.conditions.delete(key);
   };
-  const compiled = (index, local) => JSON.stringify(mapperRuleIds(compile(makeTree(index, { ...local, showAll: true }), st.values, st.iterations, st.translations, st.conditions), parseMappings(element.mappings)));
+  const compiled = (index, local) => {
+    const previous = parseMappings(element.mappings);
+    const rules = mapperRuleIds(compile(makeTree(index, { ...local, showAll: true }), st.values, st.iterations, st.translations, st.conditions), previous);
+    const kept = new Map(previous.filter((rule) => rule.id && (rule.note || rule.disabled)).map((rule) => [rule.id, rule]));
+    return JSON.stringify(rules.map((rule) => {
+      const before = kept.get(rule.id);
+      return before ? { ...rule, ...before.note ? { note: before.note } : {}, ...before.disabled ? { disabled: true } : {} } : rule;
+    }));
+  };
   const save = () => {
     if (!tree) return;
     element.mappings = compiled(st.rootIndex, ctx);
@@ -1615,7 +1773,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
         onChange();
       }
     } catch (e) {
-      st.error = errorText(e);
+      st.error = errorText2(e);
     } finally {
       st.loading = false;
       st.current = snapshot(st);
@@ -1623,8 +1781,8 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     }
   };
   React.useEffect(() => {
-    if (element.profileUrl) load(element.profileUrl);
-  }, [st]);
+    if (element.profileUrl && (!element.context || st.settingsReady)) load(element.profileUrl);
+  }, [st, element.context ? st.settingsReady : true]);
   const scriptFor = React.useRef({ source: null, timer: null });
   React.useEffect(() => {
     const source = JSON.stringify(element);
@@ -1649,7 +1807,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       st.profileList = JSON.parse(text2);
       st.error = "";
     } catch (e) {
-      st.error = errorText(e);
+      st.error = errorText2(e);
     }
     rerender();
   };
@@ -1665,7 +1823,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       try {
         await fetchSd(platform2, version, profiles, node.typeUrl);
       } catch (e) {
-        st.error = `${node.typeUrl}: ${errorText(e)}`;
+        st.error = `${node.typeUrl}: ${errorText2(e)}`;
       }
       rerender();
     }
@@ -1731,7 +1889,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       });
       return JSON.parse(text2);
     } catch (e) {
-      const message = errorText(e);
+      const message = errorText2(e);
       return { output: null, issues: [], errors: [{ key: null, line: null, message: e?.status === 403 || /Test FHIR mapper steps/.test(message) ? "Testing a step runs its code on the server, like a deployed channel: it requires the permission “Test FHIR mapper steps”." : message }] };
     }
   };
@@ -1799,7 +1957,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       const text2 = await platform2.api.post(`${MAPPER_API2}/script`, JSON.stringify(element), { contentType: "text/plain", raw: true });
       st.scriptResult = JSON.parse(text2);
     } catch (e) {
-      st.scriptResult = { script: "", errors: [{ key: null, line: null, message: errorText(e) }] };
+      st.scriptResult = { script: "", errors: [{ key: null, line: null, message: errorText2(e) }] };
     }
     rerender();
   };
@@ -1821,7 +1979,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     rerender();
   };
   const loadConceptMaps = async () => {
-    const server = (element.terminologyServer || "").trim();
+    const server = txServer.trim();
     const source = `${server}|${profiles}|${version}`;
     if (st.conceptMaps && st.conceptMaps.source === source) return;
     try {
@@ -1830,7 +1988,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       st.error = "";
     } catch (e) {
       st.conceptMaps = { source, list: [] };
-      st.error = errorText(e);
+      st.error = errorText2(e);
     }
     rerender();
   };
@@ -1843,13 +2001,13 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     try {
       const text2 = await platform2.api.get(
         `${MAPPER_API2}/translate`,
-        { server: element.terminologyServer || "", profiles, conceptMap: t.conceptMap, system: t.source || "", code: test.code || "", targetSystem: t.target || "", fhirVersion: version },
+        { server: txServer, profiles, conceptMap: t.conceptMap, system: t.source || "", code: test.code || "", targetSystem: t.target || "", fhirVersion: version },
         { raw: true }
       );
       const match = JSON.parse(text2);
       test.result = match ? `→ ${[match.system, match.code].filter(Boolean).join("|")}${match.display ? ` (${match.display})` : ""}` : "→ no match (then the rule chosen for no match)";
     } catch (e) {
-      test.result = errorText(e);
+      test.result = errorText2(e);
     }
     rerender();
   };
@@ -2065,7 +2223,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     const test = st.tests.get(node.key) || {};
     const maps = st.conceptMaps && st.conceptMaps.list || [];
     const listId = "fhir-profile-mapper-conceptmaps";
-    const localTx = isLocalServer(element.terminologyServer);
+    const localTx = isLocalServer(txServer);
     const needsValue = t.unmapped === "fixed" || t.unmapped === "function";
     return subRow(node, "translate", [
       h("span", { key: "l", title: localTx ? "ConceptMap/$translate locally, on the ConceptMaps of the Profile Packages" : "ConceptMap/$translate on the terminology server" }, localTx ? "⇄ ConceptMap (local)" : "⇄ ConceptMap"),
@@ -2280,11 +2438,23 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
         "Bundles are named and created explicitly; results are completed after the last FHIR mapper."
       ),
       createBundle ? field("Bundle Name", text("bundleName", "labo"), "Internal name used by resource steps; separate from the FHIR id and profile URL.") : null,
+      h("div", { className: "mapper-wide" }, field(
+        "FHIR context",
+        h(
+          "select",
+          { value: element.context || "", "aria-label": "FHIR context", onChange: (e) => setContext(e.target.value) },
+          h("option", { value: "" }, "(none: this step's own packages and terminology server)"),
+          (cachedFhirSettings()?.contexts || []).map((c) => h("option", { key: c.name, value: c.name }, `${c.name} — ${c.fhirVersion}, ${(c.packages || []).join("; ") || "no package"}`)),
+          element.context && !shared && st.settingsReady ? h("option", { value: element.context }, `${element.context} (not defined on this server)`) : null
+        ),
+        shared ? `Packages: ${(shared.packages || []).join("; ") || "none"} · terminology: ${shared.terminologyServer || "local"} · validation: ${shared.validation}. Defined in Settings › FHIR Mapper.` : "A context of Settings › FHIR Mapper gives the packages, the terminology server and the validation policy to every step that names it."
+      )),
       field(
         "FHIR Version",
         h(
           "select",
           {
+            disabled: !!shared,
             value: version,
             onChange: (e) => {
               element.fhirVersion = e.target.value;
@@ -2295,7 +2465,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
           ["R4", "R4B", "R5"].map((v) => h("option", { key: v, value: v }, v))
         )
       ),
-      field("Profile Packages", text("profiles", "/profiles"), "Server-side profile files or folders, separated by ';'."),
+      shared ? null : field("Profile Packages", text("profiles", "/profiles"), "Server-side profile files or folders, separated by ';'."),
       h(
         "div",
         { className: "mapper-wide" },
@@ -2324,7 +2494,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
           "Loading another profile keeps the mappings of the elements it also has."
         )
       ),
-      h(
+      shared ? null : h(
         "div",
         { className: "mapper-wide" },
         field(
@@ -2333,7 +2503,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
           "Empty or n/a: translate locally using Profile Packages. Otherwise, enter the terminology server URL as reached by OIE."
         )
       ),
-      h(
+      shared ? null : h(
         "details",
         { className: "mapper-wide" },
         h("summary", { className: "text-text-faint", style: { cursor: "pointer", fontSize: "12px" } }, "Terminology server options"),
@@ -2383,7 +2553,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
           !declarations.length && !targets.length ? h("div", { className: "hint", style: { marginTop: "8px" } }, "Create a Bundle earlier in this transformer to select it here.") : null,
           [...declarations, ...targets.filter((t) => !declarations.some((b) => b.bundleName === t.name)).map((t) => ({ bundleName: t.name }))].map((b) => {
             const target = targets.find((t) => t.name === b.bundleName);
-            const request = target && ["transaction", "batch"].includes(b.bundleType);
+            const request2 = target && ["transaction", "batch"].includes(b.bundleType);
             return h(
               "div",
               { key: b.bundleName, className: "bundle-target", "data-bundle": b.bundleName },
@@ -2395,7 +2565,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
                 h("span", { className: "hint" }, b.bundleType || "not declared earlier")
               ),
               b.name ? h("div", { className: "hint" }, `Created by step “${b.name}”.`) : null,
-              request ? h(
+              request2 ? h(
                 "div",
                 { className: "bundle-request" },
                 field("Method", h(
@@ -2405,8 +2575,8 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
                 )),
                 field("Request URL", h(ExpressionField, { completionContext: completionFor(tree?.root, "reference"), value: target.requestUrl || "", placeholder: "Empty: the resource type or type/id", onChange: (e) => updateTarget(b.bundleName, { requestUrl: e.target.value }), style: mono }))
               ) : null,
-              request && (!target.requestMethod || target.requestMethod === "POST") ? field("If-None-Exist", h(ExpressionField, { completionContext: completionFor(tree?.root, "reference"), value: target.ifNoneExist || "", placeholder: "'identifier=' + ...", onChange: (e) => updateTarget(b.bundleName, { ifNoneExist: e.target.value }), style: mono }), "Conditional creation for this Bundle entry.") : null,
-              target && !request ? h("div", { className: "hint", style: { marginTop: "8px" } }, b.bundleType ? `No request for a ${b.bundleType} Bundle.` : "This Bundle must be created earlier in the transformer.") : null
+              request2 && (!target.requestMethod || target.requestMethod === "POST") ? field("If-None-Exist", h(ExpressionField, { completionContext: completionFor(tree?.root, "reference"), value: target.ifNoneExist || "", placeholder: "'identifier=' + ...", onChange: (e) => updateTarget(b.bundleName, { ifNoneExist: e.target.value }), style: mono }), "Conditional creation for this Bundle entry.") : null,
+              target && !request2 ? h("div", { className: "hint", style: { marginTop: "8px" } }, b.bundleType ? `No request for a ${b.bundleType} Bundle.` : "This Bundle must be created earlier in the transformer.") : null
             );
           })
         ) : null
@@ -2436,16 +2606,26 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
             h(
               "label",
               { className: "check" },
-              h("input", {
-                type: "checkbox",
-                checked: asBool(element.validateOutput, true),
-                onChange: (e) => {
-                  element.validateOutput = e.target.checked;
-                  onChange();
-                  rerender();
-                }
-              }),
-              bundle && !createBundle ? " Validate this preview (final validation is set on each Bundle)" : " Validate FHIR output"
+              bundle && !createBundle ? "Validate this preview " : "Validate FHIR output ",
+              h(
+                "select",
+                {
+                  "aria-label": "Validation",
+                  style: { width: "auto" },
+                  value: element.validation || (asBool(element.validateOutput, true) ? "always" : "off"),
+                  onChange: (e) => {
+                    element.validation = e.target.value;
+                    element.validateOutput = e.target.value !== "off";
+                    element.formatVersion = 2;
+                    onChange();
+                    rerender();
+                  }
+                },
+                element.context ? h("option", { value: "inherit" }, `as the context says${shared ? ` (${shared.validation})` : ""}`) : null,
+                h("option", { value: "always" }, "always"),
+                h("option", { value: "off" }, "off")
+              ),
+              bundle && !createBundle ? " (final validation is set on each Bundle)" : null
             ),
             h(
               "label",
@@ -2529,7 +2709,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
             onChange();
             rerender();
           } catch (error) {
-            st.error = errorText(error);
+            st.error = errorText2(error);
             rerender();
           }
         } }, "Validate and apply")
@@ -2915,6 +3095,9 @@ function registerProfileMapper(platform2) {
       terminologyAuthorization: "",
       terminologyCacheSeconds: 300,
       terminologyTimeoutSeconds: 10,
+      formatVersion: 2,
+      context: "",
+      validation: "always",
       mappings: "[]",
       samples: "[]",
       traceMessages: false,
@@ -3061,7 +3244,7 @@ var FML_STYLES = `
 `;
 var React2;
 var h2 = (...args) => React2.createElement(...args);
-function errorText2(e) {
+function errorText3(e) {
   const body = e && e.body || "";
   const m = /<detailMessage>([\s\S]*?)<\/detailMessage>/.exec(body);
   if (m) return m[1].replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
@@ -3136,24 +3319,41 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
   };
   const field = (label, control, hint, wide) => h2("div", { className: wide ? "field fml-wide" : "field" }, h2("label", null, label), control, hint ? h2("div", { className: "hint" }, hint) : null);
   const text = (prop, placeholder) => h2("input", { type: "text", placeholder, value: element[prop] ?? "", onChange: (e) => set(prop, e.target.value) });
+  const shared = fhirContext(element.context);
+  const version = shared ? shared.fhirVersion : element.fhirVersion || "R4";
+  const locations = shared ? (shared.packages || []).join(";") : element.profiles || "";
+  React2.useEffect(() => {
+    let active = true;
+    const done = () => {
+      if (active) {
+        st.settingsReady = true;
+        rerender();
+        if (element.context && fhirContext(element.context)) loadMaps(false);
+      }
+    };
+    loadFhirSettings().then(done, done);
+    return () => {
+      active = false;
+    };
+  }, []);
   const loadMaps = async (reload) => {
     st.loading = true;
     st.loadError = "";
     rerender();
     try {
       if (reload) await platform2.api.post(`${FML_API}/reload`, "", { contentType: "text/plain", raw: true });
-      const answer = JSON.parse(await platform2.api.get(`${FML_API}/maps`, { fhirVersion: element.fhirVersion || "R4", profiles: element.profiles || "" }, { raw: true }));
+      const answer = JSON.parse(await platform2.api.get(`${FML_API}/maps`, { fhirVersion: version, profiles: locations }, { raw: true }));
       st.maps = answer.maps || [];
       st.mapErrors = answer.errors || {};
     } catch (e) {
       st.maps = null;
-      st.loadError = errorText2(e);
+      st.loadError = errorText3(e);
     }
     st.loading = false;
     rerender();
   };
   React2.useEffect(() => {
-    if ((element.profiles || "").trim()) loadMaps(false);
+    if (!element.context && (element.profiles || "").trim()) loadMaps(false);
   }, []);
   const saveSample = () => {
     try {
@@ -3173,7 +3373,7 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
       });
       st.result = JSON.parse(text2);
     } catch (e) {
-      const message = errorText2(e);
+      const message = errorText3(e);
       st.result = { model: null, output: null, issues: [], errors: [{ phase: "request", message: e?.status === 403 || /Test FHIR FML transforms/.test(message) ? "Testing a step requires the permission “Test FHIR FML transforms”." : message }] };
     }
     st.testing = false;
@@ -3185,12 +3385,12 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
     try {
       const text2 = await platform2.api.post(
         `${FML_API}/check`,
-        JSON.stringify({ mapSource: element.mapSource || "", fhirVersion: element.fhirVersion || "R4", profiles: element.profiles || "" }),
+        JSON.stringify({ mapSource: element.mapSource || "", fhirVersion: version, profiles: locations }),
         { contentType: "text/plain", raw: true, timeoutMs: 12e4 }
       );
       st.check = JSON.parse(text2);
     } catch (e) {
-      st.check = { errors: [{ line: 1, column: 1, message: errorText2(e) }] };
+      st.check = { errors: [{ line: 1, column: 1, message: errorText3(e) }] };
     }
     st.checking = false;
     rerender();
@@ -3227,9 +3427,24 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
   const settings = h2(
     "div",
     { className: "fml-settings" },
+    field(
+      "FHIR context",
+      h2(
+        "select",
+        { value: element.context || "", "aria-label": "FHIR context", onChange: (e) => {
+          set("context", e.target.value);
+          setTimeout(() => loadMaps(false), 0);
+        } },
+        h2("option", { value: "" }, "(none: this step's own version and locations)"),
+        (cachedFhirSettings()?.contexts || []).map((c) => h2("option", { key: c.name, value: c.name }, `${c.name} — ${c.fhirVersion}, ${(c.packages || []).join("; ") || "no package"}`)),
+        element.context && !shared && st.settingsReady ? h2("option", { value: element.context }, `${element.context} (not defined on this server)`) : null
+      ),
+      shared ? `Locations: ${(shared.packages || []).join("; ") || "none"} · validation policy of the context: ${shared.validation}.` : "A context of Settings › FHIR Mapper gives the version and the locations to every step that names it.",
+      true
+    ),
     field("FHIR version", h2(
       "select",
-      { value: element.fhirVersion || "R4", onChange: (e) => set("fhirVersion", e.target.value) },
+      { disabled: !!shared, value: version, onChange: (e) => set("fhirVersion", e.target.value) },
       ["R4", "R4B", "R5"].map((v) => h2("option", { key: v, value: v }, v))
     ), "Version of the resources the map produces."),
     field(
@@ -3242,13 +3457,13 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
     ),
     element.variable ? field("Variable", text("variable", "fhirResource")) : null,
     field(
-      "Profile locations",
+      shared ? "Maps of the context" : "Profile locations",
       h2(
         "div",
         { className: "fml-row" },
-        text("profiles", "/opt/fhir/ig;/opt/fhir/maps"),
-        h2("button", { type: "button", className: "btn btn-sm", disabled: st.loading || !(element.profiles || "").trim(), onClick: () => loadMaps(false) }, st.loading ? "Loading…" : "Load maps"),
-        h2("button", { type: "button", className: "btn btn-sm", disabled: st.loading || !(element.profiles || "").trim(), title: "Read the map files again", onClick: () => loadMaps(true) }, "Reload")
+        shared ? null : text("profiles", "/opt/fhir/ig;/opt/fhir/maps"),
+        h2("button", { type: "button", className: "btn btn-sm", disabled: st.loading || !locations.trim(), onClick: () => loadMaps(false) }, st.loading ? "Loading…" : "Load maps"),
+        h2("button", { type: "button", className: "btn btn-sm", disabled: st.loading || !locations.trim(), title: "Read the map files again", onClick: () => loadMaps(true) }, "Reload")
       ),
       "Files and folders on the OIE server, separated by ';': FML files (.fml, .map), StructureMaps, profiles, ConceptMaps and packages (.tgz).",
       true
@@ -3385,6 +3600,7 @@ function register2(platform2) {
       profiles: "",
       mapUrl: "",
       mapSource: "",
+      context: "",
       variable: "",
       validateOutput: true,
       contextVariables: ""
@@ -3404,6 +3620,7 @@ function register3(platform2) {
   installStyles([editor_default]);
   register(platform2);
   register2(platform2);
+  platform2.registerSettingsPanel?.({ label: "FHIR Mapper", component: FhirSettingsPanel });
   registerTraceAction();
   registerMapperReferences().catch((error) => console.warn("[fhir-mapper] references unavailable:", error));
 }

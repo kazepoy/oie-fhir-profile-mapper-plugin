@@ -28,6 +28,7 @@ Classe `org.oie.fhir.fml.FhirFmlTransformStep`, nom affiché **FHIR FML Transfor
 
 | Propriété | Contrat |
 |---|---|
+| `context` | Nom d'un contexte FHIR du serveur : sa version et ses packages remplacent `fhirVersion` et `profiles`. Vide par défaut. |
 | `fhirVersion` | `R4` par défaut, `R4B`, `R5` : version des ressources produites. |
 | `profiles` | Fichiers et répertoires du serveur, séparés par `;` : maps (`.fml`, `.map`, `StructureMap` JSON/XML), profils, ConceptMaps, packages `.tgz`. |
 | `mapSource` | Texte FML de la map, écrit dans l'onglet **Map** et enregistré avec le canal. S'il n'est pas vide, il est exécuté à la place de `mapUrl` ; il peut importer les maps des emplacements. |

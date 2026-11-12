@@ -8,6 +8,7 @@
 
 import { createExpressionEditor, registerLanguage } from "../host/code-editor.js";
 import { FML_LANGUAGE, FML_TEMPLATE } from "./language.js";
+import { cachedFhirSettings, fhirContext, loadFhirSettings } from "../host/settings.js";
 
 export const FML_TYPE = "org.oie.fhir.fml.FhirFmlTransformStep";
 const FML_API = "/extensions/fhir-fml";
@@ -113,13 +114,23 @@ function FmlTransformEditor({ element, onChange, platform }) {
     h("div", { className: wide ? "field fml-wide" : "field" }, h("label", null, label), control, hint ? h("div", { className: "hint" }, hint) : null);
   const text = (prop, placeholder) => h("input", { type: "text", placeholder, value: element[prop] ?? "", onChange: (e) => set(prop, e.target.value) });
 
+  // A step that names a FHIR context of the server takes its version and locations.
+  const shared = fhirContext(element.context);
+  const version = shared ? shared.fhirVersion : element.fhirVersion || "R4";
+  const locations = shared ? (shared.packages || []).join(";") : element.profiles || "";
+  React.useEffect(() => {
+    let active = true;
+    const done = () => { if (active) { st.settingsReady = true; rerender(); if (element.context && fhirContext(element.context)) loadMaps(false); } };
+    loadFhirSettings().then(done, done);
+    return () => { active = false; };
+  }, []);
   const loadMaps = async (reload) => {
     st.loading = true;
     st.loadError = "";
     rerender();
     try {
       if (reload) await platform.api.post(`${FML_API}/reload`, "", { contentType: "text/plain", raw: true });
-      const answer = JSON.parse(await platform.api.get(`${FML_API}/maps`, { fhirVersion: element.fhirVersion || "R4", profiles: element.profiles || "" }, { raw: true }));
+      const answer = JSON.parse(await platform.api.get(`${FML_API}/maps`, { fhirVersion: version, profiles: locations }, { raw: true }));
       st.maps = answer.maps || [];
       st.mapErrors = answer.errors || {};
     } catch (e) {
@@ -130,7 +141,7 @@ function FmlTransformEditor({ element, onChange, platform }) {
     rerender();
   };
   React.useEffect(() => {
-    if ((element.profiles || "").trim()) loadMaps(false);
+    if (!element.context && (element.profiles || "").trim()) loadMaps(false);
   }, []);
 
   const saveSample = () => {
@@ -164,7 +175,7 @@ function FmlTransformEditor({ element, onChange, platform }) {
     st.checking = true;
     rerender();
     try {
-      const text = await platform.api.post(`${FML_API}/check`, JSON.stringify({ mapSource: element.mapSource || "", fhirVersion: element.fhirVersion || "R4", profiles: element.profiles || "" }),
+      const text = await platform.api.post(`${FML_API}/check`, JSON.stringify({ mapSource: element.mapSource || "", fhirVersion: version, profiles: locations }),
         { contentType: "text/plain", raw: true, timeoutMs: 120000 });
       st.check = JSON.parse(text);
     } catch (e) {
@@ -189,7 +200,12 @@ function FmlTransformEditor({ element, onChange, platform }) {
   const settings = h(
     "div",
     { className: "fml-settings" },
-    field("FHIR version", h("select", { value: element.fhirVersion || "R4", onChange: (e) => set("fhirVersion", e.target.value) },
+    field("FHIR context", h("select", { value: element.context || "", "aria-label": "FHIR context", onChange: (e) => { set("context", e.target.value); setTimeout(() => loadMaps(false), 0); } },
+      h("option", { value: "" }, "(none: this step's own version and locations)"),
+      (cachedFhirSettings()?.contexts || []).map((c) => h("option", { key: c.name, value: c.name }, `${c.name} — ${c.fhirVersion}, ${(c.packages || []).join("; ") || "no package"}`)),
+      element.context && !shared && st.settingsReady ? h("option", { value: element.context }, `${element.context} (not defined on this server)`) : null),
+      shared ? `Locations: ${(shared.packages || []).join("; ") || "none"} · validation policy of the context: ${shared.validation}.` : "A context of Settings › FHIR Mapper gives the version and the locations to every step that names it.", true),
+    field("FHIR version", h("select", { disabled: !!shared, value: version, onChange: (e) => set("fhirVersion", e.target.value) },
       ["R4", "R4B", "R5"].map((v) => h("option", { key: v, value: v }, v))), "Version of the resources the map produces."),
     field("Result destination", h("select", {
       value: element.variable ? "variable" : "message",
@@ -197,10 +213,10 @@ function FmlTransformEditor({ element, onChange, platform }) {
     }, h("option", { value: "message" }, "Outbound message"), h("option", { value: "variable" }, "Channel Map variable")),
     "The outbound template (tmp) if there is one, else msg.") ,
     element.variable ? field("Variable", text("variable", "fhirResource")) : null,
-    field("Profile locations", h("div", { className: "fml-row" },
-      text("profiles", "/opt/fhir/ig;/opt/fhir/maps"),
-      h("button", { type: "button", className: "btn btn-sm", disabled: st.loading || !(element.profiles || "").trim(), onClick: () => loadMaps(false) }, st.loading ? "Loading…" : "Load maps"),
-      h("button", { type: "button", className: "btn btn-sm", disabled: st.loading || !(element.profiles || "").trim(), title: "Read the map files again", onClick: () => loadMaps(true) }, "Reload")),
+    field(shared ? "Maps of the context" : "Profile locations", h("div", { className: "fml-row" },
+      shared ? null : text("profiles", "/opt/fhir/ig;/opt/fhir/maps"),
+      h("button", { type: "button", className: "btn btn-sm", disabled: st.loading || !locations.trim(), onClick: () => loadMaps(false) }, st.loading ? "Loading…" : "Load maps"),
+      h("button", { type: "button", className: "btn btn-sm", disabled: st.loading || !locations.trim(), title: "Read the map files again", onClick: () => loadMaps(true) }, "Reload")),
     "Files and folders on the OIE server, separated by ';': FML files (.fml, .map), StructureMaps, profiles, ConceptMaps and packages (.tgz).", true),
     field("Map", h("div", { className: "fml-row" },
       h("select", { value: knownMap ? element.mapUrl : "", onChange: (e) => set("mapUrl", e.target.value) },
@@ -278,6 +294,7 @@ export function register(platform) {
       profiles: "",
       mapUrl: "",
       mapSource: "",
+      context: "",
       variable: "",
       validateOutput: true,
       contextVariables: ""

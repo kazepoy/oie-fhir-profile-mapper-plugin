@@ -57,6 +57,20 @@ check_channel() {
   esac
 }
 
+# Les contextes FHIR du serveur (Settings › FHIR Mapper) : des canaux les nomment, ils
+# doivent exister avant l'import. Un contexte déjà modifié dans l'administration est
+# conservé, sauf avec OIE_INIT_FORCE=true.
+SETTINGS_FILE="${OIE_INIT_DIR:-/oie-init}/fhir-settings.json"
+if [ -f "$SETTINGS_FILE" ]; then
+  api GET /extensions/fhir-profile-mapper/settings
+  if [ "$OIE_INIT_FORCE" = "true" ] || ! grep -q '"name"' "$RESPONSE_FILE"; then
+    api POST /extensions/fhir-profile-mapper/settings "$SETTINGS_FILE" text/plain
+    echo "Contextes FHIR installés"
+  else
+    echo "Contextes FHIR déjà présents, conservés"
+  fi
+fi
+
 echo "=== Import des canaux ($OIE_URL) ==="
 count=0
 for file in "$CHANNELS_DIR"/*.xml; do

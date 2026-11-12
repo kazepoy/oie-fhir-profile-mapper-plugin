@@ -47,6 +47,20 @@ describe("the step editors in the demo", () => {
     assert.equal(await mapper.locator("tr[title^='Patient.name.family'] input[role=combobox]").first().inputValue(), before);
   });
 
+  test("the step names a FHIR context of the server, defined in Settings", async () => {
+    const { page } = session;
+    const mapper = page.locator(".fhir-profile-mapper");
+    await mapper.getByRole("tab", { name: "Properties" }).click();
+    assert.equal(await mapper.locator("select[aria-label='FHIR context']").inputValue(), "demo-labo");
+    assert.equal(await mapper.locator("select[aria-label=Validation]").inputValue(), "inherit");
+    const settings = await page.evaluate(async () => {
+      const { platform } = await import("@oie/web-shell");
+      return { panel: platform.settingsPanels().some(p => p.label === "FHIR Mapper"),
+        contexts: JSON.parse(await platform.api.get("/extensions/fhir-profile-mapper/settings", {}, { raw: true })).contexts.map(c => c.name) };
+    });
+    assert.deepEqual(settings, { panel: true, contexts: ["demo-labo"] });
+  });
+
   test("the samples saved with the step run and match their expected results", async () => {
     const { page } = session;
     const mapper = page.locator(".fhir-profile-mapper");

@@ -17,7 +17,8 @@ git et le [CHANGELOG](../CHANGELOG.md) pour ce qui a été livré).
 | 3 Studio et saisie | **Fait en partie** : Monaco sur les expressions, complétion (fonctions, variables, chemins, snippets, références), recherche, annuler/rétablir, plein écran, erreurs marquées et soulignées, volet *Sample fields*, clavier. Restent : inspecteur, codes de binding et extensions (routes de la phase 2), menu contextuel. |
 | 4 Tests et traces | **Fait en partie** : exemples enregistrés dans l'étape, résultat attendu, comparaison, *Run all*, action *FHIR mapping trace*. Restent : aperçu multi-étapes, exécution par outil, import/export de tableaux. |
 | 5 FML | **Fait en partie** : étape intégrée, map écrite dans l'étape, langage `fml`, *Check*. Restent : complétion, squelette, modèles typés, pool. |
-| 2, 6, 7 | À faire. |
+| 2 Serveur | **Fait en partie** : contextes FHIR (réglages, permission, panneau), `formatVersion: 2`, `context`, politique de validation, `note`/`disabled`. Restent : index de catalogue, arbre aplati, expansions de ValueSets, outil de migration (inutile tant que le format 1 reste lu). |
+| 6, 7 | À faire. |
 
 ---
 

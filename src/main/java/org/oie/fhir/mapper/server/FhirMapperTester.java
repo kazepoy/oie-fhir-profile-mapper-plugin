@@ -159,7 +159,7 @@ public final class FhirMapperTester {
                     out.put("validationPerformed", true);
                     long validationStarted = System.nanoTime();
                     try {
-                        FhirValidation validation = FhirFacade.validate(result, "", step.getProfiles(), step.getFhirVersion());
+                        FhirValidation validation = FhirFacade.validate(result, "", step.effectiveProfiles(), step.effectiveFhirVersion());
                         if (trace != null) trace.phase("validation", validation.isValid() ? "passed" : "failed", validationStarted, "FHIR");
                         for (Map<String, String> issue : validation.getIssues()) {
                             Map<String, Object> i = new LinkedHashMap<>();

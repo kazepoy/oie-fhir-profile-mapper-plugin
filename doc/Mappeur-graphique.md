@@ -52,7 +52,10 @@ Le nom interne d'un Bundle sert au rattachement des étapes. Ce n'est ni l'ident
 
 ## 3. Charger un profil et construire l'arbre
 
-Renseigner **FHIR Version**, **Profile Packages** et **Target Profile**, puis Load. Les packages sont des chemins du serveur OIE, séparés par `;`. List profiles permet de choisir une définition connue de ces packages.
+**FHIR context** choisit un contexte défini dans *Settings › FHIR Mapper* : la version
+FHIR, les packages et le serveur de terminologie viennent alors du contexte, et les
+champs correspondants de l'étape disparaissent. Sans contexte, renseigner **FHIR
+Version**, **Profile Packages** et **Target Profile**, puis Load. Les packages sont des chemins du serveur OIE, séparés par `;`. List profiles permet de choisir une définition connue de ces packages.
 
 Le serveur fournit le snapshot de la StructureDefinition. `indexSd()` l'indexe par identifiant et parent ; `makeTree()` construit les nœuds affichés. L'arbre présente :
 
@@ -67,6 +70,17 @@ L'ouverture d'un type complexe ou d'une extension peut charger une autre Structu
 Changer de profil conserve les mappings dont les éléments existent encore. Les éléments absents sont signalés ; si un type nécessaire n'a pas pu être chargé, l'édition est bloquée afin de ne pas supprimer silencieusement des mappings.
 
 Pour **Create a Bundle**, le profil doit décrire un Bundle. Un type fixé par ce profil règle Bundle Type et rend ce choix non modifiable. Les entrées ne sont pas mappées dans l'en-tête : elles viennent des étapes de ressources.
+
+### Contextes FHIR du serveur
+
+Le panneau *Settings › FHIR Mapper* administre des contextes nommés : version FHIR,
+packages (un chemin serveur par ligne), serveur de terminologie avec autorisation,
+cache et délai, et politique de validation (`always` ou `off`). Ils sont enregistrés
+dans les propriétés de l'extension et lus par `GET /settings` (permission **Edit FHIR
+mappings**) ; les modifier (`POST /settings`) demande la permission **Manage FHIR
+mapper settings**. Une étape FHIR Profile Mapper ou FHIR FML Transform qui nomme un
+contexte en partage les réglages ; **Validate FHIR output** propose alors
+« as the context says ». Un canal déployé garde le contexte lu à son déploiement.
 
 ## 4. Écrire une expression de valeur
 

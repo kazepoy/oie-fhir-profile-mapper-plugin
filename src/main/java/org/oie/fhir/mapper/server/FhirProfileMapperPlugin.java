@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import com.mirth.connect.model.ExtensionPermission;
 import com.mirth.connect.plugins.ServicePlugin;
 import com.mirth.connect.model.converters.ObjectXMLSerializer;
+import org.oie.fhir.mapper.FhirMapperSettings;
 import org.oie.fhir.mapper.FhirProfileMapperStep;
 import org.oie.fhir.mapper.FhirProfileServletInterface;
 import org.oie.fhir.mapper.fhir.FhirFacade;
@@ -32,10 +33,20 @@ public final class FhirProfileMapperPlugin implements ServicePlugin {
     public void init(Properties properties) {
         // Allow only our serialized step, without opening an entire package namespace.
         ObjectXMLSerializer.getInstance().allowTypes(List.of(FhirProfileMapperStep.class.getName()), List.of(), List.of());
+        loadSettings(properties);
     }
 
     @Override
-    public void update(Properties properties) {}
+    public void update(Properties properties) { loadSettings(properties); }
+
+    /** The FHIR contexts of the extension properties; invalid ones are logged and the current ones kept. */
+    private static void loadSettings(Properties properties) {
+        try {
+            FhirMapperSettings.load(properties == null ? null : properties.getProperty(FhirMapperSettings.PROPERTY));
+        } catch (RuntimeException e) {
+            logger.error("FHIR Profile Mapper: invalid settings in the extension properties, kept the previous ones", e);
+        }
+    }
 
     @Override
     public Properties getDefaultProperties() {
@@ -54,13 +65,17 @@ public final class FhirProfileMapperPlugin implements ServicePlugin {
             new ExtensionPermission(name, FhirProfileServletInterface.PERMISSION_EDIT,
                     "Use the FHIR Profile Mapper editor: profiles, StructureDefinitions, ConceptMaps and translations "
                             + "(called from the OIE server), function catalogue and generated script.",
-                    new String[] { "getFhirMapperFunctions", "getFhirMapperSource", "getFhirProfiles", "getFhirStructure",
+                    new String[] { "getFhirMapperSettings", "getFhirMapperFunctions", "getFhirMapperSource", "getFhirProfiles", "getFhirStructure",
                             "getFhirConceptMaps", "translateFhirCode", "getFhirMapperScript" },
                     new String[0]),
             new ExtensionPermission(name, FhirProfileServletInterface.PERMISSION_TEST,
                     "Run a FHIR Profile Mapper step on a sample message. The step's code runs on the server with access to "
                             + "Java, the configuration map and the code templates: grant it only to users who may deploy channels.",
                     new String[] { "testFhirMapper" },
+                    new String[0]),
+            new ExtensionPermission(name, FhirProfileServletInterface.PERMISSION_MANAGE,
+                    "Change the FHIR contexts of the server: profile packages, terminology server and validation policy shared by the steps that name them.",
+                    new String[] { "setFhirMapperSettings" },
                     new String[0])
         };
     }

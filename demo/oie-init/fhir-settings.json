@@ -1,0 +1,14 @@
+{
+  "contexts": [
+    {
+      "name": "demo-labo",
+      "fhirVersion": "R4",
+      "packages": ["/fhir-ig"],
+      "terminologyServer": "",
+      "terminologyAuthorization": "",
+      "cacheSeconds": 300,
+      "timeoutSeconds": 10,
+      "validation": "always"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "FHIR Profile Mapper — contrat existant 0.1.0",
+  "title": "FHIR Profile Mapper — format d'étape, versions 1 et 2",
   "$comment": "MPL-2.0. Schéma de rédaction ; non appliqué automatiquement par le runtime. Décoder mappings et bundleTargets et valider leurs contentSchema séparément.",
   "type": "object",
   "required": ["action", "resourceType"],
@@ -36,6 +36,9 @@
     "terminologyTimeoutSeconds": {"$ref": "#/$defs/integer", "default": 10},
     "traceMessages": {"$ref": "#/$defs/boolean", "default": false},
     "traceCaptureValues": {"$ref": "#/$defs/boolean", "default": false},
+    "formatVersion": {"$ref": "#/$defs/integer", "default": 1},
+    "context": {"type": "string", "default": ""},
+    "validation": {"enum": ["", "inherit", "always", "off"], "default": ""},
     "samples": {
       "type": "string", "default": "[]", "contentMediaType": "application/json",
       "contentSchema": {"type": "array", "items": {
@@ -88,7 +91,8 @@
         "variable": {"type": "string", "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$"},
         "condition": {"$ref": "#/$defs/nonblank"},
         "fixed": true, "when": {"type": "integer", "minimum": 0, "default": 0},
-        "translate": {"$ref": "#/$defs/translation"}
+        "translate": {"$ref": "#/$defs/translation"},
+        "note": {"type": "string"}, "disabled": {"type": "boolean", "default": false}
       },
       "allOf": [
         {"anyOf": [{"required": ["key"]}, {"required": ["element"]}]},

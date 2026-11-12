@@ -17,6 +17,7 @@ import javax.ws.rs.core.SecurityContext;
 
 import com.mirth.connect.client.core.ClientException;
 import org.oie.fhir.mapper.FhirProfileServletInterface;
+import org.oie.fhir.mapper.FhirMapperSettings;
 import org.oie.fhir.mapper.FhirProfileMapperStep;
 import org.oie.fhir.mapper.util.FhirJson;
 import org.oie.fhir.mapper.fhir.FhirFacade;
@@ -39,6 +40,25 @@ public class FhirProfileServlet extends MirthServlet implements FhirProfileServl
         // The extension name makes the operations ExtensionOperations, which an authorization
         // plugin matches against the permissions of FhirProfileMapperPlugin.
         super(request, sc, PLUGIN_NAME);
+    }
+
+    @Override
+    public String getSettings() { return FhirMapperSettings.toJson(); }
+
+    @Override
+    public String setSettings(String settings) throws ClientException {
+        try {
+            // Checked first, then saved in the extension properties, which reloads them (ServicePlugin.update).
+            String canonical = FhirMapperSettings.toJson(FhirMapperSettings.parse(settings));
+            java.util.Properties properties = new java.util.Properties();
+            properties.setProperty(FhirMapperSettings.PROPERTY, canonical);
+            ControllerFactory.getFactory().createExtensionController().setPluginProperties(PLUGIN_NAME, properties);
+            FhirMapperSettings.load(canonical);
+            FhirFacade.clearCaches();
+            return canonical;
+        } catch (Exception e) {
+            throw new ClientException(e.getMessage(), e);
+        }
     }
 
     @Override
