@@ -2,7 +2,9 @@
 
 Ce manuel explique les fonctions disponibles dans la branche `feat/refonte` au
 12 novembre 2026, avec des captures prises dans la démonstration locale. Les
-procédures sont en français ; les noms de boutons reprennent l'interface anglaise.
+procédures sont en français ; les parcours existants et leurs captures utilisent
+l’interface anglaise. Le plugin propose aussi une interface française, selon
+les préférences du navigateur : voir [langues et thèmes](langues-et-themes.md).
 Les noms, messages et identifiants visibles sont des données de démonstration.
 
 ## Choisir son parcours
@@ -12,6 +14,7 @@ Les noms, messages et identifiants visibles sont des données de démonstration.
 | Construire des ressources à partir d'un profil, sans écrire de map FML | [FHIR Profile Mapper](profile-mapper/README.md) |
 | Écrire ou exécuter une transformation FML | [FHIR FML Transform](fml/README.md) |
 | Partager les packages, la terminologie et les réglages FHIR entre étapes | [Settings › FHIR Mapper](settings/README.md) |
+| Changer la langue ou le thème | [Langues et thèmes](langues-et-themes.md) |
 | Faire un premier essai dans la démo | [Démarrage](demarrage.md) |
 | Comprendre l'échec d'un message traité | [Trace des messages](profile-mapper/trace-messages.md) |
 

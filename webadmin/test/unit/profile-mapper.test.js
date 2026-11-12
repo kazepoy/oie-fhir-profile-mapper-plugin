@@ -1,24 +1,22 @@
-// Tests of the FHIR Profile Mapper editor logic (web/plugin.js): node --test webadmin/test/
-// The module is loaded without its export, on small hand-made StructureDefinitions.
+// Direct module tests on small StructureDefinitions; component renders use a minimal React adapter.
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import vm from "node:vm";
-import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { randomUUID } from "node:crypto";
 import { snapshot, restore } from "../../src/fhir/history.js";
 import { Inspector } from "../../src/profile-mapper/inspector.js";
-import { duplicateBranch, inBranch } from "../../src/fhir/branch.js";
-import { matchingConceptMaps, profileExtensions } from "../../src/fhir/assistance.js";
-import { showContextMenu } from "../../src/host/context-menu.js";
-
-const here = path.dirname(fileURLToPath(import.meta.url));
-const code = fs.readFileSync(path.join(here, "../../src/profile-mapper/editor.js"), "utf8").replace("export function register", "function register").replace(/^import .*$/gm, "");
-const catalog = JSON.parse(fs.readFileSync(path.join(here, "../../../src/main/resources/org/oie/fhir/mapper/mapper-functions.json"), "utf8"));
-const context = vm.createContext({ console, crypto: { randomUUID }, snapshot, restore, Inspector, duplicateBranch, inBranch, matchingConceptMaps, profileExtensions, showContextMenu, normalizeResult: (x) => String(x), sourceTree: () => [], sourcePaths: () => [], CodeBox: () => null, HelpButton: () => null, MAPPER_HELP: {}, languageOf: () => "text", cachedFhirSettings: () => null, fhirContext: () => null, loadFhirSettings: () => Promise.resolve({ contexts: [] }) });
-vm.runInContext(code + `\nMAPPER_FUNCTIONS = ${JSON.stringify(catalog)};\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample, mapperDiagnostic, mapperTraceRows, mapperTraceExport, mapperSourcePaths, mapperHelpUrl, mapperJsonImport, mapperRuleIds, mapperCompletionContext, isCompletionShortcut, MapperExpression, ProfileMapperEditor, setReact: value => React = value };`, context);
-const { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample } = context.t;
+import { ProfileMapperEditor } from "../../src/profile-mapper/editor.js";
+import { MapperExpression, isCompletionShortcut } from "../../src/profile-mapper/expression.js";
+import { bindReact as setReact } from "../../src/host/react.js";
+import { indexSd, makeTree, compile, completeness, instancesOf, sdLoaded, sdKey } from "../../src/fhir/model.js";
+import { inserted, substitute } from "../../src/fhir/expressions.js";
+import { mapperSourcePaths, mapperHelpUrl, mapperJsonImport, mapperRuleIds } from "../../src/fhir/step.js";
+import { mapperBundleDeclarations, mapperSample } from "../../src/host/channel-context.js";
+import { mapperDiagnostic, traceRows as mapperTraceRows, traceExport as mapperTraceExport } from "../../src/fhir/diagnostics.js";
+import { functionCompletion as completeSymbols, completeFunction, completionContext as mapperCompletionContext } from "../../src/fhir/completion.js";
+import { profileExtensions } from "../../src/fhir/assistance.js";
+const catalog = JSON.parse(fs.readFileSync(fileURLToPath(new URL("../../../src/main/resources/org/oie/fhir/mapper/mapper-functions.json", import.meta.url)), "utf8"));
+const functionCompletion = (...args) => completeSymbols(catalog, ...args);
 
 const el = (id, min, max, types, more = {}) => ({ id, path: id.replace(/:[^.]+/g, ""), min, max, base: { max: more.baseMax ?? max }, type: types.map((t) => (typeof t === "string" ? { code: t } : t)), ...more });
 
@@ -70,9 +68,9 @@ test("expanded tree branches keep their auxiliary rows and descendants together 
   const element = { action: "resource", resourceType: "Patient", profileUrl: patient.sd.url, mappings: "[]", bundleTargets: "[]" };
   const render = () => {
     let firstRef = true;
-    context.t.setReact({ createElement: (tag, props, ...children) => ({ tag, props: props || {}, children }),
+    setReact({ createElement: (tag, props, ...children) => ({ tag, props: props || {}, children }),
       useReducer: () => [0, () => {}], useId: () => "m", useRef: value => { const current = firstRef ? state : value; firstRef = false; return { current }; }, useEffect: () => {} });
-    return context.t.ProfileMapperEditor({ element, onChange: () => {}, platform: { store: { getState: () => null } } });
+    return ProfileMapperEditor({ element, onChange: () => {}, platform: { store: { getState: () => null } } });
   };
   const all = (node) => Array.isArray(node) ? node.flatMap(all) : node && typeof node === "object" ? [node, ...all(node.children || [])] : [];
   const opened = all(render());
@@ -100,12 +98,12 @@ test("expanded tree branches keep their auxiliary rows and descendants together 
 
 test("Ctrl+Space and Alt/Option+Space open completion; macOS keeps Ctrl+Space for input sources", () => {
   const key = (more) => ({ code: "Space", key: " ", ctrlKey: false, altKey: false, metaKey: false, shiftKey: false, ...more });
-  assert.equal(context.t.isCompletionShortcut(key({ ctrlKey: true })), true);
-  assert.equal(context.t.isCompletionShortcut(key({ altKey: true, key: "\u00a0" })), true);
-  assert.equal(context.t.isCompletionShortcut(key({})), false);
-  assert.equal(context.t.isCompletionShortcut(key({ metaKey: true })), false);
-  assert.equal(context.t.isCompletionShortcut(key({ ctrlKey: true, altKey: true })), false);
-  assert.equal(context.t.isCompletionShortcut(key({ ctrlKey: true, code: "KeyA", key: "a" })), false);
+  assert.equal(isCompletionShortcut(key({ ctrlKey: true })), true);
+  assert.equal(isCompletionShortcut(key({ altKey: true, key: "\u00a0" })), true);
+  assert.equal(isCompletionShortcut(key({})), false);
+  assert.equal(isCompletionShortcut(key({ metaKey: true })), false);
+  assert.equal(isCompletionShortcut(key({ ctrlKey: true, altKey: true })), false);
+  assert.equal(isCompletionShortcut(key({ ctrlKey: true, code: "KeyA", key: "a" })), false);
 });
 
 test("rule notes and activation remain independent for a value and condition, including undo and redo", () => {
@@ -124,9 +122,9 @@ test("rule notes and activation remain independent for a value and condition, in
   const all = (node) => Array.isArray(node) ? node.flatMap(all) : node && typeof node === "object" ? [node, ...all(node.children || [])] : [];
   const render = () => {
     let firstRef = true;
-    context.t.setReact({ createElement: (tag, props, ...children) => ({ tag, props: props || {}, children }),
+    setReact({ createElement: (tag, props, ...children) => ({ tag, props: props || {}, children }),
       useReducer: () => [0, () => {}], useId: () => "m", useRef: value => { const current = firstRef ? state : value; firstRef = false; return { current }; }, useEffect: () => {} });
-    return all(context.t.ProfileMapperEditor({ element, onChange: () => {}, platform: { store: { getState: () => null } } }));
+    return all(ProfileMapperEditor({ element, onChange: () => {}, platform: { store: { getState: () => null } } }));
   };
   const control = (label) => render().find(node => node.props["aria-label"] === label);
   const rules = () => JSON.parse(element.mappings);
@@ -168,9 +166,9 @@ test("rule notes and activation remain independent for a value and condition, in
   // Reopening from the serialized step must recover edits made through the inspector.
   const reopened = { current: null };
   let firstRef = true;
-  context.t.setReact({ createElement: (tag, props, ...children) => ({ tag, props: props || {}, children }),
+  setReact({ createElement: (tag, props, ...children) => ({ tag, props: props || {}, children }),
     useReducer: () => [0, () => {}], useId: () => "reopened", useRef: value => { const ref = firstRef ? reopened : { current: value }; firstRef = false; return ref; }, useEffect: () => {} });
-  context.t.ProfileMapperEditor({ element, onChange: () => {}, platform: { store: { getState: () => null } } });
+  ProfileMapperEditor({ element, onChange: () => {}, platform: { store: { getState: () => null } } });
   assert.equal(reopened.current.values.get(key), "'male'");
   assert.ok(reopened.current.disabled.has(`condition:${key}`));
   assert.equal(reopened.current.notes.has(`value:${key}`), false);
@@ -190,9 +188,9 @@ test("duplicating from the menu generates distinct stable ids and undo/redo pres
   const all = node => Array.isArray(node) ? node.flatMap(all) : node && typeof node === "object" ? [node, ...all(node.children || [])] : [];
   const render = () => {
     let firstRef = true;
-    context.t.setReact({ createElement: (tag, props, ...children) => ({ tag, props: props || {}, children }), useReducer: () => [0, () => {}], useId: () => "branch",
+    setReact({ createElement: (tag, props, ...children) => ({ tag, props: props || {}, children }), useReducer: () => [0, () => {}], useId: () => "branch",
       useRef: value => { const current = firstRef ? state : value; firstRef = false; return { current }; }, useEffect: () => {} });
-    return all(context.t.ProfileMapperEditor({ element, onChange() {}, platform: { store: { getState: () => null }, ui: { contextMenu: (x, y, items) => { menu = items; } } } }));
+    return all(ProfileMapperEditor({ element, onChange() {}, platform: { store: { getState: () => null }, ui: { contextMenu: (x, y, items) => { menu = items; } } } }));
   };
   const openMenu = key => render().find(node => node.props["aria-label"] === `Actions for ${key}`).props.onClick({ type: "click", detail: 0,
     currentTarget: { getBoundingClientRect: () => ({ left: 0, bottom: 0 }) }, preventDefault() {}, stopPropagation() {} });
@@ -211,7 +209,7 @@ test("duplicating from the menu generates distinct stable ids and undo/redo pres
   assert.equal(JSON.parse(element.mappings).some(rule => rule.key.startsWith("Patient.name[1]")), false);
   render().find(node => node.children.includes("↷ Redo")).props.onClick();
   assert.deepEqual(JSON.parse(element.mappings).filter(rule => rule.key.startsWith("Patient.name[1]")), duplicated);
-  const imported = context.t.mapperJsonImport(element, JSON.stringify(element));
+  const imported = mapperJsonImport(element, JSON.stringify(element));
   assert.equal(imported.mappings, element.mappings);
   state.iterations.set("Patient.name", { expression: "msg.names", variable: "n" });
   openMenu("Patient.name");
@@ -236,19 +234,19 @@ test("a profile extension picker exposes the canonical and mapping its value cre
 test("Ctrl+Space opens completion without a prefix, including scoped variables and sample paths", () => {
   const root = { key: "Patient" }, name = { key: "Patient.name", parent: root }, family = { key: "Patient.name.family", parent: name };
   const iterations = new Map([[root.key, { variable: "p", expression: "msg['patients']" }], [name.key, { variable: "n", expression: "p['names']" }]]);
-  const scope = context.t.mapperCompletionContext(family, iterations, ['msg["patients"][0]["id"]']);
+  const scope = mapperCompletionContext(family, iterations, ['msg["patients"][0]["id"]']);
   assert.deepEqual(plain(scope.variables), ["n", "nIndex", "p", "pIndex"]);
   const menu = functionCompletion("", 0, 0, scope, true);
   assert.ok(menu.items.some((fn) => fn.name === "nIndex"));
   assert.ok(menu.items.some((fn) => fn.name === 'p["id"]'));
-  const each = context.t.mapperCompletionContext(name, iterations, [], "iteration");
+  const each = mapperCompletionContext(name, iterations, [], "iteration");
   assert.deepEqual(plain(each.variables), ["p", "pIndex"]);
   assert.equal(functionCompletion("'unfinished", 11, 11, scope, true), null);
   assert.ok(functionCompletion("uuid", 4, 4, scope, true).items.some((fn) => fn.name === "fhirUuid"));
   const updates = [];
-  context.t.setReact({ createElement: (tag, props, ...children) => ({ tag, props, children }), useRef: value => ({ current: value }),
+  setReact({ createElement: (tag, props, ...children) => ({ tag, props, children }), useRef: value => ({ current: value }),
     useId: () => "completion", useState: value => [value, next => updates.push(next)], useLayoutEffect: () => {} });
-  const field = context.t.MapperExpression({ value: "", onChange: () => {}, completionContext: scope });
+  const field = MapperExpression({ value: "", onChange: () => {}, completionContext: scope });
   let prevented = false;
   field.children[0].props.onKeyDown({ ctrlKey: true, code: "Space", nativeEvent: { isComposing: false },
     target: { value: "", selectionStart: 0, selectionEnd: 0 }, preventDefault: () => prevented = true, stopPropagation: () => {} });
@@ -257,49 +255,49 @@ test("Ctrl+Space opens completion without a prefix, including scoped variables a
 });
 
 test("FHIR help uses the selected release and a core definition anchor rather than an IG slice", () => {
-  assert.equal(context.t.mapperHelpUrl("R4B", "Patient", "Patient.identifier:ipp.value"), "https://hl7.org/fhir/R4B/patient-definitions.html#Patient.identifier");
-  assert.equal(context.t.mapperHelpUrl("R5", "Patient", "Patient.deceased[x].deceasedDateTime"), "https://hl7.org/fhir/R5/patient-definitions.html#Patient.deceased%5Bx%5D");
+  assert.equal(mapperHelpUrl("R4B", "Patient", "Patient.identifier:ipp.value"), "https://hl7.org/fhir/R4B/patient-definitions.html#Patient.identifier");
+  assert.equal(mapperHelpUrl("R5", "Patient", "Patient.deceased[x].deceasedDateTime"), "https://hl7.org/fhir/R5/patient-definitions.html#Patient.deceased%5Bx%5D");
 });
 
 test("source suggestions use sample structure and JSON round trips preserve rules and OIE identity", () => {
-  assert.deepEqual(plain(context.t.mapperSourcePaths({ dataType: "JSON", message: '{"rows":[{"ipp":"001"}]}' })), ['msg["rows"]', 'msg["rows"][0]', 'msg["rows"][0]["ipp"]']);
+  assert.deepEqual(plain(mapperSourcePaths({ dataType: "JSON", message: '{"rows":[{"ipp":"001"}]}' })), ['msg["rows"]', 'msg["rows"][0]', 'msg["rows"][0]["ipp"]']);
   const original = { __type: "org.oie.fhir.mapper.FhirProfileMapperStep", sequenceNumber: "2", enabled: false,
     action: "resource", resourceType: "Patient", mappings: JSON.stringify([{ id: "stable-1", key: "Patient.active", type: "boolean", expression: "true", path: [["active"]] }]), bundleTargets: "[]", customMetadata: "kept" };
-  const edited = context.t.mapperJsonImport(original, JSON.stringify({ ...original, sequenceNumber: "99", enabled: true, mappings: original.mappings.replace('true', 'false') }));
+  const edited = mapperJsonImport(original, JSON.stringify({ ...original, sequenceNumber: "99", enabled: true, mappings: original.mappings.replace('true', 'false') }));
   assert.equal(edited.sequenceNumber, "2"); assert.equal(edited.enabled, false); assert.equal(edited.customMetadata, "kept");
   assert.equal(JSON.parse(edited.mappings)[0].id, "stable-1");
-  const reopened = context.t.mapperJsonImport(original, JSON.stringify(edited));
+  const reopened = mapperJsonImport(original, JSON.stringify(edited));
   assert.equal(reopened.mappings, edited.mappings);
-  assert.throws(() => context.t.mapperJsonImport(original, '{"mappings":[]}'));
+  assert.throws(() => mapperJsonImport(original, '{"mappings":[]}'));
   const rules = JSON.parse(original.mappings);
-  assert.equal(context.t.mapperRuleIds([{ ...rules[0], expression: "false" }], rules)[0].id, "stable-1");
-  assert.throws(() => context.t.mapperRuleIds([rules[0], rules[0]]));
+  assert.equal(mapperRuleIds([{ ...rules[0], expression: "false" }], rules)[0].id, "stable-1");
+  assert.throws(() => mapperRuleIds([rules[0], rules[0]]));
 });
 
 test("diagnostics show the step, slice path and phase and select the right editor field", () => {
   const error = { step: { name: "Patient", resourceType: "Patient" }, key: "Patient.identifier:ipp.value",
     phase: "conversion", operation: "value", line: "42", path: [["identifier", "ipp#0"], ["value"]] };
-  assert.deepEqual(plain(context.t.mapperDiagnostic(error)), {
+  assert.deepEqual(plain(mapperDiagnostic(error)), {
     label: "Patient · conversion · Patient.identifier:ipp.value · line 42",
     target: "Patient.identifier[ipp#0].value", kind: "value"
   });
-  assert.equal(context.t.mapperDiagnostic({ ...error, operation: "condition", phase: "syntax" }).kind, "condition");
-  assert.equal(context.t.mapperDiagnostic({ ...error, operation: "iteration" }).kind, "each");
-  assert.equal(context.t.mapperDiagnostic({ ...error, phase: "translation" }).kind, "translate");
-  assert.equal(context.t.mapperDiagnostic({ ...error, errorType: "TypeError" }).label,
+  assert.equal(mapperDiagnostic({ ...error, operation: "condition", phase: "syntax" }).kind, "condition");
+  assert.equal(mapperDiagnostic({ ...error, operation: "iteration" }).kind, "each");
+  assert.equal(mapperDiagnostic({ ...error, phase: "translation" }).kind, "translate");
+  assert.equal(mapperDiagnostic({ ...error, errorType: "TypeError" }).label,
     "Patient · conversion · TypeError · Patient.identifier:ipp.value · line 42");
-  assert.deepEqual(plain(context.t.mapperDiagnostic({ message: "old API error" })), { label: "", target: "", kind: "value" });
+  assert.deepEqual(plain(mapperDiagnostic({ message: "old API error" })), { label: "", target: "", kind: "value" });
 });
 
 test("trace rows preserve iteration indices and exports retain the structured trace", () => {
   const trace = { formatVersion: 1, id: "preview-1", step: { name: "Patient", resourceType: "Patient" },
     events: [{ phase: "conversion", key: "Patient.name.family", status: "success", durationNanos: 1500000,
       iterations: [{ ruleIndex: 0, index: 2 }], value: { type: "string", text: "Durand", truncated: false } }] };
-  const rows = context.t.mapperTraceRows(trace);
+  const rows = mapperTraceRows(trace);
   assert.equal(rows[0].label, "Patient · conversion · Patient.name.family");
   assert.equal(rows[0].duration, "1.500 ms");
   assert.equal(rows[0].iterations, "rule 0, item 2");
-  assert.deepEqual(JSON.parse(context.t.mapperTraceExport(trace)), trace);
+  assert.deepEqual(JSON.parse(mapperTraceExport(trace)), trace);
 });
 
 test("the tree hides ids and unsliced extensions unless asked, and opens data types", () => {

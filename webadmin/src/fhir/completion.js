@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { t as tr } from "../i18n/index.js";
 // What the expression editors offer: the mapper functions by role, the variables of
 // the iterations around an element, the paths of the sample, snippets, and the
 // typings (a .d.ts) that give the host's language service hover and signature help.
@@ -51,8 +52,8 @@ export function functionCompletion(functions, value, caret, selectionEnd = caret
 export function completionSymbols(functions, context = {}) {
   return [...functions.filter(fn => !context.role || fn.contexts.includes(context.role)),
     ...[...new Set([...SCOPE_VARIABLES, ...(context.variables || [])])]
-      .map(name => ({ name, signature: name, example: name, description: "Variable available in this scope.", kind: "variable" })),
-    ...(context.paths || []).map(name => ({ name, signature: name, example: name, description: "Source path from the sample; guard optional values.", kind: "path" }))];
+      .map(name => ({ name, signature: name, example: name, description: tr("Variable available in this scope."), kind: "variable" })),
+    ...(context.paths || []).map(name => ({ name, signature: name, example: name, description: tr("Source path from the sample; guard optional values."), kind: "path" }))];
 }
 
 export function completeFunction(value, completion, fn) {
@@ -63,11 +64,11 @@ export function completeFunction(value, completion, fn) {
 
 /** Snippets that guard optional data, offered in every role. */
 export const SNIPPETS = [
-  { name: "guard", label: "guard optional (x != null ? x : undefined)", insert: "${1:value} != null ? ${1:value} : undefined", description: "Give nothing when the source is missing, instead of a TypeError." },
-  { name: "repetition", label: "nth repetition if present", insert: "${1:msg['PID']['PID.3']}.length() > ${2:1} ? ${1:msg['PID']['PID.3']}[${2:1}]${3:['PID.3.1']}.toString() : undefined", description: "HL7 v2 repetition guarded by its count." },
-  { name: "find", label: "fhirFind(list, function)", insert: "fhirFind(${1:list}, function (${2:item}) { return ${3:condition}; })", description: "First item of a list matching a condition." },
-  { name: "filter", label: "fhirFilter(list, function)", insert: "fhirFilter(${1:list}, function (${2:item}) { return ${3:condition}; })", description: "Items of a list matching a condition." },
-  { name: "ternary", label: "condition ? a : b", insert: "${1:condition} ? ${2:a} : ${3:b}", description: "A choice between two values." }
+  { name: "guard", label: tr("guard optional (x != null ? x : undefined)"), insert: "${1:value} != null ? ${1:value} : undefined", description: tr("Give nothing when the source is missing, instead of a TypeError.") },
+  { name: "repetition", label: tr("nth repetition if present"), insert: "${1:msg['PID']['PID.3']}.length() > ${2:1} ? ${1:msg['PID']['PID.3']}[${2:1}]${3:['PID.3.1']}.toString() : undefined", description: tr("HL7 v2 repetition guarded by its count.") },
+  { name: "find", label: tr("fhirFind(list, function)"), insert: "fhirFind(${1:list}, function (${2:item}) { return ${3:condition}; })", description: tr("First item of a list matching a condition.") },
+  { name: "filter", label: tr("fhirFilter(list, function)"), insert: "fhirFilter(${1:list}, function (${2:item}) { return ${3:condition}; })", description: tr("Items of a list matching a condition.") },
+  { name: "ternary", label: tr("condition ? a : b"), insert: "${1:condition} ? ${2:a} : ${3:b}", description: tr("A choice between two values.") }
 ];
 
 /**
@@ -80,10 +81,10 @@ export function monacoItems(functions, context = {}, sampleValues = new Map()) {
     if (context.role && !fn.contexts.includes(context.role)) continue;
     const params = (fn.parameters || []).map(p => p.name);
     items.push({ label: fn.signature, filterText: fn.name, kind: "function", insertText: params.length ? `${fn.name}(${params.map((p, i) => `\${${i + 1}:${p}}`).join(", ")})` : `${fn.name}()`,
-      snippet: true, detail: `FHIR Mapper · ${fn.returnType || ""}`, documentation: `${fn.description}\n\nExample: ${fn.example}`, sortText: `2${fn.name}` });
+      snippet: true, detail: tr("FHIR Mapper · {p0}", { p0: fn.returnType || "" }), documentation: tr("{p0}\n\nExample: {p1}", { p0: fn.description, p1: fn.example }), sortText: `2${fn.name}` });
   }
   for (const name of context.variables || []) {
-    items.push({ label: name, kind: "variable", insertText: name, detail: name.endsWith("Index") ? "iteration index (0, 1, …)" : "iteration item", sortText: `0${name}` });
+    items.push({ label: name, kind: "variable", insertText: name, detail: name.endsWith("Index") ? tr("iteration index (0, 1, …)") : tr("iteration item"), sortText: `0${name}` });
   }
   if (context.role === "translation") {
     // code and system are already in variables
@@ -98,11 +99,11 @@ export function monacoItems(functions, context = {}, sampleValues = new Map()) {
   for (const path of shown) {
     const value = sampleValues.get(path) ?? (context.pathValues ? context.pathValues[path] : undefined);
     const text = single(path) + (context.e4x ? ".toString()" : "");
-    items.push({ label: text, filterText: text, kind: "path", insertText: text, detail: value == null || value === "" ? "sample path" : `sample: ${String(value).slice(0, 60)}`,
+    items.push({ label: text, filterText: text, kind: "path", insertText: text, detail: value == null || value === "" ? tr("sample path") : tr("sample: {p0}", { p0: String(value).slice(0, 60) }),
       sortText: `${scoped(path) ? "1" : "4"}${path}` });
   }
   for (const s of SNIPPETS) {
-    items.push({ label: s.label, filterText: s.name, kind: "snippet", insertText: s.insert, snippet: true, detail: `snippet · ${s.description}`, sortText: `5${s.name}` });
+    items.push({ label: s.label, filterText: s.name, kind: "snippet", insertText: s.insert, snippet: true, detail: tr("snippet · {p0}", { p0: s.description }), sortText: `5${s.name}` });
   }
   return items;
 }

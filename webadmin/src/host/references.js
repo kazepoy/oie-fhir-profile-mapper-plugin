@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { t as tr } from "../i18n/index.js";
 // The mapper's runtime functions in Web Admin's Reference panel and in the
 // completion of its script editors, for transformer contexts.
 import { platform } from "./platform.js";
@@ -12,7 +13,7 @@ export async function registerMapperReferences() {
   const functions = await mapperFunctions();
   p.registerReferences("FHIR Mapper", functions.map(fn => ({
     name: fn.signature,
-    description: `${fn.description} Example: ${fn.example}. Available inside FHIR Profile Mapper expressions.`,
+    description: tr("{p0} Example: {p1}. Available inside FHIR Profile Mapper expressions.", { p0: fn.description, p1: fn.example }),
     code: `function ${fn.name}(${(fn.parameters || []).map(x => x.name).join(", ")}) {}`,
     type: "FUNCTION",
     contexts: CONTEXTS

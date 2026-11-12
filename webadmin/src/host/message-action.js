@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { t as tr } from "../i18n/index.js";
 // "FHIR mapping trace" on a message of the message browser: shows the traces the
 // FHIR Profile Mapper steps left in the connector maps of that message.
 import { platform, toast } from "./platform.js";
@@ -9,7 +10,7 @@ export function registerTraceAction() {
   if (typeof p.registerMessageAction !== "function") return;
   p.registerMessageAction({
     id: "fhir-mapper-trace",
-    label: "FHIR mapping trace",
+    label: tr("FHIR mapping trace"),
     order: 50,
     onInvoke: async (message, ctx) => {
       let traces = findTraces(ctx?.connectorMessage || null);
@@ -21,13 +22,13 @@ export function registerTraceAction() {
         } catch { /* reported below */ }
       }
       if (!traces.length) {
-        toast("This message has no FHIR mapping trace. Enable “Trace processed messages” on a FHIR Profile Mapper step, redeploy the channel, and check that its message storage keeps the maps.", "info");
+        toast(tr("This message has no FHIR mapping trace. Enable “Trace processed messages” on a FHIR Profile Mapper step, redeploy the channel, and check that its message storage keeps the maps."), "info");
         return;
       }
       p.ui.detailModal({
-        title: `FHIR mapping trace of message ${message?.messageId ?? ""}`,
+        title: tr("FHIR mapping trace of message {p0}", { p0: message?.messageId ?? "" }),
         meta: traces.map(t => t.key).join(", "),
-        sections: traces.flatMap(({ key, trace }) => [{ label: key, text: traceText(trace) }, { label: `${key} (JSON)`, text: JSON.stringify(trace, null, 2) }])
+        sections: traces.flatMap(({ key, trace }) => [{ label: key, text: traceText(trace) }, { label: tr("{p0} (JSON)", { p0: key }), text: JSON.stringify(trace, null, 2) }])
       });
     }
   });

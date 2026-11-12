@@ -2,6 +2,17 @@
 
 ## Non publié (branche `feat/refonte`)
 
+- **Socle frontend** : modèle/compilation FHIR, adaptation du catalogue et du
+  canal, champs d’expression et styles extraits des éditeurs ; tests sans VM.
+- **Langues et thèmes** : interface du plugin et aides en anglais/français,
+  selon les langues du navigateur, repli anglais ; couleurs sémantiques du thème
+  Web Admin. Expressions, chemins FHIR et formats d’étapes conservés.
+- **Assemblage** : Maven installe les dépendances Node verrouillées, contrôle,
+  construit et teste le frontend avant de produire le ZIP. Vérification de
+  reproductibilité depuis une copie isolée contenant un bundle périmé, en CI
+  et avec `tools/check_reproducible.py`. Node/npm inclus dans le build Docker.
+
+
 - **Documentation utilisateur** : [manuel illustré](doc/user-manual/README.md),
   avec parcours par fonctionnalité pour le Profile Mapper, FML et les réglages,
   captures réelles de la démo et limites actuelles des aperçus et validations.

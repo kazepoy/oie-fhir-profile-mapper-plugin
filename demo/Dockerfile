@@ -2,6 +2,9 @@
 # OIE est fourni par le service de build oie-engine de compose.yaml.
 ARG BUSYBOX_IMAGE=busybox:1.37.0-glibc@sha256:42a9ff19af33811ee466b24c66384461d37c32dcc28d1d27d49b8aca816bd5ee
 ARG MAVEN_IMAGE=maven:3.9.9-eclipse-temurin-17
+ARG NODE_IMAGE=node:22-bookworm-slim@sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee
+
+FROM ${NODE_IMAGE} AS node-toolchain
 
 FROM curlimages/curl:8.21.0 AS downloads
 
@@ -41,6 +44,9 @@ RUN mkdir -p /extensions \
     && chmod -R go-w /extensions
 
 FROM ${MAVEN_IMAGE} AS mapper
+COPY --from=node-toolchain /usr/local/bin/node /usr/local/bin/node
+COPY --from=node-toolchain /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
 WORKDIR /build
 # L'API OIE n'est pas publiée sur Maven Central : utiliser celle de l'image cible.
 COPY --from=oie-engine /opt/engine/server-lib/mirth-server.jar /engine/server-api.jar

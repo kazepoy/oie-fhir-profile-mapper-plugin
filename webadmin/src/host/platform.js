@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { t as tr } from "../i18n/index.js";
 // The Web Admin platform object, kept here so that the host/ modules share it.
 
 /** @type {any} */
@@ -10,7 +11,7 @@ export function bindPlatform(platform) {
 
 /** @returns {any} */
 export function platform() {
-  if (!current) throw new Error("FHIR Mapper: the platform is not bound yet");
+  if (!current) throw new Error(tr("FHIR Mapper: the platform is not bound yet"));
   return current;
 }
 

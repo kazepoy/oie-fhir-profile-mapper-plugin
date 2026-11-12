@@ -33,7 +33,8 @@ n'est nécessaire sur l'hôte pour ce lancement.
 
 ## Compiler sans Docker
 
-Prérequis : JDK 17 ou ultérieur et Maven 3.8 ou ultérieur. Les JAR OIE et
+Prérequis : JDK 17 ou ultérieur, Maven 3.8 ou ultérieur, Node.js 22 ou ultérieur
+et npm (disponibles dans le `PATH`). Les JAR OIE et
 FHIR Data Type ne sont pas publiés sur Maven Central. Les installer une fois
 depuis une installation OIE 4.7.0 contenant le datatype officiel 1.5.1.
 Depuis la racine du projet :
@@ -55,10 +56,15 @@ mvn install:install-file \
   -Dfile="$OIE_INSTALL_DIR/extensions/datatype-fhir/lib/datatype-fhir-engine.jar" \
   -DgroupId=com.matthy.oie -DartifactId=datatype-fhir-engine -Dversion=1.5.1 -Dpackaging=jar
 mvn clean package
-(cd webadmin && npm ci && npm test && npm run build)   # régénère webadmin/web/plugin.js depuis webadmin/src
 (cd webadmin && npm run test:e2e)                      # contre la démo lancée (Playwright)
 python3 -m unittest discover -s tools/tests
 ```
+
+`mvn clean package` exécute `npm ci`, `npm run check`, la construction frontend
+avant la copie des ressources, les tests Java et les tests unitaires Node.
+`-DskipTests` ignore les tests Java/Node, mais reconstruit toujours le frontend.
+Le bundle embarqué porte la version Maven via `MAPPER_VERSION`. Un lancement
+direct de `npm run build` utilise la version de `webadmin/package.json`.
 
 Le résultat est `target/fhir-profile-mapper-0.1.0-SNAPSHOT.zip` :
 
@@ -75,6 +81,39 @@ fhir-profile-mapper/
 
 Ce ZIP peut aussi être installé dans *Settings > Extensions* d'OIE 4.7.0, suivi
 d'un redémarrage. FHIR Data Type 1.5.1 est requis pour les services FHIR.
+
+## Socle frontend et langues
+
+Les modèles FHIR et la compilation sont dans `src/fhir/model.js` ; les conversions
+d’étapes dans `fhir/step.js`, les expressions dans `fhir/expressions.js`.
+`host/catalog.js` et `host/channel-context.js` isolent les appels au catalogue et
+la lecture du canal hôte. `profile-mapper/expression.js` regroupe les champs de
+saisie et la complétion ; `inspector.js` porte l’inspecteur. Les éditeurs gardent
+l’orchestration React. Les tests importent les modules directement, sans VM ni
+réécriture du fichier source. Les styles sont installés une seule fois à l’entrée
+du plugin et utilisent les variables de thème de Web Admin.
+
+Le [guide i18n](i18n.md) décrit les catalogues, le choix de langue et leurs contrôles.
+Pour les parcours navigateur : installer Playwright avec `cd webadmin && npx
+playwright install chromium webkit`, lancer la démo, puis `npm run test:e2e`.
+La variable `E2E_BROWSER=webkit` sélectionne WebKit ; la langue et le thème des
+parcours sont explicitement définis, indépendamment du poste de développement.
+
+## Vérifier la reproductibilité
+
+Après `mvn clean package`, exécuter depuis la racine :
+
+```sh
+python3 tools/check_reproducible.py
+```
+
+Le script copie les sources dans un autre répertoire, sans dépendances Node ni
+`target`, remplace le bundle par un contenu périmé, puis reconstruit avec Maven.
+Il vérifie son remplacement et compare les ZIP complets octet par octet.
+Les horodatages des archives sont fixés par `project.build.outputTimestamp`.
+La vérification suppose les mêmes sources et dépendances ; elle ne compare pas
+les images Docker ni des versions différentes de JDK/Node. La CI applique ce
+contrôle après son assemblage. Le Dockerfile de démo fournit Node/npm à Maven.
 
 ## Publier une release
 

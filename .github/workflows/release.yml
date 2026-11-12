@@ -84,15 +84,6 @@ jobs:
         with:
           node-version: '22'
 
-      # webadmin/web/plugin.js est généré depuis webadmin/src : le reconstruire et le tester.
-      - name: Build and test the web editors
-        working-directory: webadmin
-        run: |
-          npm ci
-          npm test
-          npm run build
-          git diff --exit-code -- web/plugin.js || echo "::warning::webadmin/web/plugin.js n'était pas à jour dans le dépôt"
-
       - name: Test the tools
         run: |
           pip install -q -r tools/requirements.txt
@@ -100,6 +91,9 @@ jobs:
 
       - name: Build
         run: mvn -B -ntp package
+
+      - name: Verify reproducible archive
+        run: python3 tools/check_reproducible.py
 
       - uses: actions/upload-artifact@v4
         with:

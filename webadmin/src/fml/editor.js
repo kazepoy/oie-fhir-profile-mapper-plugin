@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { t as tr } from "../i18n/index.js";
 // ---------------------------------------------------------------------------------------------
 // FHIR FML Transform transformer step (org.oie.fhir.fml.FhirFmlTransformStep). The step runs an FML
 // map (StructureMap) found in its profile locations on the message, seen through the generic OIE
@@ -17,24 +18,6 @@ export const FML_TYPE = "org.oie.fhir.fml.FhirFmlTransformStep";
 const FML_API = "/extensions/fhir-fml";
 const DATA_TYPES = ["HL7V2", "XML", "JSON", "RAW", "DELIMITED"];
 
-const FML_STYLES = `
-.fhir-fml { container-type: inline-size; min-width: 0; }
-.fhir-fml .fml-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; align-items: start; }
-.fhir-fml .fml-settings > *, .fhir-fml .field { min-width: 0; }
-.fhir-fml .fml-wide { grid-column: 1 / -1; }
-.fhir-fml .fml-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.fhir-fml .fml-row > select, .fhir-fml .fml-row > input[type=text] { flex: 1 1 240px; min-width: 0; width: auto; }
-.fhir-fml .fml-row > button { flex: none; white-space: nowrap; }
-.fhir-fml .fml-tabs { display: flex; gap: 2px; margin-bottom: 12px; border-bottom: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 35%, transparent); }
-.fhir-fml .fml-tabs [role=tab] { padding: 6px 14px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-faint, #64748b); font: inherit; font-weight: 600; cursor: pointer; }
-.fhir-fml .fml-tabs [role=tab]:hover { color: var(--text, #1e293b); }
-.fhir-fml .fml-tabs [role=tab][aria-selected=true] { color: var(--text, #1e293b); border-bottom-color: var(--accent, #2563eb); }
-.fhir-fml pre.fml-json { max-height: 420px; overflow: auto; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; white-space: pre; }
-.fhir-fml .fml-error { color: #b91c1c; overflow-wrap: anywhere; }
-.fhir-fml .fml-issue-warning { color: #b45309; }
-.fhir-fml .fml-ok { color: #15803d; }
-@container (max-width: 640px) { .fhir-fml .fml-settings { grid-template-columns: minmax(0, 1fr); } }
-`;
 
 let React;
 const h = (...args) => React.createElement(...args);
@@ -168,7 +151,7 @@ function FmlTransformEditor({ element, onChange, platform }) {
     } catch (e) {
       const message = errorText(e);
       st.result = { model: null, output: null, issues: [], errors: [{ phase: "request", message: e?.status === 403 || /Test FHIR FML transforms/.test(message)
-        ? "Testing a step requires the permission “Test FHIR FML transforms”." : message }] };
+        ? tr("Testing a step requires the permission “Test FHIR FML transforms”.") : message }] };
     }
     st.testing = false;
     rerender();
@@ -189,51 +172,51 @@ function FmlTransformEditor({ element, onChange, platform }) {
   };
   const inline = !!String(element.mapSource || "").trim();
   const mapPanel = h("div", null,
-    h("div", { className: "hint", style: { marginBottom: "8px" } }, "A map written here is saved with the channel and runs instead of the map chosen in Properties. It may import the maps and use the profiles and ConceptMaps of the profile locations."),
+    h("div", { className: "hint", style: { marginBottom: "8px" } }, tr("A map written here is saved with the channel and runs instead of the map chosen in Properties. It may import the maps and use the profiles and ConceptMaps of the profile locations.")),
     h("div", { className: "fml-row", style: { marginBottom: "8px" } },
-      h("button", { type: "button", className: "btn btn-sm", disabled: st.checking || !inline, onClick: checkMap }, st.checking ? "Checking…" : "Check"),
-      !inline ? h("button", { type: "button", className: "btn btn-sm", onClick: () => { st.check = null; set("mapSource", FML_TEMPLATE); } }, "Start from an example") : null,
-      inline ? h("button", { type: "button", className: "btn btn-sm", title: "Empty the map: the step then runs the map chosen in Properties", onClick: () => { st.check = null; set("mapSource", ""); } }, "Clear") : null,
-      st.check && !st.check.errors.length ? h("span", { className: "fml-ok" }, `No problem found${st.check.name ? ` in ${st.check.name}` : ""}${st.check.groups?.length ? ` (groups: ${st.check.groups.join(", ")})` : ""}.`) : null,
-      st.check && st.check.errors.length ? h("span", { className: "fml-error" }, `${st.check.errors.length} problem(s)`) : null),
+      h("button", { type: "button", className: "btn btn-sm", disabled: st.checking || !inline, onClick: checkMap }, st.checking ? tr("Checking…") : tr("Check")),
+      !inline ? h("button", { type: "button", className: "btn btn-sm", onClick: () => { st.check = null; set("mapSource", FML_TEMPLATE); } }, tr("Start from an example")) : null,
+      inline ? h("button", { type: "button", className: "btn btn-sm", title: tr("Empty the map: the step then runs the map chosen in Properties"), onClick: () => { st.check = null; set("mapSource", ""); } }, tr("Clear")) : null,
+      st.check && !st.check.errors.length ? h("span", { className: "fml-ok" }, tr("No problem found{p0}{p1}.", { p0: st.check.name ? tr(" in {name}", { name: st.check.name }) : "", p1: st.check.groups?.length ? tr(" (groups: {groups})", { groups: st.check.groups.join(", ") }) : "" })) : null,
+      st.check && st.check.errors.length ? h("span", { className: "fml-error" }, tr("{p0} problem(s)", { p0: st.check.errors.length })) : null),
     h(FmlMapEditor, { value: element.mapSource || "", problems: st.check?.errors || [], onChange: (text) => { element.mapSource = text; onChange(); if (!!text.trim() !== inline) rerender(); } }),
-    (st.check?.errors || []).map((e, i) => h("div", { key: i, className: "fml-error", style: { marginTop: "4px" } }, `Line ${e.line}, column ${e.column}: ${e.message}`)));
+    (st.check?.errors || []).map((e, i) => h("div", { key: i, className: "fml-error", style: { marginTop: "4px" } }, tr("Line {p0}, column {p1}: {p2}", { p0: e.line, p1: e.column, p2: e.message }))));
   const mapOptions = st.maps || [];
   const knownMap = mapOptions.some((m) => m.url === element.mapUrl);
   const settings = h(
     "div",
     { className: "fml-settings" },
-    field("FHIR context", h("select", { value: element.context || "", "aria-label": "FHIR context", onChange: (e) => { set("context", e.target.value); setTimeout(() => loadMaps(false), 0); } },
-      h("option", { value: "" }, "(none: this step's own version and locations)"),
-      (cachedFhirSettings()?.contexts || []).map((c) => h("option", { key: c.name, value: c.name }, `${c.name} — ${c.fhirVersion}, ${(c.packages || []).join("; ") || "no package"}`)),
-      element.context && !shared && st.settingsReady ? h("option", { value: element.context }, `${element.context} (not defined on this server)`) : null),
-      shared ? `Locations: ${(shared.packages || []).join("; ") || "none"} · validation policy of the context: ${shared.validation}.` : "A context of Settings › FHIR Mapper gives the version and the locations to every step that names it.", true),
-    field("FHIR version", h("select", { disabled: !!shared, value: version, onChange: (e) => set("fhirVersion", e.target.value) },
-      ["R4", "R4B", "R5"].map((v) => h("option", { key: v, value: v }, v))), "Version of the resources the map produces."),
-    field("Result destination", h("select", {
+    field(tr("FHIR context"), h("select", { value: element.context || "", "aria-label": tr("FHIR context"), onChange: (e) => { set("context", e.target.value); setTimeout(() => loadMaps(false), 0); } },
+      h("option", { value: "" }, tr("(none: this step's own version and locations)")),
+      (cachedFhirSettings()?.contexts || []).map((c) => h("option", { key: c.name, value: c.name }, tr("{p0} — {p1}, {p2}", { p0: c.name, p1: c.fhirVersion, p2: (c.packages || []).join("; ") || tr("no package") }))),
+      element.context && !shared && st.settingsReady ? h("option", { value: element.context }, tr("{p0} (not defined on this server)", { p0: element.context })) : null),
+      shared ? tr("Locations: {p0} · validation policy of the context: {p1}.", { p0: (shared.packages || []).join("; ") || tr("none"), p1: shared.validation }) : tr("A context of Settings › FHIR Mapper gives the version and the locations to every step that names it."), true),
+    field(tr("FHIR version"), h("select", { disabled: !!shared, value: version, onChange: (e) => set("fhirVersion", e.target.value) },
+      ["R4", "R4B", "R5"].map((v) => h("option", { key: v, value: v }, v))), tr("Version of the resources the map produces.")),
+    field(tr("Result destination"), h("select", {
       value: element.variable ? "variable" : "message",
       onChange: (e) => set("variable", e.target.value === "variable" ? element.variable || "fhirResource" : "")
-    }, h("option", { value: "message" }, "Outbound message"), h("option", { value: "variable" }, "Channel Map variable")),
-    "The outbound template (tmp) if there is one, else msg.") ,
-    element.variable ? field("Variable", text("variable", "fhirResource")) : null,
-    field(shared ? "Maps of the context" : "Profile locations", h("div", { className: "fml-row" },
+    }, h("option", { value: "message" }, tr("Outbound message")), h("option", { value: "variable" }, tr("Channel Map variable"))),
+    tr("The outbound template (tmp) if there is one, else msg.")) ,
+    element.variable ? field(tr("Variable"), text("variable", "fhirResource")) : null,
+    field(shared ? tr("Maps of the context") : tr("Profile locations"), h("div", { className: "fml-row" },
       shared ? null : text("profiles", "/opt/fhir/ig;/opt/fhir/maps"),
-      h("button", { type: "button", className: "btn btn-sm", disabled: st.loading || !locations.trim(), onClick: () => loadMaps(false) }, st.loading ? "Loading…" : "Load maps"),
-      h("button", { type: "button", className: "btn btn-sm", disabled: st.loading || !locations.trim(), title: "Read the map files again", onClick: () => loadMaps(true) }, "Reload")),
-    "Files and folders on the OIE server, separated by ';': FML files (.fml, .map), StructureMaps, profiles, ConceptMaps and packages (.tgz).", true),
-    field("Map", h("div", { className: "fml-row" },
+      h("button", { type: "button", className: "btn btn-sm", disabled: st.loading || !locations.trim(), onClick: () => loadMaps(false) }, st.loading ? tr("Loading…") : tr("Load maps")),
+      h("button", { type: "button", className: "btn btn-sm", disabled: st.loading || !locations.trim(), title: tr("Read the map files again"), onClick: () => loadMaps(true) }, tr("Reload"))),
+    tr("Files and folders on the OIE server, separated by ';': FML files (.fml, .map), StructureMaps, profiles, ConceptMaps and packages (.tgz)."), true),
+    field(tr("Map"), h("div", { className: "fml-row" },
       h("select", { value: knownMap ? element.mapUrl : "", onChange: (e) => set("mapUrl", e.target.value) },
-        h("option", { value: "" }, st.maps ? (mapOptions.length ? "Choose a map…" : "No map in these locations") : "Load the maps first"),
-        mapOptions.map((m) => h("option", { key: m.url, value: m.url }, `${m.title || m.name} — ${m.url}`)))),
-    inline ? "Not used: the step runs the map written in the Map tab." : knownMap || !element.mapUrl ? "The map runs with the message as its source (OieMessage) and builds its target." : `Map ${element.mapUrl} is not in the loaded list.`, true),
+        h("option", { value: "" }, st.maps ? (mapOptions.length ? tr("Choose a map…") : tr("No map in these locations")) : tr("Load the maps first")),
+        mapOptions.map((m) => h("option", { key: m.url, value: m.url }, tr("{p0} — {p1}", { p0: m.title || m.name, p1: m.url }))))),
+    inline ? tr("Not used: the step runs the map written in the Map tab.") : knownMap || !element.mapUrl ? tr("The map runs with the message as its source (OieMessage) and builds its target.") : tr("Map {p0} is not in the loaded list.", { p0: element.mapUrl }), true),
     st.loadError ? h("div", { className: "fml-wide fml-error" }, st.loadError) : null,
-    Object.keys(st.mapErrors).length ? h("div", { className: "fml-wide fml-error" }, "Unreadable files: ",
-      Object.entries(st.mapErrors).map(([file, message]) => h("div", { key: file }, `${file}: ${message}`))) : null,
-    field("Context variables", text("contextVariables", "site, sendingFacility"),
-      "Variables of the OIE maps ($) copied to context.variable of the model, separated by commas."),
-    field("Validation", h("label", { className: "check" },
+    Object.keys(st.mapErrors).length ? h("div", { className: "fml-wide fml-error" }, tr("Unreadable files: "),
+      Object.entries(st.mapErrors).map(([file, message]) => h("div", { key: file }, tr("{p0}: {p1}", { p0: file, p1: message })))) : null,
+    field(tr("Context variables"), text("contextVariables", "site, sendingFacility"),
+      tr("Variables of the OIE maps ($) copied to context.variable of the model, separated by commas.")),
+    field(tr("Validation"), h("label", { className: "check" },
       h("input", { type: "checkbox", checked: element.validateOutput !== false && element.validateOutput !== "false", onChange: (e) => set("validateOutput", e.target.checked) }),
-      " Validate the result"), "Against the profiles in meta.profile, else the base definition. An invalid result stops the message.")
+      tr(" Validate the result")), tr("Against the profiles in meta.profile, else the base definition. An invalid result stops the message."))
   );
 
   const result = st.result;
@@ -241,20 +224,20 @@ function FmlTransformEditor({ element, onChange, platform }) {
     "div",
     null,
     h("div", { className: "fml-settings" },
-      field("Data type", h("select", { value: st.sample.dataType, onChange: (e) => { st.sample.dataType = e.target.value; saveSample(); rerender(); } },
+      field(tr("Data type"), h("select", { value: st.sample.dataType, onChange: (e) => { st.sample.dataType = e.target.value; saveSample(); rerender(); } },
         DATA_TYPES.map((v) => h("option", { key: v, value: v }, v)))),
       h("div", { className: "field" }, h("label", null, " "),
-        h("button", { type: "button", className: "btn btn-primary", disabled: st.testing || !(element.mapUrl || inline), onClick: runTest }, st.testing ? "Running…" : "Run test")),
-      field("Sample message", h(CodeBox, { value: st.sample.message, language: languageOf(st.sample.dataType), height: "190px", label: "Sample message",
+        h("button", { type: "button", className: "btn btn-primary", disabled: st.testing || !(element.mapUrl || inline), onClick: runTest }, st.testing ? tr("Running…") : tr("Run test"))),
+      field(tr("Sample message"), h(CodeBox, { value: st.sample.message, language: languageOf(st.sample.dataType), height: "190px", label: tr("Sample message"),
         onChange: (text) => { if (text !== st.sample.message) { st.sample.message = text; saveSample(); rerender(); } } }), null, true)),
     result ? h("div", null,
-      (result.errors || []).map((e, i) => h("div", { key: `e${i}`, className: "fml-error" }, `${e.phase}: ${e.message}`)),
+      (result.errors || []).map((e, i) => h("div", { key: `e${i}`, className: "fml-error" }, tr("{p0}: {p1}", { p0: e.phase, p1: e.message }))),
       result.validationPerformed && !(result.issues || []).some((i) => ["error", "fatal"].includes(i.severity)) && !(result.errors || []).length
-        ? h("div", { className: "fml-ok" }, "Valid.") : null,
+        ? h("div", { className: "fml-ok" }, tr("Valid.")) : null,
       (result.issues || []).filter((i) => i.severity !== "information").map((i, n) =>
-        h("div", { key: `i${n}`, className: i.severity === "warning" ? "fml-issue-warning" : "fml-error" }, `${i.severity} ${i.location || ""}: ${i.message}`)),
-      result.output ? h("div", null, h("h4", null, "Result"), h(CodeBox, { value: pretty(result.output), language: "json", readOnly: true, height: "360px", label: "Result" })) : null,
-      result.model ? h("details", null, h("summary", null, "OIE model of the message (source of the map)"), h(CodeBox, { value: pretty(result.model), language: "json", readOnly: true, height: "360px", label: "OIE model" })) : null)
+        h("div", { key: `i${n}`, className: i.severity === "warning" ? "fml-issue-warning" : "fml-error" }, tr("{p0} {p1}: {p2}", { p0: i.severity, p1: i.location || "", p2: i.message }))),
+      result.output ? h("div", null, h("h4", null, tr("Result")), h(CodeBox, { value: pretty(result.output), language: "json", readOnly: true, height: "360px", label: tr("Result") })) : null,
+      result.model ? h("details", null, h("summary", null, tr("OIE model of the message (source of the map)")), h(CodeBox, { value: pretty(result.model), language: "json", readOnly: true, height: "360px", label: tr("OIE model") })) : null)
       : null
   );
 
@@ -265,17 +248,16 @@ function FmlTransformEditor({ element, onChange, platform }) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [st.fullScreen]);
-  const tabs = [{ id: "settings", label: "Properties", panel: settings }, { id: "map", label: "Map", panel: mapPanel }, { id: "test", label: "Test", panel: test }];
+  const tabs = [{ id: "settings", label: tr("Properties"), panel: settings }, { id: "map", label: tr("Map"), panel: mapPanel }, { id: "test", label: tr("Test"), panel: test }];
   const current = tabs.find((t) => t.id === st.tab) || tabs[0];
   return h(
     "div",
     { className: "fhir-fml" + (st.fullScreen ? " mapper-fullscreen" : "") },
-    h("style", null, FML_STYLES),
     h("div", { className: "fml-tabs", role: "tablist" }, tabs.map((t) =>
       h("button", { key: t.id, type: "button", role: "tab", "aria-selected": t.id === current.id, onClick: () => { st.tab = t.id; rerender(); } }, t.label)),
       h("span", { style: { marginLeft: "auto", alignSelf: "center", marginRight: "6px", display: "inline-flex" } }, h(HelpButton, { key: current.id, ...(FML_HELP[current.id] || FML_HELP.settings) })),
-      h("button", { type: "button", className: "btn btn-sm", style: { alignSelf: "center" }, title: "Edit this step on the whole page (Esc to come back)",
-        onClick: () => { st.fullScreen = !st.fullScreen; rerender(); } }, st.fullScreen ? "Exit full screen (Esc)" : "⤢ Full screen")),
+      h("button", { type: "button", className: "btn btn-sm", style: { alignSelf: "center" }, title: tr("Edit this step on the whole page (Esc to come back)"),
+        onClick: () => { st.fullScreen = !st.fullScreen; rerender(); } }, st.fullScreen ? tr("Exit full screen (Esc)") : tr("⤢ Full screen"))),
     h("div", { role: "tabpanel" }, current.panel)
   );
 }
@@ -304,8 +286,8 @@ export function register(platform) {
       contextVariables: ""
     }),
     validate: (el) => {
-      if (!String(el.mapUrl || "").trim() && !String(el.mapSource || "").trim()) return "Write the map in the Map tab, or choose the map to run.";
-      if (el.variable !== undefined && el.variable !== "" && !String(el.variable).trim()) return "Give the Channel Map variable a name.";
+      if (!String(el.mapUrl || "").trim() && !String(el.mapSource || "").trim()) return tr("Write the map in the Map tab, or choose the map to run.");
+      if (el.variable !== undefined && el.variable !== "" && !String(el.variable).trim()) return tr("Give the Channel Map variable a name.");
       return "";
     },
     component: FmlTransformEditor

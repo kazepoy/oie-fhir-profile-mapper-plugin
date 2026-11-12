@@ -9,12 +9,14 @@ import { registerMapperReferences } from "./host/references.js";
 import { registerTraceAction } from "./host/message-action.js";
 import { FhirSettingsPanel } from "./settings/panel.js";
 import editorStyles from "./styles/editor.css";
+import mapperStyles from "./styles/profile-mapper.css";
+import fmlStyles from "./styles/fml.css";
 import { register as registerProfileMapper } from "./profile-mapper/editor.js";
 import { register as registerFml } from "./fml/editor.js";
 
 export function register(platform) {
   bindPlatform(platform);
-  installStyles([editorStyles, CONTEXT_MENU_STYLES]);
+  installStyles([editorStyles, mapperStyles, fmlStyles, CONTEXT_MENU_STYLES]);
   registerProfileMapper(platform);
   registerFml(platform);
   platform.registerSettingsPanel?.({ label: "FHIR Mapper", component: FhirSettingsPanel });

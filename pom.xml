@@ -25,6 +25,8 @@
     <log4j.version>2.26.1</log4j.version>
     <datatype.fhir.version>1.5.1</datatype.fhir.version>
     <hapi.version>8.12.1</hapi.version>
+    <project.build.outputTimestamp>2026-11-12T00:00:00Z</project.build.outputTimestamp>
+    <skipTests>false</skipTests>
   </properties>
 
   <dependencies>
@@ -177,6 +179,36 @@
       </resource>
     </resources>
     <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <workingDirectory>${project.basedir}/webadmin</workingDirectory>
+          <executable>npm</executable>
+          <environmentVariables>
+            <MAPPER_VERSION>${project.version}</MAPPER_VERSION>
+          </environmentVariables>
+        </configuration>
+        <executions>
+          <execution>
+            <id>frontend-dependencies</id><phase>initialize</phase><goals><goal>exec</goal></goals>
+            <configuration><arguments><argument>ci</argument><argument>--no-audit</argument><argument>--no-fund</argument></arguments></configuration>
+          </execution>
+          <execution>
+            <id>frontend-check</id><phase>generate-sources</phase><goals><goal>exec</goal></goals>
+            <configuration><arguments><argument>run</argument><argument>check</argument></arguments></configuration>
+          </execution>
+          <execution>
+            <id>frontend-build</id><phase>generate-resources</phase><goals><goal>exec</goal></goals>
+            <configuration><arguments><argument>run</argument><argument>build</argument></arguments></configuration>
+          </execution>
+          <execution>
+            <id>frontend-test</id><phase>test</phase><goals><goal>exec</goal></goals>
+            <configuration><skip>${skipTests}</skip><arguments><argument>test</argument></arguments></configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>

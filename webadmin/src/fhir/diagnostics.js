@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
+import { t as tr } from "../i18n/index.js";
 // Diagnostics of the compiler and the test API, and the events of a trace, as
 // the editor shows them and links them to rules.
 
 export function mapperDiagnostic(error) {
   const step = error.step || {};
-  const label = [step.name || (step.sequenceNumber ? `Step ${step.sequenceNumber}` : ""), error.phase, error.errorType, error.key,
-    error.line ? `line ${error.line}` : ""].filter(Boolean).join(" · ");
+  const label = [step.name || (step.sequenceNumber ? tr("Step {number}", { number: step.sequenceNumber }) : ""), error.phase, error.errorType, error.key,
+    error.line ? tr("line {number}", { number: error.line }) : ""].filter(Boolean).join(" · ");
   const target = Array.isArray(error.path) ? [step.resourceType || "", ...error.path.map(([name, instance]) => name + (instance === undefined ? "" : `[${instance}]`))].filter(Boolean).join(".") : "";
   const kind = error.operation === "iteration" ? "each" : error.operation === "condition" ? "condition" : error.phase === "translation" ? "translate" : "value";
   return { label, target, kind };
@@ -16,7 +17,7 @@ export function traceRows(trace) {
     event,
     label: mapperDiagnostic({ ...event, step: trace.step }).label,
     duration: `${(Number(event.durationNanos) / 1000000).toFixed(3)} ms`,
-    iterations: (event.iterations || []).map(item => `rule ${item.ruleIndex}, item ${item.index}`).join(" / ")
+    iterations: (event.iterations || []).map(item => tr("rule {rule}, item {index}", { rule: item.ruleIndex, index: item.index })).join(" / ")
   }));
 }
 

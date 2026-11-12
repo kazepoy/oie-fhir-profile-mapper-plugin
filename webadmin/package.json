@@ -5,13 +5,17 @@
   "license": "MPL-2.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "node build.mjs",
     "test": "node --test \"test/unit/**/*.test.js\"",
-    "test:e2e": "node --test --test-concurrency=1 test/e2e/"
+    "test:e2e": "node --test --test-concurrency=1 test/e2e/",
+    "check": "node check.mjs"
   },
   "devDependencies": {
+    "acorn": "8.19.0",
     "esbuild": "0.28.2",
     "playwright": "1.64.1"
   }

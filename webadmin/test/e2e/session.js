@@ -6,10 +6,10 @@ import { chromium, webkit } from "playwright";
 export const DEMO_URL = process.env.DEMO_URL || "https://localhost:8443/oie-webadmin/";
 export const PASSWORD = process.env.OIE_DEMO_PASSWORD || "demo-oie-password";
 
-export async function signIn({ user = "admin", password = PASSWORD } = {}) {
+export async function signIn({ user = "admin", password = PASSWORD, locale = "en-US", colorScheme = "light" } = {}) {
   // E2E_BROWSER=webkit runs the same checks in Safari's engine.
   const browser = await (process.env.E2E_BROWSER === "webkit" ? webkit : chromium).launch();
-  const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1600, height: 1100 } });
+  const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1600, height: 1100 }, locale, colorScheme });
   const page = await context.newPage();
   page.setDefaultTimeout(30000);
   const errors = [];

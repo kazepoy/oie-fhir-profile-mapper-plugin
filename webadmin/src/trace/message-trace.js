@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { t as tr } from "../i18n/index.js";
 // The FHIR mapping trace of a processed message: found in the connector maps of
 // the message (fhirMapperTrace, fhirMapperResponseTrace) and shown as text.
 
@@ -40,24 +41,24 @@ const ms = nanos => `${(Number(nanos || 0) / 1e6).toFixed(2)} ms`;
 /** A trace as lines of text: its identity, its steps, then one line per event. */
 export function traceText(trace) {
   const lines = [];
-  if (trace.channel) lines.push(`Channel ${trace.channel.name || trace.channel.id}, revision ${trace.channel.revision}`);
-  if (trace.connector) lines.push(`Connector ${trace.connector.name} (${trace.connector.transformer})`);
+  if (trace.channel) lines.push(tr("Channel {name}, revision {revision}", { name: trace.channel.name || trace.channel.id, revision: trace.channel.revision }));
+  if (trace.connector) lines.push(tr("Connector {name} ({transformer})", { name: trace.connector.name, transformer: trace.connector.transformer }));
   const steps = new Map((trace.steps || []).map(s => [s.sequenceNumber, s]));
-  if (steps.size) lines.push(`Steps: ${[...steps.values()].map(s => `${Number(s.sequenceNumber) + 1}. ${s.name} (${s.action === "createBundle" ? `Bundle ${s.bundleName}` : s.resourceType})`).join(", ")}`);
-  lines.push(`${(trace.events || []).length} event(s)${trace.truncated ? ", truncated" : ""}`, "");
+  if (steps.size) lines.push(tr("Steps: {steps}", { steps: [...steps.values()].map(s => `${Number(s.sequenceNumber) + 1}. ${s.name} (${s.action === "createBundle" ? `Bundle ${s.bundleName}` : s.resourceType})`).join(", ") }));
+  lines.push(tr("{count} event(s){suffix}", { count: (trace.events || []).length, suffix: trace.truncated ? tr(", truncated") : "" }), "");
   let current;
   for (const e of trace.events || []) {
     if (e.step !== current) {
       current = e.step;
       const step = steps.get(e.step);
-      lines.push(step ? `── ${step.name}` : "── finalization");
+      lines.push(step ? `── ${step.name}` : tr("── finalization"));
     }
     const what = e.phase === "reference" ? `${e.name}[${e.index ?? 0}] ${e.fullUrl || ""}`
       : e.phase === "bundle-entry" ? `${e.resourceType} ${e.refName || ""} → ${(e.bundles || []).join(", ")}`
       : e.phase === "publication" ? `${e.target || ""}${e.variable ? ` ${e.variable}` : ""}`
       : e.key || (e.bundle ? `Bundle ${e.bundle}` : "");
-    const extra = [e.count !== undefined ? `${e.count} item(s)` : "", e.reason || "", e.errorType || "", e.value?.text !== undefined ? `= ${e.value.text}` : "",
-      (e.iterations || []).length ? `item ${e.iterations.map(i => i.index).join("/")}` : ""].filter(Boolean).join(" · ");
+    const extra = [e.count !== undefined ? tr("{count} item(s)", { count: e.count }) : "", e.reason || "", e.errorType || "", e.value?.text !== undefined ? `= ${e.value.text}` : "",
+      (e.iterations || []).length ? tr("item {indices}", { indices: e.iterations.map(i => i.index).join("/") }) : ""].filter(Boolean).join(" · ");
     lines.push(`   ${String(e.phase).padEnd(12)} ${String(e.status).padEnd(9)} ${what}${extra ? `   (${extra})` : ""}   ${ms(e.durationNanos)}`);
   }
   return lines.join("\n");
