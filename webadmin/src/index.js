@@ -5,6 +5,7 @@ import { bindPlatform } from "./host/platform.js";
 import { bindReact } from "./host/react.js";
 import { installStyles } from "./host/styles.js";
 import { registerMapperReferences } from "./host/references.js";
+import { registerTraceAction } from "./host/message-action.js";
 import { setLocale } from "./i18n/index.js";
 import { STYLE_SHEETS } from "./styles.js";
 import { register as registerProfileMapper } from "./profile-mapper/legacy-editor.js";
@@ -17,5 +18,6 @@ export function register(platform) {
   installStyles(STYLE_SHEETS);
   registerProfileMapper(platform);
   registerFml(platform);
+  registerTraceAction();
   registerMapperReferences().catch(error => console.warn("[fhir-mapper] references unavailable:", error));
 }

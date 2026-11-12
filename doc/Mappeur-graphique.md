@@ -120,6 +120,14 @@ modification). Les éléments signalés par le dernier test ou la dernière comp
 sont marqués en rouge, avec le message en info-bulle. **Full screen** étend l'étape
 à toute la page ; Échap y met fin. L'étape FHIR FML Transform a le même bouton.
 
+**Sample fields**, au-dessus de l'arbre, liste les champs du message exemple de
+l'onglet Test avec leur valeur (HL7 v2 lu par le serveur), filtrables par chemin ou
+par valeur. Un clic insère le chemin dans le champ en cours d'édition, réécrit vers
+la variable d'itération s'il y a lieu ; sans champ en édition, le chemin est copié.
+Une ligne se glisse aussi sur un champ. `Alt+↓` et `Alt+↑` passent au champ suivant
+ou précédent de l'arbre, `Alt+→` et `Alt+←` ouvrent ou referment l'élément. Une
+erreur du dernier test ou de la compilation est aussi soulignée dans le champ édité.
+
 ## 6. Répétitions, conditions et traductions
 
 | Contrôle | Effet dans le contrat de mapping |

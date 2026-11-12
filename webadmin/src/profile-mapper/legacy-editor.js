@@ -3,6 +3,7 @@ import { createExpressionEditor } from "../host/code-editor.js";
 import { monacoItems, scopeDts } from "../fhir/completion.js";
 import { snapshot, restore } from "../fhir/history.js";
 import { normalizeResult } from "../fhir/diagnostics.js";
+import { sourceTree, sourcePaths } from "../fhir/source.js";
 import { createDiff } from "../host/code-editor.js";
 
 const PKG = "org.oie.fhir.mapper";
@@ -304,6 +305,9 @@ function MapperExpression({ style, onChange, completionContext = {}, ...props })
  * editor (Monaco, one line) with the mapper's completions and typings. Only the field
  * being edited holds an editor, so a large tree stays light.
  */
+/** The expression editor being used, so that a click on a sample field can insert into it. */
+let activeExpressionEditor = null;
+
 function ExpressionField(props) {
   const [editing, setEditing] = React.useState(false);
   const host = React.useRef(null);
@@ -330,10 +334,15 @@ function ExpressionField(props) {
       });
     } catch (error) { console.error("[fhir-mapper] expression editor:", error); setEditing(false); return undefined; }
     editor.current = ed;
+    activeExpressionEditor = ed;
+    ed.setMarkers(latest.current.errors || []);
     host.current.appendChild(ed.el);
     ed.focus();
+    // Another field taking the focus (Tab, Alt+arrows) ends this edition; the sample fields list does not.
+    const focusElsewhere = (e) => { if (host.current && !host.current.contains(e.target) && !e.target.closest?.(".suggest-widget, .monaco-hover, .mapper-source-pane")) setEditing(false); };
+    document.addEventListener("focusin", focusElsewhere, true);
     const focusWhenReady = setInterval(() => { if (ed.hasMonaco()) { clearInterval(focusWhenReady); ed.focus(); } }, 60);
-    const outside = (e) => { if (host.current && !host.current.contains(e.target) && !e.target.closest?.(".suggest-widget, .monaco-hover, .parameter-hints-widget")) setEditing(false); };
+    const outside = (e) => { if (host.current && !host.current.contains(e.target) && !e.target.closest?.(".suggest-widget, .monaco-hover, .parameter-hints-widget, .mapper-source-pane")) setEditing(false); };
     const onKey = (e) => { if (e.key === "Tab" && host.current?.contains(e.target) && !document.querySelector(".suggest-widget.visible")) setEditing(false); };
     document.addEventListener("mousedown", outside, true);
     document.addEventListener("keydown", onKey, true);
@@ -341,6 +350,8 @@ function ExpressionField(props) {
       clearInterval(focusWhenReady);
       document.removeEventListener("mousedown", outside, true);
       document.removeEventListener("keydown", onKey, true);
+      document.removeEventListener("focusin", focusElsewhere, true);
+      if (activeExpressionEditor === ed) activeExpressionEditor = null;
       editor.current = null;
       ed.dispose();
     };
@@ -348,7 +359,9 @@ function ExpressionField(props) {
   React.useEffect(() => {
     if (editor.current && (props.value ?? "") !== editor.current.getValue()) editor.current.setValue(props.value ?? "");
   }, [props.value]);
-  if (!available || !editing || props.disabled) return h(MapperExpression, { ...props, onFocus: () => { if (available && !props.disabled) setEditing(true); } });
+  React.useEffect(() => { editor.current?.setMarkers(props.errors || []); }, [(props.errors || []).join("\n")]);
+  const { errors, ...plain } = props;
+  if (!available || !editing || props.disabled) return h(MapperExpression, { ...plain, onFocus: () => { if (available && !props.disabled) setEditing(true); } });
   return h("span", { className: "mapper-expression mapper-expression-editing", style: props.style, ref: host });
 }
 
@@ -892,7 +905,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       if (sample.dataType !== "HL7V2" || !sample.message.trim()) return;
       try {
         const text = await platform.api.post(`${MAPPER_API}/source`, JSON.stringify(sample), { contentType: "text/plain", raw: true });
-        if (active) { st.sourcePaths = mapperSourcePaths(JSON.parse(text)); rerender(); }
+        if (active) { st.serialized = JSON.parse(text); st.sourcePaths = mapperSourcePaths(st.serialized); rerender(); }
       } catch { if (active) { st.sourcePaths = []; rerender(); } }
     }, 300);
     return () => { active = false; clearTimeout(timer); };
@@ -1469,6 +1482,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
           node.choice
             ? h("span", { className: "text-text-faint", style: { ...ellipsis, flex: "1 1 auto", fontSize: "11px" } }, placeholder)
             : h(ExpressionField, {
+                errors: errorsByKey.get(node.key),
                 completionContext: completionFor(node),
                 type: "text",
                 value,
@@ -1641,6 +1655,45 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       rowGroups.push(h("tbody", { key: child.key, className: grouped ? "mapper-branch-open" : undefined, "aria-label": child.key }, rows.splice(0)));
     }
   }
+  // Alt+↑/↓ moves between the fields of the tree, Alt+→/← opens or closes the element.
+  const treeKeys = (e) => {
+    if (!e.altKey || !["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft"].includes(e.key)) return;
+    const row = e.target.closest?.("tr");
+    if (!row) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      const toggleButton = row.querySelector("button[aria-expanded]");
+      if (toggleButton && (toggleButton.getAttribute("aria-expanded") === "true") === (e.key === "ArrowLeft")) toggleButton.click();
+      return;
+    }
+    const rows = [...row.closest("table").querySelectorAll("tbody tr")].filter((r) => r.querySelector("input[role=combobox], .mapper-expression-editing"));
+    const next = rows[rows.indexOf(row) + (e.key === "ArrowDown" ? 1 : -1)];
+    next?.querySelector("input[role=combobox]")?.focus();
+  };
+  // The fields of the sample message with their values: click to insert into the field being edited, or drag.
+  const sourcePane = () => {
+    const serialized = st.sample.dataType === "HL7V2" ? st.serialized : st.sample;
+    const fields = serialized ? sourcePaths(sourceTree(serialized)).filter((f) => f.value !== null && f.value !== "" && f.path !== "msg") : [];
+    const filter = (st.sourceFilter || "").toLowerCase();
+    const shown = fields.filter((f) => !filter || `${f.path} ${f.value}`.toLowerCase().includes(filter)).slice(0, 300);
+    const accessor = (f) => (st.sample.dataType === "JSON" ? f.path : `${f.path}.toString()`);
+    return h("details", { className: "mapper-source-pane", open: !!st.sourceOpen, onToggle: (e) => { if (st.sourceOpen !== e.currentTarget.open) { st.sourceOpen = e.currentTarget.open; rerender(); } }, style: { marginBottom: "8px" } },
+      h("summary", { style: { cursor: "pointer" } }, `Sample fields (${fields.length})`,
+        h("span", { className: "hint text-text-faint", style: { marginLeft: "8px", fontSize: "11px" } }, "values of the sample message of the Test tab — click to insert into the field being edited, or drag onto a field")),
+      st.sourceOpen ? h("div", null,
+        h("input", { type: "search", value: st.sourceFilter || "", placeholder: "Filter fields and values…", "aria-label": "Filter sample fields", style: { width: "260px", margin: "6px 0", height: "26px", minHeight: "26px", padding: "2px 8px" },
+          onChange: (e) => { st.sourceFilter = e.target.value; rerender(); } }),
+        fields.length ? h("div", { className: "border border-line rounded", style: { maxHeight: "220px", overflow: "auto" } },
+          h("table", { className: "dt", style: { width: "100%", tableLayout: "fixed" } }, h("tbody", null, shown.map((f) =>
+            h("tr", { key: f.path, draggable: true, style: { cursor: "grab" }, title: accessor(f),
+              onDragStart: (e) => { e.dataTransfer.effectAllowed = "copy"; e.dataTransfer.setData("text/plain", accessor(f)); e.dataTransfer.setData("application/x-oie-accessor", accessor(f)); },
+              onMouseDown: (e) => { if (activeExpressionEditor) e.preventDefault(); },
+              onClick: () => { if (activeExpressionEditor) activeExpressionEditor.insert(accessor(f)); else navigator.clipboard?.writeText(accessor(f)).then(() => platform.ui?.toast?.("Path copied: click a field first to insert it directly.", "info"), () => {}); } },
+              h("td", { style: { fontFamily: "monospace", fontSize: "11px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "60%" } }, f.path.replace(/^msg/, "")),
+              h("td", { style: { fontSize: "11px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f.value))))))
+          : h("div", { className: "hint" }, "No field: paste a sample message in the Test tab (HL7 v2 is read by the server).")) : null);
+  };
   const check = tree ? completeness(tree, parseMappings(element.mappings)) : { required: [], mustSupport: [] };
   // A Bundle step sets its type; its entries come from the resource steps that select it.
   const entryKey = (k) => k === "Bundle.entry" || k.startsWith("Bundle.entry.") || k.startsWith("Bundle.entry:");
@@ -1937,9 +1990,10 @@ function ProfileMapperEditor({ element, onChange, platform }) {
             h("button", { type: "button", className: "btn btn-sm", title: "Redo", disabled: !(st.redo || []).length || blocked, onClick: () => travel(st.redo, st.undo) }, "↷ Redo"),
             h("span", { className: "hint text-text-faint", style: { fontSize: "11px" } }, `Click a field to edit it with completion. ${COMPLETION_HINT}: functions, scoped variables and sample paths. ↑/↓ to choose, Enter/Tab to insert, Esc to close. Guard optional values.`)
           ),
+          sourcePane(),
           h(
             "div",
-            { className: "dt-wrap border border-line rounded", style: { maxHeight: "none", overflowX: "auto", overflowY: "visible" } },
+            { className: "dt-wrap border border-line rounded", style: { maxHeight: "none", overflowX: "auto", overflowY: "visible" }, onKeyDownCapture: treeKeys },
             h(
               "table",
               { className: "dt mapper-tree", style: { tableLayout: "fixed", width: "100%", minWidth: "720px" } },

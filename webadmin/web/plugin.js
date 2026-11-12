@@ -15,6 +15,9 @@ function platform() {
   if (!current) throw new Error("FHIR Mapper: the platform is not bound yet");
   return current;
 }
+function toast(message, type = "info") {
+  current?.ui?.toast?.(message, type);
+}
 
 // src/host/styles.js
 var ATTRIBUTE = "data-plugin";
@@ -57,6 +60,97 @@ async function registerMapperReferences() {
     type: "FUNCTION",
     contexts: CONTEXTS
   })));
+}
+
+// src/trace/message-trace.js
+var TRACE_KEYS = ["fhirMapperTrace", "fhirMapperResponseTrace"];
+function findTraces(message) {
+  const found = [];
+  const seen = /* @__PURE__ */ new Set();
+  const take = (key, text) => {
+    if (typeof text !== "string" || seen.has(text)) return;
+    try {
+      const trace = JSON.parse(text);
+      if (trace && typeof trace === "object" && Array.isArray(trace.events)) {
+        seen.add(text);
+        found.push({ key, trace });
+      }
+    } catch {
+    }
+  };
+  const walk = (value, depth) => {
+    if (!value || typeof value !== "object" || depth > 14) return;
+    if (Array.isArray(value)) {
+      value.forEach((item, i) => {
+        if (TRACE_KEYS.includes(item)) take(item, value[i + 1]);
+      });
+      for (const item of value) walk(item, depth + 1);
+      return;
+    }
+    for (const [name, item] of Object.entries(value)) {
+      if (TRACE_KEYS.includes(name)) take(name, item);
+      walk(item, depth + 1);
+    }
+  };
+  walk(message, 0);
+  return found;
+}
+var ms = (nanos) => `${(Number(nanos || 0) / 1e6).toFixed(2)} ms`;
+function traceText(trace) {
+  const lines = [];
+  if (trace.channel) lines.push(`Channel ${trace.channel.name || trace.channel.id}, revision ${trace.channel.revision}`);
+  if (trace.connector) lines.push(`Connector ${trace.connector.name} (${trace.connector.transformer})`);
+  const steps = new Map((trace.steps || []).map((s) => [s.sequenceNumber, s]));
+  if (steps.size) lines.push(`Steps: ${[...steps.values()].map((s) => `${Number(s.sequenceNumber) + 1}. ${s.name} (${s.action === "createBundle" ? `Bundle ${s.bundleName}` : s.resourceType})`).join(", ")}`);
+  lines.push(`${(trace.events || []).length} event(s)${trace.truncated ? ", truncated" : ""}`, "");
+  let current2;
+  for (const e of trace.events || []) {
+    if (e.step !== current2) {
+      current2 = e.step;
+      const step = steps.get(e.step);
+      lines.push(step ? `── ${step.name}` : "── finalization");
+    }
+    const what = e.phase === "reference" ? `${e.name}[${e.index ?? 0}] ${e.fullUrl || ""}` : e.phase === "bundle-entry" ? `${e.resourceType} ${e.refName || ""} → ${(e.bundles || []).join(", ")}` : e.phase === "publication" ? `${e.target || ""}${e.variable ? ` ${e.variable}` : ""}` : e.key || (e.bundle ? `Bundle ${e.bundle}` : "");
+    const extra = [
+      e.count !== void 0 ? `${e.count} item(s)` : "",
+      e.reason || "",
+      e.errorType || "",
+      e.value?.text !== void 0 ? `= ${e.value.text}` : "",
+      (e.iterations || []).length ? `item ${e.iterations.map((i) => i.index).join("/")}` : ""
+    ].filter(Boolean).join(" · ");
+    lines.push(`   ${String(e.phase).padEnd(12)} ${String(e.status).padEnd(9)} ${what}${extra ? `   (${extra})` : ""}   ${ms(e.durationNanos)}`);
+  }
+  return lines.join("\n");
+}
+
+// src/host/message-action.js
+function registerTraceAction() {
+  const p = platform();
+  if (typeof p.registerMessageAction !== "function") return;
+  p.registerMessageAction({
+    id: "fhir-mapper-trace",
+    label: "FHIR mapping trace",
+    order: 50,
+    onInvoke: async (message, ctx) => {
+      let traces = findTraces(ctx?.connectorMessage || null);
+      if (!traces.length) traces = findTraces(message);
+      if (!traces.length && ctx?.channelId != null && message?.messageId != null) {
+        try {
+          traces = findTraces(await p.api.get(`/channels/${encodeURIComponent(ctx.channelId)}/messages/${encodeURIComponent(message.messageId)}`));
+        } catch {
+        }
+      }
+      if (!traces.length) {
+        toast("This message has no FHIR mapping trace. Enable “Trace processed messages” on a FHIR Profile Mapper step, redeploy the channel, and check that its message storage keeps the maps.", "info");
+        return;
+      }
+      p.ui.detailModal({
+        title: `FHIR mapping trace of message ${message?.messageId ?? ""}`,
+        meta: traces.map((t) => t.key).join(", "),
+        sections: traces.flatMap(({ key, trace }) => [{ label: key, text: traceText(trace) }, { label: `${key} (JSON)`, text: JSON.stringify(trace, null, 2) }])
+      });
+    }
+  });
 }
 
 // src/i18n/locales/en.js
@@ -940,6 +1034,68 @@ function normalizeResult(text) {
   return json.replace(/urn:uuid:[0-9a-f-]{36}/gi, "urn:uuid:<uuid>").replace(/"lastUpdated"\s*:\s*"[^"]*"/g, '"lastUpdated": "<time>"');
 }
 
+// src/fhir/source.js
+var esc = (s) => String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+function xmlNode(element, accessor) {
+  const children = [];
+  for (const attr of element.attributes) {
+    children.push({ name: `@${attr.name}`, accessor: `${accessor}['@${esc(attr.name)}'].toString()`, value: attr.value, children: [] });
+  }
+  const counts = {};
+  for (const child of element.children) counts[child.tagName] = (counts[child.tagName] || 0) + 1;
+  const seen = {};
+  for (const child of element.children) {
+    const index = seen[child.tagName] || 0;
+    seen[child.tagName] = index + 1;
+    let childAccessor = `${accessor}['${esc(child.tagName)}']`;
+    const repeated = counts[child.tagName] > 1;
+    if (repeated) childAccessor += `[${index}]`;
+    const node = xmlNode(child, childAccessor);
+    if (repeated) {
+      node.repeated = true;
+      node.index = index;
+      node.listAccessor = `${accessor}['${esc(child.tagName)}']`;
+    }
+    children.push(node);
+  }
+  const value = element.children.length ? null : element.textContent ?? "";
+  return { name: element.tagName, accessor: `${accessor}.toString()`, pathAccessor: accessor, value, children };
+}
+function jsonNode(name, value, accessor) {
+  if (Array.isArray(value)) {
+    return { name, accessor, pathAccessor: accessor, value: null, children: value.map((item, i) => ({ ...jsonNode(`[${i}]`, item, `${accessor}[${i}]`), repeated: true, index: i, listAccessor: accessor })) };
+  }
+  if (value && typeof value === "object") {
+    return { name, accessor, pathAccessor: accessor, value: null, children: Object.entries(value).map(([key, item]) => jsonNode(key, item, `${accessor}['${esc(key)}']`)) };
+  }
+  return { name, accessor, pathAccessor: accessor, value: value === null ? "null" : String(value), children: [] };
+}
+function sourceTree(sample, variable = "msg") {
+  const message = sample?.message || "";
+  if (!message.trim()) return [];
+  try {
+    if (sample.dataType === "JSON") return [jsonNode(variable, JSON.parse(message), variable)];
+    if (sample.dataType === "RAW") return [{ name: variable, accessor: variable, pathAccessor: variable, value: message.slice(0, 200), children: [] }];
+    const doc = new DOMParser().parseFromString(message, "application/xml");
+    if (doc.getElementsByTagName("parsererror").length) return [];
+    const root = xmlNode(doc.documentElement, variable);
+    root.name = `${variable} (${doc.documentElement.tagName})`;
+    return [root];
+  } catch {
+    return [];
+  }
+}
+function sourcePaths(tree, limit = 2e3) {
+  const paths = [];
+  const walk = (node) => {
+    if (paths.length >= limit) return;
+    paths.push({ path: node.pathAccessor || node.accessor, value: node.value, name: node.name, repeated: !!node.repeated, listAccessor: node.listAccessor });
+    for (const child of node.children) walk(child);
+  };
+  for (const node of tree) walk(node);
+  return paths;
+}
+
 // src/profile-mapper/legacy-editor.js
 var PKG = "org.oie.fhir.mapper";
 var MAPPER_TYPE = `${PKG}.FhirProfileMapperStep`;
@@ -1254,6 +1410,7 @@ function MapperExpression({ style, onChange, completionContext = {}, ...props })
     )
   );
 }
+var activeExpressionEditor = null;
 function ExpressionField(props) {
   const [editing, setEditing] = React2.useState(false);
   const host = React2.useRef(null);
@@ -1291,8 +1448,14 @@ function ExpressionField(props) {
       return void 0;
     }
     editor.current = ed;
+    activeExpressionEditor = ed;
+    ed.setMarkers(latest.current.errors || []);
     host.current.appendChild(ed.el);
     ed.focus();
+    const focusElsewhere = (e) => {
+      if (host.current && !host.current.contains(e.target) && !e.target.closest?.(".suggest-widget, .monaco-hover, .mapper-source-pane")) setEditing(false);
+    };
+    document.addEventListener("focusin", focusElsewhere, true);
     const focusWhenReady = setInterval(() => {
       if (ed.hasMonaco()) {
         clearInterval(focusWhenReady);
@@ -1300,7 +1463,7 @@ function ExpressionField(props) {
       }
     }, 60);
     const outside = (e) => {
-      if (host.current && !host.current.contains(e.target) && !e.target.closest?.(".suggest-widget, .monaco-hover, .parameter-hints-widget")) setEditing(false);
+      if (host.current && !host.current.contains(e.target) && !e.target.closest?.(".suggest-widget, .monaco-hover, .parameter-hints-widget, .mapper-source-pane")) setEditing(false);
     };
     const onKey = (e) => {
       if (e.key === "Tab" && host.current?.contains(e.target) && !document.querySelector(".suggest-widget.visible")) setEditing(false);
@@ -1311,6 +1474,8 @@ function ExpressionField(props) {
       clearInterval(focusWhenReady);
       document.removeEventListener("mousedown", outside, true);
       document.removeEventListener("keydown", onKey, true);
+      document.removeEventListener("focusin", focusElsewhere, true);
+      if (activeExpressionEditor === ed) activeExpressionEditor = null;
       editor.current = null;
       ed.dispose();
     };
@@ -1318,7 +1483,11 @@ function ExpressionField(props) {
   React2.useEffect(() => {
     if (editor.current && (props.value ?? "") !== editor.current.getValue()) editor.current.setValue(props.value ?? "");
   }, [props.value]);
-  if (!available || !editing || props.disabled) return h2(MapperExpression, { ...props, onFocus: () => {
+  React2.useEffect(() => {
+    editor.current?.setMarkers(props.errors || []);
+  }, [(props.errors || []).join("\n")]);
+  const { errors, ...plain } = props;
+  if (!available || !editing || props.disabled) return h2(MapperExpression, { ...plain, onFocus: () => {
     if (available && !props.disabled) setEditing(true);
   } });
   return h2("span", { className: "mapper-expression mapper-expression-editing", style: props.style, ref: host });
@@ -1811,7 +1980,8 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       try {
         const text2 = await platform2.api.post(`${MAPPER_API2}/source`, JSON.stringify(sample), { contentType: "text/plain", raw: true });
         if (active) {
-          st.sourcePaths = mapperSourcePaths(JSON.parse(text2));
+          st.serialized = JSON.parse(text2);
+          st.sourcePaths = mapperSourcePaths(st.serialized);
           rerender();
         }
       } catch {
@@ -2381,6 +2551,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
           "div",
           { style: { display: "flex", alignItems: "center", gap: "4px", minWidth: 0 } },
           node.choice ? h2("span", { className: "text-text-faint", style: { ...ellipsis, flex: "1 1 auto", fontSize: "11px" } }, placeholder) : h2(ExpressionField, {
+            errors: errorsByKey.get(node.key),
             completionContext: completionFor(node),
             type: "text",
             value,
@@ -2538,6 +2709,86 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       rowGroups.push(h2("tbody", { key: child.key, className: grouped ? "mapper-branch-open" : void 0, "aria-label": child.key }, rows.splice(0)));
     }
   }
+  const treeKeys = (e) => {
+    if (!e.altKey || !["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft"].includes(e.key)) return;
+    const row2 = e.target.closest?.("tr");
+    if (!row2) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+      const toggleButton = row2.querySelector("button[aria-expanded]");
+      if (toggleButton && toggleButton.getAttribute("aria-expanded") === "true" === (e.key === "ArrowLeft")) toggleButton.click();
+      return;
+    }
+    const rows2 = [...row2.closest("table").querySelectorAll("tbody tr")].filter((r) => r.querySelector("input[role=combobox], .mapper-expression-editing"));
+    const next = rows2[rows2.indexOf(row2) + (e.key === "ArrowDown" ? 1 : -1)];
+    next?.querySelector("input[role=combobox]")?.focus();
+  };
+  const sourcePane = () => {
+    const serialized = st.sample.dataType === "HL7V2" ? st.serialized : st.sample;
+    const fields = serialized ? sourcePaths(sourceTree(serialized)).filter((f) => f.value !== null && f.value !== "" && f.path !== "msg") : [];
+    const filter = (st.sourceFilter || "").toLowerCase();
+    const shown = fields.filter((f) => !filter || `${f.path} ${f.value}`.toLowerCase().includes(filter)).slice(0, 300);
+    const accessor = (f) => st.sample.dataType === "JSON" ? f.path : `${f.path}.toString()`;
+    return h2(
+      "details",
+      { className: "mapper-source-pane", open: !!st.sourceOpen, onToggle: (e) => {
+        if (st.sourceOpen !== e.currentTarget.open) {
+          st.sourceOpen = e.currentTarget.open;
+          rerender();
+        }
+      }, style: { marginBottom: "8px" } },
+      h2(
+        "summary",
+        { style: { cursor: "pointer" } },
+        `Sample fields (${fields.length})`,
+        h2("span", { className: "hint text-text-faint", style: { marginLeft: "8px", fontSize: "11px" } }, "values of the sample message of the Test tab — click to insert into the field being edited, or drag onto a field")
+      ),
+      st.sourceOpen ? h2(
+        "div",
+        null,
+        h2("input", {
+          type: "search",
+          value: st.sourceFilter || "",
+          placeholder: "Filter fields and values…",
+          "aria-label": "Filter sample fields",
+          style: { width: "260px", margin: "6px 0", height: "26px", minHeight: "26px", padding: "2px 8px" },
+          onChange: (e) => {
+            st.sourceFilter = e.target.value;
+            rerender();
+          }
+        }),
+        fields.length ? h2(
+          "div",
+          { className: "border border-line rounded", style: { maxHeight: "220px", overflow: "auto" } },
+          h2("table", { className: "dt", style: { width: "100%", tableLayout: "fixed" } }, h2("tbody", null, shown.map((f) => h2(
+            "tr",
+            {
+              key: f.path,
+              draggable: true,
+              style: { cursor: "grab" },
+              title: accessor(f),
+              onDragStart: (e) => {
+                e.dataTransfer.effectAllowed = "copy";
+                e.dataTransfer.setData("text/plain", accessor(f));
+                e.dataTransfer.setData("application/x-oie-accessor", accessor(f));
+              },
+              onMouseDown: (e) => {
+                if (activeExpressionEditor) e.preventDefault();
+              },
+              onClick: () => {
+                if (activeExpressionEditor) activeExpressionEditor.insert(accessor(f));
+                else navigator.clipboard?.writeText(accessor(f)).then(() => platform2.ui?.toast?.("Path copied: click a field first to insert it directly.", "info"), () => {
+                });
+              }
+            },
+            h2("td", { style: { fontFamily: "monospace", fontSize: "11px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "60%" } }, f.path.replace(/^msg/, "")),
+            h2("td", { style: { fontSize: "11px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, f.value)
+          ))))
+        ) : h2("div", { className: "hint" }, "No field: paste a sample message in the Test tab (HL7 v2 is read by the server).")
+      ) : null
+    );
+  };
   const check = tree ? completeness(tree, parseMappings(element.mappings)) : { required: [], mustSupport: [] };
   const entryKey = (k) => k === "Bundle.entry" || k.startsWith("Bundle.entry.") || k.startsWith("Bundle.entry:");
   if (createBundle) {
@@ -2933,9 +3184,10 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       h2("button", { type: "button", className: "btn btn-sm", title: "Redo", disabled: !(st.redo || []).length || blocked, onClick: () => travel(st.redo, st.undo) }, "↷ Redo"),
       h2("span", { className: "hint text-text-faint", style: { fontSize: "11px" } }, `Click a field to edit it with completion. ${COMPLETION_HINT}: functions, scoped variables and sample paths. ↑/↓ to choose, Enter/Tab to insert, Esc to close. Guard optional values.`)
     ),
+    sourcePane(),
     h2(
       "div",
-      { className: "dt-wrap border border-line rounded", style: { maxHeight: "none", overflowX: "auto", overflowY: "visible" } },
+      { className: "dt-wrap border border-line rounded", style: { maxHeight: "none", overflowX: "auto", overflowY: "visible" }, onKeyDownCapture: treeKeys },
       h2(
         "table",
         { className: "dt mapper-tree", style: { tableLayout: "fixed", width: "100%", minWidth: "720px" } },
@@ -3701,6 +3953,7 @@ function register3(platform2) {
   installStyles(STYLE_SHEETS);
   register(platform2);
   register2(platform2);
+  registerTraceAction();
   registerMapperReferences().catch((error) => console.warn("[fhir-mapper] references unavailable:", error));
 }
 export {

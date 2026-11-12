@@ -143,6 +143,8 @@ pour le transformer de réponse. La trace est réécrite à la fin de chaque ét
 tracée et de la finalisation : un message en erreur garde la trace partielle
 jusqu'à l'échec. Aucun stockage propre au plugin n'est ajouté.
 
+- Administration web : **Messages**, clic droit sur le message, **FHIR mapping trace** :
+  la trace est affichée en clair (canal, étapes, un événement par ligne) puis en JSON.
 - Administration web : **Messages**, choisir le message, onglet **Mappings**,
   variable `fhirMapperTrace` de portée *Connector*.
 - API OIE : `GET /api/channels/{channelId}/messages/{messageId}`, puis

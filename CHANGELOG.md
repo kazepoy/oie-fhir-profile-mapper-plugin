@@ -11,6 +11,9 @@
   `imports` introuvables.
 - **Mappeur, jeux d'essai** : exemples nommés enregistrés dans l'étape (propriété `samples`),
   résultat attendu par exemple, comparaison avec vue côte à côte en cas d'écart, *Run all*.
+- **Trace** : action *FHIR mapping trace* sur un message de la liste des messages.
+- **Mappeur, saisie** : volet *Sample fields* (champs et valeurs de l'exemple, clic ou glisser),
+  déplacement au clavier entre les champs (`Alt` + flèches), erreur soulignée dans le champ.
 - **Mappeur** : expressions éditées dans l'éditeur de code de Web Admin (Monaco) avec
   complétion des fonctions, des variables d'itération, des chemins du message exemple,
   des références des autres étapes et de modèles de garde ; recherche dans l'arbre ;
