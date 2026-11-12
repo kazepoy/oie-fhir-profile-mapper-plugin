@@ -97,7 +97,7 @@ public final class FhirCatalogBridge {
         }
     }
 
-    public void clearCaches() { conceptMaps.clear(); }
+    public void clearCaches() { conceptMaps.clear(); answers.clear(); }
 
     @FunctionalInterface
     private interface CatalogWork<T> { T call(Catalog catalog) throws Exception; }
@@ -135,7 +135,12 @@ public final class FhirCatalogBridge {
     }
 
     public String structureDefinition(String url, Map<String, String> options) throws Exception {
-        return withCatalog(options, cached -> {
+        return withCatalog(options, cached -> snapshotJson(cached, url));
+    }
+
+    /** A StructureDefinition with its snapshot, as FHIR JSON. */
+    private static String snapshotJson(Catalog cached, String url) throws Exception {
+        {
             String canonical = url.trim().contains("/") ? url.trim() : "http://hl7.org/fhir/StructureDefinition/" + url.trim();
             IBaseResource sd = cached.chain.fetchStructureDefinition(canonical);
             if (sd == null) {
@@ -150,7 +155,207 @@ public final class FhirCatalogBridge {
                 }
             }
             return withOriginalBases(cached, cached.ctx.newJsonParser().encodeResourceToString(sd));
+        }
+    }
+
+    // ------------------------------------------------------------------ catalogue of the locations
+
+    private static final Set<String> CATALOG_TYPES = Set.of("StructureDefinition", "ValueSet", "CodeSystem", "ConceptMap", "StructureMap");
+    private static final Set<String> NOT_EXPANDED = Set.of("Resource", "DomainResource", "BackboneElement", "Element");
+    /** Answers that are costly to build and do not change until the caches are cleared. */
+    private final Map<String, String> answers = new ConcurrentHashMap<>();
+
+    /**
+     * The conformance resources of the profile locations: [{resourceType, url, name, title, version}],
+     * with type, kind, derivation and baseDefinition for a StructureDefinition. kind filters: a
+     * resource type, or profile, extension, logical; empty for everything.
+     */
+    public String catalog(String kind, Map<String, String> options) throws Exception {
+        String wanted = text(kind);
+        String key = "catalog|" + options.get(FHIR_VERSION) + "|" + options.getOrDefault(PROFILES, "");
+        String all = answers.get(key);
+        if (all == null) {
+            all = withEngineClassLoader(() -> {
+                ObjectMapper mapper = exactMapper();
+                Map<String, ObjectNode> sorted = new TreeMap<>();
+                for (JsonNode resource : readResources(version(options.get(FHIR_VERSION)), options.getOrDefault(PROFILES, ""))) {
+                    String url = resource.path("url").asText("");
+                    if (url.isEmpty()) continue;
+                    ObjectNode item = mapper.createObjectNode();
+                    for (String field : new String[] { "resourceType", "url", "name", "title", "version", "type", "kind", "derivation", "baseDefinition" }) {
+                        if (resource.hasNonNull(field)) item.put(field, resource.get(field).asText());
+                    }
+                    sorted.putIfAbsent(resource.path("resourceType").asText() + "|" + url, item);
+                }
+                return mapper.writeValueAsString(sorted.values());
+            });
+            answers.put(key, all);
+        }
+        if (wanted.isEmpty()) return all;
+        ObjectMapper mapper = exactMapper();
+        List<JsonNode> kept = new ArrayList<>();
+        for (JsonNode item : mapper.readTree(all)) {
+            boolean sd = "StructureDefinition".equals(item.path("resourceType").asText());
+            boolean match;
+            switch (wanted) {
+                case "profile":
+                    match = sd && "resource".equals(item.path("kind").asText()) && "constraint".equals(item.path("derivation").asText());
+                    break;
+                case "extension":
+                    match = sd && "Extension".equals(item.path("type").asText());
+                    break;
+                case "logical":
+                    match = sd && "logical".equals(item.path("kind").asText());
+                    break;
+                default:
+                    match = wanted.equals(item.path("resourceType").asText());
+            }
+            if (match) kept.add(item);
+        }
+        return mapper.writeValueAsString(kept);
+    }
+
+    /** Every conformance resource of the files and packages, as JSON. A file that cannot be read is skipped. */
+    private static List<JsonNode> readResources(FhirVersionEnum version, String paths) {
+        List<File> files = new ArrayList<>();
+        for (String path : paths.split(";")) {
+            if (!path.trim().isEmpty()) collect(new File(path.trim()), files);
+        }
+        ObjectMapper mapper = exactMapper();
+        List<JsonNode> resources = new ArrayList<>();
+        for (File file : files) {
+            String name = file.getName().toLowerCase();
+            try {
+                if (name.endsWith(".tgz") || name.endsWith(".tar.gz")) {
+                    NpmPackage npm;
+                    try (InputStream in = new FileInputStream(file)) { npm = NpmPackage.fromPackage(in); }
+                    for (String type : CATALOG_TYPES) {
+                        for (String resourceFile : npm.listResources(type)) {
+                            try (InputStream in = npm.loadResource(resourceFile)) { resources.add(mapper.readTree(in)); }
+                        }
+                    }
+                } else if (name.endsWith(".json")) {
+                    JsonNode node = mapper.readTree(file);
+                    if (CATALOG_TYPES.contains(node.path("resourceType").asText())) resources.add(node);
+                } else {
+                    String text = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+                    for (String type : CATALOG_TYPES) {
+                        if (text.contains("<" + type)) {
+                            IBaseResource resource = FhirContext.forCached(version).newXmlParser().parseResource(text);
+                            resources.add(mapper.readTree(FhirContext.forCached(version).newJsonParser().encodeResourceToString(resource)));
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // not a FHIR resource, or unreadable: the validation of the datatype reports such files
+            }
+        }
+        return resources;
+    }
+
+    /**
+     * A profile and every data type and extension profile its elements use, each reduced to what a
+     * tree needs: {"root": sd, "types": {url: sd}, "errors": {url: message}}. One call instead of
+     * one per type.
+     */
+    public String elements(String url, Map<String, String> options) throws Exception {
+        String key = "elements|" + options.get(FHIR_VERSION) + "|" + options.getOrDefault(PROFILES, "") + "|" + url;
+        String cachedAnswer = answers.get(key);
+        if (cachedAnswer != null) return cachedAnswer;
+        String answer = withCatalog(options, cached -> {
+            ObjectMapper mapper = exactMapper();
+            ObjectNode result = mapper.createObjectNode();
+            JsonNode root = prune(mapper, mapper.readTree(snapshotJson(cached, url)));
+            result.set("root", root);
+            ObjectNode types = result.putObject("types");
+            ObjectNode errors = result.putObject("errors");
+            java.util.ArrayDeque<JsonNode> queue = new java.util.ArrayDeque<>();
+            queue.add(root);
+            Set<String> seen = new HashSet<>();
+            seen.add(root.path("url").asText());
+            while (!queue.isEmpty() && types.size() < 150) {
+                for (JsonNode element : queue.poll().path("snapshot").path("element")) {
+                    for (JsonNode type : element.path("type")) {
+                        String code = type.path("code").asText("");
+                        if (code.isEmpty() || Character.isLowerCase(code.charAt(0)) || code.startsWith("http://hl7.org/fhirpath/") || NOT_EXPANDED.contains(code)) continue;
+                        String typeUrl = type.path("profile").path(0).asText(FHIR_BASE + code);
+                        if (!seen.add(typeUrl)) continue;
+                        try {
+                            JsonNode sd = prune(mapper, mapper.readTree(snapshotJson(cached, typeUrl)));
+                            types.set(typeUrl, sd);
+                            queue.add(sd);
+                        } catch (Exception e) {
+                            errors.put(typeUrl, e.getMessage() == null ? e.toString() : e.getMessage());
+                        }
+                    }
+                }
+            }
+            return mapper.writeValueAsString(result);
         });
+        answers.put(key, answer);
+        return answer;
+    }
+
+    private static final Set<String> SD_FIELDS = Set.of("resourceType", "url", "version", "name", "title", "type", "kind", "derivation", "baseDefinition");
+    private static final Set<String> ELEMENT_FIELDS = Set.of("id", "path", "sliceName", "min", "max", "base", "type", "mustSupport", "short", "definition", "binding", "slicing");
+
+    /** A StructureDefinition with the fields of its snapshot elements a tree shows or compiles. */
+    private static JsonNode prune(ObjectMapper mapper, JsonNode sd) {
+        ObjectNode out = mapper.createObjectNode();
+        sd.fields().forEachRemaining(f -> { if (SD_FIELDS.contains(f.getKey())) out.set(f.getKey(), f.getValue()); });
+        com.fasterxml.jackson.databind.node.ArrayNode elements = out.putObject("snapshot").putArray("element");
+        for (JsonNode element : sd.path("snapshot").path("element")) {
+            ObjectNode e = elements.addObject();
+            element.fields().forEachRemaining(f -> {
+                String name = f.getKey();
+                if (ELEMENT_FIELDS.contains(name) || name.startsWith("fixed") || name.startsWith("pattern")) e.set(name, f.getValue());
+            });
+        }
+        return out;
+    }
+
+    /**
+     * The codes of a ValueSet, expanded with the code systems of the specification and the
+     * locations: {"valueSet", "total", "codes": [{system, code, display}]}, 200 codes at most,
+     * filtered on the code or its display.
+     */
+    public String expand(String valueSet, String filter, Map<String, String> options) throws Exception {
+        return withCatalog(options, cached -> {
+            String url = unversioned(text(valueSet));
+            IBaseResource vs = cached.chain.fetchValueSet(url);
+            if (vs == null) throw new IllegalArgumentException("ValueSet " + url + " is not in the specification or the profile packages.");
+            IValidationSupport.ValueSetExpansionOutcome outcome = cached.chain.expandValueSet(new ValidationSupportContext(cached.chain), null, vs);
+            if (outcome == null || outcome.getValueSet() == null) {
+                throw new IllegalArgumentException("ValueSet " + url + " cannot be expanded here" + (outcome != null && outcome.getError() != null ? ": " + outcome.getError() : " (it may need a terminology server)."));
+            }
+            ObjectMapper mapper = exactMapper();
+            JsonNode expanded = mapper.readTree(cached.ctx.newJsonParser().encodeResourceToString(outcome.getValueSet()));
+            List<JsonNode> all = new ArrayList<>();
+            contains(expanded.path("expansion").path("contains"), all);
+            String wanted = text(filter).toLowerCase();
+            ObjectNode result = mapper.createObjectNode();
+            result.put("valueSet", url);
+            com.fasterxml.jackson.databind.node.ArrayNode codes = mapper.createArrayNode();
+            int total = 0;
+            for (JsonNode item : all) {
+                String code = item.path("code").asText("");
+                String display = item.path("display").asText("");
+                if (code.isEmpty() || (!wanted.isEmpty() && !code.toLowerCase().contains(wanted) && !display.toLowerCase().contains(wanted))) continue;
+                total++;
+                if (codes.size() < 200) codes.add(coding(item.path("system").asText(""), code, display));
+            }
+            result.put("total", total);
+            result.set("codes", codes);
+            return mapper.writeValueAsString(result);
+        });
+    }
+
+    private static void contains(JsonNode list, List<JsonNode> all) {
+        for (JsonNode item : list) {
+            all.add(item);
+            contains(item.path("contains"), all);
+        }
     }
 
     // ------------------------------------------------------------------ local $translate

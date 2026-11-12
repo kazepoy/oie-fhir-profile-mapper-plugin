@@ -36,6 +36,11 @@ vérifie que chaque fonction publiée existe dans le runtime réel. Le navigateu
 utilise ce catalogue ; les implémentations des fonctions restent dans le runtime
 et dans OIE.
 
+Un agent dispose des mêmes sources que l'éditeur : `GET /catalog` (profils, extensions,
+ValueSets, ConceptMaps et maps des packages), `GET /catalog/elements` (l'arbre d'un
+profil et de ses types), `GET /catalog/expand` (les codes d'un binding) et
+`GET /settings` (les contextes FHIR), sous `/api/extensions/fhir-profile-mapper`.
+
 ## Modifier une étape en JSON
 
 Dans l'onglet **Properties**, **Edit as JSON**, puis **Read current step**, fournit l'objet

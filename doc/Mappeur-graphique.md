@@ -134,6 +134,12 @@ modification). Les éléments signalés par le dernier test ou la dernière comp
 sont marqués en rouge, avec le message en info-bulle. **Full screen** étend l'étape
 à toute la page ; Échap y met fin. L'étape FHIR FML Transform a le même bouton.
 
+Un élément lié à un jeu de valeurs l'indique dans son champ vide (« required binding:
+administrative-gender »). À la première édition de ce champ, l'éditeur lit les codes
+du jeu de valeurs sur le serveur et les propose dans la complétion, entre apostrophes
+(`'female'`), avec leur libellé. Un jeu de valeurs que le serveur ne sait pas
+développer sans serveur de terminologie ne propose rien.
+
 **Sample fields**, au-dessus de l'arbre, liste les champs du message exemple de
 l'onglet Test avec leur valeur (HL7 v2 lu par le serveur), filtrables par chemin ou
 par valeur. Un clic insère le chemin dans le champ en cours d'édition, réécrit vers
@@ -197,15 +203,20 @@ Les contrôles locaux signalent la configuration incohérente et les éléments 
 | `profiles` | Lister les profils disponibles. |
 | `structure` | Charger une StructureDefinition et son snapshot. |
 | `conceptMaps` | Lister les ConceptMaps disponibles. |
+| `catalog` | Lister les ressources de conformité des packages (`kind` : un type de ressource, `profile`, `extension`, `logical`, ou vide). |
+| `catalog/elements` | Un profil et tous les types qu'il utilise, réduits aux champs de l'arbre : `{root, types, errors}`. L'éditeur ouvre l'arbre avec cette seule requête. |
+| `catalog/expand` | Les codes d'un ValueSet (`valueSet`, `filter`), 200 au plus. |
+| `settings` | Lire (GET) ou remplacer (POST) les contextes FHIR du serveur. |
 | `translate` | Tester une traduction. |
 | `script` | Compiler la configuration d'une étape et relever ses erreurs de syntaxe. |
 | `test` | Exécuter une étape sur un message exemple et valider la ressource obtenue. |
 
-Le plugin déclare deux permissions, appliquées par un plugin d'autorisation comme [RBAC](https://github.com/diridium-com/role-based-access-control) et accordées à tous sans lui :
+Le plugin déclare trois permissions, appliquées par un plugin d'autorisation comme [RBAC](https://github.com/diridium-com/role-based-access-control) et accordées à tous sans lui :
 
 | Permission | Routes |
 |---|---|
-| **Edit FHIR mappings** | `profiles`, `structure`, `conceptMaps`, `translate`, `script`, `functions`, `source` |
+| **Edit FHIR mappings** | `profiles`, `structure`, `conceptMaps`, `translate`, `script`, `functions`, `source`, `catalog`, `catalog/elements`, `catalog/expand`, `settings` (lecture) |
+| **Manage FHIR mapper settings** | `settings` (écriture) |
 | **Test FHIR mapper steps** | `test` |
 
 Le test exécute le code de l'étape sur le serveur, avec l'accès à Java, à la configuration map et aux code templates, comme un channel déployé : n'accorder **Test FHIR mapper steps** qu'aux utilisateurs autorisés à déployer. Sans cette permission, l'onglet **Test** l'indique. L'exécution est limitée à dix secondes.

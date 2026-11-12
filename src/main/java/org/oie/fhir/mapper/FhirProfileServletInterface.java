@@ -51,6 +51,31 @@ public interface FhirProfileServletInterface extends BaseServletInterface {
     @MirthOperation(name = "setFhirMapperSettings", display = "Change the FHIR contexts", permission = PERMISSION_MANAGE)
     String setSettings(String settings) throws ClientException;
 
+    /**
+     * The conformance resources of the profile locations, as a JSON array of {resourceType, url, name,
+     * title, version, …}. kind: a resource type, or profile, extension, logical; empty for all.
+     */
+    @GET
+    @Path("/catalog")
+    @Produces(MediaType.APPLICATION_JSON)
+    @MirthOperation(name = "getFhirCatalog", display = "Get the FHIR catalogue of profile locations", permission = PERMISSION_EDIT)
+    String getCatalog(@QueryParam("kind") String kind, @QueryParam("fhirVersion") String fhirVersion, @QueryParam("profiles") String profiles) throws ClientException;
+
+    /** A profile and every data type it uses, reduced to what a tree needs: {"root", "types", "errors"}. */
+    @GET
+    @Path("/catalog/elements")
+    @Produces(MediaType.APPLICATION_JSON)
+    @MirthOperation(name = "getFhirElements", display = "Get the elements of a FHIR profile and its types", permission = PERMISSION_EDIT)
+    String getElements(@QueryParam("url") String url, @QueryParam("fhirVersion") String fhirVersion, @QueryParam("profiles") String profiles) throws ClientException;
+
+    /** The codes of a ValueSet: {"valueSet", "total", "codes": [{system, code, display}]}, 200 at most. */
+    @GET
+    @Path("/catalog/expand")
+    @Produces(MediaType.APPLICATION_JSON)
+    @MirthOperation(name = "expandFhirValueSet", display = "Get the codes of a FHIR ValueSet", permission = PERMISSION_EDIT)
+    String expandValueSet(@QueryParam("valueSet") String valueSet, @QueryParam("filter") String filter, @QueryParam("fhirVersion") String fhirVersion,
+            @QueryParam("profiles") String profiles) throws ClientException;
+
     @GET
     @Path("/functions")
     @Produces(MediaType.APPLICATION_JSON)

@@ -10,6 +10,9 @@
   transformeurs peuvent en nommer un (`context`) ; politique de validation `inherit`/`always`/`off` ;
   `formatVersion: 2` ; règles `note` et `disabled` (non compilées). Les étapes au format 1
   fonctionnent sans changement.
+- **Catalogue** : routes `GET /catalog`, `/catalog/elements` (un profil et ses types en une
+  requête : l'arbre s'ouvre sans chargement type par type) et `/catalog/expand` (codes d'un
+  ValueSet) ; les éléments liés proposent leurs codes dans la complétion.
 - **FML, map dans l'étape** : onglet *Map* avec l'éditeur de code en langage `fml`, propriété
   `mapSource` enregistrée avec le canal et exécutée à la place de `mapUrl`, bouton *Check*
   (route `POST /check`) qui positionne les erreurs du parseur et signale les `uses` et

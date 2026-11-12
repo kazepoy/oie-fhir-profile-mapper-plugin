@@ -61,4 +61,29 @@ public class FhirFacadeTest {
             assertTrue(e.getMessage().contains("not found"));
         }
     }
+
+    @Test
+    public void givesTheCatalogueTheElementsOfAProfileWithItsTypesAndTheCodesOfAValueSet() throws Exception {
+        String profiles = fixture("profiles") + ";" + fixture("conceptmaps/v2-sex-r4.json");
+        List<?> all = (List<?>) FhirFacade.parse(FhirFacade.catalog("", "R4", profiles));
+        assertTrue(all.stream().anyMatch(i -> PROFILE.equals(((Map<?, ?>) i).get("url"))));
+        assertTrue(all.stream().anyMatch(i -> "ConceptMap".equals(((Map<?, ?>) i).get("resourceType"))));
+        List<?> onlyProfiles = (List<?>) FhirFacade.parse(FhirFacade.catalog("profile", "R4", profiles));
+        assertEquals(1, onlyProfiles.size());
+
+        Map<?, ?> tree = (Map<?, ?>) FhirFacade.parse(FhirFacade.elements(PROFILE, "R4", profiles));
+        assertEquals("Patient", ((Map<?, ?>) tree.get("root")).get("type"));
+        Map<?, ?> types = (Map<?, ?>) tree.get("types");
+        assertTrue(types.containsKey("http://hl7.org/fhir/StructureDefinition/HumanName"));
+        assertTrue(types.containsKey("http://hl7.org/fhir/StructureDefinition/Period"));
+        List<?> elements = (List<?>) ((Map<?, ?>) ((Map<?, ?>) tree.get("root")).get("snapshot")).get("element");
+        Map<?, ?> gender = elements.stream().map(e -> (Map<?, ?>) e).filter(e -> "Patient.gender".equals(e.get("path"))).findFirst().orElseThrow();
+        assertNotNull(gender.get("binding"));
+        assertNull(gender.get("constraint"));
+
+        Map<?, ?> codes = (Map<?, ?>) FhirFacade.parse(FhirFacade.expand("http://hl7.org/fhir/ValueSet/administrative-gender|4.0.1", "", "R4", profiles));
+        assertEquals("4", codes.get("total").toString());
+        Map<?, ?> filtered = (Map<?, ?>) FhirFacade.parse(FhirFacade.expand("http://hl7.org/fhir/ValueSet/administrative-gender", "fem", "R4", profiles));
+        assertEquals("female", ((Map<?, ?>) ((List<?>) filtered.get("codes")).get(0)).get("code"));
+    }
 }

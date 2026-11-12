@@ -996,6 +996,7 @@ function ExpressionField(props) {
   React.useEffect(() => {
     if (!editing || !host.current) return void 0;
     const context = () => latest.current.completionContext || {};
+    latest.current.onEdit?.();
     let ed;
     try {
       ed = createExpressionEditor({
@@ -1003,9 +1004,18 @@ function ExpressionField(props) {
         ariaLabel: latest.current["aria-label"] || "JavaScript expression",
         onChange: (value) => latest.current.onChange({ target: { value } }),
         onEnter: () => setEditing(false),
+        // Inside quotes only the codes of the element's value set make sense; elsewhere they come quoted.
         getItems: () => [
           // The functions themselves are offered once, by Web Admin's Reference entries (host/references.js).
           ...monacoItems([], context()),
+          ...(context().codes || []).map((c) => ({
+            label: `'${c.code}'${c.display ? ` — ${c.display}` : ""}`,
+            filterText: `${c.code} ${c.display || ""}`,
+            kind: "variable",
+            insertText: `'${c.code}'`,
+            detail: `code of the ${context().bindingStrength || ""} binding${c.system ? ` · ${c.system}` : ""}`,
+            sortText: `0code${c.code}`
+          })),
           ...(context().refs || []).map((ref) => ({
             label: `fhirRef(${ref.expression})`,
             filterText: `fhirRef ${ref.expression}`,
@@ -1061,7 +1071,7 @@ function ExpressionField(props) {
   React.useEffect(() => {
     editor.current?.setMarkers(props.errors || []);
   }, [(props.errors || []).join("\n")]);
-  const { errors, ...plain } = props;
+  const { errors, onEdit, ...plain } = props;
   if (!available || !editing || props.disabled) return h(MapperExpression, { ...plain, onFocus: () => {
     if (available && !props.disabled) setEditing(true);
   } });
@@ -1120,6 +1130,28 @@ function fetchSd(platform2, version, profiles, url) {
     sdPromises.set(key, promise);
   }
   return sdPromises.get(key);
+}
+function fetchElements(platform2, version, profiles, url) {
+  const key = sdKey(version, profiles, url);
+  if (sdPromises.has(key)) return sdPromises.get(key);
+  const promise = platform2.api.get(`${MAPPER_API2}/catalog/elements`, { url, fhirVersion: version, profiles }, { raw: true }).then((text) => {
+    const answer = JSON.parse(text);
+    const index = indexSd(answer.root);
+    sdLoaded.set(key, index);
+    for (const [typeUrl, sd] of Object.entries(answer.types || {})) {
+      const typeKey = sdKey(version, profiles, typeUrl);
+      if (sdLoaded.has(typeKey)) continue;
+      const typeIndex = indexSd(sd);
+      sdLoaded.set(typeKey, typeIndex);
+      sdPromises.set(typeKey, Promise.resolve(typeIndex));
+    }
+    return index;
+  }).catch(() => {
+    sdPromises.delete(key);
+    return fetchSd(platform2, version, profiles, url);
+  });
+  sdPromises.set(key, promise);
+  return promise;
 }
 function errorText2(e) {
   const body = e && e.body || "";
@@ -1224,6 +1256,7 @@ function makeTree(rootIndex, ctx) {
       max: choiceType ? parent.max : el.max,
       short: el.short || "",
       mustSupport: !!el.mustSupport || (choiceType ? parent.mustSupport : false),
+      binding: el.binding && el.binding.valueSet ? { strength: el.binding.strength || "", valueSet: el.binding.valueSet } : null,
       fixed: choiceType ? null : fixedOf(el),
       depth: parent.depth + 1,
       parent
@@ -1697,7 +1730,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     st.unresolved = [];
     rerender();
     try {
-      const index = await fetchSd(platform2, version, profiles, url);
+      const index = await fetchElements(platform2, version, profiles, url);
       const sameProfile = element.profileUrl === url && element.resourceType === index.sd.type;
       st.rootIndex = index;
       if (element.action && index.sd.type === "Bundle") {
@@ -2023,7 +2056,24 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     const found = mapperContext(platform2, element);
     return found ? found.steps.filter((s, i) => i !== found.index && s.__type === MAPPER_TYPE && String(s.refName || "").trim()).map((s) => ({ step: s.name, expression: String(s.refName).trim(), resourceType: s.resourceType })) : [];
   })();
-  const completionFor = (node, role = "value") => ({ ...mapperCompletionContext(node, st.iterations, st.sourcePaths, role), refs: stepRefs });
+  const bindingCodes = (node) => node?.binding && (st.codes ||= /* @__PURE__ */ new Map()).get(node.binding.valueSet)?.codes || [];
+  const ensureCodes = (node) => {
+    if (!node?.binding) return;
+    const known = st.codes ||= /* @__PURE__ */ new Map();
+    if (known.has(node.binding.valueSet)) return;
+    known.set(node.binding.valueSet, { codes: [] });
+    platform2.api.get(`${MAPPER_API2}/catalog/expand`, { valueSet: node.binding.valueSet, filter: "", fhirVersion: version, profiles }, { raw: true }).then((text2) => {
+      known.set(node.binding.valueSet, JSON.parse(text2));
+      rerender();
+    }).catch(() => {
+    });
+  };
+  const completionFor = (node, role = "value") => ({
+    ...mapperCompletionContext(node, st.iterations, st.sourcePaths, role),
+    refs: stepRefs,
+    codes: role === "value" ? bindingCodes(node) : [],
+    bindingStrength: node?.binding?.strength
+  });
   const errorsByKey = /* @__PURE__ */ new Map();
   for (const error of [...st.testResult?.errors || [], ...st.scriptResult?.errors || []]) {
     if (error.key) errorsByKey.set(error.key, [...errorsByKey.get(error.key) || [], error.message]);
@@ -2110,7 +2160,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     const canTranslate = !node.choice && TRANSLATABLE.has(node.code);
     const value = st.values.get(node.key) ?? "";
     const types = node.types.map((t) => shortType(t.code) + (t.profile ? ` (${t.profile.map((p) => p.slice(p.lastIndexOf("/") + 1)).join(", ")})` : "")).join(" | ");
-    const placeholder = node.fixed ? `${node.fixed.kind}: ${fixedText(node.fixed)}` : node.choice ? "choose a type below" : "";
+    const placeholder = node.fixed ? `${node.fixed.kind}: ${fixedText(node.fixed)}` : node.choice ? "choose a type below" : node.binding ? `${node.binding.strength} binding: ${node.binding.valueSet.replace(/\|.*$/, "").split("/").pop()}` : "";
     const ellipsis = { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
     const tool = (label, title, onClick, active) => h("button", { type: "button", className: "btn btn-sm", style: { flex: "none", padding: "0 6px", fontWeight: active ? 700 : 400, borderColor: active ? "#2563eb" : void 0 }, title, disabled: blocked, onClick }, label);
     return h(
@@ -2163,6 +2213,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
           { style: { display: "flex", alignItems: "center", gap: "4px", minWidth: 0 } },
           node.choice ? h("span", { className: "text-text-faint", style: { ...ellipsis, flex: "1 1 auto", fontSize: "11px" } }, placeholder) : h(ExpressionField, {
             errors: errorsByKey.get(node.key),
+            onEdit: () => ensureCodes(node),
             completionContext: completionFor(node),
             type: "text",
             value,

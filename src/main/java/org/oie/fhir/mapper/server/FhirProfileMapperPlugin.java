@@ -65,7 +65,7 @@ public final class FhirProfileMapperPlugin implements ServicePlugin {
             new ExtensionPermission(name, FhirProfileServletInterface.PERMISSION_EDIT,
                     "Use the FHIR Profile Mapper editor: profiles, StructureDefinitions, ConceptMaps and translations "
                             + "(called from the OIE server), function catalogue and generated script.",
-                    new String[] { "getFhirMapperSettings", "getFhirMapperFunctions", "getFhirMapperSource", "getFhirProfiles", "getFhirStructure",
+                    new String[] { "getFhirMapperSettings", "getFhirCatalog", "getFhirElements", "expandFhirValueSet", "getFhirMapperFunctions", "getFhirMapperSource", "getFhirProfiles", "getFhirStructure",
                             "getFhirConceptMaps", "translateFhirCode", "getFhirMapperScript" },
                     new String[0]),
             new ExtensionPermission(name, FhirProfileServletInterface.PERMISSION_TEST,

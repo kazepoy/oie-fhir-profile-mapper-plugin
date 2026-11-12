@@ -62,6 +62,26 @@ public class FhirProfileServlet extends MirthServlet implements FhirProfileServl
     }
 
     @Override
+    public String getCatalog(String kind, String fhirVersion, String profiles) throws ClientException {
+        try { return FhirFacade.catalog(kind, fhirVersion, profiles); }
+        catch (Exception e) { throw new ClientException(e.getMessage(), e); }
+    }
+
+    @Override
+    public String getElements(String url, String fhirVersion, String profiles) throws ClientException {
+        if (url == null || url.trim().isEmpty()) throw new ClientException("The url of the StructureDefinition is missing.");
+        try { return FhirFacade.elements(url, fhirVersion, profiles); }
+        catch (Exception e) { throw new ClientException(e.getMessage(), e); }
+    }
+
+    @Override
+    public String expandValueSet(String valueSet, String filter, String fhirVersion, String profiles) throws ClientException {
+        if (valueSet == null || valueSet.trim().isEmpty()) throw new ClientException("The url of the ValueSet is missing.");
+        try { return FhirFacade.expand(valueSet, filter, fhirVersion, profiles); }
+        catch (Exception e) { throw new ClientException(e.getMessage(), e); }
+    }
+
+    @Override
     public String getFunctions() { return FhirProfileMapperStep.functionCatalog(); }
 
     @Override

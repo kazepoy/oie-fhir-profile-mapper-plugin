@@ -30,6 +30,14 @@ public final class FhirFacade {
     public static String structureDefinition(String url, String version, String profiles) throws Exception {
         return FhirDataTypeAdapter.structureDefinition(url, version, profiles);
     }
+    /** Conformance resources of the locations; kind: a resource type, profile, extension, logical, or empty. */
+    public static String catalog(String kind, String version, String profiles) throws Exception { return FhirDataTypeAdapter.catalog(kind, version, profiles); }
+    /** A profile and the data types it uses, reduced to what a tree needs: {"root", "types", "errors"}. */
+    public static String elements(String url, String version, String profiles) throws Exception { return FhirDataTypeAdapter.elements(url, version, profiles); }
+    /** The codes of a ValueSet: {"valueSet", "total", "codes"}. */
+    public static String expand(String valueSet, String filter, String version, String profiles) throws Exception {
+        return FhirDataTypeAdapter.expand(valueSet, filter, version, profiles);
+    }
     public static String listConceptMaps(String server, String profiles, String version) throws Exception {
         return FhirTerminology.listConceptMaps(server, profiles, version);
     }
