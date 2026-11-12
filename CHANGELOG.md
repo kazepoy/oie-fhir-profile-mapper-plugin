@@ -2,6 +2,19 @@
 
 ## Non publié (branche `feat/refonte`)
 
+- **Studio, inspecteur** : sélection d'un élément au clic ou au clavier ; volet
+  avec métadonnées FHIR, définition, exemples, règles modifiables et diagnostics.
+  Les champs de condition, itération et traduction sont partagés avec l'arbre ;
+  les modifications utilisent le même historique. Affichage à droite en pleine
+  largeur, en dessous sur un éditeur étroit. *Go to rule* révèle aussi la cible
+  quand la recherche de l'arbre masquait l'élément.
+
+- **Mappeur, règles (R-06 partiel)** : bouton *Rules* sur les éléments mappés et
+  la racine, pour saisir une note et activer/désactiver chaque règle séparément.
+  Notes et activation sont conservées lors de la compilation et restaurées par
+  *Undo / Redo*. Vérification unitaire et parcours Playwright dans la démo.
+- Suivi de reprise par lots et critères de validation : [TODO.md](TODO.md).
+
 - **FHIR FML Transform** : second transformeur, qui exécute une map FML (StructureMap)
   sur le message vu par le modèle logique générique `OieMessage`, avec le moteur du
   core HL7 livré par FHIR Data Type. Canal de démo sur le port 8087.

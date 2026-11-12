@@ -145,6 +145,28 @@ modification). Les éléments signalés par le dernier test ou la dernière comp
 sont marqués en rouge, avec le message en info-bulle. **Full screen** étend l'étape
 à toute la page ; Échap y met fin. L'étape FHIR FML Transform a le même bouton.
 
+Le bouton **Rules** d'un élément déjà mappé ouvre la note et la case d'activation
+de chacune de ses règles (valeur, condition, itération ou valeur fixe). Les règles
+de la racine sont accessibles de la même façon. Une règle désactivée reste dans
+le canal avec son expression et sa note, mais le serveur ne l'exécute pas ; le
+bouton indique **Rules (disabled)**. Désactiver une condition supprime son contrôle :
+les règles situées dessous peuvent alors s'exécuter sans cette condition.
+**Undo** / **Redo** restaure aussi les notes et l'activation.
+
+L'**Element inspector** suit l'élément sélectionné : cliquez sur son nom,
+activez ce bouton avec Entrée au clavier, ou placez le focus dans un de ses
+champs. Il affiche les types, cardinalités, Must Support, slice, description,
+définition, binding, valeur fixe ou pattern et exemples du profil disponibles.
+Le lien **Official FHIR definition** mène à la définition de la version FHIR choisie.
+L'expression et les règles déjà présentes (condition, itération, traduction,
+notes et activation) se modifient aussi depuis l'inspecteur, avec la même
+complétion, la même sauvegarde et le même historique que l'arbre. Les boutons
+de l'arbre servent toujours à ajouter une condition, une itération ou une traduction.
+Les diagnostics de l'élément sélectionné y sont regroupés ; **Go to rule**
+sélectionne l'élément et révèle son champ dans l'arbre en effaçant la recherche.
+En plein écran, l'inspecteur se place à droite de l'arbre ; dans une zone de
+moins de 1 100 pixels de large, il passe en dessous.
+
 Un élément lié à un jeu de valeurs l'indique dans son champ vide (« required binding:
 administrative-gender »). À la première édition de ce champ, l'éditeur lit les codes
 du jeu de valeurs sur le serveur et les propose dans la complétion, entre apostrophes

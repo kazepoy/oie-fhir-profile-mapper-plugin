@@ -258,6 +258,11 @@ var MAPPER_HELP = {
         ["Sample fields", "The fields of the sample message with their values. Click one to insert its path into the field being edited, or drag it onto a field."],
         ["Alt+↓ ↑ → ←", "Next or previous field; open or close the element."]
       ] },
+      { title: "Element inspector", lines: [
+        "Select an element by its name, with a click or Enter, or focus one of its fields. The inspector follows the selection.",
+        "Read the profile's definition, cardinality, binding, fixed value and examples. Edit expressions, existing conditions, iterations, translations, notes and activation in the same rules as the tree.",
+        "Diagnostics belong to the selected element. Go to rule reveals its field in the tree. On a narrow editor the inspector sits below the tree."
+      ] },
       { title: "Buttons of a row", lines: [
         ["+ / −", "Add or remove an entry of a repeating element."],
         ["↻", "One entry per item of a list. Fields below use the item variable, e.g. n['PID.5.1']."],
@@ -487,6 +492,21 @@ var editor_default = `/* SPDX-License-Identifier: MPL-2.0
 .fhir-profile-mapper .mapper-tree tr.mapper-node-error > td { background: color-mix(in srgb, var(--err, #cc3b3b) 10%, var(--bg2, #fff)); }
 .fhir-profile-mapper .mapper-tree tr.mapper-node-error > td:first-child { border-left-color: var(--err, #cc3b3b); }
 .fhir-profile-mapper .mapper-tree tr.mapper-node-error input[role=combobox] { border-color: var(--err, #cc3b3b); }
+
+.mapper-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 340px); gap: 12px; align-items: start; }
+.mapper-inspector { min-width: 0; padding: 12px; border: 1px solid var(--line, #cdd7e0); border-radius: 6px; background: var(--bg2, #fff); overflow-wrap: anywhere; }
+.mapper-inspector h3 { margin: 0 0 12px; font-size: 14px; }
+.mapper-inspector h4 { margin: 14px 0 8px; }
+.mapper-inspector dl { margin: 0; font-size: 12px; }
+.mapper-inspector dl > div { margin-bottom: 8px; }
+.mapper-inspector dt { font-weight: 600; }
+.mapper-inspector dd { margin: 2px 0 0; white-space: pre-wrap; }
+.mapper-inspector-fields { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 12px; }
+.mapper-inspector-fields input, .mapper-inspector-fields select { max-width: 100%; min-width: 0; }
+.fhir-profile-mapper .mapper-tree .mapper-select { background: none; border: 0; padding: 0; color: inherit; text-align: left; font: inherit; cursor: pointer; height: auto; }
+.mapper-select:focus-visible { outline: 2px solid var(--accent, #2e6da4); outline-offset: 2px; }
+.fhir-profile-mapper .mapper-tree tr.mapper-node-selected > td { background: color-mix(in srgb, var(--accent, #2e6da4) 12%, var(--bg2, #fff)); }
+@container (max-width: 1100px) { .mapper-workspace { grid-template-columns: minmax(0, 1fr); } }
 
 /* Contextual help: a "?" button and its panel. */
 .fm-help { position: relative; display: inline-flex; align-self: center; }
@@ -955,6 +975,47 @@ function sourcePaths(tree, limit = 2e3) {
   return paths;
 }
 
+// src/profile-mapper/inspector.js
+function Inspector({ h: h3, node, helpUrl, children, diagnostics }) {
+  if (!node) return h3(
+    "aside",
+    { className: "mapper-inspector", "aria-label": "Element inspector" },
+    h3("h3", null, "Element inspector"),
+    h3("p", null, "Select an element in the tree to inspect its definition and rules.")
+  );
+  const el = node.el || {};
+  const item = (label, value) => value == null || value === "" ? null : h3("div", { key: label }, h3("dt", null, label), h3("dd", null, value));
+  return h3(
+    "aside",
+    { className: "mapper-inspector", "aria-label": "Element inspector" },
+    h3("h3", null, node.key),
+    h3(
+      "dl",
+      null,
+      item("Type", (node.types || el.type || []).map((type) => type.code).join(" | ") || node.code),
+      item("Cardinality", `${node.min ?? el.min ?? 0}..${node.max ?? el.max ?? "*"}`),
+      item("Must Support", node.mustSupport || el.mustSupport ? "Yes" : "No"),
+      item("Slice", node.sliceName || el.sliceName),
+      item("Description", node.short || el.short),
+      item("Definition", el.definition),
+      item("Binding", node.binding ? `${node.binding.strength}: ${node.binding.valueSet}` : null),
+      item(node.fixed?.kind === "pattern" ? "Pattern" : "Fixed value", node.fixed ? JSON.stringify(node.fixed.value) : null)
+    ),
+    (el.example || []).map((example, index) => h3(
+      "p",
+      { key: index },
+      h3("strong", null, example.label || "Example"),
+      ": ",
+      JSON.stringify(Object.entries(example).find(([key]) => key.startsWith("value"))?.[1])
+    )),
+    h3("a", { href: helpUrl, target: "_blank", rel: "noopener noreferrer" }, "Official FHIR definition"),
+    h3("h4", null, "Rules"),
+    children,
+    h3("h4", null, "Diagnostics"),
+    diagnostics.length ? diagnostics : h3("p", { className: "hint" }, "No diagnostic reported for this element.")
+  );
+}
+
 // src/profile-mapper/editor.js
 var PKG = "org.oie.fhir.mapper";
 var MAPPER_TYPE = `${PKG}.FhirProfileMapperStep`;
@@ -1110,8 +1171,11 @@ function mapperJsonImport(element, text) {
   merged.mappings = JSON.stringify(mapperRuleIds(JSON.parse(merged.mappings || "[]"), parseMappings(element.mappings)));
   return merged;
 }
+function mapperRuleKey(rule) {
+  return `${"each" in rule ? "each" : "condition" in rule ? "condition" : "fixed" in rule ? "fixed" : "value"}:${rule.key || rule.element}`;
+}
 function mapperRuleIds(entries, previous = [], createId = () => crypto.randomUUID()) {
-  const identity = (rule) => `${"each" in rule ? "each" : "condition" in rule ? "condition" : "fixed" in rule ? "fixed" : "value"}:${rule.key || rule.element}`;
+  const identity = mapperRuleKey;
   const known = new Map(previous.filter((rule) => rule.id).map((rule) => [identity(rule), rule.id]));
   const used = /* @__PURE__ */ new Set();
   return entries.map((rule) => {
@@ -1874,6 +1938,8 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       iterations,
       translations,
       conditions,
+      notes: new Map(saved.filter((rule) => rule.note).map((rule) => [mapperRuleKey(rule), rule.note])),
+      disabled: new Set(saved.filter((rule) => rule.disabled).map(mapperRuleKey)),
       // shown when something below an extension, modifierExtension or id (that "extensions & ids" shows) is mapped
       showAll: [...values.keys(), ...iterations.keys(), ...conditions.keys()].some((k) => /\.(extension|modifierExtension|id)(\[\d+\])?(\.|$)/.test(k)),
       sample,
@@ -1989,8 +2055,10 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     } else {
       st.showAll = true;
       st.filter = "all";
+      st.search = "";
       for (const node of chain.slice(0, -1)) st.expanded.add(node.key);
       st.pendingDiagnostic = { key: error.key, kind: mapperDiagnostic(error).kind };
+      st.selectedKey = error.key;
       st.tab = "mapper";
     }
     rerender();
@@ -2024,10 +2092,9 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
   const compiled = (index, local) => {
     const previous = parseMappings(element.mappings);
     const rules = mapperRuleIds(compile(makeTree(index, { ...local, showAll: true }), st.values, st.iterations, st.translations, st.conditions), previous);
-    const kept = new Map(previous.filter((rule) => rule.id && (rule.note || rule.disabled)).map((rule) => [rule.id, rule]));
     return JSON.stringify(rules.map((rule) => {
-      const before = kept.get(rule.id);
-      return before ? { ...rule, ...before.note ? { note: before.note } : {}, ...before.disabled ? { disabled: true } : {} } : rule;
+      const key = mapperRuleKey(rule);
+      return { ...rule, ...st.notes.get(key) ? { note: st.notes.get(key) } : {}, ...st.disabled.has(key) ? { disabled: true } : {} };
     }));
   };
   const save = () => {
@@ -2496,6 +2563,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     if (st.iterations.has(child.key)) rows.push(iterationRow(child));
     if (st.conditions.has(child.key)) rows.push(conditionRow(child));
     if (st.translations.has(child.key)) rows.push(translationRow(child));
+    if (st.ruleDetails === child.key) rows.push(ruleDetailsRow(child));
     if (opened(child)) addRows(child);
   };
   const addRows = (node) => {
@@ -2525,9 +2593,11 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       "tr",
       {
         key: node.key,
-        className: [open ? "mapper-node-open" : "", errorsByKey.has(node.key) ? "mapper-node-error" : ""].filter(Boolean).join(" ") || void 0,
+        className: [open ? "mapper-node-open" : "", errorsByKey.has(node.key) ? "mapper-node-error" : "", st.selectedKey === node.key ? "mapper-node-selected" : ""].filter(Boolean).join(" ") || void 0,
         "data-depth": node.depth,
         ref: diagnosticRef(node.key, "value"),
+        onFocus: () => selectNode(node),
+        onClick: () => selectNode(node),
         title: errorsByKey.has(node.key) ? `${node.key}: ${errorsByKey.get(node.key).join(" · ")}` : node.short ? `${node.key}: ${node.short}` : node.key
       },
       h(
@@ -2549,7 +2619,14 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
             },
             open ? "▾" : "▸"
           ),
-          h("span", { className: "mapper-node-label", style: { ...ellipsis, minWidth: 0, fontWeight: node.mustSupport || open ? 600 : 400 } }, node.label + (node.instance ? ` [${node.instance}]` : "")),
+          h("button", {
+            type: "button",
+            className: "mapper-node-label mapper-select",
+            "aria-label": `Inspect ${node.key}`,
+            "aria-pressed": st.selectedKey === node.key,
+            style: { ...ellipsis, minWidth: 0, fontWeight: node.mustSupport || open ? 600 : 400 },
+            onClick: () => selectNode(node)
+          }, node.label + (node.instance ? ` [${node.instance}]` : "")),
           h("span", { className: "text-text-faint", style: { flex: "none", fontSize: "11px" } }, `${node.min ?? 0}..${node.max ?? "*"}`),
           node.mustSupport ? h("span", { title: "Must Support", style: { flex: "none", color: "#c2410c", fontSize: "11px" } }, "S") : null,
           h("a", {
@@ -2595,25 +2672,82 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
           node.instance && node.instance === count - 1 ? tool("−", "Remove this entry and its mappings", () => removeInstance(node), false) : null,
           canIterate ? tool("↻", "One entry for each item of a list (for each repetition)", () => toggleIteration(node), iterated) : null,
           canTranslate ? tool("⇄", "Translate the value with ConceptMap/$translate", () => toggleTranslation(node), st.translations.has(node.key)) : null,
-          node.choice ? null : tool("?", "Only map this element (and what is below it) when a condition holds", () => toggleCondition(node), st.conditions.has(node.key))
+          node.choice ? null : tool("?", "Only map this element (and what is below it) when a condition holds", () => toggleCondition(node), st.conditions.has(node.key)),
+          ruleDetailsButton(node)
         )
       )
     );
   };
   const subRow = (node, suffix, children) => h("tr", { key: `${node.key}/${suffix}`, ref: diagnosticRef(node.key, suffix), "data-owner": node.key }, h("td", { colSpan: 3, style: { paddingLeft: `${node.depth * 20 + 34}px` } }, guides(node, true), h("div", { style: { display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" } }, children)));
   const mono = { fontFamily: "monospace", fontSize: "12px" };
-  const iterationRow = (node) => {
+  const rulesAt = (node) => parseMappings(element.mappings).filter((rule) => (rule.key || rule.element) === node.key);
+  const selectNode = (node) => {
+    if (st.selectedKey !== node.key) {
+      st.selectedKey = node.key;
+      rerender();
+    }
+  };
+  const ruleDetailsButton = (node) => rulesAt(node).length ? h("button", {
+    type: "button",
+    className: "btn btn-sm",
+    disabled: blocked,
+    "aria-label": `Rule details for ${node.key}`,
+    "aria-expanded": st.ruleDetails === node.key,
+    onClick: () => {
+      st.ruleDetails = st.ruleDetails === node.key ? null : node.key;
+      rerender();
+    }
+  }, st.disabled.size && rulesAt(node).some((rule) => st.disabled.has(mapperRuleKey(rule))) ? "Rules (disabled)" : "Rules") : null;
+  const ruleDetailsFields = (node) => rulesAt(node).map((rule) => {
+    const key = mapperRuleKey(rule);
+    const kind = "each" in rule ? "Iteration" : "condition" in rule ? "Condition" : "fixed" in rule ? "Fixed value" : "Value";
+    return h(
+      "div",
+      { key, style: { flex: "1 1 100%", padding: "4px 0" } },
+      h("label", null, h("input", {
+        type: "checkbox",
+        checked: !st.disabled.has(key),
+        disabled: blocked,
+        "aria-label": `Enable ${kind.toLowerCase()} rule for ${node.key}`,
+        onChange: (e) => {
+          if (e.target.checked) st.disabled.delete(key);
+          else st.disabled.add(key);
+          st.lastPush = 0;
+          save();
+          st.lastPush = 0;
+          rerender();
+        }
+      }), ` ${kind} rule`, st.disabled.has(key) ? " — disabled (kept, not executed)" : ""),
+      h("textarea", {
+        value: st.notes.get(key) || "",
+        disabled: blocked,
+        rows: 2,
+        placeholder: "Rule note…",
+        "aria-label": `Note for ${kind.toLowerCase()} rule for ${node.key}`,
+        style: { display: "block", width: "100%", marginTop: "4px" },
+        onChange: (e) => {
+          if (e.target.value) st.notes.set(key, e.target.value);
+          else st.notes.delete(key);
+          save();
+          rerender();
+        }
+      })
+    );
+  });
+  const ruleDetailsRow = (node) => subRow(node, "rules", ruleDetailsFields(node));
+  const iterationFields = (node) => {
     const it = st.iterations.get(node.key);
     const variable = (it.variable || "item").trim() || "item";
-    return subRow(node, "each", [
+    return [
       h("span", { key: "l", title: node === tree.root ? "One resource for each item" : "One entry of this element for each item" }, node === tree.root ? "↻ One resource for each" : "↻ For each"),
       h(ExpressionField, { key: "e", completionContext: completionFor(node, "iteration"), value: it.expression, disabled: blocked, placeholder: "msg['PID']['PID.3']", style: { ...mono, flex: "1 1 240px" }, onChange: (e) => setIteration(node, "expression", e.target.value) }),
       h("span", { key: "a" }, "as"),
       h("input", { key: "v", type: "text", value: it.variable, disabled: blocked, style: { ...mono, width: "90px" }, onChange: (e) => setIteration(node, "variable", e.target.value) }),
       h("span", { key: "h", className: "text-text-faint", style: { fontSize: "11px" } }, `below: ${variable} (the item), ${variable}Index (0, 1, …); fields dragged in are rewritten to ${variable}[…]`)
-    ]);
+    ];
   };
-  const conditionRow = (node) => subRow(node, "condition", [
+  const iterationRow = (node) => subRow(node, "each", iterationFields(node));
+  const conditionFields = (node) => [
     h("span", { key: "l", title: "What is below this element is only mapped when the condition holds" }, node === tree.root ? "? Only make the resource if" : "? Only if"),
     h(ExpressionField, {
       completionContext: completionFor(node, "condition"),
@@ -2626,15 +2760,15 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       onChange: (e) => setCondition(node, withSubstitution(node, st.conditions.get(node.key) || "", e.target.value))
     }),
     h("span", { key: "h", className: "text-text-faint", style: { fontSize: "11px" } }, st.iterations.has(node.key) ? "per item: keeps the items it holds for" : "false, or an error on a missing segment: nothing below")
-  ]);
-  const translationRow = (node) => {
+  ];
+  const conditionRow = (node) => subRow(node, "condition", conditionFields(node));
+  const translationFields = (node, listId = "fhir-profile-mapper-conceptmaps") => {
     const t = st.translations.get(node.key);
     const test = st.tests.get(node.key) || {};
     const maps = st.conceptMaps && st.conceptMaps.list || [];
-    const listId = "fhir-profile-mapper-conceptmaps";
     const localTx = isLocalServer(txServer);
     const needsValue = t.unmapped === "fixed" || t.unmapped === "function";
-    return subRow(node, "translate", [
+    return [
       h("span", { key: "l", title: localTx ? "ConceptMap/$translate locally, on the ConceptMaps of the Profile Packages" : "ConceptMap/$translate on the terminology server" }, localTx ? "⇄ ConceptMap (local)" : "⇄ ConceptMap"),
       h("input", {
         key: "m",
@@ -2690,8 +2824,9 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       }),
       h("button", { key: "b", type: "button", className: "btn btn-sm", disabled: !t.conceptMap || !test.code, onClick: () => testTranslation(node) }, "Test"),
       test.result ? h("span", { key: "r", className: "text-text-faint", style: { fontSize: "11px" } }, test.result) : null
-    ]);
+    ];
   };
+  const translationRow = (node) => subRow(node, "translate", translationFields(node));
   const createBundle = element.action === "createBundle";
   const declarations = mapperBundleDeclarations(platform2, element);
   const targets = parseMappings(element.bundleTargets);
@@ -2707,19 +2842,21 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     rows.push(
       h(
         "tr",
-        { key: tree.root.key, ref: diagnosticRef(tree.root.key, "value") },
+        { key: tree.root.key, ref: diagnosticRef(tree.root.key, "value"), onFocus: () => selectNode(tree.root), onClick: () => selectNode(tree.root) },
         h(
           "td",
           { colSpan: 3 },
-          h("strong", null, tree.root.label),
+          h("button", { type: "button", className: "mapper-node-label mapper-select", "aria-label": `Inspect ${tree.root.key}`, "aria-pressed": st.selectedKey === tree.root.key, onClick: () => selectNode(tree.root) }, tree.root.label),
           h("span", { className: "text-text-faint", style: { marginLeft: "8px" } }, st.rootIndex.sd.url + (st.rootIndex.sd.version ? ` | ${st.rootIndex.sd.version}` : "")),
           bundle && !createBundle ? rootTool("↻", "One resource for each item of a list (e.g. each OBX)", () => toggleIteration(tree.root), st.iterations.has(tree.root.key)) : null,
-          rootTool("?", "Only make the resource when a condition holds", () => toggleCondition(tree.root), st.conditions.has(tree.root.key))
+          rootTool("?", "Only make the resource when a condition holds", () => toggleCondition(tree.root), st.conditions.has(tree.root.key)),
+          ruleDetailsButton(tree.root)
         )
       )
     );
     if (st.iterations.has(tree.root.key)) rows.push(iterationRow(tree.root));
     if (st.conditions.has(tree.root.key)) rows.push(conditionRow(tree.root));
+    if (st.ruleDetails === tree.root.key) rows.push(ruleDetailsRow(tree.root));
     rowGroups.push(h("tbody", { key: "root" }, rows.splice(0)));
     const children = tree.children(tree.root);
     if (children) for (const child of children) {
@@ -2736,7 +2873,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     e.preventDefault();
     e.stopPropagation();
     if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-      const toggleButton = row2.querySelector("button[aria-expanded]");
+      const toggleButton = row2.querySelector("button[aria-label^='Expand '], button[aria-label^='Collapse ']");
       if (toggleButton && toggleButton.getAttribute("aria-expanded") === "true" === (e.key === "ArrowLeft")) toggleButton.click();
       return;
     }
@@ -3169,6 +3306,36 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       h("button", { type: "button", className: "btn btn-sm", onClick: removeUnresolved }, "Remove these mappings")
     ) : null
   );
+  const selectedChain = tree && st.selectedKey ? makeTree(st.rootIndex, { ...ctx, showAll: true }).chain(st.selectedKey) : null;
+  const selected = selectedChain?.[selectedChain.length - 1];
+  const inspector = () => h(
+    Inspector,
+    {
+      key: selected?.key || "empty",
+      h,
+      node: selected,
+      helpUrl: selected ? mapperHelpUrl(version, element.resourceType, selected.key) : "",
+      diagnostics: selected ? [...st.testResult?.errors || [], ...st.scriptResult?.errors || []].filter((error) => error.key === selected.key).map((error, index) => diagnosticView(error, index)) : []
+    },
+    selected ? h(
+      "div",
+      { className: "mapper-inspector-rules" },
+      !selected.resourceRoot && !selected.choice ? field("Expression", h(ExpressionField, {
+        "aria-label": `Inspector expression for ${selected.key}`,
+        value: st.values.get(selected.key) || "",
+        completionContext: completionFor(selected),
+        errors: errorsByKey.get(selected.key),
+        onEdit: () => ensureCodes(selected),
+        disabled: blocked || createBundle && selected.key === "Bundle.type",
+        onChange: (e) => setValue(selected, withSubstitution(selected, st.values.get(selected.key) || "", e.target.value))
+      })) : null,
+      st.iterations.has(selected.key) ? h("div", { className: "mapper-inspector-fields" }, iterationFields(selected)) : null,
+      st.conditions.has(selected.key) ? h("div", { className: "mapper-inspector-fields" }, conditionFields(selected)) : null,
+      st.translations.has(selected.key) ? h("div", { className: "mapper-inspector-fields" }, translationFields(selected, "fhir-inspector-conceptmaps")) : null,
+      ruleDetailsFields(selected),
+      !rulesAt(selected).length ? h("p", { className: "hint" }, "No saved rule for this element.") : null
+    ) : null
+  );
   const mapperPanel = tree ? h(
     "div",
     null,
@@ -3231,14 +3398,19 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     sourcePane(),
     h(
       "div",
-      { className: "dt-wrap border border-line rounded", style: { maxHeight: "none", overflowX: "auto", overflowY: "visible" }, onKeyDownCapture: treeKeys },
+      { className: "mapper-workspace" },
       h(
-        "table",
-        { className: "dt mapper-tree", style: { tableLayout: "fixed", width: "100%", minWidth: "720px" } },
-        h("colgroup", null, h("col", { style: { width: "36%" } }), h("col", { style: { width: "14%" } }), h("col", { style: { width: "50%" } })),
-        h("thead", null, h("tr", null, h("th", null, "Element"), h("th", null, "Type"), h("th", null, "Mapping"))),
-        rowGroups
-      )
+        "div",
+        { className: "dt-wrap border border-line rounded", style: { maxHeight: "none", overflowX: "auto", overflowY: "visible" }, onKeyDownCapture: treeKeys },
+        h(
+          "table",
+          { className: "dt mapper-tree", style: { tableLayout: "fixed", width: "100%", minWidth: "720px" } },
+          h("colgroup", null, h("col", { style: { width: "36%" } }), h("col", { style: { width: "14%" } }), h("col", { style: { width: "50%" } })),
+          h("thead", null, h("tr", null, h("th", null, "Element"), h("th", null, "Type"), h("th", null, "Mapping"))),
+          rowGroups
+        )
+      ),
+      inspector()
     ),
     check.required.length || check.mustSupport.length ? h(
       "div",

@@ -7,11 +7,13 @@ import vm from "node:vm";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
+import { snapshot, restore } from "../../src/fhir/history.js";
+import { Inspector } from "../../src/profile-mapper/inspector.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const code = fs.readFileSync(path.join(here, "../../src/profile-mapper/editor.js"), "utf8").replace("export function register", "function register").replace(/^import .*$/gm, "");
 const catalog = JSON.parse(fs.readFileSync(path.join(here, "../../../src/main/resources/org/oie/fhir/mapper/mapper-functions.json"), "utf8"));
-const context = vm.createContext({ console, crypto: { randomUUID }, snapshot: () => ({}), restore: () => {}, normalizeResult: (x) => String(x), sourceTree: () => [], sourcePaths: () => [], CodeBox: () => null, HelpButton: () => null, MAPPER_HELP: {}, languageOf: () => "text", cachedFhirSettings: () => null, fhirContext: () => null, loadFhirSettings: () => Promise.resolve({ contexts: [] }) });
+const context = vm.createContext({ console, crypto: { randomUUID }, snapshot, restore, Inspector, normalizeResult: (x) => String(x), sourceTree: () => [], sourcePaths: () => [], CodeBox: () => null, HelpButton: () => null, MAPPER_HELP: {}, languageOf: () => "text", cachedFhirSettings: () => null, fhirContext: () => null, loadFhirSettings: () => Promise.resolve({ contexts: [] }) });
 vm.runInContext(code + `\nMAPPER_FUNCTIONS = ${JSON.stringify(catalog)};\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample, mapperDiagnostic, mapperTraceRows, mapperTraceExport, mapperSourcePaths, mapperHelpUrl, mapperJsonImport, mapperRuleIds, mapperCompletionContext, isCompletionShortcut, MapperExpression, ProfileMapperEditor, setReact: value => React = value };`, context);
 const { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample } = context.t;
 
@@ -60,7 +62,7 @@ const labels = (t, node) => (t.children(node) || []).map((n) => n.label);
 test("expanded tree branches keep their auxiliary rows and descendants together when folded", () => {
   const state = { values: new Map(), iterations: new Map([["Patient.name", { expression: "msg.names", variable: "n" }]]),
     conditions: new Map([["Patient.name", "n.active"]]), translations: new Map(), expanded: new Set(["Patient", "Patient.name"]),
-    instances: new Map(), rootIndex: patient, sourcePaths: [], showAll: false, filter: "all", unresolved: [], tests: new Map(),
+    instances: new Map(), notes: new Map(), disabled: new Set(), rootIndex: patient, sourcePaths: [], showAll: false, filter: "all", unresolved: [], tests: new Map(),
     sample: { dataType: "JSON", message: "{}" }, traceOptions: { enabled: false }, jsonDraft: "", loading: false, tab: "mapper" };
   const element = { action: "resource", resourceType: "Patient", profileUrl: patient.sd.url, mappings: "[]", bundleTargets: "[]" };
   const render = () => {
@@ -101,6 +103,74 @@ test("Ctrl+Space and Alt/Option+Space open completion; macOS keeps Ctrl+Space fo
   assert.equal(context.t.isCompletionShortcut(key({ metaKey: true })), false);
   assert.equal(context.t.isCompletionShortcut(key({ ctrlKey: true, altKey: true })), false);
   assert.equal(context.t.isCompletionShortcut(key({ ctrlKey: true, code: "KeyA", key: "a" })), false);
+});
+
+test("rule notes and activation remain independent for a value and condition, including undo and redo", () => {
+  const key = "Patient.gender";
+  const saved = [
+    { id: "gender-value", key, type: "code", expression: "'female'", path: [["gender"]], note: "Imported note", disabled: true },
+    { id: "gender-condition", key, condition: "true", path: [["gender"]] }
+  ];
+  const state = { values: new Map([[key, "'female'"]]), iterations: new Map(), translations: new Map(), conditions: new Map([[key, "true"]]),
+    notes: new Map([[`value:${key}`, "Imported note"]]), disabled: new Set([`value:${key}`]),
+    instances: new Map(), rootIndex: patient, sourcePaths: [], showAll: false, filter: "all", unresolved: [], tests: new Map(),
+    sample: { dataType: "JSON", message: "{}" }, traceOptions: { enabled: false }, jsonDraft: "", loading: false, tab: "mapper",
+    expanded: new Set(), undo: [], redo: [], lastPush: 0 };
+  state.current = snapshot(state);
+  const element = { action: "resource", resourceType: "Patient", profileUrl: patient.sd.url, mappings: JSON.stringify(saved), bundleTargets: "[]" };
+  const all = (node) => Array.isArray(node) ? node.flatMap(all) : node && typeof node === "object" ? [node, ...all(node.children || [])] : [];
+  const render = () => {
+    let firstRef = true;
+    context.t.setReact({ createElement: (tag, props, ...children) => ({ tag, props: props || {}, children }),
+      useReducer: () => [0, () => {}], useId: () => "m", useRef: value => { const current = firstRef ? state : value; firstRef = false; return { current }; }, useEffect: () => {} });
+    return all(context.t.ProfileMapperEditor({ element, onChange: () => {}, platform: { store: { getState: () => null } } }));
+  };
+  const control = (label) => render().find(node => node.props["aria-label"] === label);
+  const rules = () => JSON.parse(element.mappings);
+  control(`Rule details for ${key}`).props.onClick();
+  assert.equal(control(`Note for value rule for ${key}`).props.value, "Imported note");
+  assert.equal(control(`Enable value rule for ${key}`).props.checked, false);
+  control(`Enable condition rule for ${key}`).props.onChange({ target: { checked: false } });
+  assert.ok(rules().find(rule => rule.id === "gender-condition").disabled);
+  assert.equal(rules().find(rule => rule.id === "gender-value").note, "Imported note");
+  control(`Note for value rule for ${key}`).props.onChange({ target: { value: "Updated note" } });
+  assert.equal(rules().find(rule => rule.id === "gender-value").note, "Updated note");
+  render().find(node => node.tag === "button" && node.children.includes("↶ Undo")).props.onClick();
+  assert.equal(control(`Note for value rule for ${key}`).props.value, "Imported note");
+  assert.ok(rules().find(rule => rule.id === "gender-condition").disabled);
+  render().find(node => node.tag === "button" && node.children.includes("↷ Redo")).props.onClick();
+  assert.equal(rules().find(rule => rule.id === "gender-value").note, "Updated note");
+  control(`Enable value rule for ${key}`).props.onChange({ target: { checked: true } });
+  assert.equal(rules().find(rule => rule.id === "gender-value").disabled, undefined);
+  assert.ok(rules().find(rule => rule.id === "gender-condition").disabled);
+  control(`Note for value rule for ${key}`).props.onChange({ target: { value: "" } });
+  assert.equal(rules().find(rule => rule.id === "gender-value").note, undefined);
+  control(`Inspect ${key}`).props.onClick();
+  let inspector = render().find(node => node.tag === Inspector);
+  assert.equal(inspector.props.node.key, key);
+  assert.equal(control(`Inspector expression for ${key}`).props.value, "'female'");
+  control(`Inspector expression for ${key}`).props.onChange({ target: { value: "'male'" } });
+  assert.equal(rules().find(rule => rule.id === "gender-value").expression, "'male'");
+  assert.equal(state.values.get(key), "'male'");
+  state.scriptResult = { errors: [{ key, operation: "condition", message: "Invalid condition" }, { key: "Patient.name", message: "Other rule" }] };
+  inspector = render().find(node => node.tag === Inspector);
+  assert.equal(inspector.props.diagnostics.length, 1);
+  state.search = "name";
+  state.selectedKey = "Patient.name";
+  all(inspector.props.diagnostics).find(node => node.tag === "button" && node.children.includes("Go to rule")).props.onClick();
+  assert.equal(state.selectedKey, key);
+  assert.equal(state.search, "");
+  assert.equal(state.pendingDiagnostic.kind, "condition");
+
+  // Reopening from the serialized step must recover edits made through the inspector.
+  const reopened = { current: null };
+  let firstRef = true;
+  context.t.setReact({ createElement: (tag, props, ...children) => ({ tag, props: props || {}, children }),
+    useReducer: () => [0, () => {}], useId: () => "reopened", useRef: value => { const ref = firstRef ? reopened : { current: value }; firstRef = false; return ref; }, useEffect: () => {} });
+  context.t.ProfileMapperEditor({ element, onChange: () => {}, platform: { store: { getState: () => null } } });
+  assert.equal(reopened.current.values.get(key), "'male'");
+  assert.ok(reopened.current.disabled.has(`condition:${key}`));
+  assert.equal(reopened.current.notes.has(`value:${key}`), false);
 });
 
 test("Ctrl+Space opens completion without a prefix, including scoped variables and sample paths", () => {

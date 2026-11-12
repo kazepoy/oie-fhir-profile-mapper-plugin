@@ -14,11 +14,15 @@ git et le [CHANGELOG](../CHANGELOG.md) pour ce qui a été livré).
 | Phase | État |
 |---|---|
 | 1 Socle frontend | **Fait** pour le build : projet Node, esbuild, modules `host/`, `fhir/`, `trace/`, tests unitaires et e2e, CI. Les deux éditeurs restent chacun un grand fichier (`editor.js`) ; leur découpage en composants et l'i18n sont à faire avec le studio. |
-| 3 Studio et saisie | **Fait en partie** : Monaco sur les expressions, complétion (fonctions, variables, chemins, snippets, références), recherche, annuler/rétablir, plein écran, erreurs marquées et soulignées, volet *Sample fields*, clavier. Codes de binding proposés dans la complétion. Restent : inspecteur, extensions du profil, saisie de la note et de la désactivation d'une règle, menu contextuel. |
+| 3 Studio et saisie | **Fait en partie** : Monaco sur les expressions, complétion (fonctions, variables, chemins, snippets, références), recherche, annuler/rétablir, plein écran, erreurs marquées et soulignées, volet *Sample fields*, clavier. Codes de binding proposés dans la complétion. Notes et activation par règle accessibles avec *Rules*, y compris dans l'historique. Inspecteur de sélection avec métadonnées, édition des règles, aide et diagnostics. Restent : extensions du profil, menu contextuel. |
 | 4 Tests et traces | **Fait en partie** : exemples enregistrés dans l'étape, résultat attendu, comparaison, *Run all*, action *FHIR mapping trace*. Restent : aperçu multi-étapes, exécution par outil, import/export de tableaux. |
 | 5 FML | **Fait en partie** : étape intégrée, map écrite dans l'étape, langage `fml`, *Check*. Restent : complétion, squelette, modèles typés, pool. |
 | 2 Serveur | **Fait** : contextes FHIR, format 2, politique de validation, catalogue des packages, arbre d'un profil en une requête, codes des ValueSets. Non fait, par choix : outil de migration (le format 1 reste lu tel quel) et cache d'index persistant (les réponses sont gardées en mémoire jusqu'au rechargement). |
 | 6, 7 | À faire. |
+
+La reprise, les écarts constatés dans le code et les critères de validation par
+lot sont suivis dans [TODO.md](../TODO.md). Les numéros de version ci-dessous
+restent des jalons du plan initial, pas des versions déjà publiées.
 
 ---
 

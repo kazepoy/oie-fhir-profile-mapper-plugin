@@ -36,6 +36,10 @@ export const MAPPER_HELP = {
         ["⌥Space", "Suggestions: iteration variables, codes of the value set, references of other steps, mapper functions, paths of the sample."],
         ["Sample fields", "The fields of the sample message with their values. Click one to insert its path into the field being edited, or drag it onto a field."],
         ["Alt+↓ ↑ → ←", "Next or previous field; open or close the element."]] },
+      { title: "Element inspector", lines: [
+        "Select an element by its name, with a click or Enter, or focus one of its fields. The inspector follows the selection.",
+        "Read the profile's definition, cardinality, binding, fixed value and examples. Edit expressions, existing conditions, iterations, translations, notes and activation in the same rules as the tree.",
+        "Diagnostics belong to the selected element. Go to rule reveals its field in the tree. On a narrow editor the inspector sits below the tree."] },
       { title: "Buttons of a row", lines: [
         ["+ / −", "Add or remove an entry of a repeating element."],
         ["↻", "One entry per item of a list. Fields below use the item variable, e.g. n['PID.5.1']."],

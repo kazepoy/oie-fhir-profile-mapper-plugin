@@ -87,6 +87,63 @@ describe("the step editors in the demo", () => {
     }
   });
 
+  test("a rule can be documented and disabled, then restored with undo", async () => {
+    const mapper = session.page.locator(".fhir-profile-mapper");
+    await mapper.getByRole("tab", { name: "Mapper", exact: true }).click();
+    await mapper.getByLabel("Search elements").fill("gender");
+    await mapper.getByRole("button", { name: "Rule details for Patient.gender", exact: true }).click();
+    const enabled = mapper.locator("table.mapper-tree").getByLabel("Enable value rule for Patient.gender", { exact: true });
+    const note = mapper.locator("table.mapper-tree").getByLabel("Note for value rule for Patient.gender", { exact: true });
+    const before = await note.inputValue();
+    assert.equal(await enabled.isChecked(), true);
+    await enabled.uncheck();
+    await note.fill("Temporary rule note");
+    assert.equal(await enabled.isChecked(), false);
+    assert.match(await mapper.locator("tr[data-owner='Patient.gender']").last().innerText(), /disabled \(kept, not executed\)/);
+    await mapper.getByRole("button", { name: /Undo/ }).click();
+    assert.equal(await note.inputValue(), before);
+    assert.equal(await enabled.isChecked(), false);
+    await mapper.getByRole("button", { name: /Undo/ }).click();
+    assert.equal(await enabled.isChecked(), true);
+  });
+
+  test("the inspector follows keyboard selection and edits the same rules as the tree", async () => {
+    const { page } = session;
+    await openStep(page, "ORU R01 vers Patient FHIR", "Patient");
+    const mapper = page.locator(".fhir-profile-mapper");
+    const inspector = mapper.getByRole("complementary", { name: "Element inspector" });
+    await mapper.getByLabel("Search elements").fill("gender");
+    const select = mapper.getByRole("button", { name: "Inspect Patient.gender", exact: true });
+    await select.focus();
+    await page.keyboard.press("Enter");
+    assert.equal(await select.getAttribute("aria-pressed"), "true");
+    assert.match(await inspector.innerText(), /Patient.gender[\s\S]*Cardinality[\s\S]*1\.\.1/);
+    assert.equal(await inspector.getByRole("link", { name: "Official FHIR definition" }).getAttribute("href"), "https://hl7.org/fhir/R4/patient-definitions.html#Patient.gender");
+    const expression = inspector.getByRole("combobox", { name: "Inspector expression for Patient.gender" });
+    const before = await expression.evaluate(el => el.value ?? el.dataset.value);
+    await expression.click();
+    await inspector.locator(".mapper-expression-editing .monaco-editor").waitFor();
+    await inspector.locator(".monaco-editor").click();
+    await page.keyboard.press("End");
+    await page.keyboard.type(" || 'unknown'");
+    await inspector.getByRole("heading", { name: "Patient.gender", exact: true }).click();
+    assert.equal(await mapper.locator("tr[title^='Patient.gender'] [role=combobox]").first().evaluate(el => el.value ?? el.dataset.value), `${before} || 'unknown'`);
+    await mapper.getByRole("button", { name: /Undo/ }).click();
+    assert.equal(await expression.evaluate(el => el.value ?? el.dataset.value), before);
+    await mapper.getByRole("button", { name: /Full screen/ }).click();
+    assert.equal(await inspector.isVisible(), true);
+    await page.screenshot({ path: "test/e2e/output/inspector-fullscreen.png" });
+    await mapper.getByRole("button", { name: /Exit full screen/ }).click();
+    // On a narrow editor the inspector stacks below the tree instead of squeezing it.
+    const width = await mapper.evaluate(el => { const before = el.style.width; el.style.width = "700px"; return before; });
+    const layout = await mapper.locator(".mapper-workspace").evaluate(el => {
+      const [tree, inspector] = [...el.children].map(child => child.getBoundingClientRect());
+      return { stacked: inspector.top >= tree.bottom, contained: inspector.right <= el.getBoundingClientRect().right + 1 };
+    });
+    assert.deepEqual(layout, { stacked: true, contained: true });
+    await mapper.evaluate((el, width) => { el.style.width = width; }, width);
+  });
+
   test("the step names a FHIR context of the server, defined in Settings", async () => {
     const { page } = session;
     const mapper = page.locator(".fhir-profile-mapper");

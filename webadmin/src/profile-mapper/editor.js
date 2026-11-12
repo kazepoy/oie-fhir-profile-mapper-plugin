@@ -9,6 +9,7 @@ import { cachedFhirSettings, fhirContext, loadFhirSettings } from "../host/setti
 import { normalizeResult } from "../fhir/diagnostics.js";
 import { sourceTree, sourcePaths } from "../fhir/source.js";
 import { createDiff } from "../host/code-editor.js";
+import { Inspector } from "./inspector.js";
 
 const PKG = "org.oie.fhir.mapper";
 
@@ -162,8 +163,12 @@ function mapperJsonImport(element, text) {
   return merged;
 }
 
+function mapperRuleKey(rule) {
+  return `${"each" in rule ? "each" : "condition" in rule ? "condition" : "fixed" in rule ? "fixed" : "value"}:${rule.key || rule.element}`;
+}
+
 function mapperRuleIds(entries, previous = [], createId = () => crypto.randomUUID()) {
-  const identity = (rule) => `${"each" in rule ? "each" : "condition" in rule ? "condition" : "fixed" in rule ? "fixed" : "value"}:${rule.key || rule.element}`;
+  const identity = mapperRuleKey;
   const known = new Map(previous.filter((rule) => rule.id).map((rule) => [identity(rule), rule.id]));
   const used = new Set();
   return entries.map((rule) => {
@@ -933,6 +938,8 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       iterations,
       translations,
       conditions,
+      notes: new Map(saved.filter((rule) => rule.note).map((rule) => [mapperRuleKey(rule), rule.note])),
+      disabled: new Set(saved.filter((rule) => rule.disabled).map(mapperRuleKey)),
       // shown when something below an extension, modifierExtension or id (that "extensions & ids" shows) is mapped
       showAll: [...values.keys(), ...iterations.keys(), ...conditions.keys()].some((k) => /\.(extension|modifierExtension|id)(\[\d+\])?(\.|$)/.test(k)),
       sample,
@@ -1020,8 +1027,10 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     } else {
       st.showAll = true;
       st.filter = "all";
+      st.search = "";
       for (const node of chain.slice(0, -1)) st.expanded.add(node.key);
       st.pendingDiagnostic = { key: error.key, kind: mapperDiagnostic(error).kind };
+      st.selectedKey = error.key;
       st.tab = "mapper";
     }
     rerender();
@@ -1054,11 +1063,9 @@ function ProfileMapperEditor({ element, onChange, platform }) {
   const compiled = (index, local) => {
     const previous = parseMappings(element.mappings);
     const rules = mapperRuleIds(compile(makeTree(index, { ...local, showAll: true }), st.values, st.iterations, st.translations, st.conditions), previous);
-    // What the editor does not edit yet is kept on the rule it belongs to: its note, and that it is disabled.
-    const kept = new Map(previous.filter((rule) => rule.id && (rule.note || rule.disabled)).map((rule) => [rule.id, rule]));
     return JSON.stringify(rules.map((rule) => {
-      const before = kept.get(rule.id);
-      return before ? { ...rule, ...(before.note ? { note: before.note } : {}), ...(before.disabled ? { disabled: true } : {}) } : rule;
+      const key = mapperRuleKey(rule);
+      return { ...rule, ...(st.notes.get(key) ? { note: st.notes.get(key) } : {}), ...(st.disabled.has(key) ? { disabled: true } : {}) };
     }));
   };
 
@@ -1546,6 +1553,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     if (st.iterations.has(child.key)) rows.push(iterationRow(child));
     if (st.conditions.has(child.key)) rows.push(conditionRow(child));
     if (st.translations.has(child.key)) rows.push(translationRow(child));
+    if (st.ruleDetails === child.key) rows.push(ruleDetailsRow(child));
     if (opened(child)) addRows(child);
   };
   const addRows = (node) => {
@@ -1577,7 +1585,8 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     // mapping keeps its room, and the actions sit next to it, where they cannot push it away.
     return h(
       "tr",
-      { key: node.key, className: [open ? "mapper-node-open" : "", errorsByKey.has(node.key) ? "mapper-node-error" : ""].filter(Boolean).join(" ") || undefined, "data-depth": node.depth, ref: diagnosticRef(node.key, "value"),
+      { key: node.key, className: [open ? "mapper-node-open" : "", errorsByKey.has(node.key) ? "mapper-node-error" : "", st.selectedKey === node.key ? "mapper-node-selected" : ""].filter(Boolean).join(" ") || undefined, "data-depth": node.depth, ref: diagnosticRef(node.key, "value"),
+        onFocus: () => selectNode(node), onClick: () => selectNode(node),
         title: errorsByKey.has(node.key) ? `${node.key}: ${errorsByKey.get(node.key).join(" · ")}` : node.short ? `${node.key}: ${node.short}` : node.key },
       h(
         "td",
@@ -1598,7 +1607,8 @@ function ProfileMapperEditor({ element, onChange, platform }) {
             },
             open ? "▾" : "▸"
           ),
-          h("span", { className: "mapper-node-label", style: { ...ellipsis, minWidth: 0, fontWeight: node.mustSupport || open ? 600 : 400 } }, node.label + (node.instance ? ` [${node.instance}]` : "")),
+          h("button", { type: "button", className: "mapper-node-label mapper-select", "aria-label": `Inspect ${node.key}`, "aria-pressed": st.selectedKey === node.key,
+            style: { ...ellipsis, minWidth: 0, fontWeight: node.mustSupport || open ? 600 : 400 }, onClick: () => selectNode(node) }, node.label + (node.instance ? ` [${node.instance}]` : "")),
           h("span", { className: "text-text-faint", style: { flex: "none", fontSize: "11px" } }, `${node.min ?? 0}..${node.max ?? "*"}`),
           node.mustSupport ? h("span", { title: "Must Support", style: { flex: "none", color: "#c2410c", fontSize: "11px" } }, "S") : null,
           h("a", { className: "mapper-help", href: mapperHelpUrl(version, element.resourceType, node.key), target: "_blank", rel: "noopener noreferrer",
@@ -1640,7 +1650,8 @@ function ProfileMapperEditor({ element, onChange, platform }) {
           node.instance && node.instance === count - 1 ? tool("−", "Remove this entry and its mappings", () => removeInstance(node), false) : null,
           canIterate ? tool("↻", "One entry for each item of a list (for each repetition)", () => toggleIteration(node), iterated) : null,
           canTranslate ? tool("⇄", "Translate the value with ConceptMap/$translate", () => toggleTranslation(node), st.translations.has(node.key)) : null,
-          node.choice ? null : tool("?", "Only map this element (and what is below it) when a condition holds", () => toggleCondition(node), st.conditions.has(node.key))
+          node.choice ? null : tool("?", "Only map this element (and what is below it) when a condition holds", () => toggleCondition(node), st.conditions.has(node.key)),
+          ruleDetailsButton(node)
         )
       )
     );
@@ -1650,20 +1661,45 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     h("tr", { key: `${node.key}/${suffix}`, ref: diagnosticRef(node.key, suffix), "data-owner": node.key }, h("td", { colSpan: 3, style: { paddingLeft: `${node.depth * 20 + 34}px` } }, guides(node, true), h("div", { style: { display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" } }, children)));
   const mono = { fontFamily: "monospace", fontSize: "12px" };
 
-  const iterationRow = (node) => {
+  const rulesAt = (node) => parseMappings(element.mappings).filter((rule) => (rule.key || rule.element) === node.key);
+  const selectNode = (node) => { if (st.selectedKey !== node.key) { st.selectedKey = node.key; rerender(); } };
+  const ruleDetailsButton = (node) => rulesAt(node).length ? h("button", {
+    type: "button", className: "btn btn-sm", disabled: blocked,
+    "aria-label": `Rule details for ${node.key}`, "aria-expanded": st.ruleDetails === node.key,
+    onClick: () => { st.ruleDetails = st.ruleDetails === node.key ? null : node.key; rerender(); }
+  }, st.disabled.size && rulesAt(node).some((rule) => st.disabled.has(mapperRuleKey(rule))) ? "Rules (disabled)" : "Rules") : null;
+  const ruleDetailsFields = (node) => rulesAt(node).map((rule) => {
+    const key = mapperRuleKey(rule);
+    const kind = "each" in rule ? "Iteration" : "condition" in rule ? "Condition" : "fixed" in rule ? "Fixed value" : "Value";
+    return h("div", { key, style: { flex: "1 1 100%", padding: "4px 0" } },
+      h("label", null, h("input", {
+        type: "checkbox", checked: !st.disabled.has(key), disabled: blocked,
+        "aria-label": `Enable ${kind.toLowerCase()} rule for ${node.key}`,
+        onChange: (e) => { if (e.target.checked) st.disabled.delete(key); else st.disabled.add(key); st.lastPush = 0; save(); st.lastPush = 0; rerender(); }
+      }), ` ${kind} rule`, st.disabled.has(key) ? " — disabled (kept, not executed)" : ""),
+      h("textarea", {
+        value: st.notes.get(key) || "", disabled: blocked, rows: 2, placeholder: "Rule note…",
+        "aria-label": `Note for ${kind.toLowerCase()} rule for ${node.key}`,
+        style: { display: "block", width: "100%", marginTop: "4px" },
+        onChange: (e) => { if (e.target.value) st.notes.set(key, e.target.value); else st.notes.delete(key); save(); rerender(); }
+      }));
+  });
+  const ruleDetailsRow = (node) => subRow(node, "rules", ruleDetailsFields(node));
+
+  const iterationFields = (node) => {
     const it = st.iterations.get(node.key);
     const variable = (it.variable || "item").trim() || "item";
-    return subRow(node, "each", [
+    return [
       h("span", { key: "l", title: node === tree.root ? "One resource for each item" : "One entry of this element for each item" }, node === tree.root ? "↻ One resource for each" : "↻ For each"),
       h(ExpressionField, { key: "e", completionContext: completionFor(node, "iteration"), value: it.expression, disabled: blocked, placeholder: "msg['PID']['PID.3']", style: { ...mono, flex: "1 1 240px" }, onChange: (e) => setIteration(node, "expression", e.target.value) }),
       h("span", { key: "a" }, "as"),
       h("input", { key: "v", type: "text", value: it.variable, disabled: blocked, style: { ...mono, width: "90px" }, onChange: (e) => setIteration(node, "variable", e.target.value) }),
       h("span", { key: "h", className: "text-text-faint", style: { fontSize: "11px" } }, `below: ${variable} (the item), ${variable}Index (0, 1, …); fields dragged in are rewritten to ${variable}[…]`)
-    ]);
+    ];
   };
+  const iterationRow = (node) => subRow(node, "each", iterationFields(node));
 
-  const conditionRow = (node) =>
-    subRow(node, "condition", [
+  const conditionFields = (node) => [
       h("span", { key: "l", title: "What is below this element is only mapped when the condition holds" }, node === tree.root ? "? Only make the resource if" : "? Only if"),
       h(ExpressionField, {
         completionContext: completionFor(node, "condition"),
@@ -1676,16 +1712,16 @@ function ProfileMapperEditor({ element, onChange, platform }) {
         onChange: (e) => setCondition(node, withSubstitution(node, st.conditions.get(node.key) || "", e.target.value))
       }),
       h("span", { key: "h", className: "text-text-faint", style: { fontSize: "11px" } }, st.iterations.has(node.key) ? "per item: keeps the items it holds for" : "false, or an error on a missing segment: nothing below")
-    ]);
+    ];
+  const conditionRow = (node) => subRow(node, "condition", conditionFields(node));
 
-  const translationRow = (node) => {
+  const translationFields = (node, listId = "fhir-profile-mapper-conceptmaps") => {
     const t = st.translations.get(node.key);
     const test = st.tests.get(node.key) || {};
     const maps = (st.conceptMaps && st.conceptMaps.list) || [];
-    const listId = "fhir-profile-mapper-conceptmaps";
     const localTx = isLocalServer(txServer);
     const needsValue = t.unmapped === "fixed" || t.unmapped === "function";
-    return subRow(node, "translate", [
+    return [
       h("span", { key: "l", title: localTx ? "ConceptMap/$translate locally, on the ConceptMaps of the Profile Packages" : "ConceptMap/$translate on the terminology server" }, localTx ? "⇄ ConceptMap (local)" : "⇄ ConceptMap"),
       h("input", {
         key: "m",
@@ -1748,8 +1784,9 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       }),
       h("button", { key: "b", type: "button", className: "btn btn-sm", disabled: !t.conceptMap || !test.code, onClick: () => testTranslation(node) }, "Test"),
       test.result ? h("span", { key: "r", className: "text-text-faint", style: { fontSize: "11px" } }, test.result) : null
-    ]);
+    ];
   };
+  const translationRow = (node) => subRow(node, "translate", translationFields(node));
   const createBundle = element.action === "createBundle";
   const declarations = mapperBundleDeclarations(platform, element);
   const targets = parseMappings(element.bundleTargets);
@@ -1767,19 +1804,21 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     rows.push(
       h(
         "tr",
-        { key: tree.root.key, ref: diagnosticRef(tree.root.key, "value") },
+        { key: tree.root.key, ref: diagnosticRef(tree.root.key, "value"), onFocus: () => selectNode(tree.root), onClick: () => selectNode(tree.root) },
         h(
           "td",
           { colSpan: 3 },
-          h("strong", null, tree.root.label),
+          h("button", { type: "button", className: "mapper-node-label mapper-select", "aria-label": `Inspect ${tree.root.key}`, "aria-pressed": st.selectedKey === tree.root.key, onClick: () => selectNode(tree.root) }, tree.root.label),
           h("span", { className: "text-text-faint", style: { marginLeft: "8px" } }, st.rootIndex.sd.url + (st.rootIndex.sd.version ? ` | ${st.rootIndex.sd.version}` : "")),
           bundle && !createBundle ? rootTool("↻", "One resource for each item of a list (e.g. each OBX)", () => toggleIteration(tree.root), st.iterations.has(tree.root.key)) : null,
-          rootTool("?", "Only make the resource when a condition holds", () => toggleCondition(tree.root), st.conditions.has(tree.root.key))
+          rootTool("?", "Only make the resource when a condition holds", () => toggleCondition(tree.root), st.conditions.has(tree.root.key)),
+          ruleDetailsButton(tree.root)
         )
       )
     );
     if (st.iterations.has(tree.root.key)) rows.push(iterationRow(tree.root));
     if (st.conditions.has(tree.root.key)) rows.push(conditionRow(tree.root));
+    if (st.ruleDetails === tree.root.key) rows.push(ruleDetailsRow(tree.root));
     rowGroups.push(h("tbody", { key: "root" }, rows.splice(0)));
     const children = tree.children(tree.root);
     if (children) for (const child of children) {
@@ -1797,7 +1836,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     e.preventDefault();
     e.stopPropagation();
     if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-      const toggleButton = row.querySelector("button[aria-expanded]");
+      const toggleButton = row.querySelector("button[aria-label^='Expand '], button[aria-label^='Collapse ']");
       if (toggleButton && (toggleButton.getAttribute("aria-expanded") === "true") === (e.key === "ArrowLeft")) toggleButton.click();
       return;
     }
@@ -2092,6 +2131,24 @@ function ProfileMapperEditor({ element, onChange, platform }) {
         )
       : null
   );
+  const selectedChain = tree && st.selectedKey ? makeTree(st.rootIndex, { ...ctx, showAll: true }).chain(st.selectedKey) : null;
+  const selected = selectedChain?.[selectedChain.length - 1];
+  const inspector = () => h(Inspector, { key: selected?.key || "empty", h, node: selected,
+    helpUrl: selected ? mapperHelpUrl(version, element.resourceType, selected.key) : "",
+    diagnostics: selected ? [...(st.testResult?.errors || []), ...(st.scriptResult?.errors || [])]
+      .filter(error => error.key === selected.key).map((error, index) => diagnosticView(error, index)) : [] },
+    selected ? h("div", { className: "mapper-inspector-rules" },
+      !selected.resourceRoot && !selected.choice ? field("Expression", h(ExpressionField, {
+        "aria-label": `Inspector expression for ${selected.key}`, value: st.values.get(selected.key) || "",
+        completionContext: completionFor(selected), errors: errorsByKey.get(selected.key), onEdit: () => ensureCodes(selected),
+        disabled: blocked || (createBundle && selected.key === "Bundle.type"),
+        onChange: (e) => setValue(selected, withSubstitution(selected, st.values.get(selected.key) || "", e.target.value))
+      })) : null,
+      st.iterations.has(selected.key) ? h("div", { className: "mapper-inspector-fields" }, iterationFields(selected)) : null,
+      st.conditions.has(selected.key) ? h("div", { className: "mapper-inspector-fields" }, conditionFields(selected)) : null,
+      st.translations.has(selected.key) ? h("div", { className: "mapper-inspector-fields" }, translationFields(selected, "fhir-inspector-conceptmaps")) : null,
+      ruleDetailsFields(selected),
+      !rulesAt(selected).length ? h("p", { className: "hint" }, "No saved rule for this element.") : null) : null);
   const mapperPanel = tree
       ? h(
           "div",
@@ -2137,6 +2194,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
             h("span", { className: "hint text-text-faint", style: { fontSize: "11px" } }, `Click a field to edit it with completion. ${COMPLETION_HINT}: functions, scoped variables and sample paths. ↑/↓ to choose, Enter/Tab to insert, Esc to close. Guard optional values.`)
           ),
           sourcePane(),
+          h("div", { className: "mapper-workspace" },
           h(
             "div",
             { className: "dt-wrap border border-line rounded", style: { maxHeight: "none", overflowX: "auto", overflowY: "visible" }, onKeyDownCapture: treeKeys },
@@ -2147,7 +2205,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
               h("thead", null, h("tr", null, h("th", null, "Element"), h("th", null, "Type"), h("th", null, "Mapping"))),
               rowGroups
             )
-          ),
+          ), inspector()),
           check.required.length || check.mustSupport.length
             ? h(
                 "div",
