@@ -30,7 +30,8 @@ Classe `org.oie.fhir.fml.FhirFmlTransformStep`, nom affiché **FHIR FML Transfor
 |---|---|
 | `fhirVersion` | `R4` par défaut, `R4B`, `R5` : version des ressources produites. |
 | `profiles` | Fichiers et répertoires du serveur, séparés par `;` : maps (`.fml`, `.map`, `StructureMap` JSON/XML), profils, ConceptMaps, packages `.tgz`. |
-| `mapUrl` | Canonique de la `StructureMap` à exécuter. Obligatoire. |
+| `mapSource` | Texte FML de la map, écrit dans l'onglet **Map** et enregistré avec le canal. S'il n'est pas vide, il est exécuté à la place de `mapUrl` ; il peut importer les maps des emplacements. |
+| `mapUrl` | Canonique d'une `StructureMap` des emplacements. Obligatoire si `mapSource` est vide. |
 | `variable` | Vide : résultat principal ; sinon nom d'une variable de Channel Map. |
 | `validateOutput` | `true` par défaut, y compris pour un export sans la propriété. |
 | `contextVariables` | Noms de variables OIE (`$`) copiées dans `context.variable` du modèle, séparés par des virgules. |
@@ -200,6 +201,7 @@ OpenAPI` et des corps `text/plain` :
 |---|---|---|
 | `GET /maps?fhirVersion&profiles` | Edit FHIR FML transforms | `{"maps": [{url, name, title}], "errors": {fichier: message}}` |
 | `POST /source` | Edit FHIR FML transforms | Instance `OieMessage` d'un message : `{"message", "dataType", "fhirVersion", "profiles"}` |
+| `POST /check` | Edit FHIR FML transforms | Analyse une map écrite dans l'étape : `{"mapSource", "fhirVersion", "profiles"}` → `{"url", "name", "groups", "errors": [{line, column, message}]}` ; signale aussi les `uses` et `imports` absents des emplacements |
 | `POST /reload` | Edit FHIR FML transforms | Oublie les maps chargées : elles sont relues au prochain appel |
 | `POST /test` | Test FHIR FML transforms | `{"step", "message", "dataType"}` → `{"model", "output", "validationPerformed", "issues", "errors": [{phase, message}]}` |
 
@@ -209,7 +211,12 @@ plugin d'autorisation comme RBAC.
 
 ## 5. Éditeur
 
-[fml-transform.js](../webadmin/web/fml-transform.js), deux onglets :
+[legacy-editor.js](../webadmin/src/fml/legacy-editor.js), trois onglets :
+
+- **Map** : la map de l'étape dans l'éditeur de code de Web Admin, en langage `fml`
+  (coloration des mots-clés, chaînes, commentaires, noms de règles). **Check** envoie
+  la map au serveur et souligne chaque erreur à sa ligne ; **Start from an example**
+  pose un squelette ; **Clear** revient à la map choisie dans Properties ;
 
 - **Properties** : version FHIR, destination du résultat, emplacements, map
   choisie parmi celles chargées (**Load maps**, **Reload**), variables de

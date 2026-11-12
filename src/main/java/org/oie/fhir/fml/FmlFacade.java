@@ -14,7 +14,24 @@ import org.oie.fhir.mapper.fhir.FhirValidation;
  * through the FML bridge, and validates the result with FHIR Data Type like the Profile Mapper.
  */
 public final class FmlFacade {
+    /** Prefix of a map reference that carries the FML text of the step, not a canonical URL. */
+    public static final String INLINE = "inline:";
+
     private FmlFacade() {}
+
+    /** The map a step runs: its own text when it has one, else the canonical URL it names. */
+    public static String mapReference(String mapSource, String mapUrl) {
+        return mapSource != null && !mapSource.isBlank() ? INLINE + mapSource : (mapUrl == null ? "" : mapUrl.trim());
+    }
+
+    private static String mapLabel(String reference) {
+        return reference != null && reference.startsWith(INLINE) ? "the map written in the step" : "map " + reference;
+    }
+
+    /** Parses a map written in a step: {"url", "name", "groups", "errors": [{line, column, message}]}. */
+    public static String check(String mapSource, String version, String profiles) throws Exception {
+        return FmlBridgeAdapter.check(mapSource, version, profiles);
+    }
 
     /** The maps of the profile locations: {"maps": [{url, name, title}], "errors": {file: message}}. */
     public static String listMaps(String version, String profiles) throws Exception {
@@ -44,11 +61,11 @@ public final class FmlFacade {
         try {
             output = transform(mapUrl, source, format, context, variables, version, profiles);
         } catch (Exception e) {
-            throw new IllegalStateException(label + ", map " + mapUrl + ": " + message(e), e);
+            throw new IllegalStateException(label + ", " + mapLabel(mapUrl) + ": " + message(e), e);
         }
         if (validate) {
             FhirValidation result = validate(output, version, profiles);
-            if (!result.isValid()) throw new IllegalStateException(label + ", map " + mapUrl + ": " + result.summary());
+            if (!result.isValid()) throw new IllegalStateException(label + ", " + mapLabel(mapUrl) + ": " + result.summary());
         }
         return output;
     }

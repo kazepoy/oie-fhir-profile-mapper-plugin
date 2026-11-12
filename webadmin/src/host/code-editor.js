@@ -141,9 +141,11 @@ export function createExpressionEditor(options) {
     const model = instance.getModel();
     const text = model.getValue();
     const lines = text.split("\n");
-    m.editor.setModelMarkers(model, OWNER, (messages || []).map(message => ({
-      severity: m.MarkerSeverity.Error, message, startLineNumber: 1, startColumn: 1, endLineNumber: lines.length, endColumn: (lines[lines.length - 1]?.length || 0) + 1
-    })));
+    // A text marks the whole expression; { line, column, message } marks from there to the end of its line.
+    m.editor.setModelMarkers(model, OWNER, (messages || []).map(item => typeof item === "string"
+      ? { severity: m.MarkerSeverity.Error, message: item, startLineNumber: 1, startColumn: 1, endLineNumber: lines.length, endColumn: (lines[lines.length - 1]?.length || 0) + 1 }
+      : { severity: m.MarkerSeverity.Error, message: item.message, startLineNumber: Math.min(item.line || 1, lines.length), startColumn: item.column || 1,
+          endLineNumber: Math.min(item.line || 1, lines.length), endColumn: (lines[Math.min(item.line || 1, lines.length) - 1]?.length || 0) + 1 }));
     el.classList.toggle("fm-code-editor--invalid", !!(messages && messages.length));
   };
   const insert = text => {
@@ -186,8 +188,8 @@ export function createExpressionEditor(options) {
 export const monacoLoaded = () => !!monaco();
 
 /** Registers a Monarch language once Monaco asks for it (for the FML map editor). */
-export function registerLanguage(id, definition) {
-  const p = platform();
+export function registerLanguage(id, definition, host) {
+  const p = host || platform();
   if (typeof p.registerEditorLanguage !== "function") return false;
   try {
     p.registerEditorLanguage(id, { load: () => definition, aliases: definition.aliases, extensions: definition.extensions });

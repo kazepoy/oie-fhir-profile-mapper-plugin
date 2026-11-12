@@ -34,6 +34,8 @@ import org.hl7.fhir.r5.utils.structuremap.StructureMapUtilities;
  * maps: .fml or .map files, StructureMap resources and packages.
  */
 public final class FmlBridge {
+    /** Prefix of a map reference that carries the FML text itself, not a canonical URL. */
+    static final String INLINE = "inline:";
     private final Object engine;
     private final Map<String, FmlContext> contexts = new ConcurrentHashMap<>();
 
@@ -80,7 +82,7 @@ public final class FmlBridge {
             String url = mapUrl == null ? "" : mapUrl.trim();
             // The engine is not thread-safe: one transformation at a time per context.
             synchronized (context) {
-                StructureMap map = context.map(url);
+                StructureMap map = url.startsWith(INLINE) ? context.inline(mapUrl.substring(mapUrl.indexOf(INLINE) + INLINE.length())) : context.map(url);
                 if (map == null) {
                     throw new IllegalArgumentException("StructureMap " + url + " is not in the profile locations of the step"
                             + (context.errors.isEmpty() ? "." : " (unreadable files: " + String.join(", ", context.errors.keySet()) + ")."));
@@ -94,6 +96,81 @@ public final class FmlBridge {
                 return compose(worker, target);
             }
         });
+    }
+
+    /**
+     * Parses a map written in a step: {"url", "name", "groups": [...], "errors": [{"line", "column",
+     * "message"}]}. Also reports the structures the map uses that the locations do not have.
+     */
+    public String check(String mapSource, Map<String, String> options) throws Exception {
+        return withEngineClassLoader(() -> {
+            FmlContext context = context(options);
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode result = mapper.createObjectNode();
+            ArrayNode errors = mapper.createArrayNode();
+            synchronized (context) {
+                try {
+                    StructureMap map = new StructureMapUtilities(context.worker).parse(mapSource == null ? "" : mapSource, "step");
+                    result.put("url", map.getUrl());
+                    result.put("name", map.hasName() ? map.getName() : "");
+                    ArrayNode groups = result.putArray("groups");
+                    for (StructureMapGroupComponent group : map.getGroup()) groups.add(group.getName());
+                    for (StructureMapStructureComponent uses : map.getStructure()) {
+                        StructureDefinition sd = context.worker.fetchResource(StructureDefinition.class, uses.getUrl(), IWorkerContext.VersionResolutionRules.defaultRule());
+                        if (sd == null) errors.add(problem(mapper, mapSource, uses.getUrl(), "uses " + uses.getUrl() + ": this structure is not in the profile locations of the step."));
+                    }
+                    for (org.hl7.fhir.r5.model.CanonicalType imported : map.getImport()) {
+                        if (context.map(imported.getValue()) == null)
+                            errors.add(problem(mapper, mapSource, imported.getValue(), "imports " + imported.getValue() + ": this map is not in the profile locations of the step."));
+                    }
+                } catch (Exception e) {
+                    errors.add(located(mapper, e));
+                }
+            }
+            result.set("errors", errors);
+            return mapper.writeValueAsString(result);
+        });
+    }
+
+    /** A problem on the first line that holds a text of the map. */
+    private static ObjectNode problem(ObjectMapper mapper, String source, String text, String message) {
+        ObjectNode error = mapper.createObjectNode();
+        String[] lines = (source == null ? "" : source).split("\n", -1);
+        int line = 1, column = 1;
+        for (int i = 0; i < lines.length; i++) {
+            int at = lines[i].indexOf(text);
+            if (at >= 0) { line = i + 1; column = at + 1; break; }
+        }
+        error.put("line", line);
+        error.put("column", column);
+        error.put("message", message);
+        return error;
+    }
+
+    private static final java.util.regex.Pattern LOCATION = java.util.regex.Pattern.compile("(?:@|at|line)\\s*(\\d+)\\s*[,:]\\s*(?:col(?:umn)?\\s*)?(\\d+)", java.util.regex.Pattern.CASE_INSENSITIVE);
+
+    /** The parser's error with its position: from the exception's location, else from its message. */
+    private static ObjectNode located(ObjectMapper mapper, Exception e) {
+        ObjectNode error = mapper.createObjectNode();
+        int line = 1, column = 1;
+        try {
+            Object location = e.getClass().getMethod("getLocation").invoke(e);
+            if (location != null) {
+                line = ((Number) location.getClass().getMethod("getLine").invoke(location)).intValue();
+                column = ((Number) location.getClass().getMethod("getColumn").invoke(location)).intValue();
+            }
+        } catch (ReflectiveOperationException | RuntimeException ignored) {
+            // no location on this exception: read the message
+        }
+        String message = e.getMessage() == null ? e.toString() : e.getMessage();
+        if (line <= 1 && column <= 1) {
+            java.util.regex.Matcher m = LOCATION.matcher(message);
+            if (m.find()) { line = Integer.parseInt(m.group(1)); column = Integer.parseInt(m.group(2)); }
+        }
+        error.put("line", Math.max(1, line));
+        error.put("column", Math.max(1, column));
+        error.put("message", message);
+        return error;
     }
 
     public void clearCaches() {

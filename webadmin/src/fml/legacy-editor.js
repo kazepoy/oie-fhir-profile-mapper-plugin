@@ -6,6 +6,9 @@
 // elsewhere: this editor only chooses one and tests it on a sample message.
 // ---------------------------------------------------------------------------------------------
 
+import { createExpressionEditor, registerLanguage } from "../host/code-editor.js";
+import { FML_LANGUAGE, FML_TEMPLATE } from "./language.js";
+
 export const FML_TYPE = "org.oie.fhir.fml.FhirFmlTransformStep";
 const FML_API = "/extensions/fhir-fml";
 const DATA_TYPES = ["HL7V2", "XML", "JSON", "RAW", "DELIMITED"];
@@ -67,6 +70,23 @@ function fmlSample(platform, element) {
   const inbound = ctx?.transformer.inboundDataType || "HL7V2";
   const key = ctx ? `fhir-fml-sample:${ctx.channel.id}:${ctx.connector.metaDataId}` : "fhir-fml-sample:unknown";
   return { key, sample: { message: ctx?.transformer.inboundTemplate || "", dataType: DATA_TYPES.includes(inbound) ? inbound : "RAW" } };
+}
+
+/** The map editor: the host's code editor in the fml language; markers are the problems of the last check. */
+function FmlMapEditor({ value, onChange, problems }) {
+  const host = React.useRef(null);
+  const editor = React.useRef(null);
+  const latest = React.useRef(onChange);
+  latest.current = onChange;
+  React.useEffect(() => {
+    const ed = createExpressionEditor({ value, language: "fml", multiline: true, minHeight: "360px", ariaLabel: "FML map", onChange: (text) => latest.current(text) });
+    editor.current = ed;
+    host.current.appendChild(ed.el);
+    return () => { editor.current = null; ed.dispose(); };
+  }, []);
+  React.useEffect(() => { if (editor.current && editor.current.getValue() !== (value || "")) editor.current.setValue(value || ""); }, [value]);
+  React.useEffect(() => { editor.current?.setMarkers(problems || []); }, [problems]);
+  return h("div", { ref: host, className: "fml-map-editor" });
 }
 
 function FmlTransformEditor({ element, onChange, platform }) {
@@ -140,6 +160,30 @@ function FmlTransformEditor({ element, onChange, platform }) {
     rerender();
   };
 
+  const checkMap = async () => {
+    st.checking = true;
+    rerender();
+    try {
+      const text = await platform.api.post(`${FML_API}/check`, JSON.stringify({ mapSource: element.mapSource || "", fhirVersion: element.fhirVersion || "R4", profiles: element.profiles || "" }),
+        { contentType: "text/plain", raw: true, timeoutMs: 120000 });
+      st.check = JSON.parse(text);
+    } catch (e) {
+      st.check = { errors: [{ line: 1, column: 1, message: errorText(e) }] };
+    }
+    st.checking = false;
+    rerender();
+  };
+  const inline = !!String(element.mapSource || "").trim();
+  const mapPanel = h("div", null,
+    h("div", { className: "hint", style: { marginBottom: "8px" } }, "A map written here is saved with the channel and runs instead of the map chosen in Properties. It may import the maps and use the profiles and ConceptMaps of the profile locations."),
+    h("div", { className: "fml-row", style: { marginBottom: "8px" } },
+      h("button", { type: "button", className: "btn btn-sm", disabled: st.checking || !inline, onClick: checkMap }, st.checking ? "Checking…" : "Check"),
+      !inline ? h("button", { type: "button", className: "btn btn-sm", onClick: () => { st.check = null; set("mapSource", FML_TEMPLATE); } }, "Start from an example") : null,
+      inline ? h("button", { type: "button", className: "btn btn-sm", title: "Empty the map: the step then runs the map chosen in Properties", onClick: () => { st.check = null; set("mapSource", ""); } }, "Clear") : null,
+      st.check && !st.check.errors.length ? h("span", { className: "fml-ok" }, `No problem found${st.check.name ? ` in ${st.check.name}` : ""}${st.check.groups?.length ? ` (groups: ${st.check.groups.join(", ")})` : ""}.`) : null,
+      st.check && st.check.errors.length ? h("span", { className: "fml-error" }, `${st.check.errors.length} problem(s)`) : null),
+    h(FmlMapEditor, { value: element.mapSource || "", problems: st.check?.errors || [], onChange: (text) => { element.mapSource = text; onChange(); if (!!text.trim() !== inline) rerender(); } }),
+    (st.check?.errors || []).map((e, i) => h("div", { key: i, className: "fml-error", style: { marginTop: "4px" } }, `Line ${e.line}, column ${e.column}: ${e.message}`)));
   const mapOptions = st.maps || [];
   const knownMap = mapOptions.some((m) => m.url === element.mapUrl);
   const settings = h(
@@ -162,7 +206,7 @@ function FmlTransformEditor({ element, onChange, platform }) {
       h("select", { value: knownMap ? element.mapUrl : "", onChange: (e) => set("mapUrl", e.target.value) },
         h("option", { value: "" }, st.maps ? (mapOptions.length ? "Choose a map…" : "No map in these locations") : "Load the maps first"),
         mapOptions.map((m) => h("option", { key: m.url, value: m.url }, `${m.title || m.name} — ${m.url}`)))),
-    knownMap || !element.mapUrl ? "The map runs with the message as its source (OieMessage) and builds its target." : `Map ${element.mapUrl} is not in the loaded list.`, true),
+    inline ? "Not used: the step runs the map written in the Map tab." : knownMap || !element.mapUrl ? "The map runs with the message as its source (OieMessage) and builds its target." : `Map ${element.mapUrl} is not in the loaded list.`, true),
     st.loadError ? h("div", { className: "fml-wide fml-error" }, st.loadError) : null,
     Object.keys(st.mapErrors).length ? h("div", { className: "fml-wide fml-error" }, "Unreadable files: ",
       Object.entries(st.mapErrors).map(([file, message]) => h("div", { key: file }, `${file}: ${message}`))) : null,
@@ -181,7 +225,7 @@ function FmlTransformEditor({ element, onChange, platform }) {
       field("Data type", h("select", { value: st.sample.dataType, onChange: (e) => { st.sample.dataType = e.target.value; saveSample(); rerender(); } },
         DATA_TYPES.map((v) => h("option", { key: v, value: v }, v)))),
       h("div", { className: "field" }, h("label", null, " "),
-        h("button", { type: "button", className: "btn btn-primary", disabled: st.testing || !element.mapUrl, onClick: runTest }, st.testing ? "Running…" : "Run test")),
+        h("button", { type: "button", className: "btn btn-primary", disabled: st.testing || !(element.mapUrl || inline), onClick: runTest }, st.testing ? "Running…" : "Run test")),
       field("Sample message", h("textarea", { rows: 8, value: st.sample.message, style: { width: "100%", fontFamily: "monospace" },
         onChange: (e) => { st.sample.message = e.target.value; saveSample(); rerender(); } }), null, true)),
     result ? h("div", null,
@@ -202,7 +246,7 @@ function FmlTransformEditor({ element, onChange, platform }) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [st.fullScreen]);
-  const tabs = [{ id: "settings", label: "Properties", panel: settings }, { id: "test", label: "Test", panel: test }];
+  const tabs = [{ id: "settings", label: "Properties", panel: settings }, { id: "map", label: "Map", panel: mapPanel }, { id: "test", label: "Test", panel: test }];
   const current = tabs.find((t) => t.id === st.tab) || tabs[0];
   return h(
     "div",
@@ -218,6 +262,7 @@ function FmlTransformEditor({ element, onChange, platform }) {
 
 export function register(platform) {
   React = platform.React;
+  registerLanguage("fml", FML_LANGUAGE, platform);
   try {
     if (platform.oie && platform.oie.STEP_TYPES && !platform.oie.STEP_TYPES[FML_TYPE]) platform.oie.STEP_TYPES[FML_TYPE] = { label: "FHIR FML Transform" };
   } catch {
@@ -232,12 +277,13 @@ export function register(platform) {
       fhirVersion: "R4",
       profiles: "",
       mapUrl: "",
+      mapSource: "",
       variable: "",
       validateOutput: true,
       contextVariables: ""
     }),
     validate: (el) => {
-      if (!String(el.mapUrl || "").trim()) return "Choose the map to run.";
+      if (!String(el.mapUrl || "").trim() && !String(el.mapSource || "").trim()) return "Write the map in the Map tab, or choose the map to run.";
       if (el.variable !== undefined && el.variable !== "" && !String(el.variable).trim()) return "Give the Channel Map variable a name.";
       return "";
     },

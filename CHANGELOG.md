@@ -5,6 +5,10 @@
 - **FHIR FML Transform** : second transformeur, qui exécute une map FML (StructureMap)
   sur le message vu par le modèle logique générique `OieMessage`, avec le moteur du
   core HL7 livré par FHIR Data Type. Canal de démo sur le port 8087.
+- **FML, map dans l'étape** : onglet *Map* avec l'éditeur de code en langage `fml`, propriété
+  `mapSource` enregistrée avec le canal et exécutée à la place de `mapUrl`, bouton *Check*
+  (route `POST /check`) qui positionne les erreurs du parseur et signale les `uses` et
+  `imports` introuvables.
 - **Mappeur** : expressions éditées dans l'éditeur de code de Web Admin (Monaco) avec
   complétion des fonctions, des variables d'itération, des chemins du message exemple,
   des références des autres étapes et de modèles de garde ; recherche dans l'arbre ;

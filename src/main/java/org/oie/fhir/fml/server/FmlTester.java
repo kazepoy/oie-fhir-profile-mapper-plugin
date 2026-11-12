@@ -43,7 +43,7 @@ public final class FmlTester {
         try {
             Map<?, ?> request = object(requestJson, "The test request");
             FhirFmlTransformStep step = FhirFmlTransformStep.fromJson(FhirJson.write(request.get("step")));
-            if (step.getMapUrl() == null || step.getMapUrl().isBlank()) throw new IllegalArgumentException("Choose the map to run.");
+            if (step.mapReference().isBlank()) throw new IllegalArgumentException("Write the map or choose the map to run.");
             Map<String, String> variables = new LinkedHashMap<>();
             for (String name : step.contextVariableNames()) variables.put(name, "");
             phase = "input";
@@ -54,7 +54,7 @@ public final class FmlTester {
             Map<String, String> context = Map.of("channelName", "test", "connectorName", "test");
             out.put("model", FhirJson.parse(FmlFacade.source(message, format, context, variables, step.getFhirVersion(), step.getProfiles())));
             phase = "transform";
-            String output = FmlFacade.transform(step.getMapUrl(), message, format, context, variables, step.getFhirVersion(), step.getProfiles());
+            String output = FmlFacade.transform(step.mapReference(), message, format, context, variables, step.getFhirVersion(), step.getProfiles());
             out.put("output", output);
             if (step.isValidateOutput()) {
                 phase = "validation";
@@ -71,6 +71,12 @@ public final class FmlTester {
         out.put("issues", issues);
         out.put("errors", errors);
         return FhirJson.write(out);
+    }
+
+    /** Checks a map written in a step: request {"mapSource", "fhirVersion", "profiles"}. */
+    public static String check(String requestJson) throws Exception {
+        Map<?, ?> request = object(requestJson, "The check request");
+        return FmlFacade.check(text(request.get("mapSource")), text(request.get("fhirVersion")), text(request.get("profiles")));
     }
 
     private static Map<?, ?> object(String json, String what) {

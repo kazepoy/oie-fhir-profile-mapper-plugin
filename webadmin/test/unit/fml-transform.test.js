@@ -20,7 +20,7 @@ test("registers the step with the defaults of the Java step", () => {
   assert.equal(step.label, "FHIR FML Transform");
   assert.equal(p.oie.STEP_TYPES[FML_TYPE].label, "FHIR FML Transform");
   assert.deepEqual(step.create(), {
-    __type: "org.oie.fhir.fml.FhirFmlTransformStep", name: "", enabled: true, fhirVersion: "R4", profiles: "", mapUrl: "",
+    __type: "org.oie.fhir.fml.FhirFmlTransformStep", name: "", enabled: true, fhirVersion: "R4", profiles: "", mapUrl: "", mapSource: "",
     variable: "", validateOutput: true, contextVariables: ""
   });
 });
@@ -29,7 +29,8 @@ test("asks for a map before saving", () => {
   const p = platform();
   register(p);
   const { validate, create } = p.types.get(FML_TYPE);
-  assert.equal(validate(create()), "Choose the map to run.");
+  assert.equal(validate(create()), "Write the map in the Map tab, or choose the map to run.");
+  assert.equal(validate({ ...create(), mapSource: "map \"u\" = \"n\"" }), "");
   assert.equal(validate({ ...create(), mapUrl: "http://example.org/fhir/StructureMap/OruPatient" }), "");
   assert.equal(validate({ ...create(), mapUrl: "http://example.org/m", variable: "  " }), "Give the Channel Map variable a name.");
 });

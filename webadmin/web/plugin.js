@@ -769,14 +769,14 @@ function createExpressionEditor(options) {
     const model = instance.getModel();
     const text = model.getValue();
     const lines = text.split("\n");
-    m.editor.setModelMarkers(model, OWNER, (messages || []).map((message) => ({
+    m.editor.setModelMarkers(model, OWNER, (messages || []).map((item) => typeof item === "string" ? { severity: m.MarkerSeverity.Error, message: item, startLineNumber: 1, startColumn: 1, endLineNumber: lines.length, endColumn: (lines[lines.length - 1]?.length || 0) + 1 } : {
       severity: m.MarkerSeverity.Error,
-      message,
-      startLineNumber: 1,
-      startColumn: 1,
-      endLineNumber: lines.length,
-      endColumn: (lines[lines.length - 1]?.length || 0) + 1
-    })));
+      message: item.message,
+      startLineNumber: Math.min(item.line || 1, lines.length),
+      startColumn: item.column || 1,
+      endLineNumber: Math.min(item.line || 1, lines.length),
+      endColumn: (lines[Math.min(item.line || 1, lines.length) - 1]?.length || 0) + 1
+    }));
     el.classList.toggle("fm-code-editor--invalid", !!(messages && messages.length));
   };
   const insert = (text) => {
@@ -819,6 +819,16 @@ function createExpressionEditor(options) {
       el.remove();
     }
   };
+}
+function registerLanguage(id, definition, host) {
+  const p = host || platform();
+  if (typeof p.registerEditorLanguage !== "function") return false;
+  try {
+    p.registerEditorLanguage(id, { load: () => definition, aliases: definition.aliases, extensions: definition.extensions });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // src/fhir/completion.js
@@ -3083,6 +3093,101 @@ function register(platform2) {
   registerProfileMapper(platform2);
 }
 
+// src/fml/language.js
+var KEYWORDS = [
+  "map",
+  "uses",
+  "alias",
+  "as",
+  "imports",
+  "group",
+  "extends",
+  "source",
+  "target",
+  "queried",
+  "produced",
+  "where",
+  "check",
+  "then",
+  "default",
+  "first",
+  "not_first",
+  "last",
+  "not_last",
+  "only_one",
+  "share",
+  "collate",
+  "log",
+  "types",
+  "type+",
+  "conceptmap",
+  "prefix",
+  "let"
+];
+var TRANSFORMS = [
+  "create",
+  "copy",
+  "truncate",
+  "escape",
+  "cast",
+  "append",
+  "translate",
+  "reference",
+  "dateOp",
+  "uuid",
+  "pointer",
+  "evaluate",
+  "cc",
+  "c",
+  "qty",
+  "id",
+  "cp"
+];
+var FML_LANGUAGE = {
+  aliases: ["FHIR Mapping Language", "fml"],
+  extensions: [".fml", ".map"],
+  configuration: {
+    comments: { lineComment: "//", blockComment: ["/*", "*/"] },
+    brackets: [["{", "}"], ["(", ")"], ["[", "]"]],
+    autoClosingPairs: [{ open: "{", close: "}" }, { open: "(", close: ")" }, { open: "'", close: "'", notIn: ["string"] }, { open: '"', close: '"', notIn: ["string"] }],
+    surroundingPairs: [{ open: "{", close: "}" }, { open: "(", close: ")" }, { open: "'", close: "'" }, { open: '"', close: '"' }]
+  },
+  tokensProvider: {
+    keywords: KEYWORDS,
+    transforms: TRANSFORMS,
+    tokenizer: {
+      root: [
+        [/\/\/.*$/, "comment"],
+        [/\/\*/, "comment", "@comment"],
+        [/<<[a-z+]+>>/, "keyword"],
+        [/"([^"\\]|\\.)*"\s*;/, "type.identifier"],
+        [/"([^"\\]|\\.)*"/, "string"],
+        [/'([^'\\]|\\.)*'/, "string"],
+        [/->/, "keyword.operator"],
+        [/[a-zA-Z_][\w]*(?=\s*\()/, { cases: { "@transforms": "predefined", "@keywords": "keyword", "@default": "identifier" } }],
+        [/[a-zA-Z_][\w]*/, { cases: { "@keywords": "keyword", "@default": "identifier" } }],
+        [/\d+(\.\d+)?/, "number"],
+        [/[{}()\[\]]/, "@brackets"],
+        [/[;,.:=]/, "delimiter"]
+      ],
+      comment: [[/[^/*]+/, "comment"], [/\*\//, "comment", "@pop"], [/[/*]/, "comment"]]
+    }
+  }
+};
+var FML_TEMPLATE = `map "http://example.org/fhir/StructureMap/MyMap" = "MyMap"
+
+uses "http://oie.org/fhir/StructureDefinition/OieMessage" alias OieMessage as source
+uses "http://hl7.org/fhir/StructureDefinition/Patient" alias Patient as target
+
+group MyMap(source src : OieMessage, target patient : Patient) {
+  src.node as pid where name = 'PID' then {
+    pid.node as birth where name = 'PID.7' then {
+      birth.node as ts where position = 1 then { ts.value as v -> patient.birthDate = (v.substring(0, 4) & '-' & v.substring(4, 2) & '-' & v.substring(6, 2)) "birthDate"; } "birth-ts";
+    } "birth";
+  } "pid";
+}
+`;
+
 // src/fml/legacy-editor.js
 var FML_TYPE = "org.oie.fhir.fml.FhirFmlTransformStep";
 var FML_API = "/extensions/fhir-fml";
@@ -3139,6 +3244,28 @@ function fmlSample(platform2, element) {
   const inbound = ctx?.transformer.inboundDataType || "HL7V2";
   const key = ctx ? `fhir-fml-sample:${ctx.channel.id}:${ctx.connector.metaDataId}` : "fhir-fml-sample:unknown";
   return { key, sample: { message: ctx?.transformer.inboundTemplate || "", dataType: DATA_TYPES.includes(inbound) ? inbound : "RAW" } };
+}
+function FmlMapEditor({ value, onChange, problems }) {
+  const host = React3.useRef(null);
+  const editor = React3.useRef(null);
+  const latest = React3.useRef(onChange);
+  latest.current = onChange;
+  React3.useEffect(() => {
+    const ed = createExpressionEditor({ value, language: "fml", multiline: true, minHeight: "360px", ariaLabel: "FML map", onChange: (text) => latest.current(text) });
+    editor.current = ed;
+    host.current.appendChild(ed.el);
+    return () => {
+      editor.current = null;
+      ed.dispose();
+    };
+  }, []);
+  React3.useEffect(() => {
+    if (editor.current && editor.current.getValue() !== (value || "")) editor.current.setValue(value || "");
+  }, [value]);
+  React3.useEffect(() => {
+    editor.current?.setMarkers(problems || []);
+  }, [problems]);
+  return h3("div", { ref: host, className: "fml-map-editor" });
 }
 function FmlTransformEditor({ element, onChange, platform: platform2 }) {
   const [, rerender] = React3.useReducer((x) => x + 1, 0);
@@ -3203,6 +3330,49 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
     st.testing = false;
     rerender();
   };
+  const checkMap = async () => {
+    st.checking = true;
+    rerender();
+    try {
+      const text2 = await platform2.api.post(
+        `${FML_API}/check`,
+        JSON.stringify({ mapSource: element.mapSource || "", fhirVersion: element.fhirVersion || "R4", profiles: element.profiles || "" }),
+        { contentType: "text/plain", raw: true, timeoutMs: 12e4 }
+      );
+      st.check = JSON.parse(text2);
+    } catch (e) {
+      st.check = { errors: [{ line: 1, column: 1, message: errorText2(e) }] };
+    }
+    st.checking = false;
+    rerender();
+  };
+  const inline = !!String(element.mapSource || "").trim();
+  const mapPanel = h3(
+    "div",
+    null,
+    h3("div", { className: "hint", style: { marginBottom: "8px" } }, "A map written here is saved with the channel and runs instead of the map chosen in Properties. It may import the maps and use the profiles and ConceptMaps of the profile locations."),
+    h3(
+      "div",
+      { className: "fml-row", style: { marginBottom: "8px" } },
+      h3("button", { type: "button", className: "btn btn-sm", disabled: st.checking || !inline, onClick: checkMap }, st.checking ? "Checking…" : "Check"),
+      !inline ? h3("button", { type: "button", className: "btn btn-sm", onClick: () => {
+        st.check = null;
+        set("mapSource", FML_TEMPLATE);
+      } }, "Start from an example") : null,
+      inline ? h3("button", { type: "button", className: "btn btn-sm", title: "Empty the map: the step then runs the map chosen in Properties", onClick: () => {
+        st.check = null;
+        set("mapSource", "");
+      } }, "Clear") : null,
+      st.check && !st.check.errors.length ? h3("span", { className: "fml-ok" }, `No problem found${st.check.name ? ` in ${st.check.name}` : ""}${st.check.groups?.length ? ` (groups: ${st.check.groups.join(", ")})` : ""}.`) : null,
+      st.check && st.check.errors.length ? h3("span", { className: "fml-error" }, `${st.check.errors.length} problem(s)`) : null
+    ),
+    h3(FmlMapEditor, { value: element.mapSource || "", problems: st.check?.errors || [], onChange: (text2) => {
+      element.mapSource = text2;
+      onChange();
+      if (!!text2.trim() !== inline) rerender();
+    } }),
+    (st.check?.errors || []).map((e, i) => h3("div", { key: i, className: "fml-error", style: { marginTop: "4px" } }, `Line ${e.line}, column ${e.column}: ${e.message}`))
+  );
   const mapOptions = st.maps || [];
   const knownMap = mapOptions.some((m) => m.url === element.mapUrl);
   const settings = h3(
@@ -3246,7 +3416,7 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
           mapOptions.map((m) => h3("option", { key: m.url, value: m.url }, `${m.title || m.name} — ${m.url}`))
         )
       ),
-      knownMap || !element.mapUrl ? "The map runs with the message as its source (OieMessage) and builds its target." : `Map ${element.mapUrl} is not in the loaded list.`,
+      inline ? "Not used: the step runs the map written in the Map tab." : knownMap || !element.mapUrl ? "The map runs with the message as its source (OieMessage) and builds its target." : `Map ${element.mapUrl} is not in the loaded list.`,
       true
     ),
     st.loadError ? h3("div", { className: "fml-wide fml-error" }, st.loadError) : null,
@@ -3288,7 +3458,7 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
         "div",
         { className: "field" },
         h3("label", null, " "),
-        h3("button", { type: "button", className: "btn btn-primary", disabled: st.testing || !element.mapUrl, onClick: runTest }, st.testing ? "Running…" : "Run test")
+        h3("button", { type: "button", className: "btn btn-primary", disabled: st.testing || !(element.mapUrl || inline), onClick: runTest }, st.testing ? "Running…" : "Run test")
       ),
       field("Sample message", h3("textarea", {
         rows: 8,
@@ -3322,7 +3492,7 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [st.fullScreen]);
-  const tabs = [{ id: "settings", label: "Properties", panel: settings }, { id: "test", label: "Test", panel: test }];
+  const tabs = [{ id: "settings", label: "Properties", panel: settings }, { id: "map", label: "Map", panel: mapPanel }, { id: "test", label: "Test", panel: test }];
   const current2 = tabs.find((t) => t.id === st.tab) || tabs[0];
   return h3(
     "div",
@@ -3351,6 +3521,7 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
 }
 function register2(platform2) {
   React3 = platform2.React;
+  registerLanguage("fml", FML_LANGUAGE, platform2);
   try {
     if (platform2.oie && platform2.oie.STEP_TYPES && !platform2.oie.STEP_TYPES[FML_TYPE]) platform2.oie.STEP_TYPES[FML_TYPE] = { label: "FHIR FML Transform" };
   } catch {
@@ -3364,12 +3535,13 @@ function register2(platform2) {
       fhirVersion: "R4",
       profiles: "",
       mapUrl: "",
+      mapSource: "",
       variable: "",
       validateOutput: true,
       contextVariables: ""
     }),
     validate: (el) => {
-      if (!String(el.mapUrl || "").trim()) return "Choose the map to run.";
+      if (!String(el.mapUrl || "").trim() && !String(el.mapSource || "").trim()) return "Write the map in the Map tab, or choose the map to run.";
       if (el.variable !== void 0 && el.variable !== "" && !String(el.variable).trim()) return "Give the Channel Map variable a name.";
       return "";
     },

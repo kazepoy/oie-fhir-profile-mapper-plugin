@@ -46,6 +46,10 @@ public final class FmlBridgeAdapter {
                 mapUrl, source, format, context, variables, options(version, profiles));
     }
 
+    public static String check(String mapSource, String version, String profiles) throws Exception {
+        return (String) call("check", new Class<?>[] { String.class, Map.class }, mapSource, options(version, profiles));
+    }
+
     public static synchronized void clearCaches() throws Exception {
         if (bridge != null) call("clearCaches", new Class<?>[0]);
     }

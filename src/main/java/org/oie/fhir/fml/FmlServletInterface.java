@@ -45,6 +45,17 @@ public interface FmlServletInterface extends BaseServletInterface {
     @MirthOperation(name = "getFhirFmlSource", display = "Read the OIE model of a sample message", permission = PERMISSION_EDIT)
     String getSource(String request) throws ClientException;
 
+    /**
+     * Parses a map written in a step: body {"mapSource", "fhirVersion", "profiles"}, answer {"url",
+     * "name", "groups", "errors": [{"line", "column", "message"}]}.
+     */
+    @POST
+    @Path("/check")
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
+    @MirthOperation(name = "checkFhirFmlMap", display = "Check an FML map", permission = PERMISSION_EDIT)
+    String check(String request) throws ClientException;
+
     /** Forgets the loaded maps and profiles: the next call reads the files again. */
     @POST
     @Path("/reload")

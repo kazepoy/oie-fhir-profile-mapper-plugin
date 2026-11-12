@@ -28,6 +28,8 @@ public class FhirFmlTransformStep extends Step {
     private String fhirVersion = "R4";
     private String profiles = "";
     private String mapUrl = "";
+    /** The FML text of the map, kept in the step; when not blank it runs instead of mapUrl. */
+    private String mapSource = "";
     private String variable = "";
     private Boolean validateOutput = true;
     private String contextVariables = "";
@@ -39,6 +41,7 @@ public class FhirFmlTransformStep extends Step {
         fhirVersion = props.getFhirVersion();
         profiles = props.getProfiles();
         mapUrl = props.getMapUrl();
+        mapSource = props.getMapSource();
         variable = props.getVariable();
         validateOutput = props.isValidateOutput();
         contextVariables = props.getContextVariables();
@@ -46,8 +49,8 @@ public class FhirFmlTransformStep extends Step {
 
     @Override
     public String getScript(boolean loadFiles) throws ScriptBuilderException {
-        String map = text(mapUrl);
-        if (map.isEmpty()) throw new ScriptBuilderException(PLUGIN_POINT + " \"" + text(getName()) + "\": choose the map to run.");
+        String map = FmlFacade.mapReference(mapSource, mapUrl);
+        if (map.isEmpty()) throw new ScriptBuilderException(PLUGIN_POINT + " \"" + text(getName()) + "\": write the map or choose the map to run.");
         StringBuilder sb = new StringBuilder();
         sb.append("(function () {\n");
         // The message as OIE holds it: its internal XML (HL7 v2, delimited, XML…), JSON, or text.
@@ -114,6 +117,7 @@ public class FhirFmlTransformStep extends Step {
         step.setFhirVersion(string(m, "fhirVersion").isEmpty() ? "R4" : string(m, "fhirVersion"));
         step.setProfiles(string(m, "profiles"));
         step.setMapUrl(string(m, "mapUrl"));
+        step.setMapSource(string(m, "mapSource"));
         step.setVariable(string(m, "variable"));
         step.setContextVariables(string(m, "contextVariables"));
         Object validate = m.get("validateOutput");
@@ -153,6 +157,13 @@ public class FhirFmlTransformStep extends Step {
     public String getMapUrl() { return mapUrl; }
 
     public void setMapUrl(String mapUrl) { this.mapUrl = mapUrl; }
+
+    public String getMapSource() { return mapSource == null ? "" : mapSource; }
+
+    public void setMapSource(String mapSource) { this.mapSource = mapSource; }
+
+    /** What the engine runs: the step's own map text, else the canonical URL. */
+    public String mapReference() { return FmlFacade.mapReference(mapSource, mapUrl); }
 
     public String getVariable() { return variable; }
 

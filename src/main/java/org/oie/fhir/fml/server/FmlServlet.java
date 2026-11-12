@@ -37,6 +37,15 @@ public class FmlServlet extends MirthServlet implements FmlServletInterface {
     }
 
     @Override
+    public String check(String request) throws ClientException {
+        try {
+            return FmlTester.check(request);
+        } catch (Exception e) {
+            throw new ClientException(e.getMessage(), e);
+        }
+    }
+
+    @Override
     public String reload() throws ClientException {
         try {
             FmlFacade.clearCaches();

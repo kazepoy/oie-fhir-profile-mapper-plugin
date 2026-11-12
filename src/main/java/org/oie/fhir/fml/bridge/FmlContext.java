@@ -54,7 +54,21 @@ final class FmlContext {
         this.worker = worker;
     }
 
+    /** Inline maps (the FML text kept in a step), parsed once per text. */
+    private final Map<String, StructureMap> inline = new java.util.concurrent.ConcurrentHashMap<>();
+
     StructureMap map(String url) { return maps.get(url); }
+
+    /** The map written in a step; a parse error is the caller's to report. */
+    StructureMap inline(String text) throws Exception {
+        StructureMap map = inline.get(text);
+        if (map == null) {
+            map = new StructureMapUtilities(worker).parse(text, "step");
+            if (inline.size() > 200) inline.clear();
+            inline.put(text, map);
+        }
+        return map;
+    }
 
     List<StructureMap> maps() { return new ArrayList<>(maps.values()); }
 

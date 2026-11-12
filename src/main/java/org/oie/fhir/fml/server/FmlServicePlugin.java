@@ -35,7 +35,7 @@ public final class FmlServicePlugin implements ServicePlugin {
         return new ExtensionPermission[] {
             new ExtensionPermission(name, FmlServletInterface.PERMISSION_EDIT,
                     "Use the FHIR FML Transform editor: maps of the profile locations, OIE model of a sample message, reload of the maps.",
-                    new String[] { "getFhirFmlMaps", "getFhirFmlSource", "reloadFhirFml" }, new String[0]),
+                    new String[] { "getFhirFmlMaps", "getFhirFmlSource", "reloadFhirFml", "checkFhirFmlMap" }, new String[0]),
             new ExtensionPermission(name, FmlServletInterface.PERMISSION_TEST,
                     "Run a FHIR FML Transform step on a sample message.",
                     new String[] { "testFhirFml" }, new String[0])

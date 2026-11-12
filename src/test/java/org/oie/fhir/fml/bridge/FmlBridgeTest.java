@@ -102,4 +102,24 @@ public class FmlBridgeTest {
             assertTrue(e.getMessage().contains("http://example.org/unknown"));
         }
     }
+
+    @Test
+    public void runsAMapWrittenInTheStepAndChecksIt() throws Exception {
+        String text = Files.readString(Path.of(fixture("fml/maps/OruPatient.fml")));
+        JsonNode patient = JSON.readTree(bridge.transform(FmlBridge.INLINE + text, oru, "xml", Map.of(), Map.of(), options()));
+        assertEquals("Patient", patient.path("resourceType").asText());
+        assertEquals(JSON.readTree(bridge.transform(PATIENT_MAP, oru, "xml", Map.of(), Map.of(), options())), patient);
+
+        JsonNode ok = JSON.readTree(bridge.check(text, options()));
+        assertEquals(PATIENT_MAP, ok.path("url").asText());
+        assertEquals(0, ok.path("errors").size());
+
+        JsonNode broken = JSON.readTree(bridge.check(text.replaceFirst("group ", "groupe "), options()));
+        assertEquals(1, broken.path("errors").size());
+        assertTrue(broken.path("errors").get(0).path("line").asInt() >= 1);
+        assertFalse(broken.path("errors").get(0).path("message").asText().isEmpty());
+
+        JsonNode unknown = JSON.readTree(bridge.check(text.replace("StructureDefinition/OieMessage", "StructureDefinition/Missing"), options()));
+        assertTrue(unknown.path("errors").get(0).path("message").asText().contains("Missing"));
+    }
 }
