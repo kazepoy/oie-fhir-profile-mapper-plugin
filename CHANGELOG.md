@@ -2,6 +2,10 @@
 
 ## Non publié (branche `feat/refonte`)
 
+- **Documentation utilisateur** : [manuel illustré](doc/user-manual/README.md),
+  avec parcours par fonctionnalité pour le Profile Mapper, FML et les réglages,
+  captures réelles de la démo et limites actuelles des aperçus et validations.
+
 - **Studio, assistance et branches (R-05/R-06 partiels)** : menu contextuel par
   clic droit, Maj+F10 ou *⋯* ; duplication des occurrences répétables avec nouveaux
   chemins et IDs, conservés par Undo/Redo ; activation de branche et copie JSON.

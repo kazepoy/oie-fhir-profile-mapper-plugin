@@ -43,6 +43,7 @@ Administration: <https://localhost:8443/oie-webadmin/> (`admin` /
 
 Detailed documentation is in French:
 
+- [Illustrated user manual](doc/user-manual/README.md): Profile Mapper, FML and Settings, with feature-by-feature procedures and screenshots
 - [Development, installation and releases](doc/Developpement.md)
 - [Mapping format and execution](doc/Specification-mapping.md)
 - [Graphical mapper](doc/Mappeur-graphique.md)
