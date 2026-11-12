@@ -1,0 +1,17 @@
+/* SPDX-License-Identifier: MPL-2.0
+ * Styles shared by the two step editors: full screen, the one-line code editor
+ * of an expression, and the elements a test or the compiler reported.
+ * Colours come from the Web Admin variables, so both themes follow the host.
+ */
+.fhir-profile-mapper.mapper-fullscreen, .fhir-fml.mapper-fullscreen { position: fixed; inset: 0; z-index: 900; overflow: auto; padding: 14px 18px; background: var(--bg2, #fff); color: var(--text, #1f2c38); }
+
+.fm-code-editor--line { width: 100%; height: 26px; min-height: 26px !important; border-radius: 4px; overflow: hidden; }
+.fm-code-editor--line .ce-gutter { display: none; }
+.fm-code-editor--line textarea.ce-area { height: 26px; min-height: 26px; padding: 3px 6px; resize: none; white-space: nowrap; overflow: hidden; }
+.fm-code-editor--line .monaco-host { height: 26px; }
+.fm-code-editor--invalid { outline: 1px solid var(--err, #cc3b3b); }
+.mapper-expression-editing { flex: 1 1 auto; min-width: 160px; }
+
+.fhir-profile-mapper .mapper-tree tr.mapper-node-error > td { background: color-mix(in srgb, var(--err, #cc3b3b) 10%, var(--bg2, #fff)); }
+.fhir-profile-mapper .mapper-tree tr.mapper-node-error > td:first-child { border-left-color: var(--err, #cc3b3b); }
+.fhir-profile-mapper .mapper-tree tr.mapper-node-error input[role=combobox] { border-color: var(--err, #cc3b3b); }

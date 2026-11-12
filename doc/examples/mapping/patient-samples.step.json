@@ -1,0 +1,10 @@
+{
+  "action": "resource",
+  "resourceType": "Patient",
+  "fhirVersion": "R4",
+  "profileUrl": "http://hl7.org/fhir/StructureDefinition/Patient",
+  "validateOutput": true,
+  "mappings": "[{\"key\":\"Patient.id\",\"type\":\"id\",\"expression\":\"msg.patient.id\",\"path\":[[\"id\"]]},{\"key\":\"Patient.name.family\",\"type\":\"string\",\"expression\":\"msg.patient.family\",\"path\":[[\"name\",\"#0\"],[\"family\"]]},{\"key\":\"Patient.birthDate\",\"type\":\"date\",\"expression\":\"msg.patient.birthDate\",\"path\":[[\"birthDate\"]]}]",
+  "name": "Patient avec jeux d'essai",
+  "samples": "[{\"id\": \"nominal\", \"name\": \"Patient nominal\", \"dataType\": \"JSON\", \"message\": \"{\\n  \\\"patient\\\": {\\\"id\\\": \\\"patient-42\\\", \\\"family\\\": \\\"Durand\\\", \\\"birthDate\\\": \\\"19850412\\\"},\\n  \\\"observations\\\": [\\n    {\\\"code\\\": \\\"GLU\\\", \\\"value\\\": \\\"6.80\\\"},\\n    {\\\"code\\\": \\\"K\\\", \\\"value\\\": \\\"4.10\\\"}\\n  ]\\n}\\n\", \"expected\": null}, {\"id\": \"sans-naissance\", \"name\": \"Sans date de naissance\", \"dataType\": \"JSON\", \"message\": \"{\\\"patient\\\": {\\\"id\\\": \\\"patient-42\\\", \\\"family\\\": \\\"Durand\\\"}, \\\"observations\\\": [{\\\"code\\\": \\\"GLU\\\", \\\"value\\\": \\\"6.80\\\"}, {\\\"code\\\": \\\"K\\\", \\\"value\\\": \\\"4.10\\\"}]}\", \"expected\": null}]"
+}

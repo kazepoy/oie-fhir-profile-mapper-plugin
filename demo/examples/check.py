@@ -163,6 +163,10 @@ def main():
     fml = json.loads(post("FML_PATIENT_PORT", 8087, "patient", "oru-r01-minimal.er7", "text/plain"))
     assert fml == patient, fml
     print("OK ORU → Patient par FML, identique au Profile Mapper")
+    # La même map écrite dans l'étape (mapSource), sans fichier de map sur le serveur.
+    inline = json.loads(post("FML_INLINE_PORT", 8089, "patient", "oru-r01-minimal.er7", "text/plain"))
+    assert inline == patient, inline
+    print("OK ORU → Patient par la map FML écrite dans l'étape, identique")
 
     transaction = json.loads(post("LAB_BUNDLES_PORT", 8083, "labo", "oru-r01-labo.er7", "text/plain"))
     message = messages("labo")[0]

@@ -1,7 +1,7 @@
 // Tests of the FHIR FML Transform step registration (web/fml-transform.js).
 import test from "node:test";
 import assert from "node:assert/strict";
-import { register, FML_TYPE } from "../../src/fml/legacy-editor.js";
+import { register, FML_TYPE } from "../../src/fml/editor.js";
 
 function platform() {
   const types = new Map();

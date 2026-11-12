@@ -11,7 +11,10 @@ Le format des mappings, son schéma et les exemples exécutés par
 | `src/main/java/org/oie/fhir/mapper/` | Compilateur des étapes et métadonnées de déploiement |
 | `src/main/java/org/oie/fhir/mapper/server/` | Cycle de vie, API et exécution des tests de l'éditeur |
 | `src/main/java/org/oie/fhir/mapper/integration/` | Adaptateur du datatype et pont de catalogue |
-| `webadmin/` | Éditeurs Web Admin : sources dans `src/` (esbuild), tests dans `test/unit`, bundle généré `web/plugin.js` |
+| `src/main/java/org/oie/fhir/fml/` | Étape FHIR FML Transform, son API et son pont vers le moteur FML (`lib/fhir-fml-bridge.jar`) |
+| `webadmin/src/` | Éditeurs Web Admin : `profile-mapper/editor.js`, `fml/editor.js` et `fml/language.js`, `fhir/` (complétion, lecture de l'exemple, historique, comparaison de résultats), `trace/`, `host/` (éditeur de code, références, action de message) |
+| `webadmin/test/` | `unit/` : tests Node sans navigateur ; `e2e/` : parcours Playwright contre la démo |
+| `webadmin/web/plugin.js` | Bundle **généré** par `npm run build` (esbuild) ; ne pas l'éditer |
 | `tools/` | Outils Python : contrôle du schéma, édition d'une étape dans un export de channel |
 | `src/main/resources/plugin.xml` | Descripteur de l'extension, versionné depuis le POM |
 | `assembly.xml` | Assemblage du ZIP installable |
@@ -53,6 +56,7 @@ mvn install:install-file \
   -DgroupId=com.matthy.oie -DartifactId=datatype-fhir-engine -Dversion=1.5.1 -Dpackaging=jar
 mvn clean package
 (cd webadmin && npm ci && npm test && npm run build)   # régénère webadmin/web/plugin.js depuis webadmin/src
+(cd webadmin && npm run test:e2e)                      # contre la démo lancée (Playwright)
 python3 -m unittest discover -s tools/tests
 ```
 

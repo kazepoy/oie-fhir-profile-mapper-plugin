@@ -82,7 +82,7 @@ services:
       start_period: 120s
     logging: *logging
 
-  # Importe les six exemples repris du POC et la variante Strict Parser sans remplacer les canaux existants.
+  # Importe les canaux de demo/oie-init/channels sans remplacer les canaux existants.
   oie-init:
     image: curlimages/curl:8.21.0
     restart: "no"

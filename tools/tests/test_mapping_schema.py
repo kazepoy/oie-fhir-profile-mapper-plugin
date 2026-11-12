@@ -20,7 +20,7 @@ class MappingSchemaTest(unittest.TestCase):
         Draft202012Validator.check_schema(SCHEMA)
 
     def test_documented_examples(self):
-        for name in ("patient.step.json", "laboratory.steps.json", "unresolved-reference.steps.json"):
+        for name in ("patient.step.json", "patient-samples.step.json", "laboratory.steps.json", "unresolved-reference.steps.json"):
             value = json.loads((EXAMPLES / name).read_text())
             for step in value if isinstance(value, list) else [value]:
                 with self.subTest(file=name, resource=step["resourceType"]):
@@ -30,7 +30,7 @@ class MappingSchemaTest(unittest.TestCase):
 
     def test_all_demo_channels(self):
         channels = list((ROOT / "demo/oie-init/channels").glob("*.xml"))
-        self.assertEqual(8, len(channels))  # sept canaux Profile Mapper, un canal FML
+        self.assertEqual(9, len(channels))  # sept canaux Profile Mapper, deux canaux FML
         count = 0
         for path in channels:
             # OIE stocke le nom dans CHANNEL.NAME, varchar(40) : un nom plus long fait échouer l'import.

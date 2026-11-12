@@ -211,7 +211,7 @@ plugin d'autorisation comme RBAC.
 
 ## 5. Éditeur
 
-[legacy-editor.js](../webadmin/src/fml/legacy-editor.js), trois onglets :
+[editor.js](../webadmin/src/fml/editor.js), trois onglets :
 
 - **Map** : la map de l'étape dans l'éditeur de code de Web Admin, en langage `fml`
   (coloration des mots-clés, chaînes, commentaires, noms de règles). **Check** envoie
@@ -233,13 +233,17 @@ avec les profils et ConceptMaps de `/fhir-ig`. Il produit le même Patient
 `ExampleLabPatient` que le channel Profile Mapper du port 8082 ;
 [check.py](../demo/examples/check.py) le vérifie.
 
+Le channel **ORU R01 vers Patient FHIR (FML inline)** (port 8089) porte la même map
+dans sa propriété `mapSource`, sans `/fhir-fml` dans ses emplacements : il montre la
+map écrite et vérifiée dans l'onglet **Map**.
+
 ## 7. Tests
 
 | Test | Ce qu'il vérifie |
 |---|---|
 | [FmlBridgeTest](../src/test/java/org/oie/fhir/fml/bridge/FmlBridgeTest.java) | Liste des maps, modèle OIE (noms, positions, occurrences, contexte), Patient avec `translate()`, Bundle avec `imports` et type choix, map inconnue |
 | [FhirFmlTransformStepTest](../src/test/java/org/oie/fhir/fml/FhirFmlTransformStepTest.java) | Script exécuté dans Rhino avec E4X, publication dans `msg` ou une variable, échec d'une map inconnue, test sur message exemple, map de démo valide contre `ExampleLabPatient`, sérialisation XML du channel |
-| [fml-transform.test.mjs](../webadmin/test/fml-transform.test.mjs) | Enregistrement de l'étape dans l'administration web |
+| [fml-transform.test.js](../webadmin/test/unit/fml-transform.test.js) | Enregistrement de l'étape dans l'administration web |
 
 Les fixtures sont dans `src/test/resources/fml/` : deux maps et un ORU sérialisé
 par OIE.
@@ -247,7 +251,7 @@ par OIE.
 ## 8. Limites et suites
 
 - **Canonique du modèle** `http://oie.org/fhir/…` : provisoire, à fixer avec la
-  migration de namespace prévue au [plan](Plan.md#phases-ultérieures).
+  migration de namespace prévue au [plan](plan-refonte.md).
 - **Concurrence** : une transformation à la fois par contexte (mêmes version et
   emplacements). À mesurer avec les outils de charge ; un pool de contextes est
   possible si besoin.

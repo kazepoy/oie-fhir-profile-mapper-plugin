@@ -849,6 +849,9 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     } catch {
       // no storage: use this transformer's inbound template
     }
+    // Samples saved with the step come first: they are the same for every user of the channel.
+    const savedSamples = stepSamples(element);
+    if (savedSamples.length) sample = { message: savedSamples[0].message, dataType: savedSamples[0].dataType || "HL7V2" };
     state.current = {
       values,
       iterations,
@@ -857,6 +860,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       // shown when something below an extension, modifierExtension or id (that "extensions & ids" shows) is mapped
       showAll: [...values.keys(), ...iterations.keys(), ...conditions.keys()].some((k) => /\.(extension|modifierExtension|id)(\[\d+\])?(\.|$)/.test(k)),
       sample,
+      activeSample: savedSamples.length ? savedSamples[0].id : null,
       sampleKey: initial.key,
       testResult: null,
       scriptResult: null,

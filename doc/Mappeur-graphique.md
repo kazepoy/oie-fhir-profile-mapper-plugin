@@ -18,7 +18,7 @@ Saisie graphique → état de l'éditeur → mappings JSON → compilation serve
 
 L'onglet Generated Script et les contrôles d'étape utilisent le même compilateur serveur. Ils ne sont pas un second générateur propre à l'interface.
 
-Source principale : [webadmin/web/plugin.js](../webadmin/web/plugin.js). L'étape est enregistrée par `registerProfileMapper()` ; son composant est `ProfileMapperEditor`.
+Source principale : [webadmin/src/profile-mapper/editor.js](../webadmin/src/profile-mapper/editor.js). L'étape est enregistrée par `registerProfileMapper()` ; son composant est `ProfileMapperEditor`. Le fichier `webadmin/web/plugin.js` en est le bundle généré.
 
 Le tableau est compact : les champs et l'aide FHIR ont une hauteur bornée, sans
 modifier la densité des autres écrans de Web Admin. Les branches ouvertes sont
@@ -228,10 +228,11 @@ Les options, les limites et la portée de l'aperçu sont précisées dans
 
 L'administration Swing ne connaît pas cet éditeur. Ne sont pas pris en charge : les extensions primitives, les ressources `contained`, les sous-slices et les discriminants de slicing `type`, `profile` et `exists` ; la traduction locale sans `dependsOn`/`product` ni traduction inverse.
 
-Les [tests de l'éditeur](../webadmin/test/profile-mapper.test.mjs) se lancent avec :
+Les [tests de l'éditeur](../webadmin/test/unit/profile-mapper.test.js) se lancent avec :
 
 ```bash
-node --test webadmin/test/
+(cd webadmin && npm test)        # sans navigateur
+(cd webadmin && npm run test:e2e) # parcours Playwright contre la démo lancée
 ```
 
 Le [README de la démonstration](Demo.md) décrit les six channels et leurs ports HTTP, dont les exemples SQL XML et CSV nettoyé à la source puis mappé en destination, avec résultats individuels ou collection.

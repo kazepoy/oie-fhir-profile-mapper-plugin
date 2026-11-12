@@ -9,14 +9,34 @@ Environnement de démonstration du plugin de mapping :
   (diridium-com), qui remplace l'autorisation « tout permis » d'OIE par des rôles ;
 - [OIE Flow UI](https://github.com/kazepoy/oie-flow-ui-plugin) **0.8.1**, pour suivre
   les messages dans les canaux (Flows Monitoring, Channel Flow) ;
-- FHIR Profile Mapper **0.1.0-SNAPSHOT**, compilé depuis les sources du projet.
+- FHIR Profile Mapper **0.1.0-SNAPSHOT**, compilé depuis les sources du projet, avec
+  ses deux étapes : FHIR Profile Mapper et [FHIR FML Transform](Transformation-FML.md).
 
 Web Support, FHIR Data Type, RBAC et Flow UI sont téléchargés au build, avec vérification
 de leur SHA-256. Le mapper est compilé avec Maven à partir de l'API de l'image OIE
 cible, puis installé dans cette même image. Le compilateur, le runtime et
-l'éditeur graphique sont repris du POC. L'initialisation importe et déploie les
-six canaux de référence, avec leur IG de démonstration montée dans `/fhir-ig`, et
-une variante du canal Patient lue avec le Strict Parser HL7 v2 (§ ci-dessous).
+l'éditeur graphique sont repris du POC. L'initialisation importe et déploie neuf
+canaux, avec leur IG de démonstration montée dans `/fhir-ig` et la map FML de
+[demo/fml](../demo/fml) montée dans `/fhir-fml`.
+
+## Ce que montre chaque canal
+
+| Canal | Port | Fonctions montrées |
+|---|---|---|
+| ORU R01 vers Bundle FHIR | 8081 | Bundle nommé, sept étapes, itérations de ressources, références entre étapes (`fhirRef`), traductions ConceptMap, **trace des messages traités** (action *FHIR mapping trace* dans Messages), **exemples enregistrés** sur l'étape Patient |
+| ORU R01 vers Patient FHIR | 8082 | Une ressource seule ; slices, itération, condition, traduction ; **deux exemples avec résultat attendu** (*Run all* dans l'onglet Test) |
+| ORU R01 vers deux Bundles labo FHIR | 8083 | Deux Bundles (transaction et document) qui partagent les mêmes ressources, résultat en variable, chaînes de destinations |
+| SQL XML vers Patient FHIR | 8084 | Source XML, accents et zéros initiaux |
+| CSV patients métier vers Patient FHIR | 8085 | Nettoyage à la source, mapping en destination |
+| CSV patients métier vers collection | 8086 | Bundle `collection` |
+| ORU R01 vers Patient FHIR (FML) | 8087 | Étape **FHIR FML Transform** sur une map fichier (`/fhir-fml/OruR01ToPatient.fml`) |
+| ORU R01 vers Patient FHIR (strict) | 8088 | Strict Parser HL7 v2 : mêmes règles, autres chemins |
+| ORU R01 vers Patient FHIR (FML inline) | 8089 | **Map FML écrite dans l'étape** (onglet Map, *Check*), sans fichier de map |
+
+Pour voir l'assistance à la saisie : ouvrir le canal du port 8082, son transformeur
+source, l'étape *Patient*, puis **Full screen**. Cliquer un champ pour l'éditer avec
+la complétion, ouvrir **Sample fields** pour insérer un chemin de l'exemple, et
+lancer **Run all** dans l'onglet Test.
 
 ## Lancer
 
@@ -72,7 +92,9 @@ HTTP et lit les messages via l'API OIE, sans modifier les canaux.
 | 8084 | `/sql-patient/` | Ligne XML SQL vers Patient, accents et zéros initiaux conservés |
 | 8085 | `/csv-patients/` | Dix messages Patient après nettoyage du CSV ; dernier Patient en réponse HTTP |
 | 8086 | `/csv-patients-collection/` | Un Bundle collection contenant les dix Patients |
+| 8087 | `/patient/` | Patient par la map FML `OruR01ToPatient`, identique à celui du port 8082 |
 | 8088 | `/patient/` | Patient par le Strict Parser HL7 v2, identique à celui du port 8082 |
+| 8089 | `/patient/` | Patient par la map FML écrite dans l'étape, identique à celui du port 8082 |
 
 Le canal du port 8088, *ORU R01 vers Patient FHIR (strict)*, reprend celui du
 port 8082 avec **Use Strict Parser** et **Strip Namespaces** dans les propriétés

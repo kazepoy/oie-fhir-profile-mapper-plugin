@@ -1,21 +1,18 @@
 // SPDX-License-Identifier: MPL-2.0
 // Plugin entry point. Web Admin calls register(platform) once, after sign-in.
-// Two transformer steps: FHIR Profile Mapper (graphical) and FHIR FML Transform.
+// Two transformer steps (FHIR Profile Mapper, FHIR FML Transform), the mapper's
+// functions in the Reference panel, and the trace action of the message browser.
 import { bindPlatform } from "./host/platform.js";
-import { bindReact } from "./host/react.js";
 import { installStyles } from "./host/styles.js";
 import { registerMapperReferences } from "./host/references.js";
 import { registerTraceAction } from "./host/message-action.js";
-import { setLocale } from "./i18n/index.js";
-import { STYLE_SHEETS } from "./styles.js";
-import { register as registerProfileMapper } from "./profile-mapper/legacy-editor.js";
-import { register as registerFml } from "./fml/legacy-editor.js";
+import editorStyles from "./styles/editor.css";
+import { register as registerProfileMapper } from "./profile-mapper/editor.js";
+import { register as registerFml } from "./fml/editor.js";
 
 export function register(platform) {
   bindPlatform(platform);
-  bindReact(platform.React);
-  setLocale(navigator.languages ?? [navigator.language]);
-  installStyles(STYLE_SHEETS);
+  installStyles([editorStyles]);
   registerProfileMapper(platform);
   registerFml(platform);
   registerTraceAction();

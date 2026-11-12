@@ -22,11 +22,6 @@ await build({
   external: ["@oie/*"],
   // CSS files are injected by the plugin itself (src/host/styles.js).
   loader: { ".css": "text" },
-  // JSX uses the host's React through src/host/react.js.
-  jsx: "transform",
-  jsxFactory: "h",
-  jsxFragment: "Fragment",
-  inject: ["src/host/jsx-runtime.js"],
   define: { __MAPPER_VERSION__: JSON.stringify(version) },
   banner: { js: `// OIE FHIR Mapper ${version} · MPL-2.0 · generated from webadmin/src by build.mjs: do not edit` },
   legalComments: "none",

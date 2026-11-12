@@ -7,6 +7,7 @@
 @patient = http://localhost:8082/patient/
 @strictPatient = http://localhost:8088/patient/
 @fmlPatient = http://localhost:8087/patient/
+@fmlInlinePatient = http://localhost:8089/patient/
 @labo = http://localhost:8083/labo/
 @sqlPatient = http://localhost:8084/sql-patient/
 @csvPatients = http://localhost:8085/csv-patients/
@@ -128,6 +129,12 @@ Content-Type: text/plain; charset=UTF-8
 < ./oru-r01-minimal.er7
 ### 9 bis. Le même Patient par la map FML /fhir-fml/OruR01ToPatient.fml (étape FHIR FML Transform)
 POST {{fmlPatient}}
+Content-Type: text/plain; charset=UTF-8
+
+< ./oru-r01-minimal.er7
+
+### 9 bis (suite). Le même Patient par la map écrite dans l'étape (mapSource), sans fichier de map
+POST {{fmlInlinePatient}}
 Content-Type: text/plain; charset=UTF-8
 
 < ./oru-r01-minimal.er7
