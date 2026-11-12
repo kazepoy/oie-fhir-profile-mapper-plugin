@@ -52,6 +52,9 @@ COPY --from=plugins /extensions/datatype-fhir/lib/datatype-fhir-engine.jar /engi
 COPY pom.xml assembly.xml LICENSE ./
 COPY src ./src
 COPY doc/examples/mapping ./doc/examples/mapping
+# L'IG et les maps FML de la démo : le test de la map de démo les valide.
+COPY demo/ig ./demo/ig
+COPY demo/fml ./demo/fml
 COPY webadmin ./webadmin
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -ntp install:install-file -Dfile=/engine/server-api.jar \
@@ -73,5 +76,5 @@ FROM oie-engine
 COPY --from=plugins --chown=engine:engine /extensions/ /opt/engine/extensions/
 COPY --from=mapper --chown=engine:engine /extensions/ /opt/engine/extensions/
 # OIE ne journalise que les erreurs par défaut pour les loggers non configurés.
-RUN printf '\nlogger.fhirProfileMapper.name = org.oie.fhir.mapper\nlogger.fhirProfileMapper.level = INFO\n' >> conf/log4j2.properties
+RUN printf '\nlogger.fhirProfileMapper.name = org.oie.fhir.mapper\nlogger.fhirProfileMapper.level = INFO\nlogger.fhirFml.name = org.oie.fhir.fml\nlogger.fhirFml.level = INFO\n' >> conf/log4j2.properties
 LABEL org.opencontainers.image.title="OIE 4.7.0, Web Support, FHIR Data Type, RBAC, Flow UI et FHIR Profile Mapper"

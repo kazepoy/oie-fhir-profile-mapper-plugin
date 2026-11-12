@@ -52,7 +52,7 @@ mvn install:install-file \
   -Dfile="$OIE_INSTALL_DIR/extensions/datatype-fhir/lib/datatype-fhir-engine.jar" \
   -DgroupId=com.matthy.oie -DartifactId=datatype-fhir-engine -Dversion=1.5.1 -Dpackaging=jar
 mvn clean package
-node --test webadmin/test/
+(cd webadmin && npm ci && npm test && npm run build)   # régénère webadmin/web/plugin.js depuis webadmin/src
 python3 -m unittest discover -s tools/tests
 ```
 
@@ -64,6 +64,7 @@ fhir-profile-mapper/
   plugin.xml
   fhir-profile-mapper-server.jar
   lib/fhir-profile-mapper-bridge.jar
+  lib/fhir-fml-bridge.jar
   webadmin/plugin.json
   webadmin/web/plugin.js
 ```

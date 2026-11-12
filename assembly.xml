@@ -25,6 +25,11 @@
       <outputDirectory>/lib</outputDirectory>
       <destName>fhir-profile-mapper-bridge.jar</destName>
     </file>
+    <file>
+      <source>${project.build.directory}/${project.build.finalName}-fml-bridge.jar</source>
+      <outputDirectory>/lib</outputDirectory>
+      <destName>fhir-fml-bridge.jar</destName>
+    </file>
   </files>
   <fileSets>
     <fileSet>

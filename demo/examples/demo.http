@@ -6,6 +6,7 @@
 @oru = http://localhost:8081/oru/
 @patient = http://localhost:8082/patient/
 @strictPatient = http://localhost:8088/patient/
+@fmlPatient = http://localhost:8087/patient/
 @labo = http://localhost:8083/labo/
 @sqlPatient = http://localhost:8084/sql-patient/
 @csvPatients = http://localhost:8085/csv-patients/
@@ -125,3 +126,16 @@ POST {{strictPatient}}
 Content-Type: text/plain; charset=UTF-8
 
 < ./oru-r01-minimal.er7
+### 9 bis. Le même Patient par la map FML /fhir-fml/OruR01ToPatient.fml (étape FHIR FML Transform)
+POST {{fmlPatient}}
+Content-Type: text/plain; charset=UTF-8
+
+< ./oru-r01-minimal.er7
+
+### 9 ter. Le modèle logique OIE (OieMessage) que la map reçoit pour ce message
+POST {{oie}}/extensions/fhir-fml/source
+Authorization: {{auth}}
+X-Requested-With: OpenAPI
+Content-Type: text/plain
+
+{"message": "MSH|^~\\&|LAB|EXAMPLE-LAB|OIE|EXAMPLE-HOSP|20260114171908||ORU^R01^ORU_R01|MSG-0002|P|2.5.1\rPID|1||100001^^^EXAMPLE^PI||MARTIN^CLAIRE^ANNE^^Mme^^L||19800215|F", "dataType": "HL7V2", "profiles": "/fhir-ig;/fhir-fml"}

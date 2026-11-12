@@ -28,9 +28,9 @@ class MappingSchemaTest(unittest.TestCase):
         invalid = json.loads((EXAMPLES / "invalid-path.step.json").read_text())
         self.assertTrue(any("$.mappings (décodé)" in e for e in errors(invalid)))
 
-    def test_all_seven_demo_channels(self):
+    def test_all_demo_channels(self):
         channels = list((ROOT / "demo/oie-init/channels").glob("*.xml"))
-        self.assertEqual(7, len(channels))
+        self.assertEqual(8, len(channels))  # sept canaux Profile Mapper, un canal FML
         count = 0
         for path in channels:
             # OIE stocke le nom dans CHANNEL.NAME, varchar(40) : un nom plus long fait échouer l'import.

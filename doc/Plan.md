@@ -37,6 +37,7 @@ sous MPL 2.0. L'historique détaillé des jalons est dans l'historique git.
 | Éditeur en onglets Properties / Mapper / Test, édition en JSON | [Éditeur](Mappeur-graphique.md) |
 | Assistants de code (`Ctrl`/`Alt+Espace`), outils et parcours des agents IA | [Assistants et IA](Assistants-et-IA.md) |
 | Build et release GitHub sur tag `vX.Y.Z` | [Développement](Developpement.md) |
+| Étape FHIR FML Transform : maps FML sur le modèle logique générique `OieMessage`, moteur du core HL7 de FHIR Data Type | [Transformation FML](Transformation-FML.md) |
 
 Les vérifications visuelles (édition, diagnostics, trace, export, parcours IA)
 ont été faites dans un navigateur (Playwright, Chromium headless).
@@ -51,14 +52,19 @@ ont été faites dans un navigateur (Playwright, Chromium headless).
 
 ## Phases ultérieures
 
+La revue complète du 11 novembre 2026 et le plan de refonte en sept phases
+(studio de mapping, assistance à la saisie, contextes serveur, format v2,
+transformeur FML) sont dans [plan-refonte.md](plan-refonte.md). Les points
+ci-dessous y sont repris.
+
 - **Stabilisation et livraison** : compatibilité approfondie de l'adaptateur FHIR
   Data Type, migration du namespace vers `fr.kazepoy` avec compatibilité des
   exports, vérification des releases installables à chaque version.
 - **Performances et charge** : mesurer séparément l'édition des profils, le mapping
   avec et sans validation, et le surcoût de la trace ; tests de charge (débit,
   latence, mémoire, exécution prolongée) avec des seuils définis à l'avance.
-- **Mapper FML** : transformations FML à partir de modèles logiques (IG,
-  StructureDefinition ou format E4X d'OIE), en réutilisant les fonctions communes.
+- **Transformation FML, suites** : canonique définitive du modèle OIE, mesures de
+  charge et concurrence, diagnostics par règle FML ([limites](Transformation-FML.md#8-limites-et-suites)).
 
 ## Retours d'usage à traiter
 

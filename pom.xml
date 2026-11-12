@@ -197,6 +197,7 @@
           <systemPropertyVariables>
             <fhir.engine.direct>true</fhir.engine.direct>
             <fhir.mapper.bridge.direct>true</fhir.mapper.bridge.direct>
+            <fhir.fml.bridge.direct>true</fhir.fml.bridge.direct>
           </systemPropertyVariables>
         </configuration>
       </plugin>
@@ -210,6 +211,7 @@
             <configuration>
               <excludes>
                 <exclude>org/oie/fhir/mapper/integration/bridge/**</exclude>
+                <exclude>org/oie/fhir/fml/bridge/**</exclude>
                 <exclude>webadmin/**</exclude>
               </excludes>
             </configuration>
@@ -222,6 +224,19 @@
               <classifier>bridge</classifier>
               <includes>
                 <include>org/oie/fhir/mapper/integration/bridge/**</include>
+                <include>META-INF/LICENSE</include>
+              </includes>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- FML engine on the HL7 core of FHIR Data Type, loaded under the datatype's class loader. -->
+            <id>fml-bridge</id>
+            <phase>package</phase>
+            <goals><goal>jar</goal></goals>
+            <configuration>
+              <classifier>fml-bridge</classifier>
+              <includes>
+                <include>org/oie/fhir/fml/bridge/**</include>
                 <include>META-INF/LICENSE</include>
               </includes>
             </configuration>

@@ -16,6 +16,13 @@ FHIR validation and per-rule diagnostics.
 
 ![FHIR Profile Mapper in a transformer](doc/images/fhir-mapper.png)
 
+## FHIR FML Transform
+
+A second transformer step, next to the Profile Mapper: it runs an FML map
+(StructureMap) on the message, seen through a generic OIE logical model, then
+validates and publishes the FHIR resource. It uses the FML engine of the HL7 core
+that FHIR Data Type ships, with no extra library.
+
 ## Try it
 
 ```sh
@@ -34,11 +41,12 @@ Detailed documentation is in French:
 - [Development, installation and releases](doc/Developpement.md)
 - [Mapping format and execution](doc/Specification-mapping.md)
 - [Graphical mapper](doc/Mappeur-graphique.md)
+- [FML transform and OIE logical model](doc/Transformation-FML.md)
 - [Execution traces](doc/Trace.md) (step tests and processed messages)
 - [Code assistants and AI workflow](doc/Assistants-et-IA.md)
 - [FHIR Data Type integration](doc/Integration-FHIR-Data-Type.md)
 - [Platform limits](doc/limites-plateforme.md) (what the mapper works around, upstream requests)
 - [Demo](doc/Demo.md)
-- [Project plan](doc/Plan.md)
+- [Project plan](doc/Plan.md) and [redesign plan](doc/plan-refonte.md) (review, target, phases)
 
 License: [Mozilla Public License 2.0](LICENSE).

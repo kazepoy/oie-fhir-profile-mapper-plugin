@@ -1,3 +1,5 @@
 /target/
 __pycache__/
 /tools/load/reports/
+/webadmin/node_modules/
+/webadmin/test/e2e/output/

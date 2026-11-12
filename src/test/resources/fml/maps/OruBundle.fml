@@ -1,0 +1,41 @@
+map "http://example.org/fhir/StructureMap/OruBundle" = "OruBundle"
+
+// ORU^R01 to a transaction Bundle: the Patient through the imported map, one Observation per OBX
+// with a choice type (value[x] as a Quantity).
+
+uses "http://oie.org/fhir/StructureDefinition/OieMessage" alias OieMessage as source
+uses "http://hl7.org/fhir/StructureDefinition/Bundle" alias Bundle as target
+uses "http://hl7.org/fhir/StructureDefinition/Patient" alias Patient as target
+uses "http://hl7.org/fhir/StructureDefinition/Observation" alias Observation as target
+
+imports "http://example.org/fhir/StructureMap/OruPatient"
+
+group OruBundle(source src : OieMessage, target bundle : Bundle) {
+  src -> bundle.type = 'transaction' "type";
+  src -> bundle.entry as entry then {
+    src -> entry.resource = create('Patient') as patient then OruPatient(src, patient) "patient";
+    src -> entry.request as request, request.method = 'POST', request.url = 'Patient' "request";
+  } "patient-entry";
+  src.node as obx where name = 'OBX' -> bundle.entry as entry then {
+    obx -> entry.resource = create('Observation') as observation then OBXtoObservation(obx, observation) "observation";
+    obx -> entry.request as request, request.method = 'POST', request.url = 'Observation' "request";
+  } "observation-entry";
+}
+
+group OBXtoObservation(source obx : OieMessage, target observation : Observation) {
+  obx -> observation.status = 'final' "status";
+  obx.node as id where name = 'OBX.3' -> observation.code as code, code.coding as coding then {
+    id.node as c where position = 1 then { c.value as v -> coding.code = v "code"; } "code-value";
+    id.node as d where position = 2 then { d.value as v -> coding.display = v "display"; } "code-display";
+  } "code";
+  obx.node as result where name = 'OBX.5' then {
+    result.node as number where position = 1 then {
+      number.value as v -> observation.value = create('Quantity') as quantity then {
+        v -> quantity.value = (v.toDecimal()) "quantity-value";
+        obx.node as units where name = 'OBX.6' then {
+          units.node as unit where position = 1 then { unit.value as u -> quantity.unit = u "unit"; } "unit-code";
+        } "units";
+      } "value";
+    } "result-value";
+  } "result";
+}

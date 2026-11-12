@@ -159,6 +159,10 @@ def main():
     strict = json.loads(post("STRICT_PATIENT_PORT", 8088, "patient", "oru-r01-minimal.er7", "text/plain"))
     assert strict == patient, strict
     print("OK ORU → Patient par le Strict Parser, identique au parser par défaut")
+    # Le même message par la map FML : même Patient que le Profile Mapper.
+    fml = json.loads(post("FML_PATIENT_PORT", 8087, "patient", "oru-r01-minimal.er7", "text/plain"))
+    assert fml == patient, fml
+    print("OK ORU → Patient par FML, identique au Profile Mapper")
 
     transaction = json.loads(post("LAB_BUNDLES_PORT", 8083, "labo", "oru-r01-labo.er7", "text/plain"))
     message = messages("labo")[0]

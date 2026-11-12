@@ -70,6 +70,7 @@ services:
       - appdata:/opt/engine/appdata
       - logs:/opt/engine/logs
       - ./ig:/fhir-ig:ro
+      - ./fml:/fhir-fml:ro
     depends_on:
       oie-db:
         condition: service_healthy

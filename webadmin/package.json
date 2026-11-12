@@ -1,0 +1,20 @@
+{
+  "name": "oie-fhir-mapper-web",
+  "version": "0.3.0",
+  "description": "Web Admin editors of the OIE FHIR Mapper: FHIR Profile Mapper and FHIR Mapping Language steps.",
+  "license": "MPL-2.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test \"test/unit/**/*.test.js\"",
+    "test:e2e": "node --test --test-concurrency=1 test/e2e/",
+    "check": "tsc -p jsconfig.json"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "playwright": "1.64.1",
+    "typescript": "7.0.2"
+  }
+}
