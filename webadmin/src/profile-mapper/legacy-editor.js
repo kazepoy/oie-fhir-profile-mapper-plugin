@@ -2,6 +2,8 @@
 import { createExpressionEditor } from "../host/code-editor.js";
 import { monacoItems, scopeDts } from "../fhir/completion.js";
 import { snapshot, restore } from "../fhir/history.js";
+import { normalizeResult } from "../fhir/diagnostics.js";
+import { createDiff } from "../host/code-editor.js";
 
 const PKG = "org.oie.fhir.mapper";
 
@@ -348,6 +350,30 @@ function ExpressionField(props) {
   }, [props.value]);
   if (!available || !editing || props.disabled) return h(MapperExpression, { ...props, onFocus: () => { if (available && !props.disabled) setEditing(true); } });
   return h("span", { className: "mapper-expression mapper-expression-editing", style: props.style, ref: host });
+}
+
+/** A side-by-side diff of the expected and the actual result (the host's diff editor). */
+function ResultDiff({ expected, actual }) {
+  const host = React.useRef(null);
+  React.useEffect(() => {
+    const diff = createDiff(expected, actual, "json");
+    diff.el.style.height = "320px";
+    host.current.appendChild(diff.el);
+    diff.layout?.();
+    return () => { try { diff.dispose(); } catch { /* already gone */ } diff.el.remove(); };
+  }, [expected, actual]);
+  return h("div", { ref: host, className: "mapper-result-diff", style: { height: "320px", border: "1px solid #cbd5e1", borderRadius: "4px", overflow: "hidden" } });
+}
+
+/** The samples saved with a step: [{ id, name, dataType, message, expected }]. */
+function stepSamples(element) {
+  return parseMappings(element.samples).filter((s) => s && typeof s === "object" && s.id);
+}
+
+/** Whether a test result is what the sample expects; null without an expectation. */
+function sampleVerdict(sample, result) {
+  if (!sample || sample.expected == null || sample.expected === "") return null;
+  return !result.errors.length && normalizeResult(result.output) === normalizeResult(sample.expected);
 }
 
 /** Indexed StructureDefinitions per "version|packages|url": a promise, and the value once loaded. */
@@ -1159,22 +1185,63 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       // no storage: the sample is kept while the editor is open
     }
   };
-  const runTest = async () => {
-    st.testing = true;
-    st.testResult = null;
-    rerender();
+  // The step is sent without its samples: the server does not need them to run one.
+  const testOn = async (sample, trace) => {
     try {
-      const text = await platform.api.post(`${MAPPER_API}/test`, JSON.stringify({ step: element, message: st.sample.message, dataType: st.sample.dataType, trace: st.traceOptions }), {
+      const text = await platform.api.post(`${MAPPER_API}/test`, JSON.stringify({ step: { ...element, samples: "[]" }, message: sample.message, dataType: sample.dataType || "HL7V2", trace }), {
         contentType: "text/plain",
         raw: true,
         timeoutMs: 60000
       });
-      st.testResult = JSON.parse(text);
+      return JSON.parse(text);
     } catch (e) {
       const message = errorText(e);
-      st.testResult = { output: null, issues: [], errors: [{ key: null, line: null, message: e?.status === 403 || /Test FHIR mapper steps/.test(message)
+      return { output: null, issues: [], errors: [{ key: null, line: null, message: e?.status === 403 || /Test FHIR mapper steps/.test(message)
         ? "Testing a step runs its code on the server, like a deployed channel: it requires the permission “Test FHIR mapper steps”."
         : message }] };
+    }
+  };
+  const runTest = async () => {
+    st.testing = true;
+    st.testResult = null;
+    st.suite = null;
+    rerender();
+    st.testResult = await testOn(st.sample, st.traceOptions);
+    st.testing = false;
+    rerender();
+  };
+  // Samples saved with the step (and so with the channel), each with an optional expected result.
+  const samples = stepSamples(element);
+  const activeSample = samples.find((s) => s.id === st.activeSample) || null;
+  const writeSamples = (next) => { element.samples = JSON.stringify(next); onChange(); rerender(); };
+  const updateActive = (patch) => { if (activeSample) writeSamples(samples.map((s) => (s.id === activeSample.id ? { ...s, ...patch } : s))); };
+  const selectSample = (id) => {
+    st.activeSample = id || null;
+    const chosen = samples.find((s) => s.id === id);
+    if (chosen) st.sample = { message: chosen.message, dataType: chosen.dataType || "HL7V2" };
+    st.testResult = null;
+    rerender();
+  };
+  const saveAsSample = async () => {
+    const ask = platform.ui?.promptDialog;
+    const name = ask ? await ask("Save the sample with the step", "Name", `Sample ${samples.length + 1}`) : `Sample ${samples.length + 1}`;
+    if (!name || !String(name).trim()) return;
+    const id = crypto.randomUUID();
+    st.activeSample = id;
+    writeSamples([...samples, { id, name: String(name).trim(), dataType: st.sample.dataType, message: st.sample.message, expected: null }]);
+  };
+  const runAllSamples = async () => {
+    st.testing = true;
+    st.suite = [];
+    st.testResult = null;
+    rerender();
+    for (const sample of samples) {
+      const result = await testOn(sample, { enabled: false });
+      const verdict = sampleVerdict(sample, result);
+      const invalid = result.issues.some((i) => i.severity === "error" || i.severity === "fatal");
+      st.suite.push({ id: sample.id, name: sample.name, ok: !result.errors.length && !invalid && verdict !== false,
+        detail: result.errors.length ? result.errors[0].message : invalid ? "invalid FHIR result" : verdict === false ? "differs from the expected result" : verdict === true ? "matches the expected result" : "runs (no expected result)" });
+      rerender();
     }
     st.testing = false;
     rerender();
@@ -1906,13 +1973,20 @@ function ProfileMapperEditor({ element, onChange, platform }) {
                   value: st.sample.dataType,
                   onChange: (e) => {
                     st.sample.dataType = e.target.value;
-                    saveSample();
+                    if (activeSample) updateActive({ dataType: e.target.value }); else saveSample();
                     rerender();
                   }
                 },
                 ["HL7V2", "XML", "JSON", "RAW"].map((v) => h("option", { key: v, value: v }, v))
               ),
+              h("select", { style: { width: "auto", flex: "none", maxWidth: "260px" }, value: activeSample ? activeSample.id : "", "aria-label": "Sample", title: "Samples saved with the step",
+                onChange: (e) => selectSample(e.target.value) },
+                h("option", { value: "" }, "(unsaved sample, this browser)"),
+                samples.map((s) => h("option", { key: s.id, value: s.id }, s.name + (s.expected ? " ✓" : "")))),
               h("button", { type: "button", className: "btn btn-sm", disabled: st.testing || !st.sample.message.trim(), onClick: runTest }, st.testing ? "Running…" : "Run"),
+              !activeSample ? h("button", { type: "button", className: "btn btn-sm", disabled: !st.sample.message.trim(), title: "Keep this message in the step, so it is saved with the channel", onClick: saveAsSample }, "Save as sample") : null,
+              activeSample ? h("button", { type: "button", className: "btn btn-sm", title: "Remove this sample from the step", onClick: () => { st.activeSample = null; writeSamples(samples.filter((s) => s.id !== activeSample.id)); } }, "Delete sample") : null,
+              samples.length ? h("button", { type: "button", className: "btn btn-sm", disabled: st.testing, title: "Run every saved sample and compare with its expected result", onClick: runAllSamples }, `Run all (${samples.length})`) : null,
               h("button", { type: "button", className: "btn btn-sm", onClick: showScript }, st.scriptResult ? "Hide the script" : "Generated script"),
               h("span", { className: "text-text-faint", style: { fontSize: "11px" } }, "Runs this step on the server and validates what it makes; fhirRef() of earlier steps gives stand-ins.")
             ),
@@ -1933,10 +2007,14 @@ function ProfileMapperEditor({ element, onChange, platform }) {
               style: { width: "100%", fontFamily: "monospace", fontSize: "12px" },
               onChange: (e) => {
                 st.sample.message = e.target.value;
-                saveSample();
+                if (activeSample) updateActive({ message: e.target.value }); else saveSample();
                 rerender();
               }
             }),
+            st.suite ? h("table", { className: "dt", style: { margin: "8px 0", width: "100%" }, "aria-label": "Results of the saved samples" },
+              h("tbody", null, st.suite.map((r) => h("tr", { key: r.id, style: { cursor: "pointer" }, onClick: () => selectSample(r.id) },
+                h("td", { style: { width: "70px", color: r.ok ? "#15803d" : "#b91c1c", fontWeight: 600 } }, r.ok ? "passed" : "failed"),
+                h("td", null, r.name), h("td", { className: "text-text-faint" }, r.detail))))) : null,
             testResult
               ? h(
                   "div",
@@ -1968,6 +2046,14 @@ function ProfileMapperEditor({ element, onChange, platform }) {
                           testResult.validationPerformed === false ? "FHIR validation disabled." : (testResult.issues.length ? `${testResult.issues.length} validation issue(s):` : "Valid.")
                         ),
                         testResult.issues.map((i, n) => h("div", { key: `i${n}`, style: { fontSize: "11px", fontFamily: "monospace" } }, `${i.severity} ${i.location}: ${i.message}`)),
+                        activeSample ? h("div", { style: { display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap", margin: "6px 0" } },
+                          sampleVerdict(activeSample, testResult) === true ? h("strong", { style: { color: "#15803d" } }, "Matches the expected result.") : null,
+                          sampleVerdict(activeSample, testResult) === false ? h("strong", { style: { color: "#b91c1c" } }, "Differs from the expected result.") : null,
+                          h("button", { type: "button", className: "btn btn-sm", title: "Random identities (urn:uuid) and meta.lastUpdated are ignored when comparing", onClick: () => updateActive({ expected: testResult.output }) },
+                            activeSample.expected ? "Replace the expected result with this one" : "Use this result as expected"),
+                          activeSample.expected ? h("button", { type: "button", className: "btn btn-sm", onClick: () => updateActive({ expected: null }) }, "Clear the expected result") : null) : null,
+                        activeSample && sampleVerdict(activeSample, testResult) === false
+                          ? h(ResultDiff, { expected: normalizeResult(activeSample.expected), actual: normalizeResult(testResult.output) }) : null,
                         h("pre", { style: { maxHeight: "360px", overflow: "auto", fontSize: "11px", background: "rgba(0,0,0,0.03)", padding: "6px" } }, prettyJson(testResult.output))
                       )
                     : null
@@ -2059,6 +2145,7 @@ function registerProfileMapper(platform) {
       terminologyCacheSeconds: 300,
       terminologyTimeoutSeconds: 10,
       mappings: "[]",
+      samples: "[]",
       traceMessages: false,
       traceCaptureValues: false
     }),

@@ -114,6 +114,8 @@ public class FhirProfileMapperStep extends Step {
     private String mappings = "[]";
     private boolean traceMessages = false;
     private boolean traceCaptureValues = false;
+    /** Sample messages of the step with their expected results, as a JSON array text; used by the editor and the tools only. */
+    private String samples = "[]";
 
     public FhirProfileMapperStep() {}
 
@@ -140,6 +142,7 @@ public class FhirProfileMapperStep extends Step {
         mappings = props.getMappings();
         traceMessages = props.isTraceMessages();
         traceCaptureValues = props.isTraceCaptureValues();
+        samples = props.getSamples();
     }
 
     /** The resource, or an iteration or condition: what its entries are and in which order. */
@@ -515,6 +518,7 @@ public class FhirProfileMapperStep extends Step {
         step.setMappings(string(m, "mappings", "[]"));
         step.setTraceMessages("true".equals(string(m, "traceMessages", "false")));
         step.setTraceCaptureValues("true".equals(string(m, "traceCaptureValues", "false")));
+        step.setSamples(string(m, "samples", "[]"));
         return step;
     }
 
@@ -736,6 +740,10 @@ public class FhirProfileMapperStep extends Step {
     public void setTraceMessages(boolean traceMessages) { this.traceMessages = traceMessages; }
 
     /** Whether this step's events of processed messages include scalar values. */
+    public String getSamples() { return samples == null || samples.isBlank() ? "[]" : samples; }
+
+    public void setSamples(String samples) { this.samples = samples; }
+
     public boolean isTraceCaptureValues() { return traceCaptureValues; }
 
     public void setTraceCaptureValues(boolean traceCaptureValues) { this.traceCaptureValues = traceCaptureValues; }

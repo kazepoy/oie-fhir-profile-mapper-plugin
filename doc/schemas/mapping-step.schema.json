@@ -35,7 +35,18 @@
     "terminologyCacheSeconds": {"$ref": "#/$defs/integer", "default": 300},
     "terminologyTimeoutSeconds": {"$ref": "#/$defs/integer", "default": 10},
     "traceMessages": {"$ref": "#/$defs/boolean", "default": false},
-    "traceCaptureValues": {"$ref": "#/$defs/boolean", "default": false}
+    "traceCaptureValues": {"$ref": "#/$defs/boolean", "default": false},
+    "samples": {
+      "type": "string", "default": "[]", "contentMediaType": "application/json",
+      "contentSchema": {"type": "array", "items": {
+        "type": "object", "required": ["id", "name", "message"], "additionalProperties": false,
+        "properties": {
+          "id": {"$ref": "#/$defs/nonblank"}, "name": {"$ref": "#/$defs/nonblank"},
+          "dataType": {"enum": ["HL7V2", "XML", "JSON", "RAW"], "default": "HL7V2"},
+          "message": {"type": "string"}, "expected": {"type": ["string", "null"]}
+        }
+      }}
+    }
   },
   "not": {"anyOf": [
     {"required": ["output"]}, {"required": ["bundleProfile"]},

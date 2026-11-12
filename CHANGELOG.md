@@ -9,6 +9,8 @@
   `mapSource` enregistrée avec le canal et exécutée à la place de `mapUrl`, bouton *Check*
   (route `POST /check`) qui positionne les erreurs du parseur et signale les `uses` et
   `imports` introuvables.
+- **Mappeur, jeux d'essai** : exemples nommés enregistrés dans l'étape (propriété `samples`),
+  résultat attendu par exemple, comparaison avec vue côte à côte en cas d'écart, *Run all*.
 - **Mappeur** : expressions éditées dans l'éditeur de code de Web Admin (Monaco) avec
   complétion des fonctions, des variables d'itération, des chemins du message exemple,
   des références des autres étapes et de modèles de garde ; recherche dans l'arbre ;

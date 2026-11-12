@@ -11,7 +11,7 @@ import { randomUUID } from "node:crypto";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const code = fs.readFileSync(path.join(here, "../../src/profile-mapper/legacy-editor.js"), "utf8").replace("export function register", "function register").replace(/^import .*$/gm, "");
 const catalog = JSON.parse(fs.readFileSync(path.join(here, "../../../src/main/resources/org/oie/fhir/mapper/mapper-functions.json"), "utf8"));
-const context = vm.createContext({ console, crypto: { randomUUID }, snapshot: () => ({}), restore: () => {} });
+const context = vm.createContext({ console, crypto: { randomUUID }, snapshot: () => ({}), restore: () => {}, normalizeResult: (x) => String(x) });
 vm.runInContext(code + `\nMAPPER_FUNCTIONS = ${JSON.stringify(catalog)};\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample, mapperDiagnostic, mapperTraceRows, mapperTraceExport, mapperSourcePaths, mapperHelpUrl, mapperJsonImport, mapperRuleIds, mapperCompletionContext, isCompletionShortcut, MapperExpression, ProfileMapperEditor, setReact: value => React = value };`, context);
 const { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample } = context.t;
 

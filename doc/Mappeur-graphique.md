@@ -199,6 +199,16 @@ positionne le focus sur la valeur, condition, itération ou traduction concerné
 L'indice de règle dans la réponse API correspond au tableau `mappings` testé ;
 il ne constitue pas un identifiant stable après modification du mapping.
 
+Le message de test peut être **enregistré dans l'étape** (**Save as sample**) : il est
+alors sauvegardé avec le canal, dans la propriété `samples`, au lieu du navigateur.
+La liste des exemples permet d'en changer ; un exemple se modifie en place et se
+supprime par **Delete sample**. Après un test, **Use this result as expected** fixe le
+résultat de référence de l'exemple : les tests suivants disent s'il correspond, et
+montrent sinon les deux résultats côte à côte. Les identités `urn:uuid` et
+`meta.lastUpdated` sont ignorées dans la comparaison. **Run all** exécute tous les
+exemples et donne pour chacun *passed* ou *failed* (erreur, résultat FHIR invalide
+ou écart avec l'attendu).
+
 Cocher **Trace** avant **Run** pour voir les phases d'exécution dans
 **Execution trace**. Les événements permettent aussi de revenir à leur règle.
 **Include scalar values** autorise une capture limitée des valeurs ; elle est

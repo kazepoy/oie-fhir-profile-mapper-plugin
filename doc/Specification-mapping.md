@@ -62,6 +62,7 @@ passent par la [façade interne](Integration-FHIR-Data-Type.md).
 | `setLastUpdated` | `false` ; si activé, renseigner `meta.lastUpdated` à l'exécution. |
 | `traceMessages` | `false` ; si activé, les messages traités par le channel déployé tracent cette étape (voir [Trace.md](Trace.md#trace-des-messages-traités)). |
 | `traceCaptureValues` | `false` ; avec `traceMessages`, inclure les valeurs scalaires de cette étape dans la trace. |
+| `samples` | Chaîne `"[]"` par défaut ; tableau d'exemples `{id, name, dataType, message, expected}` de l'éditeur et des outils. Sans effet sur le script généré. |
 | `variable` | Vide : résultat principal ; sinon nom littéral d'une variable de Channel Map contenant le JSON résultat. Concerne une ressource seule ou une création de Bundle. |
 | `bundleName` | Nom littéral, non vide et unique pour une création de Bundle ; vide sur une ressource. |
 | `bundleType` | `transaction` par défaut ; également `batch`, `collection`, `document`, `message`. Défini par la création. |
