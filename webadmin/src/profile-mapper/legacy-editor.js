@@ -318,7 +318,12 @@ function ExpressionField(props) {
         value: latest.current.value ?? "", ariaLabel: latest.current["aria-label"] || "JavaScript expression",
         onChange: (value) => latest.current.onChange({ target: { value } }),
         onEnter: () => setEditing(false),
-        getItems: () => monacoItems(MAPPER_FUNCTIONS, context()),
+        getItems: () => [
+          // The functions themselves are offered once, by Web Admin's Reference entries (host/references.js).
+          ...monacoItems([], context()),
+          ...(context().refs || []).map((ref) => ({ label: `fhirRef(${ref.expression})`, filterText: `fhirRef ${ref.expression}`, kind: "function",
+            insertText: `fhirRef(${ref.expression})`, detail: `reference · ${ref.resourceType || ""} built by step “${ref.step}”`, sortText: `0ref${ref.expression}` }))
+        ],
         getDts: () => scopeDts(MAPPER_FUNCTIONS, context())
       });
     } catch (error) { console.error("[fhir-mapper] expression editor:", error); setEditing(false); return undefined; }
@@ -1252,7 +1257,18 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     }
     return list;
   };
-  const completionFor = (node, role = "value") => mapperCompletionContext(node, st.iterations, st.sourcePaths, role);
+  // Reference names of the other FHIR steps of this transformer, for fhirRef(...).
+  const stepRefs = (() => {
+    const found = mapperContext(platform, element);
+    return found ? found.steps.filter((s, i) => i !== found.index && s.__type === MAPPER_TYPE && String(s.refName || "").trim())
+      .map((s) => ({ step: s.name, expression: String(s.refName).trim(), resourceType: s.resourceType })) : [];
+  })();
+  const completionFor = (node, role = "value") => ({ ...mapperCompletionContext(node, st.iterations, st.sourcePaths, role), refs: stepRefs });
+  // Elements the last test or compilation reported: marked in the tree.
+  const errorsByKey = new Map();
+  for (const error of [...(st.testResult?.errors || []), ...(st.scriptResult?.errors || [])]) {
+    if (error.key) errorsByKey.set(error.key, [...(errorsByKey.get(error.key) || []), error.message]);
+  }
 
   const field = (label, control, hint) => h("div", { className: "field" }, h("label", null, label), control, hint ? h("div", { className: "hint" }, hint) : null);
   const number = (prop, fallback) =>
@@ -1348,7 +1364,8 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     // mapping keeps its room, and the actions sit next to it, where they cannot push it away.
     return h(
       "tr",
-      { key: node.key, className: open ? "mapper-node-open" : undefined, "data-depth": node.depth, ref: diagnosticRef(node.key, "value"), title: node.short ? `${node.key}: ${node.short}` : node.key },
+      { key: node.key, className: [open ? "mapper-node-open" : "", errorsByKey.has(node.key) ? "mapper-node-error" : ""].filter(Boolean).join(" ") || undefined, "data-depth": node.depth, ref: diagnosticRef(node.key, "value"),
+        title: errorsByKey.has(node.key) ? `${node.key}: ${errorsByKey.get(node.key).join(" · ")}` : node.short ? `${node.key}: ${node.short}` : node.key },
       h(
         "td",
         { style: { paddingLeft: `${node.depth * 20}px` } },
