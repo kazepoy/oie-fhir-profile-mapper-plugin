@@ -102,6 +102,24 @@ L'aide existe dans les valeurs, itérations, conditions, noms de référence, ex
 
 La portée et les limites de `fhirRef`, `fhirRefs`, `fhirFind`, `fhirFilter`, `fhirUuid` et des trois fonctions `hl7…` figurent dans la [spécification](Specification-mapping.md#fonctions-des-expressions).
 
+### Éditeur de code, recherche, annulation et plein écran
+
+Un clic dans un champ d'expression l'ouvre dans l'éditeur de code de Web Admin
+(Monaco), sur une ligne : coloration, complétion typée de `msg`, `tmp` et des maps,
+fonctions du mappeur (publiées aussi dans le panneau **Reference**, catégorie
+*FHIR Mapper*), variables et indices des itérations englobantes, chemins du message
+exemple, modèles de garde des accès facultatifs, et `fhirRef('…')` pour chaque nom
+de référence déclaré par une autre étape du transformeur. Un seul champ porte un
+éditeur à la fois ; Entrée, Tab ou un clic ailleurs le referme. Sans Monaco, le
+champ texte et ses suggestions restent disponibles.
+
+La barre de l'onglet **Mapper** offre la recherche d'éléments (les branches qui
+contiennent le texte se déplient), **Expand mapped**, **Collapse all**, et
+**Undo** / **Redo** des règles (les frappes rapprochées comptent pour une
+modification). Les éléments signalés par le dernier test ou la dernière compilation
+sont marqués en rouge, avec le message en info-bulle. **Full screen** étend l'étape
+à toute la page ; Échap y met fin. L'étape FHIR FML Transform a le même bouton.
+
 ## 6. Répétitions, conditions et traductions
 
 | Contrôle | Effet dans le contrat de mapping |

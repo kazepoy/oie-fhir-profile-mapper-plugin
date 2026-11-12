@@ -9,6 +9,15 @@ saisie complète** dans le mappeur graphique, et un **second transformeur FML**
 Le [plan initial](Plan.md) reste le compte rendu de ce qui a été livré ; ce
 document le remplace pour la suite.
 
+## État d'avancement (branche `feat/refonte`, 12 novembre 2026)
+
+| Phase | État |
+|---|---|
+| 1 Socle frontend | **Fait en partie** : projet Node, esbuild, `src/host`, i18n, modèle FHIR pur, CI. Les éditeurs sont encore les fichiers d'origine (`legacy-editor.js`) ; pas de tests e2e versionnés. |
+| 3 Studio et saisie | **Fait en partie** : Monaco sur les expressions, complétion (fonctions, variables, chemins, snippets, références), recherche, annuler/rétablir, plein écran, éléments en erreur. Restent : volets source et inspecteur, codes de binding, clavier, menu contextuel. |
+| 5 FML | **Fait en partie** : étape de la branche `feature/fml-transform` intégrée, plein écran. Restent : map inline, langage Monaco, modèles typés, pool. |
+| 2, 4, 6, 7 | À faire. |
+
 ---
 
 ## 1. Revue de l'existant

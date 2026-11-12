@@ -18,9 +18,10 @@ const FML_STYLES = `
 .fhir-fml .fml-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .fhir-fml .fml-row > select, .fhir-fml .fml-row > input[type=text] { flex: 1 1 240px; min-width: 0; width: auto; }
 .fhir-fml .fml-row > button { flex: none; white-space: nowrap; }
-.fhir-fml .fml-tabs { display: flex; gap: 4px; margin: 12px 0 8px; border-bottom: 1px solid #cbd5e1; }
-.fhir-fml .fml-tabs button { border: 0; border-bottom: 2px solid transparent; background: none; padding: 6px 10px; cursor: pointer; color: inherit; }
-.fhir-fml .fml-tabs button[aria-selected=true] { border-bottom-color: #2563eb; font-weight: 600; }
+.fhir-fml .fml-tabs { display: flex; gap: 2px; margin-bottom: 12px; border-bottom: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 35%, transparent); }
+.fhir-fml .fml-tabs [role=tab] { padding: 6px 14px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-faint, #64748b); font: inherit; font-weight: 600; cursor: pointer; }
+.fhir-fml .fml-tabs [role=tab]:hover { color: var(--text, #1e293b); }
+.fhir-fml .fml-tabs [role=tab][aria-selected=true] { color: var(--text, #1e293b); border-bottom-color: var(--accent, #2563eb); }
 .fhir-fml pre.fml-json { max-height: 420px; overflow: auto; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; white-space: pre; }
 .fhir-fml .fml-error { color: #b91c1c; overflow-wrap: anywhere; }
 .fhir-fml .fml-issue-warning { color: #b45309; }
@@ -194,14 +195,23 @@ function FmlTransformEditor({ element, onChange, platform }) {
       : null
   );
 
+  // Full screen as in the Profile Mapper: a style of the editor's own element.
+  React.useEffect(() => {
+    if (!st.fullScreen) return undefined;
+    const onKey = (e) => { if (e.key === "Escape" && !e.defaultPrevented) { st.fullScreen = false; rerender(); } };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [st.fullScreen]);
   const tabs = [{ id: "settings", label: "Properties", panel: settings }, { id: "test", label: "Test", panel: test }];
   const current = tabs.find((t) => t.id === st.tab) || tabs[0];
   return h(
     "div",
-    { className: "fhir-fml" },
+    { className: "fhir-fml" + (st.fullScreen ? " mapper-fullscreen" : "") },
     h("style", null, FML_STYLES),
     h("div", { className: "fml-tabs", role: "tablist" }, tabs.map((t) =>
-      h("button", { key: t.id, type: "button", role: "tab", "aria-selected": t.id === current.id, onClick: () => { st.tab = t.id; rerender(); } }, t.label))),
+      h("button", { key: t.id, type: "button", role: "tab", "aria-selected": t.id === current.id, onClick: () => { st.tab = t.id; rerender(); } }, t.label)),
+      h("button", { type: "button", className: "btn btn-sm", style: { marginLeft: "auto", alignSelf: "center" }, title: "Edit this step on the whole page (Esc to come back)",
+        onClick: () => { st.fullScreen = !st.fullScreen; rerender(); } }, st.fullScreen ? "Exit full screen (Esc)" : "⤢ Full screen")),
     h("div", { role: "tabpanel" }, current.panel)
   );
 }

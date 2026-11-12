@@ -78,7 +78,7 @@
 .fm-code-editor--invalid { outline: 1px solid var(--err, #cc3b3b); }
 .mapper-expression-editing { flex: 1 1 auto; min-width: 160px; }
 
-.fhir-profile-mapper.mapper-fullscreen { position: fixed; inset: 0; z-index: 900; overflow: auto; padding: 14px 18px; background: var(--bg2, #fff); color: var(--text, #1f2c38); }
+.fhir-profile-mapper.mapper-fullscreen, .fhir-fml.mapper-fullscreen { position: fixed; inset: 0; z-index: 900; overflow: auto; padding: 14px 18px; background: var(--bg2, #fff); color: var(--text, #1f2c38); }
 
 .fhir-profile-mapper .mapper-tree tr.mapper-node-error > td { background: color-mix(in srgb, var(--err, #cc3b3b) 10%, var(--bg2, #fff)); }
 .fhir-profile-mapper .mapper-tree tr.mapper-node-error > td:first-child { border-left-color: var(--err, #cc3b3b); }

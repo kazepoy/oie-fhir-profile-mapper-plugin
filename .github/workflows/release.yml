@@ -80,6 +80,24 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         run: mvn -B -ntp -q versions:set -DnewVersion="${GITHUB_REF_NAME#v}" -DgenerateBackupPoms=false
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # webadmin/web/plugin.js est généré depuis webadmin/src : le reconstruire et le tester.
+      - name: Build and test the web editors
+        working-directory: webadmin
+        run: |
+          npm ci
+          npm test
+          npm run build
+          git diff --exit-code -- web/plugin.js || echo "::warning::webadmin/web/plugin.js n'était pas à jour dans le dépôt"
+
+      - name: Test the tools
+        run: |
+          pip install -q -r tools/requirements.txt
+          python3 -m unittest discover -s tools/tests
+
       - name: Build
         run: mvn -B -ntp package
 

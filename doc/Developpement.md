@@ -11,7 +11,7 @@ Le format des mappings, son schéma et les exemples exécutés par
 | `src/main/java/org/oie/fhir/mapper/` | Compilateur des étapes et métadonnées de déploiement |
 | `src/main/java/org/oie/fhir/mapper/server/` | Cycle de vie, API et exécution des tests de l'éditeur |
 | `src/main/java/org/oie/fhir/mapper/integration/` | Adaptateur du datatype et pont de catalogue |
-| `webadmin/` | Éditeur du mapper et ses tests Node |
+| `webadmin/` | Éditeurs Web Admin : sources dans `src/` (esbuild), tests dans `test/unit`, bundle généré `web/plugin.js` |
 | `tools/` | Outils Python : contrôle du schéma, édition d'une étape dans un export de channel |
 | `src/main/resources/plugin.xml` | Descripteur de l'extension, versionné depuis le POM |
 | `assembly.xml` | Assemblage du ZIP installable |
