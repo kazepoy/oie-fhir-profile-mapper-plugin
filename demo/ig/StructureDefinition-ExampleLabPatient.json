@@ -22,6 +22,19 @@
         "path": "Patient"
       },
       {
+        "id": "Patient.extension",
+        "path": "Patient.extension",
+        "slicing": { "discriminator": [{ "type": "value", "path": "url" }], "rules": "open" }
+      },
+      {
+        "id": "Patient.extension:registrationMode",
+        "path": "Patient.extension",
+        "sliceName": "registrationMode",
+        "min": 0,
+        "max": "1",
+        "type": [{ "code": "Extension", "profile": ["http://example.org/fhir/oru2fhir/StructureDefinition/ExampleRegistrationMode"] }]
+      },
+      {
         "id": "Patient.identifier",
         "path": "Patient.identifier",
         "min": 1,

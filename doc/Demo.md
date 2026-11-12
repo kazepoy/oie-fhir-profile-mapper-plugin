@@ -38,6 +38,13 @@ source, l'étape *Patient*, puis **Full screen**. Cliquer un champ pour l'édite
 la complétion, ouvrir **Sample fields** pour insérer un chemin de l'exemple, et
 lancer **Run all** dans l'onglet Test.
 
+Sélectionner le nom **Patient** dans l'arbre ouvre l'inspecteur : **Profile
+extension** propose la slice optionnelle `registrationMode`, avec son URL.
+**List context extensions** propose notamment `ExampleSourceLabel`, absente du
+profil Patient, pour essayer l'ajout par URL puis le choix du type de valeur.
+Le menu **⋯** d'un élément s'ouvre aussi au clic droit ou par Maj+F10 ; la
+duplication est disponible sur une occurrence répétable mappée et non itérée.
+
 ## Lancer
 
 Docker avec Compose **2.23.1 ou ultérieur** est nécessaire (`configs.content`).

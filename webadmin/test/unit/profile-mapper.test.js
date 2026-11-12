@@ -9,11 +9,14 @@ import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
 import { snapshot, restore } from "../../src/fhir/history.js";
 import { Inspector } from "../../src/profile-mapper/inspector.js";
+import { duplicateBranch, inBranch } from "../../src/fhir/branch.js";
+import { matchingConceptMaps, profileExtensions } from "../../src/fhir/assistance.js";
+import { showContextMenu } from "../../src/host/context-menu.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const code = fs.readFileSync(path.join(here, "../../src/profile-mapper/editor.js"), "utf8").replace("export function register", "function register").replace(/^import .*$/gm, "");
 const catalog = JSON.parse(fs.readFileSync(path.join(here, "../../../src/main/resources/org/oie/fhir/mapper/mapper-functions.json"), "utf8"));
-const context = vm.createContext({ console, crypto: { randomUUID }, snapshot, restore, Inspector, normalizeResult: (x) => String(x), sourceTree: () => [], sourcePaths: () => [], CodeBox: () => null, HelpButton: () => null, MAPPER_HELP: {}, languageOf: () => "text", cachedFhirSettings: () => null, fhirContext: () => null, loadFhirSettings: () => Promise.resolve({ contexts: [] }) });
+const context = vm.createContext({ console, crypto: { randomUUID }, snapshot, restore, Inspector, duplicateBranch, inBranch, matchingConceptMaps, profileExtensions, showContextMenu, normalizeResult: (x) => String(x), sourceTree: () => [], sourcePaths: () => [], CodeBox: () => null, HelpButton: () => null, MAPPER_HELP: {}, languageOf: () => "text", cachedFhirSettings: () => null, fhirContext: () => null, loadFhirSettings: () => Promise.resolve({ contexts: [] }) });
 vm.runInContext(code + `\nMAPPER_FUNCTIONS = ${JSON.stringify(catalog)};\nthis.t = { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample, mapperDiagnostic, mapperTraceRows, mapperTraceExport, mapperSourcePaths, mapperHelpUrl, mapperJsonImport, mapperRuleIds, mapperCompletionContext, isCompletionShortcut, MapperExpression, ProfileMapperEditor, setReact: value => React = value };`, context);
 const { indexSd, makeTree, compile, substitute, inserted, completeness, instancesOf, sdLoaded, sdKey, functionCompletion, completeFunction, mapperBundleDeclarations, mapperSample } = context.t;
 
@@ -171,6 +174,63 @@ test("rule notes and activation remain independent for a value and condition, in
   assert.equal(reopened.current.values.get(key), "'male'");
   assert.ok(reopened.current.disabled.has(`condition:${key}`));
   assert.equal(reopened.current.notes.has(`value:${key}`), false);
+});
+
+test("duplicating from the menu generates distinct stable ids and undo/redo preserves the serialized branch", () => {
+  const saved = [{ id: "family", key: "Patient.name.family", type: "string", expression: "'Martin'", path: [["name", "#0"], ["family"]], note: "Name" },
+    { id: "condition", key: "Patient.name", condition: "true", path: [["name", "#0"]], disabled: true }];
+  const state = { values: new Map([["Patient.name.family", "'Martin'"]]), iterations: new Map(), translations: new Map(),
+    conditions: new Map([["Patient.name", "true"]]), notes: new Map([["value:Patient.name.family", "Name"]]), disabled: new Set(["condition:Patient.name"]),
+    ruleIds: new Map([["value:Patient.name.family", "family"], ["condition:Patient.name", "condition"]]),
+    instances: new Map(), rootIndex: patient, expanded: new Set(["Patient.name"]), sourcePaths: [], showAll: false, filter: "all", unresolved: [], tests: new Map(),
+    sample: { dataType: "JSON", message: "{}" }, traceOptions: { enabled: false }, jsonDraft: "", tab: "mapper", undo: [], redo: [], lastPush: 0 };
+  state.current = snapshot(state);
+  const element = { action: "resource", resourceType: "Patient", profileUrl: patient.sd.url, mappings: JSON.stringify(saved), bundleTargets: "[]" };
+  let menu;
+  const all = node => Array.isArray(node) ? node.flatMap(all) : node && typeof node === "object" ? [node, ...all(node.children || [])] : [];
+  const render = () => {
+    let firstRef = true;
+    context.t.setReact({ createElement: (tag, props, ...children) => ({ tag, props: props || {}, children }), useReducer: () => [0, () => {}], useId: () => "branch",
+      useRef: value => { const current = firstRef ? state : value; firstRef = false; return { current }; }, useEffect: () => {} });
+    return all(context.t.ProfileMapperEditor({ element, onChange() {}, platform: { store: { getState: () => null }, ui: { contextMenu: (x, y, items) => { menu = items; } } } }));
+  };
+  const openMenu = key => render().find(node => node.props["aria-label"] === `Actions for ${key}`).props.onClick({ type: "click", detail: 0,
+    currentTarget: { getBoundingClientRect: () => ({ left: 0, bottom: 0 }) }, preventDefault() {}, stopPropagation() {} });
+  openMenu("Patient.identifier:ipp");
+  assert.equal(menu.find(item => item.label === "Duplicate branch").disabled, true);
+  openMenu("Patient.name");
+  assert.equal(menu.find(item => item.label === "Duplicate branch").disabled, false);
+  menu.find(item => item.label === "Duplicate branch").onClick();
+  const duplicated = JSON.parse(element.mappings).filter(rule => rule.key.startsWith("Patient.name[1]"));
+  assert.equal(duplicated.length, 2);
+  assert.ok(duplicated.every(rule => !["family", "condition"].includes(rule.id)));
+  assert.equal(duplicated.find(rule => rule.expression).note, "Name");
+  assert.deepEqual(plain(duplicated.find(rule => rule.expression).path), [["name", "#1"], ["family"]]);
+  assert.equal(duplicated.find(rule => rule.condition).disabled, true);
+  render().find(node => node.children.includes("↶ Undo")).props.onClick();
+  assert.equal(JSON.parse(element.mappings).some(rule => rule.key.startsWith("Patient.name[1]")), false);
+  render().find(node => node.children.includes("↷ Redo")).props.onClick();
+  assert.deepEqual(JSON.parse(element.mappings).filter(rule => rule.key.startsWith("Patient.name[1]")), duplicated);
+  const imported = context.t.mapperJsonImport(element, JSON.stringify(element));
+  assert.equal(imported.mappings, element.mappings);
+  state.iterations.set("Patient.name", { expression: "msg.names", variable: "n" });
+  openMenu("Patient.name");
+  assert.equal(menu.find(item => item.label === "Duplicate branch").disabled, true);
+});
+
+test("a profile extension picker exposes the canonical and mapping its value creates the fixed URL", () => {
+  const url = "http://example.org/StructureDefinition/mode";
+  const sd = plain(patient.sd);
+  sd.snapshot.element.splice(3, 0, el("Patient.extension:mode", 0, "1", [{ code: "Extension", profile: [url] }], { sliceName: "mode", baseMax: "*" }));
+  sdLoaded.set(sdKey("R4", "", url), indexSd({ type: "Extension", url, snapshot: { element: [
+    { id: "Extension", path: "Extension" }, el("Extension.url", 1, "1", ["uri"], { fixedUri: url }), el("Extension.value[x]", 1, "1", ["code"])
+  ] } }));
+  const target = makeTree(indexSd(sd), { version: "R4", profiles: "", instances: new Map(), showAll: true });
+  assert.deepEqual(plain(profileExtensions(target, target.root)), [{ key: "Patient.extension:mode", label: "extension:mode", url }]);
+  const rules = compile(target, new Map([["Patient.extension:mode.valueCode", "'routine'"]]), new Map(), new Map(), new Map());
+  const fixed = rules.find(rule => rule.key === "Patient.extension:mode.url");
+  assert.equal(fixed.fixed, url);
+  assert.deepEqual(plain(fixed.path), [["extension", "mode#0"], ["url"]]);
 });
 
 test("Ctrl+Space opens completion without a prefix, including scoped variables and sample paths", () => {

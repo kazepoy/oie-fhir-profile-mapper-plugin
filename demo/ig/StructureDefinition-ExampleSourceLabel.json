@@ -1,0 +1,25 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "ExampleSourceLabel",
+  "url": "http://example.org/fhir/oru2fhir/StructureDefinition/ExampleSourceLabel",
+  "version": "0.1.0",
+  "name": "ExampleSourceLabel",
+  "title": "Libellé de la source (exemple hors profil Patient)",
+  "status": "draft",
+  "experimental": true,
+  "fhirVersion": "4.0.1",
+  "kind": "complex-type",
+  "abstract": false,
+  "type": "Extension",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
+  "derivation": "constraint",
+  "context": [{ "type": "element", "expression": "Patient" }],
+  "differential": {
+    "element": [
+      { "id": "Extension", "path": "Extension", "short": "Libellé de la source" },
+      { "id": "Extension.extension", "path": "Extension.extension", "max": "0" },
+      { "id": "Extension.url", "path": "Extension.url", "fixedUri": "http://example.org/fhir/oru2fhir/StructureDefinition/ExampleSourceLabel" },
+      { "id": "Extension.value[x]", "path": "Extension.value[x]", "min": 1, "type": [{ "code": "string" }] }
+    ]
+  }
+}

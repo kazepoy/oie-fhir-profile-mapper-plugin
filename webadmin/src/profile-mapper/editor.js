@@ -10,6 +10,9 @@ import { normalizeResult } from "../fhir/diagnostics.js";
 import { sourceTree, sourcePaths } from "../fhir/source.js";
 import { createDiff } from "../host/code-editor.js";
 import { Inspector } from "./inspector.js";
+import { duplicateBranch, inBranch } from "../fhir/branch.js";
+import { matchingConceptMaps, profileExtensions } from "../fhir/assistance.js";
+import { showContextMenu } from "../host/context-menu.js";
 
 const PKG = "org.oie.fhir.mapper";
 
@@ -940,6 +943,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       conditions,
       notes: new Map(saved.filter((rule) => rule.note).map((rule) => [mapperRuleKey(rule), rule.note])),
       disabled: new Set(saved.filter((rule) => rule.disabled).map(mapperRuleKey)),
+      ruleIds: new Map(saved.filter(rule => rule.id).map(rule => [mapperRuleKey(rule), rule.id])),
       // shown when something below an extension, modifierExtension or id (that "extensions & ids" shows) is mapped
       showAll: [...values.keys(), ...iterations.keys(), ...conditions.keys()].some((k) => /\.(extension|modifierExtension|id)(\[\d+\])?(\.|$)/.test(k)),
       sample,
@@ -1062,7 +1066,10 @@ function ProfileMapperEditor({ element, onChange, platform }) {
   // Compiled on the whole tree, also what "extensions & ids" hides, so that no mapping is lost.
   const compiled = (index, local) => {
     const previous = parseMappings(element.mappings);
-    const rules = mapperRuleIds(compile(makeTree(index, { ...local, showAll: true }), st.values, st.iterations, st.translations, st.conditions), previous);
+    const ids = st.ruleIds ||= new Map();
+    const rules = mapperRuleIds(compile(makeTree(index, { ...local, showAll: true }), st.values, st.iterations, st.translations, st.conditions)
+      .map(rule => ids.has(mapperRuleKey(rule)) ? { ...rule, id: ids.get(mapperRuleKey(rule)) } : rule), previous);
+    for (const rule of rules) ids.set(mapperRuleKey(rule), rule.id);
     return JSON.stringify(rules.map((rule) => {
       const key = mapperRuleKey(rule);
       return { ...rule, ...(st.notes.get(key) ? { note: st.notes.get(key) } : {}), ...(st.disabled.has(key) ? { disabled: true } : {}) };
@@ -1097,7 +1104,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
   React.useEffect(() => {
     if (!st.fullScreen) return undefined;
     const onKey = (e) => {
-      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(".suggest-widget.visible, .mapper-expression-editing")) return;
+      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(".suggest-widget.visible, .mapper-expression-editing, [role=menu]")) return;
       st.fullScreen = false;
       rerender();
     };
@@ -1266,6 +1273,20 @@ function ProfileMapperEditor({ element, onChange, platform }) {
 
   const addInstance = (node) => {
     st.instances.set(node.keyBase, Math.max(1, st.instances.get(node.keyBase) || 1) + 1);
+    rerender();
+  };
+
+  const duplicate = (node) => {
+    const count = tree.children(node.parent).filter(sibling => sibling.keyBase === node.keyBase).length;
+    if (!node.repeats || st.iterations.has(node.key) || (node.max !== "*" && count >= Number(node.max))) return;
+    const target = `${node.keyBase}[${count}]`;
+    duplicateBranch(st, node.key, target);
+    st.instances.set(node.keyBase, count + 1);
+    st.expanded.add(target);
+    st.selectedKey = target;
+    st.lastPush = 0;
+    save();
+    st.lastPush = 0;
     rerender();
   };
 
@@ -1521,9 +1542,26 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     return false;
   };
   const term = (st.search || "").trim().toLowerCase();
-  // A search looks in the loaded tree, a few levels below each node.
-  const matches = (node, depth = 0) => node.key.toLowerCase().includes(term)
-    || (depth < 4 && (tree.children(node) || []).some((child) => matches(child, depth + 1)));
+  // Extensions and value[x] can reach the entire type graph. Bound the search,
+  // check direct children first and stop recursive visits of the same datatype.
+  let searchBudget = 2000;
+  let searchTruncated = false;
+  const searchCache = new Map();
+  const matches = (node, depth = 0) => {
+    if (node.key.toLowerCase().includes(term)) return true;
+    if (depth >= 4) return false;
+    const cacheKey = `${depth}:${node.key}`;
+    if (searchCache.has(cacheKey)) return searchCache.get(cacheKey);
+    const children = tree.children(node) || [];
+    if (children.some(child => child.key.toLowerCase().includes(term))) { searchCache.set(cacheKey, true); return true; }
+    if (searchBudget-- <= 0) { searchTruncated = true; return false; }
+    for (let parent = node.parent; parent; parent = parent.parent) if (node.typeUrl && parent.typeUrl === node.typeUrl) return false;
+    const found = children.some(child => matches(child, depth + 1));
+    searchCache.set(cacheKey, found);
+    return found;
+  };
+  // Search the selected branch before spending the budget on unrelated datatypes.
+  if (term && st.selectedKey && tree) for (const node of (tree.chain(st.selectedKey) || []).slice(1).reverse()) matches(node);
   const opened = (node) => st.expanded.has(node.key) || (!!term && !node.key.toLowerCase().includes(term) && matches(node));
   const visible = (node) => {
     if (element.action === "createBundle" && (node.key === "Bundle.entry" || node.key.startsWith("Bundle.entry."))) return false;
@@ -1587,6 +1625,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       "tr",
       { key: node.key, className: [open ? "mapper-node-open" : "", errorsByKey.has(node.key) ? "mapper-node-error" : "", st.selectedKey === node.key ? "mapper-node-selected" : ""].filter(Boolean).join(" ") || undefined, "data-depth": node.depth, ref: diagnosticRef(node.key, "value"),
         onFocus: () => selectNode(node), onClick: () => selectNode(node),
+        onContextMenu: event => nodeMenu(event, node), onKeyDown: event => { if (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")) nodeMenu(event, node); },
         title: errorsByKey.has(node.key) ? `${node.key}: ${errorsByKey.get(node.key).join(" · ")}` : node.short ? `${node.key}: ${node.short}` : node.key },
       h(
         "td",
@@ -1651,7 +1690,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
           canIterate ? tool("↻", "One entry for each item of a list (for each repetition)", () => toggleIteration(node), iterated) : null,
           canTranslate ? tool("⇄", "Translate the value with ConceptMap/$translate", () => toggleTranslation(node), st.translations.has(node.key)) : null,
           node.choice ? null : tool("?", "Only map this element (and what is below it) when a condition holds", () => toggleCondition(node), st.conditions.has(node.key)),
-          ruleDetailsButton(node)
+          ruleDetailsButton(node), menuButton(node)
         )
       )
     );
@@ -1718,7 +1757,10 @@ function ProfileMapperEditor({ element, onChange, platform }) {
   const translationFields = (node, listId = "fhir-profile-mapper-conceptmaps") => {
     const t = st.translations.get(node.key);
     const test = st.tests.get(node.key) || {};
-    const maps = (st.conceptMaps && st.conceptMaps.list) || [];
+    const allMaps = st.conceptMaps?.list || [];
+    const recommended = matchingConceptMaps(allMaps, { source: t.source, target: t.target, valueSet: node.binding?.valueSet,
+      systems: bindingCodes(node).map(code => code.system).filter(Boolean) });
+    const maps = st.allConceptMaps ? allMaps : recommended;
     const localTx = isLocalServer(txServer);
     const needsValue = t.unmapped === "fixed" || t.unmapped === "function";
     return [
@@ -1731,10 +1773,13 @@ function ProfileMapperEditor({ element, onChange, platform }) {
         disabled: blocked,
         placeholder: "canonical URL of the ConceptMap",
         style: { ...mono, flex: "1 1 220px" },
-        onFocus: loadConceptMaps,
+        "aria-label": `ConceptMap for ${node.key}`,
+        onFocus: () => { loadConceptMaps(); ensureCodes(node); },
         onChange: (e) => setTranslation(node, "conceptMap", e.target.value)
       }),
       h("datalist", { key: "d", id: listId }, maps.map((m) => h("option", { key: m.url, value: m.url }, m.title || m.name || m.url))),
+      h("label", { key: "all", className: "hint" }, h("input", { type: "checkbox", checked: !!st.allConceptMaps,
+        onChange: event => { st.allConceptMaps = event.target.checked; loadConceptMaps(); rerender(); } }), ` All ConceptMaps (${recommended.length} matching)`),
       h("input", { key: "s", type: "text", value: t.source, disabled: blocked, placeholder: "source system (optional)", title: "system of the source code", style: { ...mono, flex: "1 1 160px" }, onChange: (e) => setTranslation(node, "source", e.target.value) }),
       h("input", { key: "t", type: "text", value: t.target, disabled: blocked, placeholder: "target system (optional)", title: "targetsystem of $translate", style: { ...mono, flex: "1 1 140px" }, onChange: (e) => setTranslation(node, "target", e.target.value) }),
       h(
@@ -1787,6 +1832,33 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     ];
   };
   const translationRow = (node) => subRow(node, "translate", translationFields(node));
+  const branchRules = node => parseMappings(element.mappings).filter(rule => inBranch(rule.key || rule.element || "", node.key));
+  const nodeMenu = (event, node) => {
+    selectNode(node);
+    const rules = branchRules(node);
+    const enable = rules.length > 0 && rules.every(rule => st.disabled.has(mapperRuleKey(rule)));
+    const count = node.parent ? tree.children(node.parent)?.filter(sibling => sibling.keyBase === node.keyBase).length : 0;
+    const action = (label, onClick, disabled = false) => ({ label, onClick, disabled: blocked || disabled });
+    showContextMenu(platform, event, [
+      action("Inspect element", () => { st.selectedKey = node.key; rerender(); }),
+      action("Add an entry", () => addInstance(node), !node.repeats || st.iterations.has(node.key) || (node.max !== "*" && count >= Number(node.max))),
+      action("Duplicate branch", () => duplicate(node), !node.repeats || st.iterations.has(node.key) || !rules.length || (node.max !== "*" && count >= Number(node.max))),
+      action("Toggle iteration", () => toggleIteration(node), !(node.repeats && !node.choice) && !(node.resourceRoot && !createBundle && bundle)),
+      action("Toggle condition", () => toggleCondition(node), !!node.choice),
+      action("Toggle translation", () => toggleTranslation(node), !TRANSLATABLE.has(node.code)),
+      action(enable ? "Enable branch rules" : "Disable branch rules", () => {
+        for (const rule of rules) { const key = mapperRuleKey(rule); if (enable) st.disabled.delete(key); else st.disabled.add(key); }
+        st.lastPush = 0; save(); st.lastPush = 0; rerender();
+      }, !rules.length),
+      action("Copy branch as JSON", async () => {
+        try { await navigator.clipboard.writeText(JSON.stringify(rules, null, 2)); }
+        catch (error) { st.error = errorText(error); rerender(); }
+      }, !rules.length)
+    ]);
+  };
+  const menuButton = node => h("button", { type: "button", className: "btn btn-sm", "aria-label": `Actions for ${node.key}`,
+    "aria-haspopup": "menu", disabled: blocked || !platform.ui?.contextMenu,
+    onClick: event => nodeMenu(event, node) }, "⋯");
   const createBundle = element.action === "createBundle";
   const declarations = mapperBundleDeclarations(platform, element);
   const targets = parseMappings(element.bundleTargets);
@@ -1804,7 +1876,8 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     rows.push(
       h(
         "tr",
-        { key: tree.root.key, ref: diagnosticRef(tree.root.key, "value"), onFocus: () => selectNode(tree.root), onClick: () => selectNode(tree.root) },
+        { key: tree.root.key, ref: diagnosticRef(tree.root.key, "value"), onFocus: () => selectNode(tree.root), onClick: () => selectNode(tree.root),
+          onContextMenu: event => nodeMenu(event, tree.root), onKeyDown: event => { if (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10")) nodeMenu(event, tree.root); } },
         h(
           "td",
           { colSpan: 3 },
@@ -1812,7 +1885,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
           h("span", { className: "text-text-faint", style: { marginLeft: "8px" } }, st.rootIndex.sd.url + (st.rootIndex.sd.version ? ` | ${st.rootIndex.sd.version}` : "")),
           bundle && !createBundle ? rootTool("↻", "One resource for each item of a list (e.g. each OBX)", () => toggleIteration(tree.root), st.iterations.has(tree.root.key)) : null,
           rootTool("?", "Only make the resource when a condition holds", () => toggleCondition(tree.root), st.conditions.has(tree.root.key)),
-          ruleDetailsButton(tree.root)
+          ruleDetailsButton(tree.root), menuButton(tree.root)
         )
       )
     );
@@ -2131,9 +2204,54 @@ function ProfileMapperEditor({ element, onChange, platform }) {
         )
       : null
   );
-  const selectedChain = tree && st.selectedKey ? makeTree(st.rootIndex, { ...ctx, showAll: true }).chain(st.selectedKey) : null;
+  const fullTree = tree ? makeTree(st.rootIndex, { ...ctx, showAll: true }) : null;
+  const loadExtensions = async () => {
+    if (st.extensions) return;
+    try {
+      const text = await platform.api.get(`${MAPPER_API}/catalog`, { kind: "extension", context: element.context || "", fhirVersion: version, profiles }, { raw: true });
+      if (state.current !== st) return;
+      st.extensions = JSON.parse(text);
+    } catch (error) { st.error = errorText(error); }
+    rerender();
+  };
+  const addCatalogExtension = async (container, url) => {
+    if (!url || blocked) return;
+    try {
+      const nodes = (fullTree.children(container) || []).filter(node => node.jsonName === "extension" && !node.sliceName && node.max !== "0");
+      if (!nodes.length || nodes[0].el.slicing?.rules === "closed") return;
+      let node = nodes.find(candidate => ![...allKeys()].some(key => inBranch(key, candidate.key)));
+      if (!node && nodes[0].max !== "*" && nodes.length >= Number(nodes[0].max)) throw new Error("No extension occurrence is available.");
+      if (!sdLoaded.has(sdKey(version, profiles, nodes[0].typeUrl))) await fetchSd(platform, version, profiles, nodes[0].typeUrl);
+      if (state.current !== st) return;
+      const key = node ? node.key : `${nodes[0].keyBase}[${nodes.length}]`;
+      if (!node) st.instances.set(nodes[0].keyBase, nodes.length + 1);
+      st.values.set(`${key}.url`, JSON.stringify(url));
+      st.showAll = true; st.search = ""; st.filter = "all";
+      st.expanded.add(container.key); st.expanded.add(key); st.selectedKey = key;
+      st.lastPush = 0; save(); st.lastPush = 0; rerender();
+    } catch (error) { st.error = errorText(error); rerender(); }
+  };
+  const extensionPanel = node => {
+    const declared = profileExtensions(fullTree, node);
+    const generic = (fullTree.children(node) || []).find(child => child.jsonName === "extension" && !child.sliceName && child.max !== "0");
+    if (!declared.length && !generic) return null;
+    const open = generic && generic.el.slicing?.rules !== "closed";
+    return h("section", { "aria-label": "Extensions" }, h("h4", null, "Extensions"),
+      declared.length ? h("select", { "aria-label": "Profile extension", value: "", disabled: blocked,
+        onChange: event => { const key = event.target.value; if (key) { revealDiagnostic({ key }); st.expanded.add(key); rerender(); } } },
+        h("option", { value: "" }, "Choose an extension of the profile…"),
+        declared.map(item => h("option", { key: item.key, value: item.key }, `${item.label} — ${item.url}`))) : null,
+      open ? h("div", null,
+        h("button", { type: "button", className: "btn btn-sm", disabled: blocked, onClick: loadExtensions }, "List context extensions"),
+        st.extensions ? h("select", { "aria-label": "Add context extension", value: "", disabled: blocked,
+          onChange: event => addCatalogExtension(node, event.target.value) },
+          h("option", { value: "" }, st.extensions.length ? "Add an extension by URL…" : "No extension in this context"),
+          st.extensions.map(item => h("option", { key: item.url, value: item.url }, `${item.title || item.name || item.url} — ${item.url}`))) : null) : null);
+  };
+  const selectedChain = fullTree && st.selectedKey ? fullTree.chain(st.selectedKey) : null;
   const selected = selectedChain?.[selectedChain.length - 1];
   const inspector = () => h(Inspector, { key: selected?.key || "empty", h, node: selected,
+    extensions: selected ? extensionPanel(selected) : null,
     helpUrl: selected ? mapperHelpUrl(version, element.resourceType, selected.key) : "",
     diagnostics: selected ? [...(st.testResult?.errors || []), ...(st.scriptResult?.errors || [])]
       .filter(error => error.key === selected.key).map((error, index) => diagnosticView(error, index)) : [] },
@@ -2194,6 +2312,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
             h("span", { className: "hint text-text-faint", style: { fontSize: "11px" } }, `Click a field to edit it with completion. ${COMPLETION_HINT}: functions, scoped variables and sample paths. ↑/↓ to choose, Enter/Tab to insert, Esc to close. Guard optional values.`)
           ),
           sourcePane(),
+          searchTruncated ? h("p", { className: "hint" }, "Search is limited to part of the loaded tree. Select a branch or narrow the search.") : null,
           h("div", { className: "mapper-workspace" },
           h(
             "div",

@@ -167,6 +167,36 @@ sélectionne l'élément et révèle son champ dans l'arbre en effaçant la rech
 En plein écran, l'inspecteur se place à droite de l'arbre ; dans une zone de
 moins de 1 100 pixels de large, il passe en dessous.
 
+Le menu d'une ligne s'ouvre par clic droit, **Maj+F10** sur son nom ou son bouton
+**⋯**. Il donne accès à l'inspecteur, à l'ajout d'une occurrence, aux conditions,
+itérations et traductions, à l'activation des règles de la branche et à leur
+copie en JSON dans le presse-papiers. **Duplicate branch** copie une branche
+mappée vers une nouvelle occurrence du même élément répétable, dans la limite
+du profil. Les expressions, traductions, notes et règles désactivées sont
+conservées ; les chemins de destination et les identifiants sont nouveaux.
+Une branche déjà itérée n'est pas duplicable. Annuler/Rétablir conserve les
+identifiants de la copie ; les expressions et références ne sont pas réécrites.
+
+Dans l'inspecteur d'un élément qui possède des extensions, **Profile extension**
+propose les slices déclarées, avec leur URL, et révèle la slice choisie. Mapper
+sa valeur ajoute automatiquement l'URL fixe du profil. **List context extensions**
+propose les extensions du catalogue du contexte ; le choix ajoute leur URL à
+une occurrence libre de `extension`. Choisir ensuite le type de valeur et son
+expression dans l'arbre. Ce choix hors profil est indisponible si le profil
+ferme le slicing des extensions. Les contextes d'application de l'extension
+restent contrôlés par la validation FHIR du résultat.
+
+Les propositions du champ **ConceptMap** tiennent compte des systèmes source et
+cible renseignés et, sans cible explicite, du binding de l'élément. Les systèmes
+des codes du binding sont utilisés lorsqu'ils ont pu être développés.
+**All ConceptMaps** affiche toute la liste, notamment pour les maps sans
+métadonnées suffisantes. Le choix actuel n'est jamais remplacé automatiquement ;
+la table HL7 n'est pas déduite du texte de l'expression.
+
+La recherche dans les types chargés est bornée pour ne pas parcourir indéfiniment
+les extensions récursives. La branche sélectionnée est examinée en priorité ;
+un message indique lorsque la recherche est partielle.
+
 Un élément lié à un jeu de valeurs l'indique dans son champ vide (« required binding:
 administrative-gender »). À la première édition de ce champ, l'éditeur lit les codes
 du jeu de valeurs sur le serveur et les propose dans la complétion, entre apostrophes

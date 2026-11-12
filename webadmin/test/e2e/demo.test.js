@@ -188,6 +188,90 @@ describe("the step editors in the demo", () => {
     assert.match(await fml.locator(".fml-ok").innerText(), /No problem found in OruR01ToPatient/);
   });
 
+  test("the keyboard menu duplicates a branch and undo restores it", async () => {
+    const { page } = session;
+    await openStep(page, "ORU R01 vers Patient FHIR", "Patient");
+    const mapper = page.locator(".fhir-profile-mapper");
+    await mapper.getByRole("button", { name: /Full screen/ }).click();
+    await mapper.getByLabel("Search elements").fill("name");
+    const name = mapper.getByRole("button", { name: "Inspect Patient.name", exact: true });
+    await name.focus();
+    await page.keyboard.press("Shift+F10");
+    assert.equal(await page.getByRole("menuitem", { name: "Duplicate branch", exact: true }).isDisabled(), true);
+    await page.getByRole("menuitem", { name: "Toggle iteration", exact: true }).click();
+    const field = mapper.locator("tr[title^='Patient.name.family'] [role=combobox]").first();
+    const before = await field.evaluate(el => el.value ?? el.dataset.value);
+    await name.focus();
+    await page.keyboard.press("Shift+F10");
+    await page.getByRole("menuitem", { name: "Duplicate branch", exact: true }).click();
+    const duplicate = mapper.locator("tr[title^='Patient.name[1].family'] [role=combobox]").first();
+    await duplicate.waitFor();
+    assert.equal(await duplicate.evaluate(el => el.value ?? el.dataset.value), before);
+    await mapper.getByRole("button", { name: /Undo/ }).click();
+    assert.equal(await duplicate.count(), 0);
+    await mapper.getByRole("button", { name: /Redo/ }).click();
+    await duplicate.waitFor();
+    await name.focus();
+    await page.keyboard.press("Shift+F10");
+    await page.keyboard.press("Escape");
+    assert.equal(await page.getByRole("menu").count(), 0);
+    assert.equal(await mapper.evaluate(el => el.classList.contains("mapper-fullscreen")), true);
+  });
+
+  test("profile slices and context extensions produce their canonical URL and value", async () => {
+    const { page } = session;
+    const url = "http://example.org/fhir/oru2fhir/StructureDefinition/";
+    for (const kind of ["profile", "context"]) {
+      await openStep(page, "ORU R01 vers Patient FHIR", "Patient");
+      const mapper = page.locator(".fhir-profile-mapper");
+      await mapper.getByRole("button", { name: /Full screen/ }).click();
+      await mapper.getByRole("button", { name: "Inspect Patient", exact: true }).click();
+      const inspector = mapper.getByRole("complementary", { name: "Element inspector" });
+      const name = kind === "profile" ? "ExampleRegistrationMode" : "ExampleSourceLabel";
+      const key = kind === "profile" ? "Patient.extension:registrationMode.valueCode" : "Patient.extension.value[x].valueString";
+      const value = kind === "profile" ? "routine" : "demo-source";
+      if (kind === "profile") {
+        assert.match(await inspector.getByLabel("Profile extension").innerText(), /ExampleRegistrationMode/);
+        await inspector.getByLabel("Profile extension").selectOption("Patient.extension:registrationMode");
+      } else {
+        await inspector.getByRole("button", { name: "List context extensions" }).click();
+        await inspector.getByLabel("Add context extension").selectOption(url + name);
+        await mapper.getByLabel("Search elements").fill("valueString");
+      }
+      await mapper.getByRole("button", { name: `Inspect ${key}`, exact: true }).click();
+      await inspector.getByRole("combobox", { name: `Inspector expression for ${key}`, exact: true }).click();
+      await inspector.locator(".mapper-expression-editing .monaco-editor").waitFor();
+      await inspector.locator(".monaco-editor").click();
+      await page.keyboard.press("ControlOrMeta+A");
+      await page.keyboard.type(`'${value}'`);
+      await inspector.getByRole("heading", { name: key, exact: true }).click();
+      await mapper.getByRole("tab", { name: "Test", exact: true }).click();
+      const response = page.waitForResponse(response => response.url().endsWith("/extensions/fhir-profile-mapper/test") && response.request().method() === "POST");
+      await mapper.getByRole("button", { name: "Run", exact: true }).click();
+      const result = await (await response).json();
+      assert.deepEqual(result.errors || [], []);
+      assert.ok(result.output, JSON.stringify(result));
+      const extension = JSON.parse(result.output).extension.find(extension => extension.url === url + name);
+      assert.equal(extension[kind === "profile" ? "valueCode" : "valueString"], value);
+      assert.equal((result.issues || []).filter(issue => ["error", "fatal"].includes(issue.severity)).length, 0);
+    }
+  });
+
+  test("ConceptMap suggestions match the HL7 source system and target binding", async () => {
+    const { page } = session;
+    await openStep(page, "ORU R01 vers Patient FHIR", "Patient");
+    const mapper = page.locator(".fhir-profile-mapper");
+    await mapper.getByLabel("Search elements").fill("gender");
+    await mapper.getByRole("button", { name: "Inspect Patient.gender", exact: true }).click();
+    const inspector = mapper.getByRole("complementary", { name: "Element inspector" });
+    await inspector.getByLabel("ConceptMap for Patient.gender", { exact: true }).focus();
+    await page.waitForFunction(() => document.querySelectorAll("#fhir-inspector-conceptmaps option").length > 0);
+    const urls = await inspector.locator("datalist option").evaluateAll(options => options.map(option => option.value));
+    assert.deepEqual(urls, ["http://example.org/fhir/oru2fhir/ConceptMap/v2-0001-to-gender"]);
+    await inspector.getByLabel(/All ConceptMaps/).check();
+    assert.ok(await inspector.locator("datalist option").count() > 1);
+  });
+
   test("no plugin error was logged", () => {
     assert.deepEqual(session.pluginErrors(), []);
   });

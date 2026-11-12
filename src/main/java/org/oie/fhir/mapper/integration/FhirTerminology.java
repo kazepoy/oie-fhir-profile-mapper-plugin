@@ -192,13 +192,13 @@ public final class FhirTerminology {
 
     /**
      * The ConceptMaps of a server (first 200), or without one (empty or "n/a") of the profiles, as a
-     * JSON array of objects with url, name, title, source and target.
+     * JSON array of objects with url, name, title, source, target and group system pairs.
      */
     public static String listConceptMaps(String server, String profiles, String fhirVersion) throws Exception {
         if (isLocal(server)) {
             return FhirDataTypeAdapter.listConceptMaps(profiles, fhirVersion);
         }
-        Object bundle = get(base(server) + "/ConceptMap?_summary=true&_count=200", "", TIMEOUT_SECONDS);
+        Object bundle = get(base(server) + "/ConceptMap?_count=200", "", TIMEOUT_SECONDS);
         List<Object> maps = new ArrayList<>();
         for (Object entry : list(map(bundle).get("entry"))) {
             Map<?, ?> resource = map(map(entry).get("resource"));
@@ -208,6 +208,14 @@ public final class FhirTerminology {
             m.put("title", value(resource.get("title")));
             m.put("source", value(first(resource, "sourceUri", "sourceCanonical", "sourceScopeUri", "sourceScopeCanonical")));
             m.put("target", value(first(resource, "targetUri", "targetCanonical", "targetScopeUri", "targetScopeCanonical")));
+            List<Object> groups = new ArrayList<>();
+            for (Object group : list(resource.get("group"))) {
+                Map<String, Object> pair = new LinkedHashMap<>();
+                pair.put("source", value(map(group).get("source")));
+                pair.put("target", value(map(group).get("target")));
+                groups.add(pair);
+            }
+            m.put("groups", groups);
             maps.add(m);
         }
         return FhirFacade.write(maps);

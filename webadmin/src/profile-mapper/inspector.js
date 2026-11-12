@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 // Presentation only: mapping edits and selection remain owned by the editor.
-export function Inspector({ h, node, helpUrl, children, diagnostics }) {
+export function Inspector({ h, node, helpUrl, children, diagnostics, extensions }) {
   if (!node) return h("aside", { className: "mapper-inspector", "aria-label": "Element inspector" },
     h("h3", null, "Element inspector"), h("p", null, "Select an element in the tree to inspect its definition and rules."));
   const el = node.el || {};
@@ -19,6 +19,7 @@ export function Inspector({ h, node, helpUrl, children, diagnostics }) {
     (el.example || []).map((example, index) => h("p", { key: index },
       h("strong", null, example.label || "Example"), ": ", JSON.stringify(Object.entries(example).find(([key]) => key.startsWith("value"))?.[1]))),
     h("a", { href: helpUrl, target: "_blank", rel: "noopener noreferrer" }, "Official FHIR definition"),
+    extensions,
     h("h4", null, "Rules"), children,
     h("h4", null, "Diagnostics"), diagnostics.length ? diagnostics : h("p", { className: "hint" }, "No diagnostic reported for this element."));
 }

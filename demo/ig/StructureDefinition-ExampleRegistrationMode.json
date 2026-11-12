@@ -1,0 +1,25 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "ExampleRegistrationMode",
+  "url": "http://example.org/fhir/oru2fhir/StructureDefinition/ExampleRegistrationMode",
+  "version": "0.1.0",
+  "name": "ExampleRegistrationMode",
+  "title": "Mode d'enregistrement du patient (exemple)",
+  "status": "draft",
+  "experimental": true,
+  "fhirVersion": "4.0.1",
+  "kind": "complex-type",
+  "abstract": false,
+  "type": "Extension",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
+  "derivation": "constraint",
+  "context": [{ "type": "element", "expression": "Patient" }],
+  "differential": {
+    "element": [
+      { "id": "Extension", "path": "Extension", "short": "Mode d'enregistrement" },
+      { "id": "Extension.extension", "path": "Extension.extension", "max": "0" },
+      { "id": "Extension.url", "path": "Extension.url", "fixedUri": "http://example.org/fhir/oru2fhir/StructureDefinition/ExampleRegistrationMode" },
+      { "id": "Extension.value[x]", "path": "Extension.value[x]", "min": 1, "type": [{ "code": "code" }] }
+    ]
+  }
+}

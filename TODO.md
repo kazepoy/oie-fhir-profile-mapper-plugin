@@ -36,8 +36,8 @@ ne doit pas être présentée comme terminée.
 |---|---|---|
 | 1 — fait | Notes et activation par règle dans le mappeur, y compris la racine ; historique et documentation | Test unitaire : valeur et condition sur le même élément indépendantes, IDs conservés, effacement de note, Undo/Redo. Test Playwright : note, désactivation et restauration. |
 | 2 — fait | Inspecteur de l'élément sélectionné : métadonnées FHIR, règles, aide et diagnostics ; extraire uniquement les composants nécessaires | Sélection et édition dans la vue normale et en plein écran ; accès clavier ; diagnostics vers la bonne règle ; aucune perte au rechargement. |
-| 3 — suivant | Assistance restante : extensions du profil, ConceptMaps pertinentes, menu contextuel et duplication de branche | Exemples de profil avec extensions et slices ; duplication avec nouveaux IDs ; parcours clavier et sauvegarde/relecture. |
-| 4 | Terminer le socle : découpage ciblé des éditeurs, anglais/français, thèmes, contrôle frontend et assemblage reproductible | Tests des modules sans VM pour le code extrait ; interface dans les deux langues ; ZIP construit depuis des sources frontend modifiées ; parcours clair/sombre et rôle restreint. |
+| 3 — fait | Assistance restante : extensions du profil, ConceptMaps pertinentes, menu contextuel et duplication de branche | Exemples de profil avec extensions et slices ; duplication avec nouveaux IDs ; parcours clavier et sauvegarde/relecture. |
+| 4 — suivant | Terminer le socle : découpage ciblé des éditeurs, anglais/français, thèmes, contrôle frontend et assemblage reproductible | Tests des modules sans VM pour le code extrait ; interface dans les deux langues ; ZIP construit depuis des sources frontend modifiées ; parcours clair/sombre et rôle restreint. |
 | 5 | Aperçu multi-étapes, puis outil de rejeu des samples et import/export de tableaux/documentation | Patient + Observation avec référence réelle ; deux Bundles nommés ; erreur localisée par étape ; mêmes sorties dans l'aperçu et dans la démo ; outil en échec si résultat attendu différent. |
 | 6 | FML : S-2 sur les maps typées, adaptateur Strict Parser, complétion et squelette, puis concurrence/pool selon mesure | `PIDtoPatient` et `ORUR01toBundle` rejoués avec modèles typés ; démo et documentation ; tests de transformations concurrentes sans contamination. |
 | 7 | Sous-slices, discriminants complémentaires, contained, extensions des primitives, R4B/R5 | Cas de test par capacité et release ; profils FR Core/EU Lab dans la démo ; erreurs explicites pour les limites restantes. |
@@ -83,3 +83,38 @@ n'a pas pu ouvrir la démo : le socket Docker `/Users/admin/.docker/run/docker.s
 était absent et le port 8443 inaccessible. Les 10 tests avaient passé juste avant
 cette modification de texte. La copie de ce dernier bundle dans la démo n'a donc
 pas abouti ; `webadmin/web/plugin.js` contient bien l'aide finale.
+
+## Vérification du lot 3
+
+- Menu public de Web Admin : clic droit, Maj+F10 et bouton d'actions. Duplication
+  des occurrences mappées non itérées, dans la limite de cardinalité ; copie des
+  notes, traductions, conditions et activations ; nouveaux IDs conservés par
+  Undo/Redo, y compris après réutilisation d'une occurrence supprimée.
+- Extensions : choix des slices avec URL du profil, ou ajout d'une URL du
+  catalogue dans une occurrence générique libre. Pas d'ajout hors profil lorsque
+  le slicing est fermé. La démo ajoute une slice optionnelle `registrationMode`
+  et une extension `ExampleSourceLabel` non déclarée dans le profil Patient.
+- ConceptMaps : couples source/cible des groupes exposés par le serveur local et
+  distant ; propositions filtrées par systèmes ou binding. La table HL7 n'est pas
+  inférée d'une expression et le choix courant n'est pas modifié automatiquement.
+- Correction de deux problèmes révélés par le parcours : superposition du menu
+  en plein écran (WA-21) et parcours excessif des types récursifs lors d'une
+  recherche avec les extensions visibles. La recherche borne le parcours et
+  privilégie la branche sélectionnée, avec indication de résultats partiels.
+- `npm test` : 28 tests passent. Duplication, nouveaux IDs, Undo/Redo, export et
+  relecture JSON, génération de l'URL fixe d'une extension et filtrage par groupe
+  source/cible sont couverts.
+- `mvn test -q` : 131 tests passent ; les métadonnées des groupes ConceptMap sont
+  vérifiées via la façade. `python3 -m unittest discover -s tools/tests` : 8 tests.
+- `npm run test:e2e` : 13 tests passent sous Chromium sur la démo. Parcours clavier
+  du menu en plein écran, duplication et historique, choix d'extension du profil
+  et hors profil, résultat Patient et validation FHIR, filtrage des ConceptMaps.
+- `python3 demo/examples/check.py` : tous les exemples passent, y compris les
+  Bundles, références, FML, diagnostics et traces. Ce rejeu crée des messages de
+  démonstration. Aucun canal n'est modifié ou enregistré par les tests de l'éditeur.
+- Bundle frontend régénéré et ZIP Maven reconstruit après les tests. JAR serveur,
+  pont et bundle copiés dans la démo ; seul le service OIE a été redémarré.
+
+Le prochain lot termine le socle (découpage ciblé, i18n, contrôles et assemblage).
+La phase 3 du plan reste partielle : elle demande aussi un agencement complet
+à trois volets, les liaisons source/cible et une revue d'ergonomie.

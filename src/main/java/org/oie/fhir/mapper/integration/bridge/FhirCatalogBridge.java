@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.hl7.fhir.common.hapi.validation.support.PrePopulatedValidationSupport;
 import org.hl7.fhir.common.hapi.validation.support.CommonCodeSystemsTerminologyService;
@@ -388,6 +389,12 @@ public final class FhirCatalogBridge {
                 item.put("title", map.path("title").asText(""));
                 item.put("source", firstText(map, "sourceUri", "sourceCanonical", "sourceScopeUri", "sourceScopeCanonical"));
                 item.put("target", firstText(map, "targetUri", "targetCanonical", "targetScopeUri", "targetScopeCanonical"));
+                ArrayNode groups = item.putArray("groups");
+                for (JsonNode group : map.path("group")) {
+                    ObjectNode pair = groups.addObject();
+                    pair.put("source", group.path("source").asText(""));
+                    pair.put("target", group.path("target").asText(""));
+                }
                 sorted.put(url, item);
             }
             return mapper.writeValueAsString(sorted.values());

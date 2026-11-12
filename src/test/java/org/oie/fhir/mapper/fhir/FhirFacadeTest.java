@@ -46,6 +46,10 @@ public class FhirFacadeTest {
     public void translatesLocalConceptMapsWithoutReplacingTheDatatypeEngine() throws Exception {
         String maps = fixture("conceptmaps/v2-sex-r4.json");
         assertTrue(FhirFacade.listConceptMaps("n/a", maps, "R4").contains("http://example.org/ConceptMap/v2-sex"));
+        Map<?, ?> listed = (Map<?, ?>) ((List<?>) FhirFacade.parse(FhirFacade.listConceptMaps("n/a", maps, "R4"))).get(0);
+        Map<?, ?> group = (Map<?, ?>) ((List<?>) listed.get("groups")).get(0);
+        assertEquals("http://terminology.hl7.org/CodeSystem/v2-0001", group.get("source"));
+        assertEquals("http://hl7.org/fhir/administrative-gender", group.get("target"));
         String translated = FhirFacade.translate("n/a", maps, "http://example.org/ConceptMap/v2-sex",
                 "http://terminology.hl7.org/CodeSystem/v2-0001", "F", "", "R4");
         assertEquals("female", ((Map<?, ?>) FhirFacade.parse(translated)).get("code"));

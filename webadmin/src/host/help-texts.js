@@ -45,6 +45,11 @@ export const MAPPER_HELP = {
         ["↻", "One entry per item of a list. Fields below use the item variable, e.g. n['PID.5.1']."],
         ["⇄", "Translate the value with a ConceptMap; choose what happens without a match."],
         ["?", "Only map this element, and what is below it, when a condition holds."]] },
+      { title: "Branch actions and extensions", lines: [
+        "Right-click a row, press Shift+F10 on its name, or use its ⋯ button to open the actions menu.",
+        "Duplicate branch copies a mapped repeating entry to a new occurrence, with new rule identities. Expressions and notes are kept. Iterated entries and entries at their maximum cardinality cannot be duplicated.",
+        "In the inspector, Profile extension reveals a declared slice and its URL. List context extensions offers other URLs to add to an open extension collection; choose its value type in the tree afterwards.",
+        "ConceptMaps are suggested by source/target systems and the target binding. All ConceptMaps restores the full list. A suggestion never replaces the current selection automatically."] },
       { title: "Toolbar", lines: [
         ["Show", "All elements, Must Support and required, or mapped only."],
         ["Search", "Filters the tree and opens the branches that contain the text."],

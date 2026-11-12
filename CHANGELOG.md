@@ -2,6 +2,15 @@
 
 ## Non publié (branche `feat/refonte`)
 
+- **Studio, assistance et branches (R-05/R-06 partiels)** : menu contextuel par
+  clic droit, Maj+F10 ou *⋯* ; duplication des occurrences répétables avec nouveaux
+  chemins et IDs, conservés par Undo/Redo ; activation de branche et copie JSON.
+  Pickers des slices d'extension et des URL du contexte ; filtrage des ConceptMaps
+  par systèmes et binding cible, avec accès à la liste complète. Recherche bornée
+  dans les extensions récursives ; menu utilisable au-dessus du studio plein écran.
+- **Démo** : slice optionnelle `registrationMode` et extension `ExampleSourceLabel`
+  hors du profil Patient, utilisées par les parcours de test de l'éditeur.
+
 - **Studio, inspecteur** : sélection d'un élément au clic ou au clavier ; volet
   avec métadonnées FHIR, définition, exemples, règles modifiables et diagnostics.
   Les champs de condition, itération et traduction sont partagés avec l'arbre ;

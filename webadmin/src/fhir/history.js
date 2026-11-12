@@ -6,7 +6,7 @@ export function snapshot(state) {
   return {
     values: [...state.values], iterations: [...state.iterations].map(([k, v]) => [k, { ...v }]),
     translations: [...state.translations].map(([k, v]) => [k, { ...v }]), conditions: [...state.conditions],
-    notes: [...(state.notes || [])], disabled: [...(state.disabled || [])], instances: [...(state.instances || [])]
+    notes: [...(state.notes || [])], disabled: [...(state.disabled || [])], instances: [...(state.instances || [])], ruleIds: [...(state.ruleIds || [])]
   };
 }
 
@@ -18,6 +18,7 @@ export function restore(state, snap) {
   state.notes = new Map(snap.notes);
   state.disabled = new Set(snap.disabled);
   state.instances = new Map(snap.instances);
+  state.ruleIds = new Map(snap.ruleIds || []);
 }
 
 export function createHistory(limit = 100) {

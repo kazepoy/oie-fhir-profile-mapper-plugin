@@ -41,8 +41,26 @@ fait), *Contourné* (le mapper vit avec), *Signalé* (issue ouverte), *Résolu* 
 | [FD-01](#fd-01) | FHIR Data Type | Profils, snapshots et ConceptMaps sans API publique | Gênant | Signalé |
 | [FD-02](#fd-02) | FHIR Data Type | Validateurs du catalogue jamais libérés sans minuteur | Gênant | Signalé |
 | [FD-03](#fd-03) | FHIR Data Type | Parseur JSON à décimaux exacts non public | Mineur | Contourné |
+| [WA-21](#wa-21) | Web Admin | Menu contextuel derrière le studio plein écran | Gênant | Contourné |
 
 ---
+
+## Web Admin 1.3
+
+### WA-21
+
+**Menu contextuel derrière le studio plein écran.** · Gênant · Contourné
+
+- **Constat.** `platform.ui.contextMenu(x, y, items)` crée un portail de menu
+  à `z-index: 150`, sous l'overlay du studio (`900`). Le menu reçoit le focus
+  clavier, mais l'arbre intercepte les clics.
+- **Preuve.** Parcours Playwright du menu ouvert par Maj+F10 en plein écran ;
+  styles calculés et interception des clics par les cellules de l'arbre.
+- **Contournement.** Styles isolés dans `host/context-menu.js`, actifs seulement
+  quand le mappeur est en plein écran : portail de menu placé à `960`. Ce style
+  dépend du conteneur Radix de Web Admin ; à revérifier à sa mise à jour.
+- **Demande amont.** Permettre aux plugins de rattacher les menus à leur overlay,
+  ou exposer une politique commune de superposition. Aucune issue envoyée.
 
 ## FHIR Data Type 1.5.1
 
