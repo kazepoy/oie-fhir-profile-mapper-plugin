@@ -80,7 +80,7 @@ export function monacoItems(functions, context = {}, sampleValues = new Map()) {
     if (context.role && !fn.contexts.includes(context.role)) continue;
     const params = (fn.parameters || []).map(p => p.name);
     items.push({ label: fn.signature, filterText: fn.name, kind: "function", insertText: params.length ? `${fn.name}(${params.map((p, i) => `\${${i + 1}:${p}}`).join(", ")})` : `${fn.name}()`,
-      snippet: true, detail: `FHIR Mapper · ${fn.returnType || ""}`, documentation: `${fn.description}\n\nExample: ${fn.example}`, sortText: `1${fn.name}` });
+      snippet: true, detail: `FHIR Mapper · ${fn.returnType || ""}`, documentation: `${fn.description}\n\nExample: ${fn.example}`, sortText: `2${fn.name}` });
   }
   for (const name of context.variables || []) {
     items.push({ label: name, kind: "variable", insertText: name, detail: name.endsWith("Index") ? "iteration index (0, 1, …)" : "iteration item", sortText: `0${name}` });
@@ -88,12 +88,21 @@ export function monacoItems(functions, context = {}, sampleValues = new Map()) {
   if (context.role === "translation") {
     // code and system are already in variables
   }
-  for (const path of context.paths || []) {
-    const value = sampleValues.get(path);
-    items.push({ label: path, kind: "path", insertText: path, detail: value == null ? "sample path" : `sample: ${String(value).slice(0, 60)}`, documentation: "From the sample message; guard optional values.", sortText: `2${path}` });
+  // Sample paths: those rewritten to an iteration variable first, then the others; only fields
+  // that hold a value in the sample when it is known; written as the rules write them.
+  const single = path => path.replace(/\["((?:[^"\\]|\\.)*)"\]/g, (_, key) => `['${key.replace(/'/g, "\\'")}']`);
+  const variables = new Set(context.variables || []);
+  const scoped = path => variables.has(path.split("[")[0]);
+  const paths = [...new Set(context.paths || [])];
+  const shown = [...paths.filter(scoped), ...paths.filter(path => !scoped(path))].slice(0, 80);
+  for (const path of shown) {
+    const value = sampleValues.get(path) ?? (context.pathValues ? context.pathValues[path] : undefined);
+    const text = single(path) + (context.e4x ? ".toString()" : "");
+    items.push({ label: text, filterText: text, kind: "path", insertText: text, detail: value == null || value === "" ? "sample path" : `sample: ${String(value).slice(0, 60)}`,
+      sortText: `${scoped(path) ? "1" : "4"}${path}` });
   }
   for (const s of SNIPPETS) {
-    items.push({ label: s.label, filterText: s.name, kind: "snippet", insertText: s.insert, snippet: true, detail: "snippet", documentation: s.description, sortText: `3${s.name}` });
+    items.push({ label: s.label, filterText: s.name, kind: "snippet", insertText: s.insert, snippet: true, detail: `snippet · ${s.description}`, sortText: `5${s.name}` });
   }
   return items;
 }

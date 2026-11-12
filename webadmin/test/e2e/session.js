@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 // Opens the demo's web administrator in Playwright, signs in, and reaches a step
 // of a channel's source transformer. Settings come from the environment.
-import { chromium } from "playwright";
+import { chromium, webkit } from "playwright";
 
 export const DEMO_URL = process.env.DEMO_URL || "https://localhost:8443/oie-webadmin/";
 export const PASSWORD = process.env.OIE_DEMO_PASSWORD || "demo-oie-password";
 
 export async function signIn({ user = "admin", password = PASSWORD } = {}) {
-  const browser = await chromium.launch();
+  // E2E_BROWSER=webkit runs the same checks in Safari's engine.
+  const browser = await (process.env.E2E_BROWSER === "webkit" ? webkit : chromium).launch();
   const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1600, height: 1100 } });
   const page = await context.newPage();
   page.setDefaultTimeout(30000);

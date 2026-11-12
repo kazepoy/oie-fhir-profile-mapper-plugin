@@ -127,6 +127,17 @@ de référence déclaré par une autre étape du transformeur. Un seul champ por
 éditeur à la fois ; Entrée, Tab ou un clic ailleurs le referme. Sans Monaco, le
 champ texte et ses suggestions restent disponibles.
 
+Les expressions qui ne sont pas en cours d'édition sont affichées avec les couleurs de
+l'éditeur. `Alt+Espace` (`⌥Espace` sur macOS) ou `Ctrl+Espace` ouvre les propositions,
+dans cet ordre : variables d'itération, codes du jeu de valeurs, références des autres
+étapes, chemins de l'exemple réécrits vers la variable d'itération, fonctions, autres
+chemins de l'exemple (seuls ceux qui portent une valeur, 80 au plus), modèles de garde.
+
+Dans l'onglet **Test**, le message exemple est édité avec la coloration de son type
+(HL7 v2, XML, JSON) ; le résultat, le script généré et l'édition en JSON sont colorés
+de même. Chaque onglet a un bouton **?** qui explique son rôle, ses boutons et ses
+raccourcis ; le panneau *Settings › FHIR Mapper* et l'étape FML ont le leur.
+
 La barre de l'onglet **Mapper** offre la recherche d'éléments (les branches qui
 contiennent le texte se déplient), **Expand mapped**, **Collapse all**, et
 **Undo** / **Redo** des règles (les frappes rapprochées comptent pour une

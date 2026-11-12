@@ -31,29 +31,38 @@ describe("the step editors in the demo", () => {
     await mapper.locator("table.mapper-tree tbody tr").nth(3).waitFor();
     await mapper.getByRole("button", { name: /Full screen/ }).click();
     await mapper.getByLabel("Search elements").fill("family");
-    const field = mapper.locator("tr[title^='Patient.name.family'] input[role=combobox]").first();
-    const before = await field.inputValue();
+    const field = mapper.locator("tr[title^='Patient.name.family'] [role=combobox]").first();
+    const before = await field.evaluate(el => el.value ?? el.dataset.value);
     await field.click();
     await page.locator(".mapper-expression-editing .monaco-editor").waitFor();
     await page.waitForTimeout(500);
+    // Alt/Option+Space asks for suggestions (macOS keeps Ctrl+Space), without typing a space.
+    await page.keyboard.press("Alt+Space");
+    await page.locator(".suggest-widget .monaco-list-row").first().waitFor();
+    assert.equal(await page.evaluate(() => window.monaco.editor.getEditors().pop().getValue()), before);
+    // No <style> of the editor may be shown as text.
+    assert.equal(await page.evaluate(() => [...document.querySelectorAll(".monaco-editor style, .suggest-widget style, .monaco-list style")].filter(e => getComputedStyle(e).display !== "none").length), 0);
+    await page.keyboard.press("Escape");
     await page.keyboard.type(" + fhirU", { delay: 60 });
     await page.locator(".suggest-widget .monaco-list-row").first().waitFor();
     assert.match((await page.locator(".suggest-widget .monaco-list-row").allInnerTexts()).join("\n"), /fhirUuid\(\)/);
     await page.keyboard.press("Enter");
     await mapper.getByLabel("Search elements").click();
-    await assert.doesNotReject(mapper.locator("tr[title^='Patient.name.family'] input[role=combobox]").first().waitFor());
-    assert.equal(await mapper.locator("tr[title^='Patient.name.family'] input[role=combobox]").first().inputValue(), `${before} + fhirUuid()`);
+    await assert.doesNotReject(mapper.locator("tr[title^='Patient.name.family'] [role=combobox]").first().waitFor());
+    assert.equal(await mapper.locator("tr[title^='Patient.name.family'] [role=combobox]").first().evaluate(el => el.value ?? el.dataset.value), `${before} + fhirUuid()`);
     while (await mapper.getByRole("button", { name: /Undo/ }).isEnabled()) await mapper.getByRole("button", { name: /Undo/ }).click();
-    assert.equal(await mapper.locator("tr[title^='Patient.name.family'] input[role=combobox]").first().inputValue(), before);
+    assert.equal(await mapper.locator("tr[title^='Patient.name.family'] [role=combobox]").first().evaluate(el => el.value ?? el.dataset.value), before);
   });
 
   test("a bound element offers the codes of its value set", async () => {
     const { page } = session;
     const mapper = page.locator(".fhir-profile-mapper");
     await mapper.getByLabel("Search elements").fill("gender");
-    const field = mapper.locator("tr[title^='Patient.gender'] input[role=combobox]").first();
-    assert.match(await field.getAttribute("placeholder"), /required binding: administrative-gender/);
-    const before = await field.inputValue();
+    const field = mapper.locator("tr[title^='Patient.gender'] [role=combobox]").first();
+    await mapper.getByLabel("Search elements").fill("maritalStatus");
+    assert.match(await mapper.locator("tr[title^='Patient.maritalStatus'] input[role=combobox]").first().getAttribute("placeholder"), /binding: marital-status/);
+    await mapper.getByLabel("Search elements").fill("gender");
+    const before = await field.evaluate(el => el.value ?? el.dataset.value);
     await field.click();
     await page.locator(".mapper-expression-editing .monaco-editor").waitFor();
     await page.waitForTimeout(1500); // the codes are read when the field is first edited
@@ -63,7 +72,19 @@ describe("the step editors in the demo", () => {
     await page.keyboard.press("Escape");
     await mapper.getByLabel("Search elements").click();
     while (await mapper.getByRole("button", { name: /Undo/ }).isEnabled()) await mapper.getByRole("button", { name: /Undo/ }).click();
-    assert.equal(await mapper.locator("tr[title^='Patient.gender'] input[role=combobox]").first().inputValue(), before);
+    assert.equal(await mapper.locator("tr[title^='Patient.gender'] [role=combobox]").first().evaluate(el => el.value ?? el.dataset.value), before);
+  });
+
+  test("each tab has its contextual help", async () => {
+    const { page } = session;
+    const mapper = page.locator(".fhir-profile-mapper");
+    for (const [tab, title, text] of [["Mapper", "Help: Mapper", /Reading the tree/i], ["Properties", "Help: Properties", /What this step does/i], ["Test", "Help: Test", /What a test runs/i]]) {
+      await mapper.getByRole("tab", { name: tab }).click();
+      await mapper.getByRole("button", { name: title }).click();
+      assert.match(await mapper.getByRole("dialog", { name: title }).innerText(), text);
+      await page.keyboard.press("Escape");
+      assert.equal(await mapper.getByRole("dialog", { name: title }).count(), 0);
+    }
   });
 
   test("the step names a FHIR context of the server, defined in Settings", async () => {
@@ -84,6 +105,8 @@ describe("the step editors in the demo", () => {
     const { page } = session;
     const mapper = page.locator(".fhir-profile-mapper");
     await mapper.getByRole("tab", { name: "Test" }).click();
+    // The sample is shown in the code editor, in the language of its data type.
+    await mapper.locator(".fm-code-box[data-language=hl7v2] .monaco-editor").waitFor();
     assert.equal(await mapper.locator("select[aria-label=Sample] option").count(), 3);
     await mapper.getByRole("button", { name: /Run all/ }).click();
     const rows = mapper.locator("table[aria-label='Results of the saved samples'] tr");

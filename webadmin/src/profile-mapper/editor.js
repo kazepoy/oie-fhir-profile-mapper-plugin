@@ -2,6 +2,9 @@
 import { createExpressionEditor } from "../host/code-editor.js";
 import { monacoItems, scopeDts } from "../fhir/completion.js";
 import { snapshot, restore } from "../fhir/history.js";
+import { CodeBox, languageOf } from "../host/code-box.js";
+import { HelpButton } from "../host/help.js";
+import { MAPPER_HELP } from "../host/help-texts.js";
 import { cachedFhirSettings, fhirContext, loadFhirSettings } from "../host/settings.js";
 import { normalizeResult } from "../fhir/diagnostics.js";
 import { sourceTree, sourcePaths } from "../fhir/source.js";
@@ -301,6 +304,38 @@ function MapperExpression({ style, onChange, completionContext = {}, ...props })
   );
 }
 
+/** Expressions already coloured by the editor's tokenizer, by text. */
+const coloured = new Map();
+
+/** An expression that is not being edited, with the colours of the code editor; a click or the focus edits it. */
+function ColouredExpression({ value, style, title, label, onActivate, onDropText }) {
+  const [html, setHtml] = React.useState(coloured.get(value) || null);
+  React.useEffect(() => {
+    if (coloured.has(value)) { setHtml(coloured.get(value)); return undefined; }
+    const monaco = typeof window !== "undefined" ? window.monaco : null;
+    if (!monaco?.editor?.colorize) { setHtml(null); return undefined; }
+    let active = true;
+    monaco.editor.colorize(value, "javascript", {}).then((text) => {
+      if (coloured.size > 2000) coloured.clear();
+      coloured.set(value, text);
+      if (active) setHtml(text);
+    }, () => {});
+    return () => { active = false; };
+  }, [value]);
+  return h("div", {
+    className: "mapper-expression-view", role: "combobox", tabIndex: 0, "aria-label": label || "JavaScript expression", "aria-expanded": false, title, style: { ...style, fontFamily: undefined, fontSize: undefined }, "data-value": value,
+    onFocus: onActivate, onClick: onActivate,
+    onDragOver: (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; },
+    onDrop: (e) => {
+      const text = e.dataTransfer.getData("application/x-oie-accessor") || e.dataTransfer.getData("text/plain");
+      if (!text) return;
+      e.preventDefault();
+      e.stopPropagation();
+      onDropText(text);
+    }
+  }, html ? h("span", { dangerouslySetInnerHTML: { __html: html } }) : value);
+}
+
 /**
  * An expression field: a plain input until it gets the focus, then the host's code
  * editor (Monaco, one line) with the mapper's completions and typings. Only the field
@@ -367,6 +402,12 @@ function ExpressionField(props) {
   }, [props.value]);
   React.useEffect(() => { editor.current?.setMarkers(props.errors || []); }, [(props.errors || []).join("\n")]);
   const { errors, onEdit, ...plain } = props;
+  // Not edited and not empty: shown with the editor's colours once Monaco is on the page.
+  if (available && !editing && !props.disabled && (props.value ?? "") !== "" && window.monaco?.editor?.colorize) {
+    return h("span", { className: "mapper-expression", style: props.style },
+      h(ColouredExpression, { value: props.value, title: props.title, label: props["aria-label"], style: props.style, onActivate: () => setEditing(true),
+        onDropText: (text) => props.onChange({ target: { value: `${props.value}${text}` } }) }));
+  }
   if (!available || !editing || props.disabled) return h(MapperExpression, { ...plain, onFocus: () => { if (available && !props.disabled) setEditing(true); } });
   return h("span", { className: "mapper-expression mapper-expression-editing", style: props.style, ref: host });
 }
@@ -1422,7 +1463,18 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       .then((text) => { known.set(node.binding.valueSet, JSON.parse(text)); rerender(); })
       .catch(() => { /* a value set that cannot be expanded here offers no code */ });
   };
-  const completionFor = (node, role = "value") => ({ ...mapperCompletionContext(node, st.iterations, st.sourcePaths, role), refs: stepRefs,
+  // Paths of the sample that hold a value, in the form the completion compares (double quotes), with that value.
+  const valuedPaths = (() => {
+    const serialized = st.sample.dataType === "HL7V2" ? st.serialized : st.sample;
+    const values = {};
+    if (serialized) {
+      for (const f of sourcePaths(sourceTree(serialized))) {
+        if (f.value !== null && f.value !== "" && f.path !== "msg") values[f.path.replace(/\['((?:[^'\\]|\\.)*)'\]/g, (_, key) => `[${JSON.stringify(key)}]`)] = f.value;
+      }
+    }
+    return values;
+  })();
+  const completionFor = (node, role = "value") => ({ ...mapperCompletionContext(node, st.iterations, Object.keys(valuedPaths), role), pathValues: valuedPaths, e4x: st.sample.dataType !== "JSON", refs: stepRefs,
     codes: role === "value" ? bindingCodes(node) : [], bindingStrength: node?.binding?.strength });
   // Elements the last test or compilation reported: marked in the tree.
   const errorsByKey = new Map();
@@ -1749,9 +1801,9 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       if (toggleButton && (toggleButton.getAttribute("aria-expanded") === "true") === (e.key === "ArrowLeft")) toggleButton.click();
       return;
     }
-    const rows = [...row.closest("table").querySelectorAll("tbody tr")].filter((r) => r.querySelector("input[role=combobox], .mapper-expression-editing"));
+    const rows = [...row.closest("table").querySelectorAll("tbody tr")].filter((r) => r.querySelector("[role=combobox], .mapper-expression-editing"));
     const next = rows[rows.indexOf(row) + (e.key === "ArrowDown" ? 1 : -1)];
-    next?.querySelector("input[role=combobox]")?.focus();
+    next?.querySelector("[role=combobox]")?.focus();
   };
   // The fields of the sample message with their values: click to insert into the field being edited, or drag.
   const sourcePane = () => {
@@ -2001,8 +2053,8 @@ function ProfileMapperEditor({ element, onChange, platform }) {
             onChange(); rerender();
           } catch (error) { st.error = errorText(error); rerender(); }
         } }, "Validate and apply")),
-      h("textarea", { rows: 8, value: st.jsonDraft, "aria-label": "Step mapping JSON", style: { width: "100%", fontFamily: "monospace" },
-        onChange: (e) => { st.jsonDraft = e.target.value; rerender(); } }),
+      h(CodeBox, { value: st.jsonDraft, language: "json", height: "260px", label: "Step mapping JSON",
+        onChange: (text) => { if (text !== st.jsonDraft) { st.jsonDraft = text; rerender(); } } }),
       h("div", { className: "hint" }, "Applies to this step only; its OIE sequence and enabled state are preserved. Save the channel to persist changes."))
   );
   const messages = h(
@@ -2148,14 +2200,12 @@ function ProfileMapperEditor({ element, onChange, platform }) {
                 disabled: !st.traceOptions.enabled, style: { width: "80px" },
                 onChange: (e) => { st.traceOptions.maxEvents = Number(e.target.value); rerender(); } }))
             ),
-            h("textarea", {
-              rows: 6,
-              value: st.sample.message,
-              placeholder: st.sample.dataType === "XML" ? "<root>...</root>" : st.sample.dataType === "JSON" ? '{"field":"value"}' : st.sample.dataType === "HL7V2" ? "MSH|^~\\&|..." : "Sample message",
-              style: { width: "100%", fontFamily: "monospace", fontSize: "12px" },
-              onChange: (e) => {
-                st.sample.message = e.target.value;
-                if (activeSample) updateActive({ message: e.target.value }); else saveSample();
+            h(CodeBox, {
+              value: st.sample.message, language: languageOf(st.sample.dataType), height: "170px", label: "Sample message",
+              onChange: (text) => {
+                if (text === st.sample.message) return;
+                st.sample.message = text;
+                if (activeSample) updateActive({ message: text }); else saveSample();
                 rerender();
               }
             }),
@@ -2202,7 +2252,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
                           activeSample.expected ? h("button", { type: "button", className: "btn btn-sm", onClick: () => updateActive({ expected: null }) }, "Clear the expected result") : null) : null,
                         activeSample && sampleVerdict(activeSample, testResult) === false
                           ? h(ResultDiff, { expected: normalizeResult(activeSample.expected), actual: normalizeResult(testResult.output) }) : null,
-                        h("pre", { style: { maxHeight: "360px", overflow: "auto", fontSize: "11px", background: "rgba(0,0,0,0.03)", padding: "6px" } }, prettyJson(testResult.output))
+                        h(CodeBox, { value: prettyJson(testResult.output), language: String(testResult.output).trim().startsWith("<") ? "xml" : "json", readOnly: true, height: "360px", label: "Result" })
                       )
                     : null
                 )
@@ -2212,7 +2262,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
                   "div",
                   { style: { marginTop: "6px" } },
                   st.scriptResult.errors.map((e, i) => diagnosticView(e, `s${i}`)),
-                  h("pre", { style: { maxHeight: "360px", overflow: "auto", fontSize: "11px", background: "rgba(0,0,0,0.03)", padding: "6px" } }, st.scriptResult.script || "")
+                  h(CodeBox, { value: st.scriptResult.script || "", language: "javascript", readOnly: true, height: "360px", label: "Generated script" })
                 )
               : null
           )
@@ -2245,7 +2295,8 @@ function ProfileMapperEditor({ element, onChange, platform }) {
         key: t.id, id: `${tabId}-${t.id}`, type: "button", role: "tab", "aria-selected": t === current, "aria-controls": `${tabId}-panel`,
         tabIndex: t === current ? 0 : -1, onClick: () => { st.tab = t.id; rerender(); }
       }, t.label, t.badge ? h("span", { className: "mapper-tab-badge", title: t.badge.title }, t.badge.text) : null)),
-      h("button", { type: "button", className: "btn btn-sm", style: { marginLeft: "auto", alignSelf: "center" }, title: "Edit this step on the whole page (Esc to come back)", onClick: toggleFullScreen },
+      h("span", { style: { marginLeft: "auto", alignSelf: "center", marginRight: "6px", display: "inline-flex" } }, h(HelpButton, { key: current.id, ...(MAPPER_HELP[current.id] || MAPPER_HELP.mapper) })),
+      h("button", { type: "button", className: "btn btn-sm", style: { alignSelf: "center" }, title: "Edit this step on the whole page (Esc to come back)", onClick: toggleFullScreen },
         st.fullScreen ? "Exit full screen (Esc)" : "⤢ Full screen")),
     messages,
     h("div", { className: "mapper-tab-panel", id: `${tabId}-panel`, role: "tabpanel", "aria-labelledby": `${tabId}-${current.id}` }, current.panel)

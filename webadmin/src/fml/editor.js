@@ -8,6 +8,9 @@
 
 import { createExpressionEditor, registerLanguage } from "../host/code-editor.js";
 import { FML_LANGUAGE, FML_TEMPLATE } from "./language.js";
+import { CodeBox, languageOf } from "../host/code-box.js";
+import { HelpButton } from "../host/help.js";
+import { FML_HELP } from "../host/help-texts.js";
 import { cachedFhirSettings, fhirContext, loadFhirSettings } from "../host/settings.js";
 
 export const FML_TYPE = "org.oie.fhir.fml.FhirFmlTransformStep";
@@ -242,16 +245,16 @@ function FmlTransformEditor({ element, onChange, platform }) {
         DATA_TYPES.map((v) => h("option", { key: v, value: v }, v)))),
       h("div", { className: "field" }, h("label", null, " "),
         h("button", { type: "button", className: "btn btn-primary", disabled: st.testing || !(element.mapUrl || inline), onClick: runTest }, st.testing ? "Running…" : "Run test")),
-      field("Sample message", h("textarea", { rows: 8, value: st.sample.message, style: { width: "100%", fontFamily: "monospace" },
-        onChange: (e) => { st.sample.message = e.target.value; saveSample(); rerender(); } }), null, true)),
+      field("Sample message", h(CodeBox, { value: st.sample.message, language: languageOf(st.sample.dataType), height: "190px", label: "Sample message",
+        onChange: (text) => { if (text !== st.sample.message) { st.sample.message = text; saveSample(); rerender(); } } }), null, true)),
     result ? h("div", null,
       (result.errors || []).map((e, i) => h("div", { key: `e${i}`, className: "fml-error" }, `${e.phase}: ${e.message}`)),
       result.validationPerformed && !(result.issues || []).some((i) => ["error", "fatal"].includes(i.severity)) && !(result.errors || []).length
         ? h("div", { className: "fml-ok" }, "Valid.") : null,
       (result.issues || []).filter((i) => i.severity !== "information").map((i, n) =>
         h("div", { key: `i${n}`, className: i.severity === "warning" ? "fml-issue-warning" : "fml-error" }, `${i.severity} ${i.location || ""}: ${i.message}`)),
-      result.output ? h("div", null, h("h4", null, "Result"), h("pre", { className: "fml-json" }, pretty(result.output))) : null,
-      result.model ? h("details", null, h("summary", null, "OIE model of the message (source of the map)"), h("pre", { className: "fml-json" }, pretty(result.model))) : null)
+      result.output ? h("div", null, h("h4", null, "Result"), h(CodeBox, { value: pretty(result.output), language: "json", readOnly: true, height: "360px", label: "Result" })) : null,
+      result.model ? h("details", null, h("summary", null, "OIE model of the message (source of the map)"), h(CodeBox, { value: pretty(result.model), language: "json", readOnly: true, height: "360px", label: "OIE model" })) : null)
       : null
   );
 
@@ -270,7 +273,8 @@ function FmlTransformEditor({ element, onChange, platform }) {
     h("style", null, FML_STYLES),
     h("div", { className: "fml-tabs", role: "tablist" }, tabs.map((t) =>
       h("button", { key: t.id, type: "button", role: "tab", "aria-selected": t.id === current.id, onClick: () => { st.tab = t.id; rerender(); } }, t.label)),
-      h("button", { type: "button", className: "btn btn-sm", style: { marginLeft: "auto", alignSelf: "center" }, title: "Edit this step on the whole page (Esc to come back)",
+      h("span", { style: { marginLeft: "auto", alignSelf: "center", marginRight: "6px", display: "inline-flex" } }, h(HelpButton, { key: current.id, ...(FML_HELP[current.id] || FML_HELP.settings) })),
+      h("button", { type: "button", className: "btn btn-sm", style: { alignSelf: "center" }, title: "Edit this step on the whole page (Esc to come back)",
         onClick: () => { st.fullScreen = !st.fullScreen; rerender(); } }, st.fullScreen ? "Exit full screen (Esc)" : "⤢ Full screen")),
     h("div", { role: "tabpanel" }, current.panel)
   );

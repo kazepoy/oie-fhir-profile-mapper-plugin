@@ -174,6 +174,194 @@ function fhirContext(name) {
   return key && cache ? (cache.contexts || []).find((c) => c.name === key) || null : null;
 }
 
+// src/host/help.js
+function HelpButton({ label, sections, note }) {
+  const React3 = platform().React;
+  const h3 = React3.createElement;
+  const [open, setOpen] = React3.useState(false);
+  const root = React3.useRef(null);
+  React3.useEffect(() => {
+    if (!open) return void 0;
+    const onDown = (e) => {
+      if (root.current && !root.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        setOpen(false);
+        root.current?.querySelector("button")?.focus();
+      }
+    };
+    document.addEventListener("mousedown", onDown, true);
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("mousedown", onDown, true);
+      document.removeEventListener("keydown", onKey, true);
+    };
+  }, [open]);
+  return h3(
+    "span",
+    { ref: root, className: "fm-help" },
+    h3("button", { type: "button", className: "fm-help__button" + (open ? " fm-help__button--open" : ""), "aria-label": label, title: label, "aria-expanded": open, onClick: () => setOpen(!open) }, "?"),
+    open ? h3(
+      "div",
+      { className: "fm-help__panel", role: "dialog", "aria-label": label },
+      sections.map((section) => h3(
+        "section",
+        { key: section.title },
+        h3("h4", null, section.title),
+        section.lines.map((line, i) => Array.isArray(line) ? h3("div", { key: i, className: "fm-help__row" }, h3("span", { className: "fm-help__key" }, line[0]), h3("span", null, line[1])) : h3("p", { key: i }, line))
+      )),
+      note ? h3("p", { className: "fm-help__note" }, note) : null
+    ) : null
+  );
+}
+
+// src/host/help-texts.js
+var MAPPER_HELP = {
+  properties: {
+    label: "Help: Properties",
+    sections: [
+      { title: "What this step does", lines: [
+        "A FHIR Profile Mapper step builds one FHIR resource from the message, or creates a named Bundle that later steps fill.",
+        ["Create a Bundle", "Declares a Bundle by name and type. Resource steps placed after it select it in “Add to Bundles”."],
+        ["Build a resource", "Maps the message onto a profile. The resource is the result of the step, or is added to one or several Bundles."]
+      ] },
+      { title: "Where the profile comes from", lines: [
+        ["FHIR context", "A named set of packages, terminology server and validation policy, defined once in Settings › FHIR Mapper and shared by every step that names it."],
+        ["Profile Packages", "Without a context: server paths of profile files, folders or .tgz packages, separated by ';'."],
+        ["Target Profile", "Canonical URL of the profile, or a resource type. Load reads its elements; mappings of elements it also has are kept."]
+      ] },
+      { title: "Result", lines: [
+        ["Result destination", "The outbound message, or a channel map variable to use from another destination."],
+        ["Reference Name", "The name other steps give to fhirRef('name') to point at this resource inside the Bundles."],
+        ["Validate FHIR output", "always, off, or as the context says. An invalid result stops the message."],
+        ["Trace processed messages", "Keeps this step's events on each processed message; read them with the “FHIR mapping trace” action of Messages. Redeploy to apply."]
+      ] },
+      { title: "Edit as JSON", lines: ["The whole step as text, to copy it elsewhere or paste a mapping written by hand or by an agent. It is compiled on the server before it is applied."] }
+    ]
+  },
+  mapper: {
+    label: "Help: Mapper",
+    sections: [
+      { title: "Reading the tree", lines: [
+        "One row per element of the profile: its name and cardinality, its type, its mapping.",
+        ["1..*", "Minimum and maximum. A red count on the tab is the number of required elements still unmapped."],
+        ["S", "Must Support in the profile."],
+        ["fixed / pattern", "A value the profile imposes: it is added by itself once its container gets a value."],
+        ["… binding", "The element takes its codes from a value set: they are offered while typing."],
+        ["red row", "The last test or the compilation reported this element; its message is in the tooltip."]
+      ] },
+      { title: "Writing a mapping", lines: [
+        "Click a field to edit it. An expression is JavaScript, usually a path of the message; a constant is written 'final'.",
+        ["⌥Space", "Suggestions: iteration variables, codes of the value set, references of other steps, mapper functions, paths of the sample."],
+        ["Sample fields", "The fields of the sample message with their values. Click one to insert its path into the field being edited, or drag it onto a field."],
+        ["Alt+↓ ↑ → ←", "Next or previous field; open or close the element."]
+      ] },
+      { title: "Buttons of a row", lines: [
+        ["+ / −", "Add or remove an entry of a repeating element."],
+        ["↻", "One entry per item of a list. Fields below use the item variable, e.g. n['PID.5.1']."],
+        ["⇄", "Translate the value with a ConceptMap; choose what happens without a match."],
+        ["?", "Only map this element, and what is below it, when a condition holds."]
+      ] },
+      { title: "Toolbar", lines: [
+        ["Show", "All elements, Must Support and required, or mapped only."],
+        ["Search", "Filters the tree and opens the branches that contain the text."],
+        ["Undo / Redo", "Of the mappings, while the step is open."],
+        ["Full screen", "The step on the whole page; Esc comes back."]
+      ] }
+    ],
+    note: "A missing optional field must give nothing, not an error: guard it, e.g. x.length() > 1 ? x[1].toString() : undefined."
+  },
+  test: {
+    label: "Help: Test",
+    sections: [
+      { title: "What a test runs", lines: [
+        "Run executes this step alone on the server, on the sample message, and validates what it makes. References to other steps are stand-ins: deploy the channel to check a whole Bundle.",
+        "Testing runs the step's code on the server and needs the permission “Test FHIR mapper steps”."
+      ] },
+      { title: "Samples", lines: [
+        ["Save as sample", "Keeps the message in the step, so it is saved with the channel and shared by every user."],
+        ["Use this result as expected", "Fixes the reference result of the sample. Later runs say whether the result matches, and show both side by side when it differs."],
+        ["Run all", "Runs every saved sample: passed, or failed on an error, an invalid result or a difference."],
+        "Random identities (urn:uuid) and meta.lastUpdated are ignored when comparing."
+      ] },
+      { title: "Understanding a result", lines: [
+        ["Go to rule", "Opens the element an error or a trace event belongs to."],
+        ["Trace", "Records each rule: value, conversion, translation, condition, iteration. Include scalar values only when patient data may be shown."],
+        ["Generated script", "The JavaScript the server compiles from the mappings."]
+      ] }
+    ]
+  }
+};
+var FML_HELP = {
+  settings: {
+    label: "Help: Properties",
+    sections: [
+      { title: "What this step does", lines: [
+        "A FHIR FML Transform step runs a map written in the FHIR Mapping Language on the message and publishes the resource it builds.",
+        "The message is given to the map as the generic OieMessage model: nodes with a name, a position, an occurrence and a value."
+      ] },
+      { title: "Which map runs", lines: [
+        ["Map tab", "A map written in the step is saved with the channel and runs first."],
+        ["Map", "Otherwise, a StructureMap of the locations: .fml or .map files, StructureMap resources, packages."],
+        ["FHIR context", "A named set of locations defined in Settings › FHIR Mapper, shared by the steps that name it."]
+      ] },
+      { title: "Result", lines: [
+        ["Result destination", "The outbound message, or a channel map variable."],
+        ["Context variables", "Variables of the OIE maps copied into context.variable of the model."],
+        ["Validation", "Against the profiles of meta.profile, else the base definition. An invalid result stops the message."]
+      ] }
+    ]
+  },
+  map: {
+    label: "Help: Map",
+    sections: [
+      { title: "Writing the map", lines: [
+        'map "url" = "Name", then uses … as source / as target, then one or more groups of rules.',
+        ["src.node as pid where name = 'PID'", "Finds a node of the message by its name, its position or its occurrence."],
+        ["-> patient.gender = translate(v, 'url', 'code')", "Translates with a ConceptMap of the locations."],
+        ['imports "url"', "Uses the groups of another map of the locations."]
+      ] },
+      { title: "Buttons", lines: [
+        ["Check", "Parses the map on the server. Errors are underlined at their line; unknown uses and imports are reported."],
+        ["Start from an example", "A small map to adapt."],
+        ["Clear", "Empties the map: the step then runs the map chosen in Properties."]
+      ] }
+    ],
+    note: "The Test tab shows the model the map receives for a message: use it to find the names and positions of the nodes."
+  },
+  test: {
+    label: "Help: Test",
+    sections: [
+      { title: "What a test runs", lines: [
+        "Run test executes the map on the sample message, on the server, and validates the result.",
+        ["Result", "The resource the map built."],
+        ["OIE model of the message", "What the map received as its source: the names, positions and values to use in its rules."],
+        "Testing needs the permission “Test FHIR FML transforms”."
+      ] }
+    ]
+  }
+};
+var SETTINGS_HELP = {
+  label: "Help: FHIR contexts",
+  sections: [
+    { title: "What a context is", lines: [
+      "A named set of profile packages, a terminology server and a validation policy, shared by the FHIR Profile Mapper and FHIR FML Transform steps that name it.",
+      "A step without a context keeps its own packages and settings."
+    ] },
+    { title: "Fields", lines: [
+      ["Packages", "One server path per line: files, folders or .tgz packages with profiles, ConceptMaps, value sets and FML maps."],
+      ["Terminology server", "Base URL as OIE reaches it; empty to translate with the ConceptMaps of the packages."],
+      ["Validation", "For the steps whose validation is “as the context says”."]
+    ] },
+    { title: "When a change applies", lines: [
+      "The editors use it at once. A deployed channel keeps the context it read when it was deployed: redeploy it.",
+      "Saving needs the permission “Manage FHIR mapper settings”."
+    ] }
+  ]
+};
+
 // src/settings/panel.js
 var emptyContext = () => ({ name: "", fhirVersion: "R4", packages: [], terminologyServer: "", terminologyAuthorization: "", cacheSeconds: 300, timeoutSeconds: 10, validation: "always" });
 function errorText(e) {
@@ -210,6 +398,7 @@ function FhirSettingsPanel() {
   return h3(
     "div",
     { className: "fhir-mapper-settings" },
+    h3("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: "6px" } }, h3(HelpButton, SETTINGS_HELP)),
     h3("p", { className: "hint" }, "A FHIR context is a named set of profile packages, a terminology server and a validation policy. FHIR Profile Mapper and FHIR FML Transform steps that name a context share them; a step without a context keeps its own. A deployed channel takes a change when it is redeployed."),
     contexts.map((c, i) => h3(
       "div",
@@ -269,7 +458,49 @@ function FhirSettingsPanel() {
 }
 
 // src/styles/editor.css
-var editor_default = "/* SPDX-License-Identifier: MPL-2.0\n * Styles shared by the two step editors: full screen, the one-line code editor\n * of an expression, and the elements a test or the compiler reported.\n * Colours come from the Web Admin variables, so both themes follow the host.\n */\n.fhir-profile-mapper.mapper-fullscreen, .fhir-fml.mapper-fullscreen { position: fixed; inset: 0; z-index: 900; overflow: auto; padding: 14px 18px; background: var(--bg2, #fff); color: var(--text, #1f2c38); }\n\n.fm-code-editor--line { width: 100%; height: 26px; min-height: 26px !important; border-radius: 4px; overflow: hidden; }\n.fm-code-editor--line .ce-gutter { display: none; }\n.fm-code-editor--line textarea.ce-area { height: 26px; min-height: 26px; padding: 3px 6px; resize: none; white-space: nowrap; overflow: hidden; }\n.fm-code-editor--line .monaco-host { height: 26px; }\n.fm-code-editor--invalid { outline: 1px solid var(--err, #cc3b3b); }\n.mapper-expression-editing { flex: 1 1 auto; min-width: 160px; }\n\n.fhir-profile-mapper .mapper-tree tr.mapper-node-error > td { background: color-mix(in srgb, var(--err, #cc3b3b) 10%, var(--bg2, #fff)); }\n.fhir-profile-mapper .mapper-tree tr.mapper-node-error > td:first-child { border-left-color: var(--err, #cc3b3b); }\n.fhir-profile-mapper .mapper-tree tr.mapper-node-error input[role=combobox] { border-color: var(--err, #cc3b3b); }\n";
+var editor_default = `/* SPDX-License-Identifier: MPL-2.0
+ * Styles shared by the two step editors: full screen, the one-line code editor
+ * of an expression, and the elements a test or the compiler reported.
+ * Colours come from the Web Admin variables, so both themes follow the host.
+ */
+.fhir-profile-mapper.mapper-fullscreen, .fhir-fml.mapper-fullscreen { position: fixed; inset: 0; z-index: 900; overflow: auto; padding: 14px 18px; background: var(--bg2, #fff); color: var(--text, #1f2c38); }
+
+/* Monaco keeps <style> elements inside its lists; nothing may show them as text. */
+.monaco-editor style, .monaco-list style, .suggest-widget style, .suggest-details style, .monaco-hover style, .overflowingContentWidgets style { display: none !important; }
+.fm-code-box { border-radius: 4px; overflow: hidden; }
+.fm-code-box .fm-code-editor--multi { width: 100%; }
+
+/* An expression that is not being edited: its text with the editor's colours. */
+.mapper-expression-view { display: block; box-sizing: border-box; width: 100%; height: 26px; padding: 3px 7px; border: 1px solid var(--line, #cdd7e0); border-radius: 4px; background: var(--bg2, #fff);
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: 12px; line-height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: text; }
+.mapper-expression-view:hover, .mapper-expression-view:focus { border-color: var(--accent, #2e6da4); outline: none; }
+.mapper-expression-view br { display: none; }
+.mapper-node-error .mapper-expression-view { border-color: var(--err, #cc3b3b); }
+
+.fm-code-editor--line { width: 100%; height: 26px; min-height: 26px !important; border-radius: 4px; overflow: hidden; }
+.fm-code-editor--line .ce-gutter { display: none; }
+.fm-code-editor--line textarea.ce-area { height: 26px; min-height: 26px; padding: 3px 6px; resize: none; white-space: nowrap; overflow: hidden; }
+.fm-code-editor--line .monaco-host { height: 26px; }
+.fm-code-editor--invalid { outline: 1px solid var(--err, #cc3b3b); }
+.mapper-expression-editing { flex: 1 1 auto; min-width: 160px; }
+
+.fhir-profile-mapper .mapper-tree tr.mapper-node-error > td { background: color-mix(in srgb, var(--err, #cc3b3b) 10%, var(--bg2, #fff)); }
+.fhir-profile-mapper .mapper-tree tr.mapper-node-error > td:first-child { border-left-color: var(--err, #cc3b3b); }
+.fhir-profile-mapper .mapper-tree tr.mapper-node-error input[role=combobox] { border-color: var(--err, #cc3b3b); }
+
+/* Contextual help: a "?" button and its panel. */
+.fm-help { position: relative; display: inline-flex; align-self: center; }
+.fm-help__button { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border: 1px solid var(--line, #cdd7e0); border-radius: 6px; background: var(--bg2, #fff); color: var(--accent, #2e6da4); font: inherit; font-weight: 600; cursor: pointer; }
+.fm-help__button:hover, .fm-help__button--open { border-color: var(--accent, #2e6da4); }
+.fm-help__panel { position: absolute; z-index: 950; top: calc(100% + 6px); right: 0; width: min(520px, 80vw); max-height: 70vh; overflow: auto; padding: 14px 16px; border: 1px solid var(--line-strong, #aebbc8); border-radius: 10px;
+  background: var(--bg2, #fff); color: var(--text, #1f2c38); box-shadow: 0 12px 30px -10px #0006; font-size: 12.5px; line-height: 1.45; font-weight: 400; text-align: left; white-space: normal; }
+.fm-help__panel h4 { margin: 12px 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim, #4d6173); }
+.fm-help__panel section:first-child h4 { margin-top: 0; }
+.fm-help__panel p { margin: 0 0 6px; }
+.fm-help__row { display: grid; grid-template-columns: minmax(96px, 34%) 1fr; gap: 10px; margin-bottom: 6px; }
+.fm-help__key { font-family: var(--font-mono, ui-monospace, monospace); font-size: 11.5px; color: var(--accent, #2e6da4); overflow-wrap: anywhere; }
+.fm-help__note { margin-top: 10px !important; color: var(--text-dim, #4d6173); font-size: 11.5px; }
+`;
 
 // src/host/code-editor.js
 var OWNER = "fhir-mapper";
@@ -365,13 +596,14 @@ function singleLine(m, instance, el, onEnter) {
   });
 }
 function createExpressionEditor(options) {
-  const { value = "", onChange, onEnter, onFocus, onBlur, placeholder, ariaLabel, completionScope, multiline = false, language = "javascript", getItems, getDts, minHeight } = options;
+  const { value = "", onChange, onEnter, onFocus, onBlur, placeholder, ariaLabel, completionScope, multiline = false, language = "javascript", getItems, getDts, minHeight, readOnly = false } = options;
   const editor = platform().createCodeEditor({
     value,
     language,
     onChange,
     completionScope,
     ariaLabel,
+    readOnly,
     minHeight: multiline ? minHeight || "120px" : void 0,
     popoutable: multiline,
     popoutTitle: ariaLabel
@@ -403,6 +635,11 @@ function createExpressionEditor(options) {
     const uri = model.uri.toString();
     if (getItems) models.set(uri, { getItems, getDts });
     if (!multiline) singleLine(m, instance, el, onEnter);
+    const suggest = () => instance.trigger("keyboard", "editor.action.triggerSuggest", {});
+    instance.addCommand(m.KeyMod.Alt | m.KeyCode.Space, suggest);
+    instance.addCommand(m.KeyMod.WinCtrl | m.KeyCode.Space, suggest);
+    instance.addCommand(m.KeyMod.CtrlCmd | m.KeyCode.Space, suggest);
+    instance.updateOptions({ suggest: { showStatusBar: false, preview: false, showInlineDetails: true }, quickSuggestionsDelay: 80 });
     if (!multiline) {
       const text = instance.getValue();
       instance.setPosition({ lineNumber: 1, column: text.length + 1 });
@@ -537,7 +774,7 @@ function monacoItems(functions, context = {}, sampleValues = /* @__PURE__ */ new
       documentation: `${fn.description}
 
 Example: ${fn.example}`,
-      sortText: `1${fn.name}`
+      sortText: `2${fn.name}`
     });
   }
   for (const name of context.variables || []) {
@@ -545,12 +782,25 @@ Example: ${fn.example}`,
   }
   if (context.role === "translation") {
   }
-  for (const path of context.paths || []) {
-    const value = sampleValues.get(path);
-    items.push({ label: path, kind: "path", insertText: path, detail: value == null ? "sample path" : `sample: ${String(value).slice(0, 60)}`, documentation: "From the sample message; guard optional values.", sortText: `2${path}` });
+  const single = (path) => path.replace(/\["((?:[^"\\]|\\.)*)"\]/g, (_, key) => `['${key.replace(/'/g, "\\'")}']`);
+  const variables = new Set(context.variables || []);
+  const scoped = (path) => variables.has(path.split("[")[0]);
+  const paths = [...new Set(context.paths || [])];
+  const shown = [...paths.filter(scoped), ...paths.filter((path) => !scoped(path))].slice(0, 80);
+  for (const path of shown) {
+    const value = sampleValues.get(path) ?? (context.pathValues ? context.pathValues[path] : void 0);
+    const text = single(path) + (context.e4x ? ".toString()" : "");
+    items.push({
+      label: text,
+      filterText: text,
+      kind: "path",
+      insertText: text,
+      detail: value == null || value === "" ? "sample path" : `sample: ${String(value).slice(0, 60)}`,
+      sortText: `${scoped(path) ? "1" : "4"}${path}`
+    });
   }
   for (const s of SNIPPETS) {
-    items.push({ label: s.label, filterText: s.name, kind: "snippet", insertText: s.insert, snippet: true, detail: "snippet", documentation: s.description, sortText: `3${s.name}` });
+    items.push({ label: s.label, filterText: s.name, kind: "snippet", insertText: s.insert, snippet: true, detail: `snippet · ${s.description}`, sortText: `5${s.name}` });
   }
   return items;
 }
@@ -595,6 +845,40 @@ function restore(state, snap) {
   state.notes = new Map(snap.notes);
   state.disabled = new Set(snap.disabled);
   state.instances = new Map(snap.instances);
+}
+
+// src/host/code-box.js
+function languageOf(dataType) {
+  return dataType === "HL7V2" ? "hl7v2" : dataType === "XML" ? "xml" : dataType === "JSON" ? "json" : "text";
+}
+function CodeBox({ value, language, readOnly = false, onChange, height = "220px", label }) {
+  const React3 = platform().React;
+  const host = React3.useRef(null);
+  const editor = React3.useRef(null);
+  const latest = React3.useRef(onChange);
+  latest.current = onChange;
+  React3.useEffect(() => {
+    const ed = createExpressionEditor({
+      value: value ?? "",
+      language,
+      multiline: true,
+      readOnly,
+      minHeight: height,
+      ariaLabel: label,
+      onChange: (text) => latest.current?.(text)
+    });
+    ed.el.style.height = height;
+    editor.current = ed;
+    host.current.appendChild(ed.el);
+    return () => {
+      editor.current = null;
+      ed.dispose();
+    };
+  }, [language, readOnly]);
+  React3.useEffect(() => {
+    if (editor.current && editor.current.getValue() !== (value ?? "")) editor.current.setValue(value ?? "");
+  }, [value]);
+  return React3.createElement("div", { ref: host, className: "fm-code-box", "data-language": language });
 }
 
 // src/fhir/diagnostics.js
@@ -985,6 +1269,54 @@ function MapperExpression({ style, onChange, completionContext = {}, ...props })
     )
   );
 }
+var coloured = /* @__PURE__ */ new Map();
+function ColouredExpression({ value, style, title, label, onActivate, onDropText }) {
+  const [html, setHtml] = React.useState(coloured.get(value) || null);
+  React.useEffect(() => {
+    if (coloured.has(value)) {
+      setHtml(coloured.get(value));
+      return void 0;
+    }
+    const monaco2 = typeof window !== "undefined" ? window.monaco : null;
+    if (!monaco2?.editor?.colorize) {
+      setHtml(null);
+      return void 0;
+    }
+    let active = true;
+    monaco2.editor.colorize(value, "javascript", {}).then((text) => {
+      if (coloured.size > 2e3) coloured.clear();
+      coloured.set(value, text);
+      if (active) setHtml(text);
+    }, () => {
+    });
+    return () => {
+      active = false;
+    };
+  }, [value]);
+  return h("div", {
+    className: "mapper-expression-view",
+    role: "combobox",
+    tabIndex: 0,
+    "aria-label": label || "JavaScript expression",
+    "aria-expanded": false,
+    title,
+    style: { ...style, fontFamily: void 0, fontSize: void 0 },
+    "data-value": value,
+    onFocus: onActivate,
+    onClick: onActivate,
+    onDragOver: (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    },
+    onDrop: (e) => {
+      const text = e.dataTransfer.getData("application/x-oie-accessor") || e.dataTransfer.getData("text/plain");
+      if (!text) return;
+      e.preventDefault();
+      e.stopPropagation();
+      onDropText(text);
+    }
+  }, html ? h("span", { dangerouslySetInnerHTML: { __html: html } }) : value);
+}
 var activeExpressionEditor = null;
 function ExpressionField(props) {
   const [editing, setEditing] = React.useState(false);
@@ -1072,6 +1404,20 @@ function ExpressionField(props) {
     editor.current?.setMarkers(props.errors || []);
   }, [(props.errors || []).join("\n")]);
   const { errors, onEdit, ...plain } = props;
+  if (available && !editing && !props.disabled && (props.value ?? "") !== "" && window.monaco?.editor?.colorize) {
+    return h(
+      "span",
+      { className: "mapper-expression", style: props.style },
+      h(ColouredExpression, {
+        value: props.value,
+        title: props.title,
+        label: props["aria-label"],
+        style: props.style,
+        onActivate: () => setEditing(true),
+        onDropText: (text) => props.onChange({ target: { value: `${props.value}${text}` } })
+      })
+    );
+  }
   if (!available || !editing || props.disabled) return h(MapperExpression, { ...plain, onFocus: () => {
     if (available && !props.disabled) setEditing(true);
   } });
@@ -2068,8 +2414,20 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     }).catch(() => {
     });
   };
+  const valuedPaths = (() => {
+    const serialized = st.sample.dataType === "HL7V2" ? st.serialized : st.sample;
+    const values = {};
+    if (serialized) {
+      for (const f of sourcePaths(sourceTree(serialized))) {
+        if (f.value !== null && f.value !== "" && f.path !== "msg") values[f.path.replace(/\['((?:[^'\\]|\\.)*)'\]/g, (_, key) => `[${JSON.stringify(key)}]`)] = f.value;
+      }
+    }
+    return values;
+  })();
   const completionFor = (node, role = "value") => ({
-    ...mapperCompletionContext(node, st.iterations, st.sourcePaths, role),
+    ...mapperCompletionContext(node, st.iterations, Object.keys(valuedPaths), role),
+    pathValues: valuedPaths,
+    e4x: st.sample.dataType !== "JSON",
     refs: stepRefs,
     codes: role === "value" ? bindingCodes(node) : [],
     bindingStrength: node?.binding?.strength
@@ -2382,9 +2740,9 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       if (toggleButton && toggleButton.getAttribute("aria-expanded") === "true" === (e.key === "ArrowLeft")) toggleButton.click();
       return;
     }
-    const rows2 = [...row2.closest("table").querySelectorAll("tbody tr")].filter((r) => r.querySelector("input[role=combobox], .mapper-expression-editing"));
+    const rows2 = [...row2.closest("table").querySelectorAll("tbody tr")].filter((r) => r.querySelector("[role=combobox], .mapper-expression-editing"));
     const next = rows2[rows2.indexOf(row2) + (e.key === "ArrowDown" ? 1 : -1)];
-    next?.querySelector("input[role=combobox]")?.focus();
+    next?.querySelector("[role=combobox]")?.focus();
   };
   const sourcePane = () => {
     const serialized = st.sample.dataType === "HL7V2" ? st.serialized : st.sample;
@@ -2765,14 +3123,16 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
           }
         } }, "Validate and apply")
       ),
-      h("textarea", {
-        rows: 8,
+      h(CodeBox, {
         value: st.jsonDraft,
-        "aria-label": "Step mapping JSON",
-        style: { width: "100%", fontFamily: "monospace" },
-        onChange: (e) => {
-          st.jsonDraft = e.target.value;
-          rerender();
+        language: "json",
+        height: "260px",
+        label: "Step mapping JSON",
+        onChange: (text2) => {
+          if (text2 !== st.jsonDraft) {
+            st.jsonDraft = text2;
+            rerender();
+          }
         }
       }),
       h("div", { className: "hint" }, "Applies to this step only; its OIE sequence and enabled state are preserved. Save the channel to persist changes.")
@@ -2969,14 +3329,15 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
         }
       }))
     ),
-    h("textarea", {
-      rows: 6,
+    h(CodeBox, {
       value: st.sample.message,
-      placeholder: st.sample.dataType === "XML" ? "<root>...</root>" : st.sample.dataType === "JSON" ? '{"field":"value"}' : st.sample.dataType === "HL7V2" ? "MSH|^~\\&|..." : "Sample message",
-      style: { width: "100%", fontFamily: "monospace", fontSize: "12px" },
-      onChange: (e) => {
-        st.sample.message = e.target.value;
-        if (activeSample) updateActive({ message: e.target.value });
+      language: languageOf(st.sample.dataType),
+      height: "170px",
+      label: "Sample message",
+      onChange: (text2) => {
+        if (text2 === st.sample.message) return;
+        st.sample.message = text2;
+        if (activeSample) updateActive({ message: text2 });
         else saveSample();
         rerender();
       }
@@ -3044,14 +3405,14 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
           activeSample.expected ? h("button", { type: "button", className: "btn btn-sm", onClick: () => updateActive({ expected: null }) }, "Clear the expected result") : null
         ) : null,
         activeSample && sampleVerdict(activeSample, testResult) === false ? h(ResultDiff, { expected: normalizeResult(activeSample.expected), actual: normalizeResult(testResult.output) }) : null,
-        h("pre", { style: { maxHeight: "360px", overflow: "auto", fontSize: "11px", background: "rgba(0,0,0,0.03)", padding: "6px" } }, prettyJson(testResult.output))
+        h(CodeBox, { value: prettyJson(testResult.output), language: String(testResult.output).trim().startsWith("<") ? "xml" : "json", readOnly: true, height: "360px", label: "Result" })
       ) : null
     ) : null,
     st.scriptResult ? h(
       "div",
       { style: { marginTop: "6px" } },
       st.scriptResult.errors.map((e, i) => diagnosticView(e, `s${i}`)),
-      h("pre", { style: { maxHeight: "360px", overflow: "auto", fontSize: "11px", background: "rgba(0,0,0,0.03)", padding: "6px" } }, st.scriptResult.script || "")
+      h(CodeBox, { value: st.scriptResult.script || "", language: "javascript", readOnly: true, height: "360px", label: "Generated script" })
     ) : null
   ) : h("div", { className: "hint" }, st.loading ? "Loading the target profile…" : "Load a target profile in Properties to test this step.");
   const tabs = [
@@ -3099,9 +3460,10 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
           rerender();
         }
       }, t.label, t.badge ? h("span", { className: "mapper-tab-badge", title: t.badge.title }, t.badge.text) : null)),
+      h("span", { style: { marginLeft: "auto", alignSelf: "center", marginRight: "6px", display: "inline-flex" } }, h(HelpButton, { key: current2.id, ...MAPPER_HELP[current2.id] || MAPPER_HELP.mapper })),
       h(
         "button",
-        { type: "button", className: "btn btn-sm", style: { marginLeft: "auto", alignSelf: "center" }, title: "Edit this step on the whole page (Esc to come back)", onClick: toggleFullScreen },
+        { type: "button", className: "btn btn-sm", style: { alignSelf: "center" }, title: "Edit this step on the whole page (Esc to come back)", onClick: toggleFullScreen },
         st.fullScreen ? "Exit full screen (Esc)" : "⤢ Full screen"
       )
     ),
@@ -3575,14 +3937,17 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
         h2("label", null, " "),
         h2("button", { type: "button", className: "btn btn-primary", disabled: st.testing || !(element.mapUrl || inline), onClick: runTest }, st.testing ? "Running…" : "Run test")
       ),
-      field("Sample message", h2("textarea", {
-        rows: 8,
+      field("Sample message", h2(CodeBox, {
         value: st.sample.message,
-        style: { width: "100%", fontFamily: "monospace" },
-        onChange: (e) => {
-          st.sample.message = e.target.value;
-          saveSample();
-          rerender();
+        language: languageOf(st.sample.dataType),
+        height: "190px",
+        label: "Sample message",
+        onChange: (text2) => {
+          if (text2 !== st.sample.message) {
+            st.sample.message = text2;
+            saveSample();
+            rerender();
+          }
         }
       }), null, true)
     ),
@@ -3592,8 +3957,8 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
       (result.errors || []).map((e, i) => h2("div", { key: `e${i}`, className: "fml-error" }, `${e.phase}: ${e.message}`)),
       result.validationPerformed && !(result.issues || []).some((i) => ["error", "fatal"].includes(i.severity)) && !(result.errors || []).length ? h2("div", { className: "fml-ok" }, "Valid.") : null,
       (result.issues || []).filter((i) => i.severity !== "information").map((i, n) => h2("div", { key: `i${n}`, className: i.severity === "warning" ? "fml-issue-warning" : "fml-error" }, `${i.severity} ${i.location || ""}: ${i.message}`)),
-      result.output ? h2("div", null, h2("h4", null, "Result"), h2("pre", { className: "fml-json" }, pretty(result.output))) : null,
-      result.model ? h2("details", null, h2("summary", null, "OIE model of the message (source of the map)"), h2("pre", { className: "fml-json" }, pretty(result.model))) : null
+      result.output ? h2("div", null, h2("h4", null, "Result"), h2(CodeBox, { value: pretty(result.output), language: "json", readOnly: true, height: "360px", label: "Result" })) : null,
+      result.model ? h2("details", null, h2("summary", null, "OIE model of the message (source of the map)"), h2(CodeBox, { value: pretty(result.model), language: "json", readOnly: true, height: "360px", label: "OIE model" })) : null
     ) : null
   );
   React2.useEffect(() => {
@@ -3620,10 +3985,11 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
         st.tab = t.id;
         rerender();
       } }, t.label)),
+      h2("span", { style: { marginLeft: "auto", alignSelf: "center", marginRight: "6px", display: "inline-flex" } }, h2(HelpButton, { key: current2.id, ...FML_HELP[current2.id] || FML_HELP.settings })),
       h2("button", {
         type: "button",
         className: "btn btn-sm",
-        style: { marginLeft: "auto", alignSelf: "center" },
+        style: { alignSelf: "center" },
         title: "Edit this step on the whole page (Esc to come back)",
         onClick: () => {
           st.fullScreen = !st.fullScreen;

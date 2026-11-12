@@ -22,6 +22,12 @@
 - **Trace** : action *FHIR mapping trace* sur un message de la liste des messages.
 - **Mappeur, saisie** : volet *Sample fields* (champs et valeurs de l'exemple, clic ou glisser),
   déplacement au clavier entre les champs (`Alt` + flèches), erreur soulignée dans le champ.
+- **Mappeur, lisibilité** : expressions colorées hors édition ; message exemple, résultat, script
+  et JSON dans l'éditeur de code avec la coloration de leur langage ; bouton d'aide **?** par
+  onglet (mappeur, FML, réglages). Corrections : `Alt+Espace` et `Ctrl+Espace` ouvrent les
+  propositions, propositions de chemins triées et limitées aux champs renseignés, plus de
+  feuille de styles de l'éditeur affichée comme du texte. Tests e2e aussi sous WebKit
+  (`E2E_BROWSER=webkit`).
 - **Mappeur** : expressions éditées dans l'éditeur de code de Web Admin (Monaco) avec
   complétion des fonctions, des variables d'itération, des chemins du message exemple,
   des références des autres étapes et de modèles de garde ; recherche dans l'arbre ;

@@ -4,6 +4,8 @@
 // that name it share them. Laid out with Web Admin's own panel classes.
 import { platform, toast } from "../host/platform.js";
 import { loadFhirSettings, saveFhirSettings } from "../host/settings.js";
+import { HelpButton } from "../host/help.js";
+import { SETTINGS_HELP } from "../host/help-texts.js";
 
 const emptyContext = () => ({ name: "", fhirVersion: "R4", packages: [], terminologyServer: "", terminologyAuthorization: "", cacheSeconds: 300, timeoutSeconds: 10, validation: "always" });
 
@@ -38,6 +40,7 @@ export function FhirSettingsPanel() {
   };
   const field = (label, control, hint) => h("div", { className: "field" }, h("label", null, label), control, hint ? h("div", { className: "hint" }, hint) : null);
   return h("div", { className: "fhir-mapper-settings" },
+    h("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: "6px" } }, h(HelpButton, SETTINGS_HELP)),
     h("p", { className: "hint" }, "A FHIR context is a named set of profile packages, a terminology server and a validation policy. FHIR Profile Mapper and FHIR FML Transform steps that name a context share them; a step without a context keeps its own. A deployed channel takes a change when it is redeployed."),
     contexts.map((c, i) => h("div", { key: i, className: "panel", style: { marginBottom: "12px" }, "data-context": c.name },
       h("div", { className: "panel-header", style: { display: "flex", alignItems: "center", gap: "8px" } }, c.name || "New context",
