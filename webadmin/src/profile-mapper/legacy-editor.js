@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
+import { createExpressionEditor } from "../host/code-editor.js";
+import { monacoItems, scopeDts } from "../fhir/completion.js";
+import { snapshot, restore } from "../fhir/history.js";
+
 const PKG = "org.oie.fhir.mapper";
 
 // ---------------------------------------------------------------------------------------------
@@ -291,6 +295,54 @@ function MapperExpression({ style, onChange, completionContext = {}, ...props })
         onMouseDown: (e) => e.preventDefault(), onClick: () => accept(fn)
       }, h("code", null, fn.signature + (fn.returnType ? ` → ${fn.returnType}` : "")), h("div", null, fn.description), h("code", null, fn.example))) : null)
   );
+}
+
+/**
+ * An expression field: a plain input until it gets the focus, then the host's code
+ * editor (Monaco, one line) with the mapper's completions and typings. Only the field
+ * being edited holds an editor, so a large tree stays light.
+ */
+function ExpressionField(props) {
+  const [editing, setEditing] = React.useState(false);
+  const host = React.useRef(null);
+  const editor = React.useRef(null);
+  const latest = React.useRef(props);
+  latest.current = props;
+  const available = typeof createExpressionEditor === "function" && typeof document !== "undefined";
+  React.useEffect(() => {
+    if (!editing || !host.current) return undefined;
+    const context = () => latest.current.completionContext || {};
+    let ed;
+    try {
+      ed = createExpressionEditor({
+        value: latest.current.value ?? "", ariaLabel: latest.current["aria-label"] || "JavaScript expression",
+        onChange: (value) => latest.current.onChange({ target: { value } }),
+        onEnter: () => setEditing(false),
+        getItems: () => monacoItems(MAPPER_FUNCTIONS, context()),
+        getDts: () => scopeDts(MAPPER_FUNCTIONS, context())
+      });
+    } catch (error) { console.error("[fhir-mapper] expression editor:", error); setEditing(false); return undefined; }
+    editor.current = ed;
+    host.current.appendChild(ed.el);
+    ed.focus();
+    const focusWhenReady = setInterval(() => { if (ed.hasMonaco()) { clearInterval(focusWhenReady); ed.focus(); } }, 60);
+    const outside = (e) => { if (host.current && !host.current.contains(e.target) && !e.target.closest?.(".suggest-widget, .monaco-hover, .parameter-hints-widget")) setEditing(false); };
+    const onKey = (e) => { if (e.key === "Tab" && host.current?.contains(e.target) && !document.querySelector(".suggest-widget.visible")) setEditing(false); };
+    document.addEventListener("mousedown", outside, true);
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      clearInterval(focusWhenReady);
+      document.removeEventListener("mousedown", outside, true);
+      document.removeEventListener("keydown", onKey, true);
+      editor.current = null;
+      ed.dispose();
+    };
+  }, [editing]);
+  React.useEffect(() => {
+    if (editor.current && (props.value ?? "") !== editor.current.getValue()) editor.current.setValue(props.value ?? "");
+  }, [props.value]);
+  if (!available || !editing || props.disabled) return h(MapperExpression, { ...props, onFocus: () => { if (available && !props.disabled) setEditing(true); } });
+  return h("span", { className: "mapper-expression mapper-expression-editing", style: props.style, ref: host });
 }
 
 /** Indexed StructureDefinitions per "version|packages|url": a promise, and the value once loaded. */
@@ -780,6 +832,11 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       sourcePaths: [],
       jsonDraft: "",
       filter: "all",
+      search: "",
+      undo: [],
+      redo: [],
+      current: null,
+      lastPush: 0,
       // An existing mapping opens on its rules; a new step on its properties.
       tab: saved.length ? "mapper" : "properties"
     };
@@ -856,8 +913,38 @@ function ProfileMapperEditor({ element, onChange, platform }) {
   const save = () => {
     if (!tree) return;
     element.mappings = compiled(st.rootIndex, ctx);
+    // Undo history: one entry per burst of edits (typing in a field is one change).
+    const snap = snapshot(st);
+    if (st.current && JSON.stringify(snap) !== JSON.stringify(st.current)) {
+      if (Date.now() - st.lastPush > 1000) { st.undo.push(st.current); if (st.undo.length > 100) st.undo.shift(); }
+      st.lastPush = Date.now();
+      st.redo = [];
+    }
+    st.current = snap;
     onChange();
   };
+  const travel = (from, to) => {
+    if (!from.length || !tree) return;
+    to.push(st.current || snapshot(st));
+    st.current = from.pop();
+    restore(st, st.current);
+    st.lastPush = 0;
+    element.mappings = compiled(st.rootIndex, { ...ctx, instances: st.instances });
+    onChange();
+    rerender();
+  };
+  // Full screen is a style of the editor's own element: moving it out of the React root would cut its events.
+  const toggleFullScreen = () => { st.fullScreen = !st.fullScreen; rerender(); };
+  React.useEffect(() => {
+    if (!st.fullScreen) return undefined;
+    const onKey = (e) => {
+      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(".suggest-widget.visible, .mapper-expression-editing")) return;
+      st.fullScreen = false;
+      rerender();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [st.fullScreen]);
 
   // Loads the profile, then every type on the way to a saved mapping. Mappings of elements another
   // profile does not have are dropped (and listed); for the saved profile, a mapping that cannot be
@@ -950,6 +1037,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       st.error = errorText(e);
     } finally {
       st.loading = false;
+      st.current = snapshot(st);
       rerender();
     }
   };
@@ -1180,7 +1268,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
       }
     });
   const text = (prop, placeholder, code) =>
-    h(code ? MapperExpression : "input", {
+    h(code ? ExpressionField : "input", {
       completionContext: code ? completionFor(tree?.root, "reference") : undefined,
       type: "text",
       placeholder,
@@ -1197,8 +1285,18 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     for (const key of allKeys()) if (key === node.key || key.startsWith(node.key + ".") || key.startsWith(node.key + "[")) return true;
     return false;
   };
+  const term = (st.search || "").trim().toLowerCase();
+  // A search looks in the loaded tree, a few levels below each node.
+  const matches = (node, depth = 0) => node.key.toLowerCase().includes(term)
+    || (depth < 4 && (tree.children(node) || []).some((child) => matches(child, depth + 1)));
+  const opened = (node) => st.expanded.has(node.key) || (!!term && !node.key.toLowerCase().includes(term) && matches(node));
   const visible = (node) => {
     if (element.action === "createBundle" && (node.key === "Bundle.entry" || node.key.startsWith("Bundle.entry."))) return false;
+    if (term && !matches(node)) {
+      // keep what is below a matching element
+      for (let p = node.parent; p; p = p.parent) if (p.depth > 0 && p.key.toLowerCase().includes(term)) return true;
+      return false;
+    }
     if (st.filter === "mapped") return hasMappedBelow(node);
     if (st.filter === "mustSupport") return node.mustSupport || Number(node.min) >= 1 || hasMappedBelow(node);
     return true;
@@ -1220,7 +1318,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     if (st.iterations.has(child.key)) rows.push(iterationRow(child));
     if (st.conditions.has(child.key)) rows.push(conditionRow(child));
     if (st.translations.has(child.key)) rows.push(translationRow(child));
-    if (st.expanded.has(child.key)) addRows(child);
+    if (opened(child)) addRows(child);
   };
   const addRows = (node) => {
     const list = tree.children(node);
@@ -1233,7 +1331,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     }
   };
   const row = (node, siblings) => {
-    const open = st.expanded.has(node.key);
+    const open = opened(node);
     const canExpand = tree.expandable(node);
     const count = siblings.filter((s) => s.keyBase === node.keyBase).length;
     const iterated = st.iterations.has(node.key);
@@ -1286,7 +1384,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
           { style: { display: "flex", alignItems: "center", gap: "4px", minWidth: 0 } },
           node.choice
             ? h("span", { className: "text-text-faint", style: { ...ellipsis, flex: "1 1 auto", fontSize: "11px" } }, placeholder)
-            : h(MapperExpression, {
+            : h(ExpressionField, {
                 completionContext: completionFor(node),
                 type: "text",
                 value,
@@ -1325,7 +1423,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
     const variable = (it.variable || "item").trim() || "item";
     return subRow(node, "each", [
       h("span", { key: "l", title: node === tree.root ? "One resource for each item" : "One entry of this element for each item" }, node === tree.root ? "↻ One resource for each" : "↻ For each"),
-      h(MapperExpression, { key: "e", completionContext: completionFor(node, "iteration"), value: it.expression, disabled: blocked, placeholder: "msg['PID']['PID.3']", style: { ...mono, flex: "1 1 240px" }, onChange: (e) => setIteration(node, "expression", e.target.value) }),
+      h(ExpressionField, { key: "e", completionContext: completionFor(node, "iteration"), value: it.expression, disabled: blocked, placeholder: "msg['PID']['PID.3']", style: { ...mono, flex: "1 1 240px" }, onChange: (e) => setIteration(node, "expression", e.target.value) }),
       h("span", { key: "a" }, "as"),
       h("input", { key: "v", type: "text", value: it.variable, disabled: blocked, style: { ...mono, width: "90px" }, onChange: (e) => setIteration(node, "variable", e.target.value) }),
       h("span", { key: "h", className: "text-text-faint", style: { fontSize: "11px" } }, `below: ${variable} (the item), ${variable}Index (0, 1, …); fields dragged in are rewritten to ${variable}[…]`)
@@ -1335,7 +1433,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
   const conditionRow = (node) =>
     subRow(node, "condition", [
       h("span", { key: "l", title: "What is below this element is only mapped when the condition holds" }, node === tree.root ? "? Only make the resource if" : "? Only if"),
-      h(MapperExpression, {
+      h(ExpressionField, {
         completionContext: completionFor(node, "condition"),
         key: "c",
         type: "text",
@@ -1389,7 +1487,7 @@ function ProfileMapperEditor({ element, onChange, platform }) {
           )
         : null,
       needsValue
-        ? h(t.unmapped === "function" ? MapperExpression : "input", {
+        ? h(t.unmapped === "function" ? ExpressionField : "input", {
             completionContext: t.unmapped === "function" ? completionFor(node, "translation") : undefined,
             key: "f",
             type: "text",
@@ -1588,8 +1686,8 @@ function ProfileMapperEditor({ element, onChange, platform }) {
               request ? h("div", { className: "bundle-request" },
                 field("Method", h("select", { value: target.requestMethod || "POST", onChange: (e) => updateTarget(b.bundleName, { requestMethod: e.target.value }) },
                   ["POST", "PUT", "PATCH", "DELETE", "GET", "HEAD"].map((v) => h("option", { key: v, value: v }, v)))),
-                field("Request URL", h(MapperExpression, { completionContext: completionFor(tree?.root, "reference"), value: target.requestUrl || "", placeholder: "Empty: the resource type or type/id", onChange: (e) => updateTarget(b.bundleName, { requestUrl: e.target.value }), style: mono }))) : null,
-              request && (!target.requestMethod || target.requestMethod === "POST") ? field("If-None-Exist", h(MapperExpression, { completionContext: completionFor(tree?.root, "reference"), value: target.ifNoneExist || "", placeholder: "'identifier=' + ...", onChange: (e) => updateTarget(b.bundleName, { ifNoneExist: e.target.value }), style: mono }), "Conditional creation for this Bundle entry.") : null,
+                field("Request URL", h(ExpressionField, { completionContext: completionFor(tree?.root, "reference"), value: target.requestUrl || "", placeholder: "Empty: the resource type or type/id", onChange: (e) => updateTarget(b.bundleName, { requestUrl: e.target.value }), style: mono }))) : null,
+              request && (!target.requestMethod || target.requestMethod === "POST") ? field("If-None-Exist", h(ExpressionField, { completionContext: completionFor(tree?.root, "reference"), value: target.ifNoneExist || "", placeholder: "'identifier=' + ...", onChange: (e) => updateTarget(b.bundleName, { ifNoneExist: e.target.value }), style: mono }), "Conditional creation for this Bundle entry.") : null,
               target && !request ? h("div", { className: "hint", style: { marginTop: "8px" } }, b.bundleType ? `No request for a ${b.bundleType} Bundle.` : "This Bundle must be created earlier in the transformer.") : null
             );
           })
@@ -1745,7 +1843,15 @@ function ProfileMapperEditor({ element, onChange, platform }) {
               }),
               " extensions & ids"
             ),
-            h("span", { className: "hint text-text-faint", style: { fontSize: "11px" } }, `${COMPLETION_HINT}: functions, scoped variables and sample paths. ↑/↓ to choose, Enter/Tab to insert, Esc to close. Guard optional values.`)
+            h("input", { type: "search", value: st.search || "", placeholder: "Search elements…", "aria-label": "Search elements", style: { width: "180px", flex: "none", height: "26px", minHeight: "26px", padding: "2px 8px" },
+              onChange: (e) => { st.search = e.target.value; rerender(); } }),
+            h("button", { type: "button", className: "btn btn-sm", title: "Expand the mapped elements", onClick: () => {
+              for (const key of allKeys()) { const parts = key.split("."); for (let i = 1; i < parts.length; i++) st.expanded.add(parts.slice(0, i).join(".")); }
+              rerender(); } }, "Expand mapped"),
+            h("button", { type: "button", className: "btn btn-sm", title: "Collapse every element", onClick: () => { st.expanded = new Set([tree.root.key]); rerender(); } }, "Collapse all"),
+            h("button", { type: "button", className: "btn btn-sm", title: "Undo the last change of the mappings", disabled: !(st.undo || []).length || blocked, onClick: () => travel(st.undo, st.redo) }, "↶ Undo"),
+            h("button", { type: "button", className: "btn btn-sm", title: "Redo", disabled: !(st.redo || []).length || blocked, onClick: () => travel(st.redo, st.undo) }, "↷ Redo"),
+            h("span", { className: "hint text-text-faint", style: { fontSize: "11px" } }, `Click a field to edit it with completion. ${COMPLETION_HINT}: functions, scoped variables and sample paths. ↑/↓ to choose, Enter/Tab to insert, Esc to close. Guard optional values.`)
           ),
           h(
             "div",
@@ -1881,13 +1987,15 @@ function ProfileMapperEditor({ element, onChange, platform }) {
   };
   return h(
     "div",
-    { className: "fhir-profile-mapper" },
+    { className: "fhir-profile-mapper" + (st.fullScreen ? " mapper-fullscreen" : "") },
     h("style", null, MAPPER_STYLES),
     h("div", { className: "mapper-tabs", role: "tablist", "aria-label": "FHIR mapper sections", onKeyDown: tabKeys },
       tabs.map((t) => h("button", {
         key: t.id, id: `${tabId}-${t.id}`, type: "button", role: "tab", "aria-selected": t === current, "aria-controls": `${tabId}-panel`,
         tabIndex: t === current ? 0 : -1, onClick: () => { st.tab = t.id; rerender(); }
-      }, t.label, t.badge ? h("span", { className: "mapper-tab-badge", title: t.badge.title }, t.badge.text) : null))),
+      }, t.label, t.badge ? h("span", { className: "mapper-tab-badge", title: t.badge.title }, t.badge.text) : null)),
+      h("button", { type: "button", className: "btn btn-sm", style: { marginLeft: "auto", alignSelf: "center" }, title: "Edit this step on the whole page (Esc to come back)", onClick: toggleFullScreen },
+        st.fullScreen ? "Exit full screen (Esc)" : "⤢ Full screen")),
     messages,
     h("div", { className: "mapper-tab-panel", id: `${tabId}-panel`, role: "tabpanel", "aria-labelledby": `${tabId}-${current.id}` }, current.panel)
   );

@@ -118,6 +118,8 @@ export function createExpressionEditor(options) {
     const uri = model.uri.toString();
     if (getItems) models.set(uri, { getItems, getDts });
     if (!multiline) singleLine(m, instance, el, onEnter);
+    // Start typing at the end of the expression, as in the plain field it replaces.
+    if (!multiline) { const text = instance.getValue(); instance.setPosition({ lineNumber: 1, column: text.length + 1 }); }
     subscriptions.push(instance.onDidFocusEditorText(() => { if (getDts) installScope(m, getDts()); onFocus?.(); }));
     subscriptions.push(instance.onDidBlurEditorText(() => onBlur?.()));
     updatePlaceholder();

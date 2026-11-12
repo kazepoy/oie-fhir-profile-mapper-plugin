@@ -63,3 +63,19 @@
 .fm-functions [role=option] { padding: 6px 8px; cursor: pointer; border-radius: 4px; font-size: 12px; white-space: normal; }
 .fm-functions [aria-selected=true] { background: var(--fm-selected, #dbeafe); color: var(--text, #1e293b); }
 .fm-functions code { display: block; overflow-wrap: anywhere; }
+
+/* Full screen */
+.fm-overlay { position: fixed; inset: 0; z-index: 900; display: flex; flex-direction: column; background: var(--bg1, #f3f6f9); color: var(--text, #1f2c38); }
+.fm-overlay__head { flex: none; display: flex; align-items: center; gap: 14px; padding: 8px 14px; border-bottom: 1px solid var(--line, #cdd7e0); background: var(--bg2, #fff); }
+.fm-overlay__title { font-weight: 600; }
+.fm-overlay__body { flex: 1; min-height: 0; overflow: auto; padding: 14px 18px; background: var(--bg2, #fff); }
+
+/* One-line expression editor */
+.fm-code-editor--line { width: 100%; height: 26px; min-height: 26px !important; border-radius: 4px; overflow: hidden; }
+.fm-code-editor--line .ce-gutter { display: none; }
+.fm-code-editor--line textarea.ce-area { height: 26px; min-height: 26px; padding: 3px 6px; resize: none; white-space: nowrap; overflow: hidden; }
+.fm-code-editor--line .monaco-host { height: 26px; }
+.fm-code-editor--invalid { outline: 1px solid var(--err, #cc3b3b); }
+.mapper-expression-editing { flex: 1 1 auto; min-width: 160px; }
+
+.fhir-profile-mapper.mapper-fullscreen { position: fixed; inset: 0; z-index: 900; overflow: auto; padding: 14px 18px; background: var(--bg2, #fff); color: var(--text, #1f2c38); }

@@ -597,10 +597,312 @@ function setLocale(preferred) {
 var tokens_default = "/* SPDX-License-Identifier: MPL-2.0\n * Design tokens of the FHIR Mapper editors, derived from the Web Admin variables\n * so both themes follow the host. Other style sheets use --fm-* only.\n */\n.fm {\n  --fm-canvas: var(--bg1, #f3f6f9);\n  --fm-surface: var(--bg2, #ffffff);\n  --fm-sunken: var(--bg0, #e9edf2);\n  --fm-raised: var(--bg3, #e1e9f1);\n  --fm-line: var(--line, #cdd7e0);\n  --fm-line-strong: var(--line-strong, #aebbc8);\n  --fm-ink: var(--text, #1f2c38);\n  --fm-dim: var(--text-dim, #4d6173);\n  --fm-faint: var(--text-faint, #7d8fa0);\n  --fm-accent: var(--accent, #2e6da4);\n  --fm-accent-ink: var(--accent-ink, #ffffff);\n  --fm-ok: var(--ok, #2e9e4f);\n  --fm-warn: var(--warn, #b97f0a);\n  --fm-error: var(--err, #cc3b3b);\n  --fm-must-support: color-mix(in srgb, var(--fm-warn) 80%, var(--fm-ink));\n  --fm-mapped: color-mix(in srgb, var(--fm-accent) 10%, var(--fm-surface));\n  --fm-selected: color-mix(in srgb, var(--fm-accent) 18%, var(--fm-surface));\n  --fm-branch: color-mix(in srgb, var(--fm-accent) 4%, var(--fm-surface));\n  --fm-radius: 8px;\n  --fm-radius-small: 5px;\n  --fm-font: var(--font-ui, system-ui, sans-serif);\n  --fm-mono: var(--font-mono, ui-monospace, monospace);\n  --fm-shadow: 0 1px 2px color-mix(in srgb, var(--fm-ink) 10%, transparent);\n  --fm-shadow-raised: 0 12px 30px -10px color-mix(in srgb, var(--fm-ink) 45%, transparent);\n  --fm-control: 26px;\n  color: var(--fm-ink);\n  font-family: var(--fm-font);\n  font-size: 12.5px;\n  line-height: 1.4;\n  container-type: inline-size;\n  min-width: 0;\n}\n\n:where(.fm) *, :where(.fm) *::before, :where(.fm) *::after { box-sizing: border-box; }\n:where(.fm) button { font: inherit; color: inherit; }\n.fm :focus-visible { outline: 2px solid var(--fm-accent); outline-offset: 1px; }\n.fm .fm-mono { font-family: var(--fm-mono); font-size: 12px; }\n.fm .fm-muted { color: var(--fm-dim); font-size: 11.5px; }\n.fm .fm-faint { color: var(--fm-faint); font-size: 11px; }\n.fm .fm-error { color: var(--fm-error); }\n.fm .fm-warn { color: var(--fm-warn); }\n.fm .fm-ok { color: var(--fm-ok); }\n";
 
 // src/shared/styles/controls.css
-var controls_default = "/* SPDX-License-Identifier: MPL-2.0\n * Controls shared by the editors: tabs, badges, toolbars, panes, popovers, menus.\n */\n.fm .fm-tabs { display: flex; gap: 2px; margin-bottom: 10px; border-bottom: 1px solid color-mix(in srgb, var(--fm-faint) 35%, transparent); align-items: center; }\n.fm .fm-tabs [role=tab] { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--fm-faint); font: inherit; font-weight: 600; cursor: pointer; }\n.fm .fm-tabs [role=tab]:hover { color: var(--fm-ink); }\n.fm .fm-tabs [role=tab][aria-selected=true] { color: var(--fm-ink); border-bottom-color: var(--fm-accent); }\n.fm .fm-tabs [role=tab]:focus-visible { outline: 2px solid var(--fm-accent); outline-offset: -2px; }\n.fm .fm-tabs__end { margin-left: auto; display: flex; gap: 6px; align-items: center; }\n.fm .fm-badge { min-width: 16px; padding: 0 5px; border-radius: 8px; background: var(--fm-error); color: white; font-size: 11px; line-height: 16px; text-align: center; font-weight: 600; }\n.fm .fm-badge--warn { background: var(--fm-warn); }\n.fm .fm-badge--ok { background: var(--fm-ok); }\n.fm .fm-badge--muted { background: var(--fm-faint); }\n\n.fm .fm-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 8px; }\n.fm .fm-toolbar select { width: auto; max-width: 100%; height: var(--fm-control); min-height: var(--fm-control); padding: 2px 6px; }\n.fm .fm-toolbar input[type=search], .fm .fm-toolbar input[type=text] { height: var(--fm-control); min-height: var(--fm-control); padding: 2px 8px; width: auto; flex: 1 1 160px; min-width: 120px; }\n.fm .fm-toolbar .fm-spacer { flex: 1 1 auto; }\n.fm .fm-tool { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: var(--fm-control); min-width: var(--fm-control); padding: 0 8px; border: 1px solid var(--fm-line); border-radius: var(--fm-radius-small); background: var(--fm-surface); cursor: pointer; white-space: nowrap; font-size: 12px; }\n.fm .fm-tool:hover:not(:disabled) { border-color: var(--fm-line-strong); background: var(--fm-raised); }\n.fm .fm-tool:disabled { opacity: 0.5; cursor: default; }\n.fm .fm-tool--active { border-color: var(--fm-accent); color: var(--fm-accent); font-weight: 600; }\n.fm .fm-tool--small { height: 22px; min-width: 22px; padding: 0 5px; font-size: 11px; }\n.fm .fm-tool--primary { background: var(--fm-accent); color: var(--fm-accent-ink); border-color: var(--fm-accent); }\n.fm .fm-tool--primary:hover:not(:disabled) { background: color-mix(in srgb, var(--fm-accent) 85%, black); }\n.fm .fm-tool--link { border: 0; background: none; color: var(--fm-accent); padding: 0 4px; }\n.fm .fm-tool--danger { color: var(--fm-error); }\n\n.fm .fm-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; align-items: start; }\n.fm .fm-settings > *, .fm .field { min-width: 0; }\n.fm .fm-settings .field { margin-bottom: 0; }\n.fm .fm-wide { grid-column: 1 / -1; }\n.fm .fm-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }\n.fm .fm-row input[type=text] { flex: 1 1 240px; min-width: 0; width: auto; }\n.fm .fm-row select { flex: none; width: auto; }\n.fm .fm-row button { flex: none; white-space: nowrap; }\n.fm .fm-checks { display: flex; flex-wrap: wrap; gap: 8px 18px; }\n.fm .check { white-space: nowrap; }\n.fm .fm-box { padding: 12px; border: 1px solid color-mix(in srgb, var(--fm-accent) 40%, var(--fm-line)); border-radius: var(--fm-radius); background: color-mix(in srgb, var(--fm-accent) 6%, var(--fm-surface)); }\n.fm .fm-box__title { margin-bottom: 4px; font-weight: 600; }\n.fm .fm-card { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--fm-line); border-radius: var(--fm-radius-small); background: var(--fm-surface); }\n.fm .fm-choice { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; text-transform: none; letter-spacing: normal; font-weight: 600; }\n.fm .fm-choice input[type=checkbox] { width: 16px; height: 16px; margin: 0; flex: none; }\n.fm .fm-request { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; margin-top: 10px; }\n.fm .fm-message { padding: 6px 10px; border-radius: var(--fm-radius-small); margin: 6px 0; font-size: 12px; }\n.fm .fm-message--error { background: color-mix(in srgb, var(--fm-error) 10%, var(--fm-surface)); color: var(--fm-error); }\n.fm .fm-message--warn { background: color-mix(in srgb, var(--fm-warn) 12%, var(--fm-surface)); color: var(--fm-warn); }\n.fm .fm-message--info { background: color-mix(in srgb, var(--fm-accent) 10%, var(--fm-surface)); color: var(--fm-ink); }\n.fm .fm-message--ok { background: color-mix(in srgb, var(--fm-ok) 10%, var(--fm-surface)); color: var(--fm-ok); }\n.fm pre.fm-code { max-height: 360px; overflow: auto; font-size: 11px; background: color-mix(in srgb, var(--fm-ink) 3%, transparent); padding: 6px; border-radius: var(--fm-radius-small); white-space: pre-wrap; margin: 4px 0; }\n.fm details > summary { cursor: pointer; }\n\n/* Menus and popovers */\n.fm-menu { position: fixed; z-index: 1000; min-width: 220px; padding: 4px; border: 1px solid var(--fm-line-strong, #aebbc8); border-radius: 6px; background: var(--bg2, white); color: var(--text, #1f2c38); box-shadow: 0 8px 24px #0004; font-size: 12px; }\n.fm-menu [role=menuitem] { display: flex; justify-content: space-between; gap: 12px; width: 100%; padding: 6px 10px; border: 0; background: none; text-align: left; cursor: pointer; border-radius: 4px; color: inherit; font: inherit; }\n.fm-menu [role=menuitem]:hover, .fm-menu [role=menuitem]:focus-visible { background: var(--fm-selected, #dbeafe); outline: none; }\n.fm-menu [role=menuitem]:disabled { opacity: 0.5; cursor: default; }\n.fm-menu hr { margin: 4px 0; border: 0; border-top: 1px solid var(--fm-line, #cdd7e0); }\n.fm-menu kbd { color: var(--fm-faint, #7d8fa0); font-family: inherit; font-size: 11px; }\n\n/* Plain-input completion popover (fallback without Monaco) */\n.fm-functions { position: fixed; inset: auto; margin: 0; padding: 4px; border: 1px solid #94a3b8; border-radius: 6px; background: var(--bg2, white); color: var(--text, #1e293b); box-shadow: 0 4px 16px #0003; overflow: auto; box-sizing: border-box; z-index: 1000; }\n.fm-functions [role=option] { padding: 6px 8px; cursor: pointer; border-radius: 4px; font-size: 12px; white-space: normal; }\n.fm-functions [aria-selected=true] { background: var(--fm-selected, #dbeafe); color: var(--text, #1e293b); }\n.fm-functions code { display: block; overflow-wrap: anywhere; }\n";
+var controls_default = "/* SPDX-License-Identifier: MPL-2.0\n * Controls shared by the editors: tabs, badges, toolbars, panes, popovers, menus.\n */\n.fm .fm-tabs { display: flex; gap: 2px; margin-bottom: 10px; border-bottom: 1px solid color-mix(in srgb, var(--fm-faint) 35%, transparent); align-items: center; }\n.fm .fm-tabs [role=tab] { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--fm-faint); font: inherit; font-weight: 600; cursor: pointer; }\n.fm .fm-tabs [role=tab]:hover { color: var(--fm-ink); }\n.fm .fm-tabs [role=tab][aria-selected=true] { color: var(--fm-ink); border-bottom-color: var(--fm-accent); }\n.fm .fm-tabs [role=tab]:focus-visible { outline: 2px solid var(--fm-accent); outline-offset: -2px; }\n.fm .fm-tabs__end { margin-left: auto; display: flex; gap: 6px; align-items: center; }\n.fm .fm-badge { min-width: 16px; padding: 0 5px; border-radius: 8px; background: var(--fm-error); color: white; font-size: 11px; line-height: 16px; text-align: center; font-weight: 600; }\n.fm .fm-badge--warn { background: var(--fm-warn); }\n.fm .fm-badge--ok { background: var(--fm-ok); }\n.fm .fm-badge--muted { background: var(--fm-faint); }\n\n.fm .fm-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 8px; }\n.fm .fm-toolbar select { width: auto; max-width: 100%; height: var(--fm-control); min-height: var(--fm-control); padding: 2px 6px; }\n.fm .fm-toolbar input[type=search], .fm .fm-toolbar input[type=text] { height: var(--fm-control); min-height: var(--fm-control); padding: 2px 8px; width: auto; flex: 1 1 160px; min-width: 120px; }\n.fm .fm-toolbar .fm-spacer { flex: 1 1 auto; }\n.fm .fm-tool { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: var(--fm-control); min-width: var(--fm-control); padding: 0 8px; border: 1px solid var(--fm-line); border-radius: var(--fm-radius-small); background: var(--fm-surface); cursor: pointer; white-space: nowrap; font-size: 12px; }\n.fm .fm-tool:hover:not(:disabled) { border-color: var(--fm-line-strong); background: var(--fm-raised); }\n.fm .fm-tool:disabled { opacity: 0.5; cursor: default; }\n.fm .fm-tool--active { border-color: var(--fm-accent); color: var(--fm-accent); font-weight: 600; }\n.fm .fm-tool--small { height: 22px; min-width: 22px; padding: 0 5px; font-size: 11px; }\n.fm .fm-tool--primary { background: var(--fm-accent); color: var(--fm-accent-ink); border-color: var(--fm-accent); }\n.fm .fm-tool--primary:hover:not(:disabled) { background: color-mix(in srgb, var(--fm-accent) 85%, black); }\n.fm .fm-tool--link { border: 0; background: none; color: var(--fm-accent); padding: 0 4px; }\n.fm .fm-tool--danger { color: var(--fm-error); }\n\n.fm .fm-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; align-items: start; }\n.fm .fm-settings > *, .fm .field { min-width: 0; }\n.fm .fm-settings .field { margin-bottom: 0; }\n.fm .fm-wide { grid-column: 1 / -1; }\n.fm .fm-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }\n.fm .fm-row input[type=text] { flex: 1 1 240px; min-width: 0; width: auto; }\n.fm .fm-row select { flex: none; width: auto; }\n.fm .fm-row button { flex: none; white-space: nowrap; }\n.fm .fm-checks { display: flex; flex-wrap: wrap; gap: 8px 18px; }\n.fm .check { white-space: nowrap; }\n.fm .fm-box { padding: 12px; border: 1px solid color-mix(in srgb, var(--fm-accent) 40%, var(--fm-line)); border-radius: var(--fm-radius); background: color-mix(in srgb, var(--fm-accent) 6%, var(--fm-surface)); }\n.fm .fm-box__title { margin-bottom: 4px; font-weight: 600; }\n.fm .fm-card { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--fm-line); border-radius: var(--fm-radius-small); background: var(--fm-surface); }\n.fm .fm-choice { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; text-transform: none; letter-spacing: normal; font-weight: 600; }\n.fm .fm-choice input[type=checkbox] { width: 16px; height: 16px; margin: 0; flex: none; }\n.fm .fm-request { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; margin-top: 10px; }\n.fm .fm-message { padding: 6px 10px; border-radius: var(--fm-radius-small); margin: 6px 0; font-size: 12px; }\n.fm .fm-message--error { background: color-mix(in srgb, var(--fm-error) 10%, var(--fm-surface)); color: var(--fm-error); }\n.fm .fm-message--warn { background: color-mix(in srgb, var(--fm-warn) 12%, var(--fm-surface)); color: var(--fm-warn); }\n.fm .fm-message--info { background: color-mix(in srgb, var(--fm-accent) 10%, var(--fm-surface)); color: var(--fm-ink); }\n.fm .fm-message--ok { background: color-mix(in srgb, var(--fm-ok) 10%, var(--fm-surface)); color: var(--fm-ok); }\n.fm pre.fm-code { max-height: 360px; overflow: auto; font-size: 11px; background: color-mix(in srgb, var(--fm-ink) 3%, transparent); padding: 6px; border-radius: var(--fm-radius-small); white-space: pre-wrap; margin: 4px 0; }\n.fm details > summary { cursor: pointer; }\n\n/* Menus and popovers */\n.fm-menu { position: fixed; z-index: 1000; min-width: 220px; padding: 4px; border: 1px solid var(--fm-line-strong, #aebbc8); border-radius: 6px; background: var(--bg2, white); color: var(--text, #1f2c38); box-shadow: 0 8px 24px #0004; font-size: 12px; }\n.fm-menu [role=menuitem] { display: flex; justify-content: space-between; gap: 12px; width: 100%; padding: 6px 10px; border: 0; background: none; text-align: left; cursor: pointer; border-radius: 4px; color: inherit; font: inherit; }\n.fm-menu [role=menuitem]:hover, .fm-menu [role=menuitem]:focus-visible { background: var(--fm-selected, #dbeafe); outline: none; }\n.fm-menu [role=menuitem]:disabled { opacity: 0.5; cursor: default; }\n.fm-menu hr { margin: 4px 0; border: 0; border-top: 1px solid var(--fm-line, #cdd7e0); }\n.fm-menu kbd { color: var(--fm-faint, #7d8fa0); font-family: inherit; font-size: 11px; }\n\n/* Plain-input completion popover (fallback without Monaco) */\n.fm-functions { position: fixed; inset: auto; margin: 0; padding: 4px; border: 1px solid #94a3b8; border-radius: 6px; background: var(--bg2, white); color: var(--text, #1e293b); box-shadow: 0 4px 16px #0003; overflow: auto; box-sizing: border-box; z-index: 1000; }\n.fm-functions [role=option] { padding: 6px 8px; cursor: pointer; border-radius: 4px; font-size: 12px; white-space: normal; }\n.fm-functions [aria-selected=true] { background: var(--fm-selected, #dbeafe); color: var(--text, #1e293b); }\n.fm-functions code { display: block; overflow-wrap: anywhere; }\n\n/* Full screen */\n.fm-overlay { position: fixed; inset: 0; z-index: 900; display: flex; flex-direction: column; background: var(--bg1, #f3f6f9); color: var(--text, #1f2c38); }\n.fm-overlay__head { flex: none; display: flex; align-items: center; gap: 14px; padding: 8px 14px; border-bottom: 1px solid var(--line, #cdd7e0); background: var(--bg2, #fff); }\n.fm-overlay__title { font-weight: 600; }\n.fm-overlay__body { flex: 1; min-height: 0; overflow: auto; padding: 14px 18px; background: var(--bg2, #fff); }\n\n/* One-line expression editor */\n.fm-code-editor--line { width: 100%; height: 26px; min-height: 26px !important; border-radius: 4px; overflow: hidden; }\n.fm-code-editor--line .ce-gutter { display: none; }\n.fm-code-editor--line textarea.ce-area { height: 26px; min-height: 26px; padding: 3px 6px; resize: none; white-space: nowrap; overflow: hidden; }\n.fm-code-editor--line .monaco-host { height: 26px; }\n.fm-code-editor--invalid { outline: 1px solid var(--err, #cc3b3b); }\n.mapper-expression-editing { flex: 1 1 auto; min-width: 160px; }\n\n.fhir-profile-mapper.mapper-fullscreen { position: fixed; inset: 0; z-index: 900; overflow: auto; padding: 14px 18px; background: var(--bg2, #fff); color: var(--text, #1f2c38); }\n";
 
 // src/styles.js
 var STYLE_SHEETS = [tokens_default, controls_default];
+
+// src/host/code-editor.js
+var OWNER = "fhir-mapper";
+var SCOPE_LIB = "ts:fhir-mapper-scope.d.ts";
+var models = /* @__PURE__ */ new Map();
+var providerRegistered = false;
+var scopeLib = null;
+var monaco = () => (
+  /** @type {any} */
+  window.monaco || null
+);
+function kindOf(m, kind) {
+  const kinds = m.languages.CompletionItemKind;
+  return kind === "function" ? kinds.Function : kind === "variable" ? kinds.Variable : kind === "path" ? kinds.Field : kind === "snippet" ? kinds.Snippet : kinds.Text;
+}
+function registerProvider(m) {
+  if (providerRegistered) return;
+  providerRegistered = true;
+  m.languages.registerCompletionItemProvider("javascript", {
+    triggerCharacters: ["'", "["],
+    provideCompletionItems(model, position) {
+      const entry = models.get(model.uri.toString());
+      if (!entry) return { suggestions: [] };
+      const word = model.getWordUntilPosition(position);
+      const line = model.getLineContent(position.lineNumber);
+      const before = line.slice(0, position.column - 1);
+      const quotes = (before.match(/'/g) || []).length + (before.match(/"/g) || []).length;
+      const inString = quotes % 2 === 1;
+      const afterDot = before.trimEnd().endsWith(".");
+      if (afterDot && !inString) return { suggestions: [] };
+      const range = { startLineNumber: position.lineNumber, endLineNumber: position.lineNumber, startColumn: word.startColumn, endColumn: word.endColumn };
+      const suggestions = [];
+      for (const item of entry.getItems({ inString })) {
+        suggestions.push({
+          label: item.label,
+          filterText: item.filterText || item.label,
+          kind: kindOf(m, item.kind),
+          detail: item.detail,
+          documentation: item.documentation,
+          insertText: item.insertText,
+          sortText: item.sortText,
+          range,
+          insertTextRules: item.snippet ? m.languages.CompletionItemInsertTextRule.InsertAsSnippet : void 0
+        });
+      }
+      return { suggestions };
+    }
+  });
+}
+function installScope(m, dts) {
+  try {
+    const defaults = m.languages.typescript?.javascriptDefaults;
+    if (!defaults) return;
+    if (scopeLib) scopeLib.dispose();
+    scopeLib = defaults.addExtraLib(dts, SCOPE_LIB);
+  } catch {
+  }
+}
+function singleLine(m, instance, el, onEnter) {
+  instance.updateOptions({
+    lineNumbers: "off",
+    glyphMargin: false,
+    folding: false,
+    lineDecorationsWidth: 0,
+    lineNumbersMinChars: 0,
+    renderLineHighlight: "none",
+    scrollBeyondLastLine: false,
+    scrollBeyondLastColumn: 2,
+    overviewRulerLanes: 0,
+    hideCursorInOverviewRuler: true,
+    overviewRulerBorder: false,
+    scrollbar: { vertical: "hidden", horizontal: "hidden", alwaysConsumeMouseWheel: false, handleMouseWheel: false },
+    wordWrap: "off",
+    minimap: { enabled: false },
+    fixedOverflowWidgets: true,
+    contextmenu: false,
+    quickSuggestions: true,
+    suggestOnTriggerCharacters: true,
+    acceptSuggestionOnEnter: "on",
+    find: { addExtraSpaceOnTop: false },
+    padding: { top: 3, bottom: 3 },
+    renderWhitespace: "none",
+    cursorBlinking: "smooth",
+    lineHeight: 18
+  });
+  el.style.height = "26px";
+  instance.layout();
+  instance.addCommand(m.KeyCode.Enter, () => onEnter?.(), "!suggestWidgetVisible");
+  instance.addCommand(m.KeyCode.Enter | m.KeyMod.Shift, () => onEnter?.(), "!suggestWidgetVisible");
+  instance.onDidChangeModelContent(() => {
+    const value = instance.getValue();
+    if (value.includes("\n")) instance.setValue(value.replace(/\s*\n\s*/g, " "));
+  });
+}
+function createExpressionEditor(options) {
+  const { value = "", onChange, onEnter, onFocus, onBlur, placeholder, ariaLabel, completionScope, multiline = false, language = "javascript", getItems, getDts, minHeight } = options;
+  const editor = platform().createCodeEditor({
+    value,
+    language,
+    onChange,
+    completionScope,
+    ariaLabel,
+    minHeight: multiline ? minHeight || "120px" : void 0,
+    popoutable: multiline,
+    popoutTitle: ariaLabel
+  });
+  const el = editor.el;
+  el.classList.add("fm-code-editor", multiline ? "fm-code-editor--multi" : "fm-code-editor--line");
+  if (placeholder) el.dataset.placeholder = placeholder;
+  const area = el.querySelector("textarea");
+  if (area) {
+    if (placeholder) area.placeholder = placeholder;
+    area.addEventListener("focus", () => onFocus?.());
+    area.addEventListener("blur", () => onBlur?.());
+    if (!multiline) area.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        onEnter?.();
+      }
+    });
+  }
+  let disposed = false;
+  let instance = null;
+  const subscriptions = [];
+  const upgraded = () => {
+    const m = monaco();
+    instance = editor.monaco;
+    if (!m || !instance || disposed) return;
+    registerProvider(m);
+    const model = instance.getModel();
+    const uri = model.uri.toString();
+    if (getItems) models.set(uri, { getItems, getDts });
+    if (!multiline) singleLine(m, instance, el, onEnter);
+    if (!multiline) {
+      const text = instance.getValue();
+      instance.setPosition({ lineNumber: 1, column: text.length + 1 });
+    }
+    subscriptions.push(instance.onDidFocusEditorText(() => {
+      if (getDts) installScope(m, getDts());
+      onFocus?.();
+    }));
+    subscriptions.push(instance.onDidBlurEditorText(() => onBlur?.()));
+    updatePlaceholder();
+    subscriptions.push(instance.onDidChangeModelContent(updatePlaceholder));
+    if (pendingMarkers) setMarkers(pendingMarkers);
+  };
+  const updatePlaceholder = () => {
+    if (instance) el.classList.toggle("fm-code-editor--empty", !instance.getValue());
+  };
+  const watch = setInterval(() => {
+    if (disposed) {
+      clearInterval(watch);
+      return;
+    }
+    if (editor.monaco) {
+      clearInterval(watch);
+      upgraded();
+    }
+  }, 50);
+  setTimeout(() => clearInterval(watch), 15e3);
+  let pendingMarkers = null;
+  const setMarkers = (messages) => {
+    pendingMarkers = messages;
+    const m = monaco();
+    if (!m || !instance) return;
+    const model = instance.getModel();
+    const text = model.getValue();
+    const lines = text.split("\n");
+    m.editor.setModelMarkers(model, OWNER, (messages || []).map((message) => ({
+      severity: m.MarkerSeverity.Error,
+      message,
+      startLineNumber: 1,
+      startColumn: 1,
+      endLineNumber: lines.length,
+      endColumn: (lines[lines.length - 1]?.length || 0) + 1
+    })));
+    el.classList.toggle("fm-code-editor--invalid", !!(messages && messages.length));
+  };
+  const insert = (text) => {
+    if (instance) {
+      const m = monaco();
+      const pos = instance.getPosition();
+      instance.executeEdits("fhir-mapper", [{ range: new m.Range(pos.lineNumber, pos.column, pos.lineNumber, pos.column), text, forceMoveMarkers: true }]);
+      instance.focus();
+      return;
+    }
+    if (area) {
+      const start = area.selectionStart ?? area.value.length;
+      const end = area.selectionEnd ?? start;
+      area.value = area.value.slice(0, start) + text + area.value.slice(end);
+      area.selectionStart = area.selectionEnd = start + text.length;
+      area.dispatchEvent(new Event("input", { bubbles: true }));
+      area.focus();
+    }
+  };
+  return {
+    el,
+    getValue: () => editor.getValue(),
+    setValue: (text) => {
+      if (editor.getValue() !== (text ?? "")) editor.setValue(text ?? "");
+      updatePlaceholder();
+    },
+    focus: () => editor.focus && editor.focus(),
+    setMarkers,
+    insert,
+    hasMonaco: () => !!instance,
+    dispose: () => {
+      disposed = true;
+      clearInterval(watch);
+      for (const s of subscriptions) s.dispose?.();
+      if (instance) models.delete(instance.getModel()?.uri.toString());
+      try {
+        editor.dispose && editor.dispose();
+      } catch {
+      }
+      el.remove();
+    }
+  };
+}
+
+// src/fhir/completion.js
+var SNIPPETS = [
+  { name: "guard", label: "guard optional (x != null ? x : undefined)", insert: "${1:value} != null ? ${1:value} : undefined", description: "Give nothing when the source is missing, instead of a TypeError." },
+  { name: "repetition", label: "nth repetition if present", insert: "${1:msg['PID']['PID.3']}.length() > ${2:1} ? ${1:msg['PID']['PID.3']}[${2:1}]${3:['PID.3.1']}.toString() : undefined", description: "HL7 v2 repetition guarded by its count." },
+  { name: "find", label: "fhirFind(list, function)", insert: "fhirFind(${1:list}, function (${2:item}) { return ${3:condition}; })", description: "First item of a list matching a condition." },
+  { name: "filter", label: "fhirFilter(list, function)", insert: "fhirFilter(${1:list}, function (${2:item}) { return ${3:condition}; })", description: "Items of a list matching a condition." },
+  { name: "ternary", label: "condition ? a : b", insert: "${1:condition} ? ${2:a} : ${3:b}", description: "A choice between two values." }
+];
+function monacoItems(functions, context = {}, sampleValues = /* @__PURE__ */ new Map()) {
+  const items = [];
+  for (const fn of functions) {
+    if (context.role && !fn.contexts.includes(context.role)) continue;
+    const params = (fn.parameters || []).map((p) => p.name);
+    items.push({
+      label: fn.signature,
+      filterText: fn.name,
+      kind: "function",
+      insertText: params.length ? `${fn.name}(${params.map((p, i) => `\${${i + 1}:${p}}`).join(", ")})` : `${fn.name}()`,
+      snippet: true,
+      detail: `FHIR Mapper · ${fn.returnType || ""}`,
+      documentation: `${fn.description}
+
+Example: ${fn.example}`,
+      sortText: `1${fn.name}`
+    });
+  }
+  for (const name of context.variables || []) {
+    items.push({ label: name, kind: "variable", insertText: name, detail: name.endsWith("Index") ? "iteration index (0, 1, …)" : "iteration item", sortText: `0${name}` });
+  }
+  if (context.role === "translation") {
+  }
+  for (const path of context.paths || []) {
+    const value = sampleValues.get(path);
+    items.push({ label: path, kind: "path", insertText: path, detail: value == null ? "sample path" : `sample: ${String(value).slice(0, 60)}`, documentation: "From the sample message; guard optional values.", sortText: `2${path}` });
+  }
+  for (const s of SNIPPETS) {
+    items.push({ label: s.label, filterText: s.name, kind: "snippet", insertText: s.insert, snippet: true, detail: "snippet", documentation: s.description, sortText: `3${s.name}` });
+  }
+  return items;
+}
+function scopeDts(functions, context = {}) {
+  const lines = ["// FHIR Profile Mapper: functions of the runtime and variables of this expression's scope."];
+  for (const fn of functions) {
+    const params = (fn.parameters || []).map((p) => `${p.name}${p.optional ? "?" : ""}: any`).join(", ");
+    lines.push(`/** ${fn.description} Example: ${fn.example} */`, `declare function ${fn.name}(${params}): ${tsType(fn.returnType)};`);
+  }
+  for (const name of context.variables || []) {
+    lines.push(`/** ${name.endsWith("Index") ? "Index of the current item of the iteration (0, 1, …)." : "Current item of the iteration."} */`, `declare const ${name}: ${name.endsWith("Index") ? "number" : "any"};`);
+  }
+  return lines.join("\n") + "\n";
+}
+function tsType(returnType) {
+  const t = String(returnType || "any");
+  if (t === "string") return "string";
+  if (t === "string[]") return "string[]";
+  if (/undefined/.test(t)) return "any";
+  if (/\[\]$/.test(t)) return "any[]";
+  if (t === "number") return "number";
+  return "any";
+}
+
+// src/fhir/history.js
+function snapshot(state) {
+  return {
+    values: [...state.values],
+    iterations: [...state.iterations].map(([k, v]) => [k, { ...v }]),
+    translations: [...state.translations].map(([k, v]) => [k, { ...v }]),
+    conditions: [...state.conditions],
+    notes: [...state.notes || []],
+    disabled: [...state.disabled || []],
+    instances: [...state.instances || []]
+  };
+}
+function restore(state, snap) {
+  state.values = new Map(snap.values);
+  state.iterations = new Map(snap.iterations.map(([k, v]) => [k, { ...v }]));
+  state.translations = new Map(snap.translations.map(([k, v]) => [k, { ...v }]));
+  state.conditions = new Map(snap.conditions);
+  state.notes = new Map(snap.notes);
+  state.disabled = new Set(snap.disabled);
+  state.instances = new Map(snap.instances);
+}
 
 // src/profile-mapper/legacy-editor.js
 var PKG = "org.oie.fhir.mapper";
@@ -915,6 +1217,64 @@ function MapperExpression({ style, onChange, completionContext = {}, ...props })
       }, h2("code", null, fn.signature + (fn.returnType ? ` → ${fn.returnType}` : "")), h2("div", null, fn.description), h2("code", null, fn.example))) : null
     )
   );
+}
+function ExpressionField(props) {
+  const [editing, setEditing] = React2.useState(false);
+  const host = React2.useRef(null);
+  const editor = React2.useRef(null);
+  const latest = React2.useRef(props);
+  latest.current = props;
+  const available = typeof createExpressionEditor === "function" && typeof document !== "undefined";
+  React2.useEffect(() => {
+    if (!editing || !host.current) return void 0;
+    const context = () => latest.current.completionContext || {};
+    let ed;
+    try {
+      ed = createExpressionEditor({
+        value: latest.current.value ?? "",
+        ariaLabel: latest.current["aria-label"] || "JavaScript expression",
+        onChange: (value) => latest.current.onChange({ target: { value } }),
+        onEnter: () => setEditing(false),
+        getItems: () => monacoItems(MAPPER_FUNCTIONS, context()),
+        getDts: () => scopeDts(MAPPER_FUNCTIONS, context())
+      });
+    } catch (error) {
+      console.error("[fhir-mapper] expression editor:", error);
+      setEditing(false);
+      return void 0;
+    }
+    editor.current = ed;
+    host.current.appendChild(ed.el);
+    ed.focus();
+    const focusWhenReady = setInterval(() => {
+      if (ed.hasMonaco()) {
+        clearInterval(focusWhenReady);
+        ed.focus();
+      }
+    }, 60);
+    const outside = (e) => {
+      if (host.current && !host.current.contains(e.target) && !e.target.closest?.(".suggest-widget, .monaco-hover, .parameter-hints-widget")) setEditing(false);
+    };
+    const onKey = (e) => {
+      if (e.key === "Tab" && host.current?.contains(e.target) && !document.querySelector(".suggest-widget.visible")) setEditing(false);
+    };
+    document.addEventListener("mousedown", outside, true);
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      clearInterval(focusWhenReady);
+      document.removeEventListener("mousedown", outside, true);
+      document.removeEventListener("keydown", onKey, true);
+      editor.current = null;
+      ed.dispose();
+    };
+  }, [editing]);
+  React2.useEffect(() => {
+    if (editor.current && (props.value ?? "") !== editor.current.getValue()) editor.current.setValue(props.value ?? "");
+  }, [props.value]);
+  if (!available || !editing || props.disabled) return h2(MapperExpression, { ...props, onFocus: () => {
+    if (available && !props.disabled) setEditing(true);
+  } });
+  return h2("span", { className: "mapper-expression mapper-expression-editing", style: props.style, ref: host });
 }
 var sdPromises = /* @__PURE__ */ new Map();
 var sdLoaded = /* @__PURE__ */ new Map();
@@ -1340,6 +1700,11 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       sourcePaths: [],
       jsonDraft: "",
       filter: "all",
+      search: "",
+      undo: [],
+      redo: [],
+      current: null,
+      lastPush: 0,
       // An existing mapping opens on its rules; a new step on its properties.
       tab: saved.length ? "mapper" : "properties"
     };
@@ -1437,8 +1802,42 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
   const save = () => {
     if (!tree) return;
     element.mappings = compiled(st.rootIndex, ctx);
+    const snap = snapshot(st);
+    if (st.current && JSON.stringify(snap) !== JSON.stringify(st.current)) {
+      if (Date.now() - st.lastPush > 1e3) {
+        st.undo.push(st.current);
+        if (st.undo.length > 100) st.undo.shift();
+      }
+      st.lastPush = Date.now();
+      st.redo = [];
+    }
+    st.current = snap;
     onChange();
   };
+  const travel = (from, to) => {
+    if (!from.length || !tree) return;
+    to.push(st.current || snapshot(st));
+    st.current = from.pop();
+    restore(st, st.current);
+    st.lastPush = 0;
+    element.mappings = compiled(st.rootIndex, { ...ctx, instances: st.instances });
+    onChange();
+    rerender();
+  };
+  const toggleFullScreen = () => {
+    st.fullScreen = !st.fullScreen;
+    rerender();
+  };
+  React2.useEffect(() => {
+    if (!st.fullScreen) return void 0;
+    const onKey = (e) => {
+      if (e.key !== "Escape" || e.defaultPrevented || document.querySelector(".suggest-widget.visible, .mapper-expression-editing")) return;
+      st.fullScreen = false;
+      rerender();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [st.fullScreen]);
   const load = async (url) => {
     st.loading = true;
     st.error = "";
@@ -1525,6 +1924,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       st.error = errorText(e);
     } finally {
       st.loading = false;
+      st.current = snapshot(st);
       rerender();
     }
   };
@@ -1731,7 +2131,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       rerender();
     }
   });
-  const text = (prop, placeholder, code) => h2(code ? MapperExpression : "input", {
+  const text = (prop, placeholder, code) => h2(code ? ExpressionField : "input", {
     completionContext: code ? completionFor(tree?.root, "reference") : void 0,
     type: "text",
     placeholder,
@@ -1747,8 +2147,15 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     for (const key of allKeys()) if (key === node.key || key.startsWith(node.key + ".") || key.startsWith(node.key + "[")) return true;
     return false;
   };
+  const term = (st.search || "").trim().toLowerCase();
+  const matches = (node, depth = 0) => node.key.toLowerCase().includes(term) || depth < 4 && (tree.children(node) || []).some((child) => matches(child, depth + 1));
+  const opened = (node) => st.expanded.has(node.key) || !!term && !node.key.toLowerCase().includes(term) && matches(node);
   const visible = (node) => {
     if (element.action === "createBundle" && (node.key === "Bundle.entry" || node.key.startsWith("Bundle.entry."))) return false;
+    if (term && !matches(node)) {
+      for (let p = node.parent; p; p = p.parent) if (p.depth > 0 && p.key.toLowerCase().includes(term)) return true;
+      return false;
+    }
     if (st.filter === "mapped") return hasMappedBelow(node);
     if (st.filter === "mustSupport") return node.mustSupport || Number(node.min) >= 1 || hasMappedBelow(node);
     return true;
@@ -1772,7 +2179,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     if (st.iterations.has(child.key)) rows.push(iterationRow(child));
     if (st.conditions.has(child.key)) rows.push(conditionRow(child));
     if (st.translations.has(child.key)) rows.push(translationRow(child));
-    if (st.expanded.has(child.key)) addRows(child);
+    if (opened(child)) addRows(child);
   };
   const addRows = (node) => {
     const list = tree.children(node);
@@ -1785,7 +2192,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     }
   };
   const row = (node, siblings) => {
-    const open = st.expanded.has(node.key);
+    const open = opened(node);
     const canExpand = tree.expandable(node);
     const count = siblings.filter((s) => s.keyBase === node.keyBase).length;
     const iterated = st.iterations.has(node.key);
@@ -1839,7 +2246,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
         h2(
           "div",
           { style: { display: "flex", alignItems: "center", gap: "4px", minWidth: 0 } },
-          node.choice ? h2("span", { className: "text-text-faint", style: { ...ellipsis, flex: "1 1 auto", fontSize: "11px" } }, placeholder) : h2(MapperExpression, {
+          node.choice ? h2("span", { className: "text-text-faint", style: { ...ellipsis, flex: "1 1 auto", fontSize: "11px" } }, placeholder) : h2(ExpressionField, {
             completionContext: completionFor(node),
             type: "text",
             value,
@@ -1875,7 +2282,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     const variable = (it.variable || "item").trim() || "item";
     return subRow(node, "each", [
       h2("span", { key: "l", title: node === tree.root ? "One resource for each item" : "One entry of this element for each item" }, node === tree.root ? "↻ One resource for each" : "↻ For each"),
-      h2(MapperExpression, { key: "e", completionContext: completionFor(node, "iteration"), value: it.expression, disabled: blocked, placeholder: "msg['PID']['PID.3']", style: { ...mono, flex: "1 1 240px" }, onChange: (e) => setIteration(node, "expression", e.target.value) }),
+      h2(ExpressionField, { key: "e", completionContext: completionFor(node, "iteration"), value: it.expression, disabled: blocked, placeholder: "msg['PID']['PID.3']", style: { ...mono, flex: "1 1 240px" }, onChange: (e) => setIteration(node, "expression", e.target.value) }),
       h2("span", { key: "a" }, "as"),
       h2("input", { key: "v", type: "text", value: it.variable, disabled: blocked, style: { ...mono, width: "90px" }, onChange: (e) => setIteration(node, "variable", e.target.value) }),
       h2("span", { key: "h", className: "text-text-faint", style: { fontSize: "11px" } }, `below: ${variable} (the item), ${variable}Index (0, 1, …); fields dragged in are rewritten to ${variable}[…]`)
@@ -1883,7 +2290,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
   };
   const conditionRow = (node) => subRow(node, "condition", [
     h2("span", { key: "l", title: "What is below this element is only mapped when the condition holds" }, node === tree.root ? "? Only make the resource if" : "? Only if"),
-    h2(MapperExpression, {
+    h2(ExpressionField, {
       completionContext: completionFor(node, "condition"),
       key: "c",
       type: "text",
@@ -1933,7 +2340,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
         h2("input", { type: "checkbox", checked: !!t.keepSource, disabled: blocked, onChange: (e) => setTranslation(node, "keepSource", e.target.checked) }),
         " + source coding"
       ) : null,
-      needsValue ? h2(t.unmapped === "function" ? MapperExpression : "input", {
+      needsValue ? h2(t.unmapped === "function" ? ExpressionField : "input", {
         completionContext: t.unmapped === "function" ? completionFor(node, "translation") : void 0,
         key: "f",
         type: "text",
@@ -2158,9 +2565,9 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
                   { value: target.requestMethod || "POST", onChange: (e) => updateTarget(b.bundleName, { requestMethod: e.target.value }) },
                   ["POST", "PUT", "PATCH", "DELETE", "GET", "HEAD"].map((v) => h2("option", { key: v, value: v }, v))
                 )),
-                field("Request URL", h2(MapperExpression, { completionContext: completionFor(tree?.root, "reference"), value: target.requestUrl || "", placeholder: "Empty: the resource type or type/id", onChange: (e) => updateTarget(b.bundleName, { requestUrl: e.target.value }), style: mono }))
+                field("Request URL", h2(ExpressionField, { completionContext: completionFor(tree?.root, "reference"), value: target.requestUrl || "", placeholder: "Empty: the resource type or type/id", onChange: (e) => updateTarget(b.bundleName, { requestUrl: e.target.value }), style: mono }))
               ) : null,
-              request && (!target.requestMethod || target.requestMethod === "POST") ? field("If-None-Exist", h2(MapperExpression, { completionContext: completionFor(tree?.root, "reference"), value: target.ifNoneExist || "", placeholder: "'identifier=' + ...", onChange: (e) => updateTarget(b.bundleName, { ifNoneExist: e.target.value }), style: mono }), "Conditional creation for this Bundle entry.") : null,
+              request && (!target.requestMethod || target.requestMethod === "POST") ? field("If-None-Exist", h2(ExpressionField, { completionContext: completionFor(tree?.root, "reference"), value: target.ifNoneExist || "", placeholder: "'identifier=' + ...", onChange: (e) => updateTarget(b.bundleName, { ifNoneExist: e.target.value }), style: mono }), "Conditional creation for this Bundle entry.") : null,
               target && !request ? h2("div", { className: "hint", style: { marginTop: "8px" } }, b.bundleType ? `No request for a ${b.bundleType} Bundle.` : "This Bundle must be created earlier in the transformer.") : null
             );
           })
@@ -2366,7 +2773,31 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
         }),
         " extensions & ids"
       ),
-      h2("span", { className: "hint text-text-faint", style: { fontSize: "11px" } }, `${COMPLETION_HINT}: functions, scoped variables and sample paths. ↑/↓ to choose, Enter/Tab to insert, Esc to close. Guard optional values.`)
+      h2("input", {
+        type: "search",
+        value: st.search || "",
+        placeholder: "Search elements…",
+        "aria-label": "Search elements",
+        style: { width: "180px", flex: "none", height: "26px", minHeight: "26px", padding: "2px 8px" },
+        onChange: (e) => {
+          st.search = e.target.value;
+          rerender();
+        }
+      }),
+      h2("button", { type: "button", className: "btn btn-sm", title: "Expand the mapped elements", onClick: () => {
+        for (const key of allKeys()) {
+          const parts = key.split(".");
+          for (let i = 1; i < parts.length; i++) st.expanded.add(parts.slice(0, i).join("."));
+        }
+        rerender();
+      } }, "Expand mapped"),
+      h2("button", { type: "button", className: "btn btn-sm", title: "Collapse every element", onClick: () => {
+        st.expanded = /* @__PURE__ */ new Set([tree.root.key]);
+        rerender();
+      } }, "Collapse all"),
+      h2("button", { type: "button", className: "btn btn-sm", title: "Undo the last change of the mappings", disabled: !(st.undo || []).length || blocked, onClick: () => travel(st.undo, st.redo) }, "↶ Undo"),
+      h2("button", { type: "button", className: "btn btn-sm", title: "Redo", disabled: !(st.redo || []).length || blocked, onClick: () => travel(st.redo, st.undo) }, "↷ Redo"),
+      h2("span", { className: "hint text-text-faint", style: { fontSize: "11px" } }, `Click a field to edit it with completion. ${COMPLETION_HINT}: functions, scoped variables and sample paths. ↑/↓ to choose, Enter/Tab to insert, Esc to close. Guard optional values.`)
     ),
     h2(
       "div",
@@ -2536,7 +2967,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
   };
   return h2(
     "div",
-    { className: "fhir-profile-mapper" },
+    { className: "fhir-profile-mapper" + (st.fullScreen ? " mapper-fullscreen" : "") },
     h2("style", null, MAPPER_STYLES),
     h2(
       "div",
@@ -2553,7 +2984,12 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
           st.tab = t.id;
           rerender();
         }
-      }, t.label, t.badge ? h2("span", { className: "mapper-tab-badge", title: t.badge.title }, t.badge.text) : null))
+      }, t.label, t.badge ? h2("span", { className: "mapper-tab-badge", title: t.badge.title }, t.badge.text) : null)),
+      h2(
+        "button",
+        { type: "button", className: "btn btn-sm", style: { marginLeft: "auto", alignSelf: "center" }, title: "Edit this step on the whole page (Esc to come back)", onClick: toggleFullScreen },
+        st.fullScreen ? "Exit full screen (Esc)" : "⤢ Full screen"
+      )
     ),
     messages,
     h2("div", { className: "mapper-tab-panel", id: `${tabId}-panel`, role: "tabpanel", "aria-labelledby": `${tabId}-${current2.id}` }, current2.panel)
