@@ -54,7 +54,8 @@ Detailed documentation is in French:
 - [FHIR Data Type integration](doc/Integration-FHIR-Data-Type.md)
 - [Platform limits](doc/limites-plateforme.md) (what the mapper works around, upstream requests)
 - [Demo](doc/Demo.md)
-- [Redesign plan](doc/plan-refonte.md): review, target, phases and progress
+- [Active roadmap](doc/plan-suite.md): decisions, classified backlog and next lots
+- [Initial redesign plan](doc/plan-refonte.md): historical review, target and phases
 - [Changelog](CHANGELOG.md)
 
 License: [Mozilla Public License 2.0](LICENSE).

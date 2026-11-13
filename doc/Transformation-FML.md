@@ -292,7 +292,7 @@ par OIE.
 ## 8. Limites et suites
 
 - **Canonique du modèle** `http://oie.org/fhir/…` : provisoire, à fixer avec la
-  migration de namespace prévue au [plan](plan-refonte.md).
+  migration de namespace prévue au [plan actif](plan-suite.md#lot-a--namespace-définitif).
 - **Concurrence** : le contexte et les maps chargées sont partagés en lecture ;
   chaque appel crée ses services, son `StructureMapUtilities`, sa source et sa
   cible. Le verrou global a été supprimé et un test mélange 24 transformations

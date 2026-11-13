@@ -1,7 +1,12 @@
 # Reprise de la refonte
 
+> **Journal et boîte d'entrée.** Les comptes rendus des lots restent ici pour
+> l'historique. La référence active pour les prochains travaux est désormais le
+> [plan de suite](doc/plan-suite.md). La section de diagnostic initial ci-dessous
+> décrit l'état de reprise et contient donc volontairement des constats périmés.
+
 État vérifié le 12 novembre 2026 sur `feat/refonte`, à partir de `4907d15`.
-Le [plan de conception](doc/plan-refonte.md) reste la référence fonctionnelle.
+Le [plan de refonte initial](doc/plan-refonte.md) reste la référence historique.
 Ce suivi découpe le travail restant en lots vérifiables ; une phase partielle
 ne doit pas être présentée comme terminée.
 
@@ -227,8 +232,9 @@ Prochain lot : FML, S-2 sur les modèles typés et adaptateur Strict Parser (lot
 - `mvn clean package` : 147 tests Java et 43 tests Node ; 13 tests Python passent.
   L'image Docker complète se construit, packages publics inclus.
 
-Prochain lot : S-3, performance, durcissement, namespace et préparation 1.0
-(lot 8).
+La suite initialement envisagée regroupait S-3, performance, durcissement,
+namespace et préparation 1.0. Elle a été reclassée : seul le namespace reste
+immédiat ; les autres travaux sont reportés dans le [plan actif](doc/plan-suite.md).
 
 
 ## mes todos a reflechir /en discusion

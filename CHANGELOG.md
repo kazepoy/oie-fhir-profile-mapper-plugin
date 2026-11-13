@@ -49,7 +49,8 @@
   la racine, pour saisir une note et activer/désactiver chaque règle séparément.
   Notes et activation sont conservées lors de la compilation et restaurées par
   *Undo / Redo*. Vérification unitaire et parcours Playwright dans la démo.
-- Suivi de reprise par lots et critères de validation : [TODO.md](TODO.md).
+- Feuille de route active : [doc/plan-suite.md](doc/plan-suite.md). Historique
+  de reprise et critères des lots livrés : [TODO.md](TODO.md).
 
 - **FHIR FML Transform** : second transformeur, qui exécute une map FML (StructureMap)
   sur le message vu par le modèle logique générique `OieMessage`, avec le moteur du
@@ -94,7 +95,8 @@
   n'est ajouté sans mesure démontrant sa nécessité.
 - **Ménage** : modules web jamais branchés retirés, `legacy-editor.js` renommés `editor.js`,
   plan initial `doc/Plan.md` retiré, tests e2e Playwright versionnés.
-- Plan de refonte : [doc/plan-refonte.md](doc/plan-refonte.md).
+- Plan de refonte initial, conservé comme historique :
+  [doc/plan-refonte.md](doc/plan-refonte.md).
 
 ## 0.2.0
 

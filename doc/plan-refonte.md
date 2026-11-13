@@ -1,5 +1,11 @@
 # Plan de refonte : OIE FHIR Mapper
 
+> **Document historique.** Les lots 1 à 7 de cette refonte sont terminés. La
+> feuille de route active, les reports et les nouveaux arbitrages sont dans le
+> [plan de suite](plan-suite.md). Les constats ci-dessous décrivent l'état au
+> moment de la revue et ne doivent plus servir seuls à déterminer le travail
+> restant.
+
 Revue complète du projet au 11 novembre 2026 (branche `main`, commit `59e5921` ;
 branche `feature/fml-transform`, commit `a845140`) et plan de refonte en phases.
 Le plan vise un plugin **complet et ergonomique**, avec une **assistance à la
