@@ -2,6 +2,14 @@
 
 ## Non publié (branche `feat/refonte`)
 
+- **Catalogue** : préchauffage du validateur avant le verrou du moteur, pour
+  éviter un interblocage avec une validation concurrente.
+- **Canaux complémentaires** : JSON métier vers Organization R5 (8090), Patient
+  FR Core 2.2.0 (8091), et Patient FHIR vers une projection FML (8092), avec
+  attendus et contre-exemples rejoués en aperçu et sur les canaux déployés.
+  L'image fournit les dépendances directes FR Core non-core à versions et SHA-256
+  fixés. L'initialisation installe trois groupes OIE et les tags natifs des
+  douze exports ; leur cohérence est contrôlée hors ligne et dans la démo.
 - **Exemples de démo** : matrice de couverture et manifeste avec groupes/tags,
   messages entrants préchargés et neuf samples Profile Mapper avec attendu sur
   les sept canaux. Les deux aperçus FML sont comparés à leurs attendus.

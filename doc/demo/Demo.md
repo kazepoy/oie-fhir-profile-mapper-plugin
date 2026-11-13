@@ -26,6 +26,8 @@ typé montées dans `/fhir-typed`.
 L'initialisation crée trois contextes dans *Settings › FHIR Mapper* :
 `demo-labo`, `fr-core-2.2.0` et `eu-laboratory-2.0.0`. Les deux derniers rendent
 les profils publiés sélectionnables dans une étape R4 sans téléchargement manuel.
+Le contexte FR Core fournit aussi les dépendances directes non-core utilisées
+par le canal du port 8091 ; voir [leur périmètre](JSON-FR-Core-et-FML.md#packages-du-contexte).
 Sur un volume déjà initialisé, lancer une fois avec `OIE_INIT_FORCE=true` pour
 remplacer les anciens réglages de démonstration.
 
@@ -33,8 +35,10 @@ remplacer les anciens réglages de démonstration.
 
 La [matrice des exemples](Matrice-exemples.md) classe les canaux par groupes et
 tags, précise les samples disponibles et distingue les capacités démontrées
-des cas encore à construire. Les sept canaux Profile Mapper ont des samples
-enregistrés avec attendu ; les deux aperçus FML sont rejoués par `check.py`.
+des cas encore à construire. Les neuf canaux Profile Mapper ont des samples
+enregistrés avec attendu ; les trois aperçus FML sont rejoués par `check.py`.
+Les douze canaux sont classés dans trois groupes natifs OIE et portent des tags
+fonctionnels (version, source, transformeur, fonctions illustrées).
 
 | Canal | Port | Fonctions montrées |
 |---|---|---|
@@ -47,6 +51,9 @@ enregistrés avec attendu ; les deux aperçus FML sont rejoués par `check.py`.
 | ORU R01 vers Bundle FHIR (FML typé) | 8087 | Strict Parser, modèle logique HL7 v2 typé, map `ORUR01toBundle` important `PIDtoPatient`, Bundle transaction Patient + Observation |
 | ORU R01 vers Patient FHIR (strict) | 8088 | Strict Parser HL7 v2 : mêmes règles, autres chemins |
 | ORU R01 vers Patient FHIR (FML inline) | 8089 | **Map FML écrite dans l'étape** (onglet Map, *Check*), sans fichier de map, sur le contexte `demo-labo` |
+| JSON métier vers Organization R5 | 8090 | Source JSON, champ `description` de type markdown propre à R5, attendu et erreur de conversion |
+| JSON métier vers Patient FR Core | 8091 | FR Core 2.2.0, identifiant PI, lieu de naissance ; contrainte d'usage de l'identifiant testée |
+| Patient FHIR vers résumé FML | 8092 | Source FHIR JSON validée, map de projection, `active: false` conservé, code de sexe invalide refusé |
 
 Pour voir l'assistance à la saisie : ouvrir le canal du port 8082, son transformeur
 source, l'étape *Patient*, puis **Full screen**. Cliquer un champ pour l'éditer avec

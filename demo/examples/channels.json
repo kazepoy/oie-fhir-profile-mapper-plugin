@@ -1,4 +1,9 @@
 {
+  "groups": [
+    {"key": "mapper-hl7v2", "id": "ce3d058f-a54e-55fd-b2d8-2221bd51da01", "name": "FHIR - Mapper HL7 v2"},
+    {"key": "mapper-metier", "id": "ce3d058f-a54e-55fd-b2d8-2221bd51da02", "name": "FHIR - Mapper metier"},
+    {"key": "fml", "id": "ce3d058f-a54e-55fd-b2d8-2221bd51da03", "name": "FHIR - FML"}
+  ],
   "channels": [
     {
       "channel": "oru-r01-vers-bundle-fhir.xml",
@@ -63,6 +68,43 @@
         "input": "oru-r01-minimal.er7",
         "expected": "expected/fml-inline-patient.json"
       }
+    },
+    {
+      "channel": "json-metier-vers-organization-r5.xml",
+      "group": "mapper-metier",
+      "tags": ["R5", "JSON", "Organization-description", "validation"],
+      "input": "organisation-metier.json",
+      "deployed": {
+        "portEnv": "ORGANIZATION_R5_PORT", "port": 8090, "route": "organization-r5",
+        "expected": "expected/organisation-r5.json"
+      },
+      "invalid": {"input": "organisation-metier-invalide.json", "diagnostic": "Organization.active"}
+    },
+    {
+      "channel": "json-metier-vers-patient-fr-core.xml",
+      "group": "mapper-metier",
+      "tags": ["R4", "JSON", "FR-Core-2-2-0", "IG", "PI", "birthPlace", "validation"],
+      "input": "patient-metier-fr-core.json",
+      "deployed": {
+        "portEnv": "FR_CORE_PATIENT_PORT", "port": 8091, "route": "patient-fr-core",
+        "expected": "expected/patient-fr-core.json"
+      },
+      "invalid": {"input": "patient-metier-fr-core-invalide.json", "diagnostic": "official"}
+    },
+    {
+      "channel": "patient-fhir-vers-resume-fml.xml",
+      "group": "fml",
+      "tags": ["R4", "FHIR", "JSON", "FML", "sourceModel-fhir", "projection", "validation"],
+      "input": "patient-fhir-source.json",
+      "preview": {
+        "dataType": "JSON", "input": "patient-fhir-source.json",
+        "expected": "expected/patient-fhir-summary.json"
+      },
+      "deployed": {
+        "portEnv": "FHIR_SUMMARY_PORT", "port": 8092, "route": "patient-summary",
+        "expected": "expected/patient-fhir-summary.json"
+      },
+      "invalid": {"input": "patient-fhir-source-invalide.json", "diagnostic": "inconnu"}
     }
   ]
 }

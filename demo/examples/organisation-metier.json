@@ -1,0 +1,6 @@
+{
+  "code": "labo-r5",
+  "active": true,
+  "nom": "Laboratoire de démonstration",
+  "description": "Organisation **fictive** : exemple du champ description ajouté en FHIR R5."
+}

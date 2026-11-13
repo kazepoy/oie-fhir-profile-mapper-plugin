@@ -5512,7 +5512,9 @@ function fmlSample(platform2, element) {
   const ctx = found && found !== "ambiguous" ? found : null;
   const inbound = ctx?.transformer.inboundDataType || "HL7V2";
   const key = ctx ? `fhir-fml-sample:${ctx.channel.id}:${ctx.connector.metaDataId}` : "fhir-fml-sample:unknown";
-  return { key, sample: { message: ctx?.transformer.inboundTemplate || "", dataType: DATA_TYPES.includes(inbound) ? inbound : "RAW" } };
+  const message = ctx?.transformer.inboundTemplate || "";
+  const dataType = inbound === "FHIR" ? message.trim().startsWith("<") ? "XML" : "JSON" : DATA_TYPES.includes(inbound) ? inbound : "RAW";
+  return { key, sample: { message, dataType } };
 }
 function FmlMapEditor({ value, onChange, problems, completionPaths }) {
   const host = React2.useRef(null);

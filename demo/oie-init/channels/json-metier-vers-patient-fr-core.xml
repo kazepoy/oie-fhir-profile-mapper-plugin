@@ -1,0 +1,362 @@
+<channel version="4.7.0">
+  <id>4eb632c8-a774-4fea-aefa-838b56818091</id>
+  <nextMetaDataId>2</nextMetaDataId>
+  <name>JSON métier vers Patient FR Core</name>
+  <description>JSON métier vers le profil FR Core Patient 2.2.0, identifiant PI et lieu de naissance. POST application/json sur /patient-fr-core/, port 8091. Exemples nominaux et invalides dans demo/examples/. Validation active.</description>
+  <revision>1</revision>
+  <sourceConnector version="4.7.0">
+    <metaDataId>0</metaDataId>
+    <name>sourceConnector</name>
+    <properties class="com.mirth.connect.connectors.http.HttpReceiverProperties" version="4.7.0">
+      <pluginProperties />
+      <listenerConnectorProperties version="4.7.0">
+        <host>0.0.0.0</host>
+        <port>8091</port>
+      </listenerConnectorProperties>
+      <sourceConnectorProperties version="4.7.0">
+        <responseVariable>d1</responseVariable>
+        <respondAfterProcessing>true</respondAfterProcessing>
+        <processBatch>false</processBatch>
+        <firstResponse>false</firstResponse>
+        <processingThreads>1</processingThreads>
+        <resourceIds class="linked-hash-map">
+          <entry>
+            <string>Default Resource</string>
+            <string>[Default Resource]</string>
+          </entry>
+        </resourceIds>
+        <queueBufferSize>1000</queueBufferSize>
+      </sourceConnectorProperties>
+      <xmlBody>false</xmlBody>
+      <parseMultipart>false</parseMultipart>
+      <includeMetadata>false</includeMetadata>
+      <binaryMimeTypes>application/.*(?&lt;!json|xml)|image/.*|video/.*|audio/.*</binaryMimeTypes>
+      <binaryMimeTypesRegex>true</binaryMimeTypesRegex>
+      <responseContentType>application/fhir+json; charset=UTF-8</responseContentType>
+      <responseDataTypeBinary>false</responseDataTypeBinary>
+      <responseStatusCode>200</responseStatusCode>
+      <responseHeaders class="linked-hash-map" />
+      <responseHeadersVariable />
+      <useResponseHeadersVariable>false</useResponseHeadersVariable>
+      <charset>UTF-8</charset>
+      <contextPath>/patient-fr-core</contextPath>
+      <timeout>30000</timeout>
+      <staticResources />
+    </properties>
+    <transformer version="4.7.0">
+      <elements>
+        <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+          <name>Patient</name>
+          <sequenceNumber>0</sequenceNumber>
+          <enabled>true</enabled>
+          <fhirVersion>R4</fhirVersion>
+          <profiles />
+          <profileUrl>https://hl7.fr/ig/fhir/core/StructureDefinition/fr-core-patient</profileUrl>
+          <profileVersion>2.2.0</profileVersion>
+          <resourceType>Patient</resourceType>
+          <addMetaProfile>true</addMetaProfile>
+          <setLastUpdated>false</setLastUpdated>
+          <variable />
+          <action>resource</action>
+          <bundleTargets>[]</bundleTargets>
+          <refName />
+          <terminologyServer>n/a</terminologyServer>
+          <terminologyAuthorization />
+          <terminologyCacheSeconds>300</terminologyCacheSeconds>
+          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
+          <mappings>[{"id":"Patient.id","key":"Patient.id","element":"Patient.id","type":"id","expression":"msg.id","path":[["id"]]},{"id":"Patient.identifier-PI.use","key":"Patient.identifier:PI.use","element":"Patient.identifier:PI.use","type":"code","expression":"msg.usage_ipp","path":[["identifier","PI#0"],["use"]]},{"id":"Patient.identifier-PI.type","key":"Patient.identifier:PI.type","fixed":{"coding":[{"system":"http://terminology.hl7.org/CodeSystem/v2-0203","code":"PI","display":"Patient internal identifier"}]},"path":[["identifier","PI#0"],["type"]]},{"id":"Patient.identifier-PI.system","key":"Patient.identifier:PI.system","fixed":"https://example.org/fhir/sid/demo-ipp","path":[["identifier","PI#0"],["system"]]},{"id":"Patient.identifier-PI.value","key":"Patient.identifier:PI.value","element":"Patient.identifier:PI.value","type":"string","expression":"msg.ipp","path":[["identifier","PI#0"],["value"]]},{"id":"Patient.name-officialName.use","key":"Patient.name:officialName.use","fixed":"official","path":[["name","officialName#0"],["use"]]},{"id":"Patient.name-officialName.family","key":"Patient.name:officialName.family","element":"Patient.name:officialName.family","type":"string","expression":"msg.nom_naissance","path":[["name","officialName#0"],["family"]]},{"id":"Patient.name-officialName.given","key":"Patient.name:officialName.given","element":"Patient.name:officialName.given","type":"string","expression":"msg.prenom","path":[["name","officialName#0"],["given","#0"]]},{"id":"Patient.gender","key":"Patient.gender","element":"Patient.gender","type":"code","expression":"msg.sexe","path":[["gender"]]},{"id":"Patient.birthDate","key":"Patient.birthDate","element":"Patient.birthDate","type":"date","expression":"msg.date_naissance","path":[["birthDate"]]},{"id":"Patient.extension-birthPlace.url","key":"Patient.extension:birthPlace.url","fixed":"http://hl7.org/fhir/StructureDefinition/patient-birthPlace","path":[["extension","birthPlace#0"],["url"]]},{"id":"Patient.extension-birthPlace.valueAddress.city","key":"Patient.extension:birthPlace.valueAddress.city","element":"Patient.extension:birthPlace.valueAddress.city","type":"string","expression":"msg.ville_naissance","path":[["extension","birthPlace#0"],["valueAddress"],["city"]]}]</mappings>
+          <samples>[{"id":"4eb632c8-a774-4fea-aefa-838b56818091","name":"JSON métier vers Patient FR Core — nominal","message":"{\n  \"id\": \"fr-demo-001\",\n  \"ipp\": \"000123456\",\n  \"usage_ipp\": \"usual\",\n  \"nom_naissance\": \"Durand\",\n  \"prenom\": \"Élodie\",\n  \"sexe\": \"female\",\n  \"date_naissance\": \"1985-04-12\",\n  \"ville_naissance\": \"Lyon\"\n}\n","dataType":"JSON","scope":"step","expected":"{\n  \"resourceType\": \"Patient\",\n  \"id\": \"fr-demo-001\",\n  \"meta\": {\"profile\": [\"https://hl7.fr/ig/fhir/core/StructureDefinition/fr-core-patient\"]},\n  \"extension\": [{\n    \"url\": \"http://hl7.org/fhir/StructureDefinition/patient-birthPlace\",\n    \"valueAddress\": {\"city\": \"Lyon\"}\n  }],\n  \"identifier\": [{\n    \"use\": \"usual\",\n    \"type\": {\"coding\": [{\"system\": \"http://terminology.hl7.org/CodeSystem/v2-0203\", \"code\": \"PI\", \"display\": \"Patient internal identifier\"}]},\n    \"system\": \"https://example.org/fhir/sid/demo-ipp\",\n    \"value\": \"000123456\"\n  }],\n  \"name\": [{\"use\": \"official\", \"family\": \"Durand\", \"given\": [\"Élodie\"]}],\n  \"gender\": \"female\",\n  \"birthDate\": \"1985-04-12\"\n}\n"}]</samples>
+          <context>fr-core-2.2.0</context>
+          <validateOutput>true</validateOutput>
+          <formatVersion>2</formatVersion>
+          <validation>always</validation>
+        </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
+      </elements>
+      <inboundTemplate>{
+  "id": "fr-demo-001",
+  "ipp": "000123456",
+  "usage_ipp": "usual",
+  "nom_naissance": "Durand",
+  "prenom": "Élodie",
+  "sexe": "female",
+  "date_naissance": "1985-04-12",
+  "ville_naissance": "Lyon"
+}
+</inboundTemplate>
+      <inboundDataType>JSON</inboundDataType>
+      <outboundDataType>FHIR</outboundDataType>
+      <inboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="4.7.0">
+        <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="4.7.0">
+          <splitType>JavaScript</splitType>
+          <batchScript />
+        </batchProperties>
+      </inboundProperties>
+      <outboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
+          <fhirVersion>R4</fhirVersion>
+          <transformerFormat>XML</transformerFormat>
+          <stripNamespaces>true</stripNamespaces>
+          <outputFormat>JSON</outputFormat>
+          <prettyPrint>true</prettyPrint>
+          <validateInbound>false</validateInbound>
+          <validateOutbound>false</validateOutbound>
+          <invalidMessages>Reject</invalidMessages>
+          <failOn>Errors</failOn>
+          <profiles />
+          <requiredProfile />
+          <unknownCodeSystems>Warning</unknownCodeSystems>
+          <anyExtensionsAllowed>true</anyExtensionsAllowed>
+          <terminologyServer />
+        </serializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
+          <splitType>Bundle_Entry</splitType>
+          <batchScript />
+        </batchProperties>
+      </outboundProperties>
+    </transformer>
+    <filter version="4.7.0">
+      <elements />
+    </filter>
+    <transportName>HTTP Listener</transportName>
+    <mode>SOURCE</mode>
+    <enabled>true</enabled>
+    <waitForPrevious>true</waitForPrevious>
+  </sourceConnector>
+  <destinationConnectors>
+    <connector version="4.7.0">
+      <metaDataId>1</metaDataId>
+      <name>Résultat FHIR</name>
+      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
+        <pluginProperties />
+        <destinationConnectorProperties version="4.7.0">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable />
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <script>return connectorMessage.getEncodedData();</script>
+      </properties>
+      <transformer version="4.7.0">
+        <elements />
+        <inboundDataType>FHIR</inboundDataType>
+        <outboundDataType>FHIR</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
+            <fhirVersion>R4</fhirVersion>
+            <transformerFormat>XML</transformerFormat>
+            <stripNamespaces>true</stripNamespaces>
+            <outputFormat>JSON</outputFormat>
+            <prettyPrint>true</prettyPrint>
+            <validateInbound>false</validateInbound>
+            <validateOutbound>false</validateOutbound>
+            <invalidMessages>Reject</invalidMessages>
+            <failOn>Errors</failOn>
+            <profiles />
+            <requiredProfile />
+            <unknownCodeSystems>Warning</unknownCodeSystems>
+            <anyExtensionsAllowed>true</anyExtensionsAllowed>
+            <terminologyServer />
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
+            <splitType>Bundle_Entry</splitType>
+            <batchScript />
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
+            <fhirVersion>R4</fhirVersion>
+            <transformerFormat>XML</transformerFormat>
+            <stripNamespaces>true</stripNamespaces>
+            <outputFormat>JSON</outputFormat>
+            <prettyPrint>true</prettyPrint>
+            <validateInbound>false</validateInbound>
+            <validateOutbound>false</validateOutbound>
+            <invalidMessages>Reject</invalidMessages>
+            <failOn>Errors</failOn>
+            <profiles />
+            <requiredProfile />
+            <unknownCodeSystems>Warning</unknownCodeSystems>
+            <anyExtensionsAllowed>true</anyExtensionsAllowed>
+            <terminologyServer />
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
+            <splitType>Bundle_Entry</splitType>
+            <batchScript />
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="4.7.0">
+        <elements />
+        <inboundDataType>RAW</inboundDataType>
+        <outboundDataType>RAW</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
+            <splitType>JavaScript</splitType>
+            <batchScript />
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
+            <splitType>JavaScript</splitType>
+            <batchScript />
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="4.7.0">
+        <elements />
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+  </destinationConnectors>
+  <preprocessingScript>return message;</preprocessingScript>
+  <postprocessingScript>return;</postprocessingScript>
+  <deployScript>return;</deployScript>
+  <undeployScript>return;</undeployScript>
+  <properties version="4.7.0">
+    <clearGlobalChannelMap>true</clearGlobalChannelMap>
+    <messageStorageMode>DEVELOPMENT</messageStorageMode>
+    <encryptData>false</encryptData>
+    <encryptAttachments>false</encryptAttachments>
+    <encryptCustomMetaData>false</encryptCustomMetaData>
+    <removeContentOnCompletion>false</removeContentOnCompletion>
+    <removeOnlyFilteredOnCompletion>false</removeOnlyFilteredOnCompletion>
+    <removeAttachmentsOnCompletion>false</removeAttachmentsOnCompletion>
+    <initialState>STARTED</initialState>
+    <storeAttachments>true</storeAttachments>
+    <metaDataColumns />
+    <attachmentProperties version="4.7.0">
+      <type>None</type>
+      <properties />
+    </attachmentProperties>
+    <resourceIds class="linked-hash-map">
+      <entry>
+        <string>Default Resource</string>
+        <string>[Default Resource]</string>
+      </entry>
+    </resourceIds>
+  </properties>
+  <exportData>
+    <metadata>
+      <enabled>true</enabled>
+      <lastModified>
+        <time>1787000000000</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <pruningSettings>
+        <archiveEnabled>true</archiveEnabled>
+        <pruneErroredMessages>false</pruneErroredMessages>
+      </pruningSettings>
+      <userId>1</userId>
+    </metadata>
+    <channelTags>
+      <channelTag>
+        <id>8bc4cff6-98e8-5658-899c-4b37619846ad</id>
+        <name>R4</name>
+        <channelIds>
+          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
+        </channelIds>
+        <backgroundColor>
+          <red>192</red>
+          <green>192</green>
+          <blue>192</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>c9a2a013-41f1-5b3b-b3d5-9ffc4c68cc04</id>
+        <name>JSON</name>
+        <channelIds>
+          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
+        </channelIds>
+        <backgroundColor>
+          <red>192</red>
+          <green>192</green>
+          <blue>192</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>c08e8827-9b46-5121-8715-af264f5decbd</id>
+        <name>FR-Core-2-2-0</name>
+        <channelIds>
+          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
+        </channelIds>
+        <backgroundColor>
+          <red>192</red>
+          <green>192</green>
+          <blue>192</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>d7b522e6-239d-5a9d-b1a1-fe7971b38ed9</id>
+        <name>IG</name>
+        <channelIds>
+          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
+        </channelIds>
+        <backgroundColor>
+          <red>192</red>
+          <green>192</green>
+          <blue>192</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>f5b855be-127c-5f5f-80a2-045e8030d443</id>
+        <name>PI</name>
+        <channelIds>
+          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
+        </channelIds>
+        <backgroundColor>
+          <red>192</red>
+          <green>192</green>
+          <blue>192</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>c3b0d40a-6af8-528d-b824-d736657c0215</id>
+        <name>birthPlace</name>
+        <channelIds>
+          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
+        </channelIds>
+        <backgroundColor>
+          <red>192</red>
+          <green>192</green>
+          <blue>192</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>4d57083a-d785-5392-8c1c-a80cadee7c35</id>
+        <name>validation</name>
+        <channelIds>
+          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
+        </channelIds>
+        <backgroundColor>
+          <red>192</red>
+          <green>192</green>
+          <blue>192</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+    </channelTags>
+  </exportData>
+</channel>

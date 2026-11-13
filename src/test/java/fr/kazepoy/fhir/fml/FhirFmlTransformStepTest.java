@@ -133,6 +133,24 @@ public class FhirFmlTransformStepTest {
     }
 
     @Test
+    public void theDemoSummaryProjectsAFhirPatientAndKeepsFalseValues() throws Exception {
+        Path examples = Path.of("demo/examples");
+        String demo = Path.of("demo").toAbsolutePath().toString();
+        Map<String, Object> step = Map.of("name", "Résumé Patient", "mapUrl",
+                "http://example.org/fhir/oru2fhir/StructureMap/PatientSummary", "profiles", demo + "/ig;" + demo + "/fml",
+                "sourceModel", "fhir", "fhirVersion", "R4", "validateOutput", true);
+        String request = FhirJson.write(Map.of("step", step, "dataType", "JSON",
+                "message", Files.readString(examples.resolve("patient-fhir-source.json"))));
+        Map<?, ?> answer = (Map<?, ?>) FhirJson.parse(FmlTester.test(request, (type, message) -> message));
+        assertEquals(List.of(), answer.get("errors"));
+        assertEquals(true, answer.get("validationPerformed"));
+        assertEquals(FhirJson.parse(Files.readString(examples.resolve("expected/patient-fhir-summary.json"))),
+                FhirJson.parse(answer.get("output").toString()));
+        assertFalse(((List<?>) answer.get("issues")).stream()
+                .anyMatch(i -> List.of("error", "fatal").contains(((Map<?, ?>) i).get("severity"))));
+    }
+
+    @Test
     public void pluginInitializationAllowsTheStepInAnOieChannel() throws Exception {
         ObjectXMLSerializer serializer = ObjectXMLSerializer.getInstance();
         if (serializer.getNormalizedVersion() == null) serializer.init("4.7.0");

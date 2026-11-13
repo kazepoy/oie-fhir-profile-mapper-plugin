@@ -1,0 +1,10 @@
+{
+  "resourceType": "Patient",
+  "id": "source-fhir-001",
+  "active": false,
+  "identifier": [{"system": "https://example.org/fhir/sid/demo-ipp", "value": "000123456"}],
+  "name": [{"use": "official", "family": "Durand", "given": ["Élodie"]}],
+  "gender": "female",
+  "birthDate": "1985-04-12",
+  "telecom": [{"system": "email", "value": "elodie.durand@example.org"}]
+}

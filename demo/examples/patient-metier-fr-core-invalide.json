@@ -1,0 +1,10 @@
+{
+  "id": "fr-demo-001",
+  "ipp": "000123456",
+  "usage_ipp": "official",
+  "nom_naissance": "Durand",
+  "prenom": "Élodie",
+  "sexe": "female",
+  "date_naissance": "1985-04-12",
+  "ville_naissance": "Lyon"
+}

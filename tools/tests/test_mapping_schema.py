@@ -30,7 +30,7 @@ class MappingSchemaTest(unittest.TestCase):
 
     def test_all_demo_channels(self):
         channels = list((ROOT / "demo/oie-init/channels").glob("*.xml"))
-        self.assertEqual(9, len(channels))  # sept canaux Profile Mapper, deux canaux FML
+        self.assertEqual(12, len(channels))  # neuf canaux Profile Mapper, trois canaux FML
         count = 0
         for path in channels:
             # OIE stocke le nom dans CHANNEL.NAME, varchar(40) : un nom plus long fait échouer l'import.
@@ -72,6 +72,11 @@ class MappingSchemaTest(unittest.TestCase):
                     preview = case["preview"]
                     self.assertTrue((examples / preview["input"]).is_file())
                     self.assertIn("resourceType", json.loads((examples / preview["expected"]).read_text()))
+                if "deployed" in case:
+                    self.assertEqual(case["deployed"]["port"], int(root.findtext("sourceConnector/properties/listenerConnectorProperties/port")))
+                    self.assertTrue((examples / case["invalid"]["input"]).is_file())
+                    self.assertTrue(case["invalid"]["diagnostic"])
+                    self.assertIn("resourceType", json.loads((examples / case["deployed"]["expected"]).read_text()))
 
     def test_rule_forms_and_translation(self):
         step = json.loads((EXAMPLES / "patient.step.json").read_text())
@@ -90,6 +95,31 @@ class MappingSchemaTest(unittest.TestCase):
         legacy["element"] = legacy.pop("key")
         step["mappings"] = json.dumps([legacy])
         self.assertEqual([], list(errors(step)))
+
+    def test_native_groups_and_tags_match_the_demo_manifest(self):
+        manifest = json.loads((ROOT / "demo/examples/channels.json").read_text())
+        exports = {case["channel"]: ET.parse(ROOT / "demo/oie-init/channels" / case["channel"]).getroot()
+                   for case in manifest["channels"]}
+        ports = [root.findtext("sourceConnector/properties/listenerConnectorProperties/port") for root in exports.values()]
+        self.assertEqual(len(ports), len(set(ports)))
+        members = set()
+        for definition in manifest["groups"]:
+            group = ET.parse(ROOT / "demo/oie-init/groups" / (definition["key"] + ".xml")).getroot().find("channelGroup")
+            self.assertEqual(definition["id"], group.findtext("id"))
+            self.assertEqual(definition["name"], group.findtext("name"))
+            expected = {exports[c["channel"]].findtext("id") for c in manifest["channels"] if c["group"] == definition["key"]}
+            actual = {c.findtext("id") for c in group.findall("channels/channel")}
+            self.assertEqual(expected, actual)
+            self.assertFalse(members & actual)
+            members.update(actual)
+        self.assertEqual({root.findtext("id") for root in exports.values()}, members)
+        for case in manifest["channels"]:
+            root = exports[case["channel"]]
+            tags = root.findall("exportData/channelTags/channelTag")
+            self.assertEqual(set(case["tags"]), {tag.findtext("name") for tag in tags})
+            for tag in tags:
+                self.assertRegex(tag.findtext("name"), r"^[A-Za-z_0-9\s-]+$")
+                self.assertEqual([root.findtext("id")], [s.text for s in tag.findall("channelIds/string")])
 
     def test_step_actions_and_wire_representation(self):
         for step in (

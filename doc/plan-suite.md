@@ -209,20 +209,35 @@ une réécriture générale de l'éditeur.
 
 ### Lot D — Matrice de démonstration et de vérité
 
-**Statut : premier sous-lot livré ; extension de la matrice encore à prioriser.**
+**Statut : consolidation et trois parcours complémentaires livrés ; autres cas à prioriser.**
 
 La [matrice des exemples](demo/Matrice-exemples.md) constitue l'inventaire de
-couverture : neuf exports classés, sept canaux Profile Mapper avec samples et
-attendus, deux aperçus FML rejouables. Les manques y sont explicites ; les tests
-Java R4B/R5 et les contextes d'IG disponibles ne valent pas encore démonstration
-sur des canaux déployés. La demande actuelle avance ce sous-lot avant B.
+couverture : douze exports dans trois groupes OIE natifs avec tags fonctionnels,
+neuf canaux Profile Mapper avec onze samples et attendus, trois aperçus FML
+rejouables. Les nouveaux parcours démontrent JSON métier vers Organization R5,
+Patient FR Core 2.2.0 et projection d'un Patient FHIR par FML. Chacun dispose
+d'un contre-exemple vérifié en aperçu et sur le canal déployé. Les manques
+restent explicites : R4B n'est démontré que par les tests Java, et le contexte
+EU Laboratory ne vaut pas encore démonstration sur un canal. Ce sous-lot avance
+avant B à la demande de l'utilisateur.
 
-Vérification du 13 novembre 2026 : 147 tests Java, 43 tests frontend et 14
-tests outils passent. Les neuf canaux sont importés, relus et redéployés dans
-la démo ; le rejeu couvre leurs sorties, neuf samples Profile Mapper et deux
-aperçus FML avec validation. Les 20 parcours navigateur Chromium passent.
+Premier sous-lot du 13 novembre 2026 : 147 tests Java, 43 tests frontend et 14
+tests outils passaient pour les neuf canaux, leurs neuf samples Profile Mapper,
+deux aperçus FML avec validation et 20 parcours navigateur Chromium.
 La map/modèle FML de démonstration a été corrigée pour lire la valeur directe
 d'OBX.5 émise par le Strict Parser, désormais contrôlée dans le rejeu.
+
+Complément : 149 tests Java, 43 tests frontend et 15 tests outils passent.
+Les 24 parcours Chromium passent. Le rejeu complet sur l'image reconstruite
+vérifie les douze canaux, onze samples Profile Mapper, trois aperçus FML,
+les trois contre-exemples et les groupes/tags natifs. Le rejeu et les parcours
+navigateur passent simultanément après redémarrage à froid ; une nouvelle
+initialisation sans forçage conserve les douze canaux et les trois groupes.
+L'image embarque les dépendances directes non-core de FR Core, avec versions et
+SHA-256 fixés ; cela ne constitue pas un résolveur général des dépendances
+transitives. L'initialisation fusionne les groupes natifs avec ceux déjà présents.
+Le pont de catalogue préchauffe le validateur avant le verrou du moteur pour
+éviter l'interblocage détecté pendant les essais concurrents à froid.
 
 Créer une matrice de capacités plutôt qu'une accumulation de canaux. Chaque cas
 porte des tags, un sample préchargé, un résultat attendu et, quand pertinent, un

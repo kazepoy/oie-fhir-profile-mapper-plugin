@@ -183,7 +183,62 @@ def check_fml_previews():
         print(f"OK aperçu FML : {case['channel']}, résultat attendu et validation")
 
 
+def check_additional_channels():
+    """Cas JSON/R5, FR Core et source FHIR : nominal et refus diagnostiqué."""
+    from tools.run_tests import normalize
+    manifest = json.loads((EXAMPLES / "channels.json").read_text())
+    for case in manifest["channels"]:
+        if "deployed" not in case:
+            continue
+        deployed = case["deployed"]
+        output = post(deployed["portEnv"], deployed["port"], deployed["route"], case["input"], "application/json")
+        expected = (EXAMPLES / deployed["expected"]).read_text()
+        assert normalize(output.decode()) == normalize(expected), case["channel"]
+        export = ET.parse(EXAMPLES.parents[1] / "demo/oie-init/channels" / case["channel"]).getroot()
+        channel_id = export.findtext("id")
+        history = f"/channels/{channel_id}/messages?limit=1&includeContent=true"
+        nominal = ET.fromstring(api(history)).find("message")
+        assert encoded(nominal, 1) == json.loads(expected), case["channel"]
+        before = int(nominal.findtext("messageId"))
+
+        node = export.find("sourceConnector/transformer/elements")[0]
+        step = {child.tag: child.text or "" for child in node}
+        endpoint = "fhir-fml" if "fml" in node.tag else "fhir-profile-mapper"
+        invalid = case["invalid"]
+        request = {"step": step, "dataType": "JSON", "message": (EXAMPLES / invalid["input"]).read_text()}
+        result = json.loads(api(f"/extensions/{endpoint}/test", "application/json", json.dumps(request).encode()))
+        diagnostics = result["errors"] + [i for i in result["issues"] if i.get("severity") in ("error", "fatal")]
+        assert diagnostics and invalid["diagnostic"] in json.dumps(diagnostics), (case["channel"], result)
+
+        assert not post(deployed["portEnv"], deployed["port"], deployed["route"], invalid["input"], "application/json")
+        rejected = ET.fromstring(api(history)).find("message")
+        assert int(rejected.findtext("messageId")) > before
+        errors = [c for c in rejected.findall(".//connectorMessage") if c.findtext("status") == "ERROR"]
+        assert errors and invalid["diagnostic"] in "".join(ET.tostring(c, encoding="unicode") for c in errors), case["channel"]
+        print(f"OK {case['channel']} : sortie attendue, exemple invalide refusé en aperçu et sur le canal")
+
+
+def check_channel_organization():
+    manifest = json.loads((EXAMPLES / "channels.json").read_text())
+    groups = {g.findtext("id"): g for g in ET.fromstring(api("/channelgroups"))}
+    tags = list(ET.fromstring(api("/server/channelTags")))
+    for definition in manifest["groups"]:
+        group = groups[definition["id"]]
+        assert group.findtext("name") == definition["name"]
+        members = {c.findtext("id") for c in group.findall("channels/channel")}
+        for case in manifest["channels"]:
+            if case["group"] != definition["key"]:
+                continue
+            export = ET.parse(EXAMPLES.parents[1] / "demo/oie-init/channels" / case["channel"]).getroot()
+            channel_id = export.findtext("id")
+            assert channel_id in members, case["channel"]
+            assigned = {t.findtext("name") for t in tags if channel_id in {s.text for s in t.findall("channelIds/string")}}
+            assert set(case["tags"]) <= assigned, (case["channel"], assigned)
+    print(f"OK classement natif OIE : {len(manifest['groups'])} groupes, tags vérifiés sur {len(manifest['channels'])} canaux")
+
+
 def main():
+    check_channel_organization()
     for filename, count in [("oru-r01-labo.er7", 12), ("oru-r01-minimal.er7", 4)]:
         value = json.loads(post("ORU_PORT", 8081, "oru", filename, "text/plain"))
         bundle(value, "transaction", count)
@@ -329,6 +384,7 @@ def main():
                 for path in sorted((EXAMPLES.parents[1] / "demo/oie-init/channels").glob("*.xml")))
     assert total > 0
     print(f"OK outil de rejeu : {total} samples des exports de démonstration")
+    check_additional_channels()
 
 
 if __name__ == "__main__":

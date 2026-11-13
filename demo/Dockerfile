@@ -46,6 +46,20 @@ RUN curl --fail --silent --show-error --location --max-time 300 \
       --output /tmp/hl7.fhir.eu.laboratory-2.0.0.tgz \
     && echo '097aa45c6efcdbc3f25ead8b7d448fee5011b5e7ecf264aa400c5e2c69c5c488  /tmp/hl7.fhir.eu.laboratory-2.0.0.tgz' | sha256sum -c -
 
+# Dépendances directes FR Core utilisées par le contexte de démonstration.
+RUN curl --fail --silent --show-error --location --max-time 300 \
+      https://packages.fhir.org/hl7.fhir.uv.extensions.r4/5.2.0 \
+      --output /tmp/hl7.fhir.uv.extensions.r4-5.2.0.tgz \
+    && echo 'b406e75575f05676559d0759770c5939d023ee72fb2ef38e0b3259328487720a  /tmp/hl7.fhir.uv.extensions.r4-5.2.0.tgz' | sha256sum -c - \
+    && curl --fail --silent --show-error --location --max-time 300 \
+      https://packages.fhir.org/hl7.terminology.r4/7.1.0 \
+      --output /tmp/hl7.terminology.r4-7.1.0.tgz \
+    && echo '1cb0cd5601972925fcd04f2c175d9cc63a9ecd9346a91a6e735f1a865dc5fba1  /tmp/hl7.terminology.r4-7.1.0.tgz' | sha256sum -c - \
+    && curl --fail --silent --show-error --location --max-time 300 \
+      https://packages.fhir.org/ans.fr.terminologies/1.7.0 \
+      --output /tmp/ans.fr.terminologies-1.7.0.tgz \
+    && echo '7239d21c228b59849dee4003fe47e4fdcf40da78ccca25c0af50a26f6122baaa  /tmp/ans.fr.terminologies-1.7.0.tgz' | sha256sum -c -
+
 FROM ${BUSYBOX_IMAGE} AS plugins
 COPY --from=downloads /tmp/*.zip /downloads/
 
@@ -71,6 +85,7 @@ COPY doc/demo/examples/mapping ./doc/demo/examples/mapping
 # L'IG et les maps FML de la démo : le test de la map de démo les valide.
 COPY demo/ig ./demo/ig
 COPY demo/fml ./demo/fml
+COPY demo/examples ./demo/examples
 COPY webadmin ./webadmin
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -ntp install:install-file -Dfile=/engine/server-api.jar \
@@ -92,6 +107,7 @@ FROM oie-engine
 COPY --from=plugins --chown=engine:engine /extensions/ /opt/engine/extensions/
 COPY --from=mapper --chown=engine:engine /extensions/ /opt/engine/extensions/
 COPY --from=downloads --chown=engine:engine /tmp/hl7.fhir.fr.core-2.2.0.tgz /tmp/hl7.fhir.eu.laboratory-2.0.0.tgz /fhir-packages/
+COPY --from=downloads --chown=engine:engine /tmp/hl7.fhir.uv.extensions.r4-5.2.0.tgz /tmp/hl7.terminology.r4-7.1.0.tgz /tmp/ans.fr.terminologies-1.7.0.tgz /fhir-packages/
 # OIE ne journalise que les erreurs par défaut pour les loggers non configurés.
 RUN printf '\nlogger.fhirProfileMapper.name = fr.kazepoy.fhir.mapper\nlogger.fhirProfileMapper.level = INFO\nlogger.fhirFml.name = fr.kazepoy.fhir.fml\nlogger.fhirFml.level = INFO\n' >> conf/log4j2.properties
 LABEL org.opencontainers.image.title="OIE 4.7.0, Web Support, FHIR Data Type, RBAC, Flow UI et FHIR Profile Mapper"

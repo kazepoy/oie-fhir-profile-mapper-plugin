@@ -1,0 +1,19 @@
+<set>
+  <channelGroup version="4.7.0">
+    <id>ce3d058f-a54e-55fd-b2d8-2221bd51da03</id>
+    <name>FHIR - FML</name>
+    <revision>1</revision>
+    <description>Canaux de démonstration FHIR : fml</description>
+    <channels>
+      <channel version="4.7.0">
+        <id>5f1f6c2e-2b8e-4f0a-9d7a-0c1e8f6a7b31</id>
+      </channel>
+      <channel version="4.7.0">
+        <id>7c2d9a41-3e5f-4b6a-8d1c-2f4e6a8b0c53</id>
+      </channel>
+      <channel version="4.7.0">
+        <id>c5792091-b613-4f1a-b899-4e8670f58092</id>
+      </channel>
+    </channels>
+  </channelGroup>
+</set>

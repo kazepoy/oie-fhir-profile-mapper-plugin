@@ -1,0 +1,8 @@
+{
+  "resourceType": "Organization",
+  "meta": {"profile": ["http://hl7.org/fhir/StructureDefinition/Organization"]},
+  "id": "labo-r5",
+  "active": true,
+  "name": "Laboratoire de démonstration",
+  "description": "Organisation **fictive** : exemple du champ description ajouté en FHIR R5."
+}
