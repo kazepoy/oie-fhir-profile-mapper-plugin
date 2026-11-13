@@ -3,7 +3,7 @@
 Ce guide donne à un agent utilisateur les contraintes nécessaires pour
 intervenir sur un canal OIE sans dégrader ses autres connecteurs ou
 transformeurs. Il complète les instructions courtes du
-[manuel agent](../agent-manual/fr/AGENTS.md). Le `AGENTS.md` situé à la racine
+[manuel agent commun en anglais](../agent-manual/AGENTS.md). Le `AGENTS.md` situé à la racine
 du dépôt concerne uniquement le développement du plugin.
 
 ## Choisir l'étape

@@ -1,7 +1,10 @@
-# Manuel pour les agents utilisateurs d'OIE
+# OIE user agent manual
 
-- [Français](fr/AGENTS.md)
+- [Common instructions (English)](AGENTS.md)
 
-Ce manuel s'adresse aux agents qui utilisent le plugin pour construire ou
-modifier des canaux OIE. Il ne contient pas les consignes de développement du
-plugin, qui restent dans le [`AGENTS.md` racine](../../AGENTS.md).
+These instructions are shared by agents in every locale. Localized supporting
+documents may be added separately, but must not redefine this contract.
+
+This manual is for agents using the plugin to build or modify OIE channels. The
+repository's root [`AGENTS.md`](../../AGENTS.md) contains the separate plugin
+development instructions.

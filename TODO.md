@@ -259,8 +259,8 @@ Prochain lot : FML, S-2 sur les modèles typés et adaptateur Strict Parser (lot
 - `tools/check_doc_links.py`, exécuté en CI, contrôle les liens locaux et refuse
   tout document Markdown de `doc/` inaccessible depuis l'index.
 - Le `AGENTS.md` racine concerne le développement du plugin. Le manuel distinct
-  `doc/agent-manual/fr/AGENTS.md` guide les agents utilisateurs qui produisent
-  ou modifient des canaux FHIR dans OIE.
+  `doc/agent-manual/AGENTS.md`, commun et rédigé en anglais, guide les agents
+  utilisateurs qui produisent ou modifient des canaux FHIR dans OIE.
 
 La suite initialement envisagée regroupait S-3, performance, durcissement,
 namespace et préparation 1.0. Le namespace et le rangement documentaire sont

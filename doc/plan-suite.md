@@ -267,8 +267,7 @@ Organisation cible :
 doc/
   user-manual/       index des langues
     fr/              procédures et captures en français
-  agent-manual/      index des instructions pour agents utilisateurs d'OIE
-    fr/              consignes de construction de canaux en français
+  agent-manual/      instructions communes en anglais pour agents utilisateurs d'OIE
   reference/         formats, contrats, API et compatibilité
   architecture/      composants, chargeurs, runtime et décisions
   development/       build, tests, contribution et release
