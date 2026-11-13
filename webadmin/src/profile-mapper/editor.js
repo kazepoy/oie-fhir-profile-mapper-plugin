@@ -255,7 +255,14 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
 
   const save = () => {
     if (!tree) return;
-    element.mappings = compiled(st.rootIndex, ctx);
+    try {
+      element.mappings = compiled(st.rootIndex, ctx);
+      st.error = "";
+    } catch (error) {
+      st.error = errorText(error);
+      rerender();
+      return;
+    }
     // Undo history: one entry per burst of edits (typing in a field is one change).
     const snap = snapshot(st);
     if (st.current && JSON.stringify(snap) !== JSON.stringify(st.current)) {

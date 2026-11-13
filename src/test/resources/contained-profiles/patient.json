@@ -1,0 +1,29 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "patient-with-contained-observation",
+  "url": "http://example.org/fhir/StructureDefinition/patient-with-contained-observation",
+  "name": "PatientWithContainedObservation",
+  "status": "active",
+  "fhirVersion": "4.0.1",
+  "kind": "resource",
+  "abstract": false,
+  "type": "Patient",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Patient",
+  "derivation": "constraint",
+  "differential": {
+    "element": [
+      { "id": "Patient", "path": "Patient" },
+      {
+        "id": "Patient.contained:observation",
+        "path": "Patient.contained",
+        "sliceName": "observation",
+        "min": 0,
+        "max": "*",
+        "type": [{
+          "code": "Resource",
+          "profile": ["http://example.org/fhir/StructureDefinition/contained-observation"]
+        }]
+      }
+    ]
+  }
+}

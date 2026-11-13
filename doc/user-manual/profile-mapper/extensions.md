@@ -31,5 +31,13 @@ l'écrire de nouveau à la main.
 
 L'ajout générique n'est pas proposé si le profil ferme le slicing des extensions.
 Le choix d'une URL ne vérifie pas à lui seul son contexte d'application : la
-validation du résultat reste nécessaire. Les extensions de primitives
-(`_birthDate`, par exemple) ne sont pas prises en charge actuellement.
+validation du résultat reste nécessaire.
+
+## Extension d'une primitive
+
+Quand le snapshot du profil déclare une extension sous une primitive, la déplier
+et mapper sa valeur comme une extension ordinaire. L'éditeur montre le chemin
+FHIR (`birthDate.extension`, par exemple), tandis que le compilateur écrit la
+forme JSON FHIR `_birthDate.extension`. Pour une primitive répétée, `_given` et
+`given` conservent les mêmes indices ; le résultat contient des `null` de
+positionnement lorsque seules certaines valeurs portent une extension.

@@ -13,12 +13,21 @@ Environnement de démonstration du plugin de mapping :
   ses deux étapes : FHIR Profile Mapper et [FHIR FML Transform](Transformation-FML.md).
 
 Web Support, FHIR Data Type, RBAC et Flow UI sont téléchargés au build, avec vérification
-de leur SHA-256. Le mapper est compilé avec Maven à partir de l'API de l'image OIE
+de leur SHA-256. Les packages officiels
+[FR Core 2.2.0](https://hl7.fr/ig/fhir/core/2.2.0/) et
+[HL7 Europe Laboratory 2.0.0](https://hl7.eu/fhir/laboratory/2.0.0/) sont eux
+aussi épinglés et vérifiés. Le mapper est compilé avec Maven à partir de l'API de l'image OIE
 cible, puis installé dans cette même image. Le compilateur, le runtime et
 l'éditeur graphique sont repris du POC. L'initialisation importe et déploie neuf
 canaux, avec leur IG de démonstration montée dans `/fhir-ig`, la map FML générique
 de [demo/fml](../demo/fml) montée dans `/fhir-fml`, et les fixtures du modèle FML
 typé montées dans `/fhir-typed`.
+
+L'initialisation crée trois contextes dans *Settings › FHIR Mapper* :
+`demo-labo`, `fr-core-2.2.0` et `eu-laboratory-2.0.0`. Les deux derniers rendent
+les profils publiés sélectionnables dans une étape R4 sans téléchargement manuel.
+Sur un volume déjà initialisé, lancer une fois avec `OIE_INIT_FORCE=true` pour
+remplacer les anciens réglages de démonstration.
 
 ## Ce que montre chaque canal
 
@@ -128,7 +137,7 @@ Le canal du port 8087 utilise le même XML Strict Parser, mais l'adapte au
 `StructureDefinition` logique `ORU__R01`. Les noms deviennent compatibles FHIRPath
 (`ORU_R01.OBSERVATION` → `ORU__R01_OBSERVATION`, `OBX.3` → `OBX_3`) et les valeurs
 terminales sont exposées sous `.value`. Les fixtures montées sont représentatives
-du contrat de la démo, pas un IG AP-HM canonique.
+du contrat de la démo, pas un IG xxx canonique.
 
 Les destinations portent le nom du système visé, simulé par un JavaScript Writer :
 *Serveur FHIR*, *Entrepôt FHIR*, *Entrepôt documentaire*, *Archive PCA/PRA*. Le canal

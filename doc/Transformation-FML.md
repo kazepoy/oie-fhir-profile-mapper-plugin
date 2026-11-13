@@ -133,7 +133,7 @@ Le modèle doit décrire les chemins utilisés par la map. Le builder accepte au
 un XML HL7 aplati pour faciliter les tests anciens, mais la démo et les fixtures
 utilisent la hiérarchie réelle HAPI. Les fichiers typés livrés ici sont des
 fixtures représentatives du contrat ; ils ne prétendent pas remplacer un IG
-AP-HM canonique absent du dépôt.
+xxx canonique absent du dépôt.
 
 ### 2.3 Ressource FHIR entrante
 
@@ -182,7 +182,7 @@ le moteur FML (`StructureMapUtilities`). L'étape l'utilise directement, à
 travers le contexte de validation du datatype : aucun JAR n'est ajouté.
 
 [Matchbox](https://github.com/ahdis/matchbox) (matchbox-engine 4.1.21, utilisé par
-le POC `aphm-fhir-svc-transform`) a été examiné et écarté :
+le POC `xxx-fhir-svc-transform`) a été examiné et écarté :
 
 - 62 Mo, dont ≈ 61 Mo de packages FHIR embarqués ;
 - il **remplace des classes du core** sous le même nom (`StructureMapUtilities`,

@@ -24,7 +24,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 /**
- * Adapts the flat XML made by OIE's Strict Parser to a typed HL7 v2 logical model. The AP-HM
+ * Adapts the flat XML made by OIE's Strict Parser to a typed HL7 v2 logical model. The xxx
  * convention is mechanical: dots become underscores, existing underscores are doubled, and the
  * value of a leaf is stored in its {@code value} child.
  */

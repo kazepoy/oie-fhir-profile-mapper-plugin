@@ -35,10 +35,11 @@ function fixedOf(el) {
 function hiddenElement(el, parent, showAll) {
   if (el.max === "0") return true;
   const name = lastSegment(el.id).split(":")[0];
-  if (showAll) return (el.type || []).some((t) => t.code === "Resource");
+  const untypedResource = (el.type || []).some((t) => t.code === "Resource" && !(t.profile && t.profile.length));
+  if (showAll) return untypedResource;
   if ((name === "extension" || name === "modifierExtension") && !el.sliceName) return true;
   if (name === "id" && !parent.resourceRoot) return true;
-  return (el.type || []).some((t) => t.code === "Resource");
+  return untypedResource;
 }
 
 /**
@@ -100,8 +101,15 @@ export function makeTree(rootIndex, ctx) {
     const code = types.length === 1 ? types[0].code : null;
     const primitive = !!code && isPrimitive(code);
     let typeUrl = null;
-    if (!choice && code && !primitive && !NOT_EXPANDED.has(code)) {
+    if (!choice && code && !primitive && (!NOT_EXPANDED.has(code) || (types[0].profile && types[0].profile.length))) {
       typeUrl = (types[0].profile && types[0].profile[0]) || FHIR_BASE + code;
+    }
+    let path = jsonName == null ? parent.path : parent.path.concat([segment]);
+    // A primitive's id and extensions are represented by its underscore sibling in FHIR JSON.
+    if (parent.primitive && (name === "id" || name === "extension") && parent.path.length) {
+      const metadata = [...parent.path[parent.path.length - 1]];
+      metadata[0] = "_" + metadata[0];
+      path = parent.path.slice(0, -1).concat([metadata, segment]);
     }
     return {
       key,
@@ -116,7 +124,7 @@ export function makeTree(rootIndex, ctx) {
       repeats,
       instance,
       index,
-      path: jsonName == null ? parent.path : parent.path.concat([segment]),
+      path,
       code,
       primitive,
       typeUrl,
@@ -177,14 +185,28 @@ export function makeTree(rootIndex, ctx) {
     return result;
   }
 
-  /** Discriminator paths of a slice ("system", "url", "type.coding.code"), relative to the slice. */
+  /** Discriminators of a slice, from the closest slicing declaration (including re-slicing). */
   function discriminators(node) {
     if (!node.sliceName) return [];
-    const base = node.sdx.byId.get(node.el.id.replace(/:[^.:]+$/, ""));
-    return ((base && base.slicing && base.slicing.discriminator) || []).map((d) => d.path).filter((p) => p && p !== "$this");
+    const colon = node.el.id.lastIndexOf(":");
+    const prefix = colon < 0 ? node.el.id : node.el.id.slice(0, colon);
+    let slice = colon < 0 ? "" : node.el.id.slice(colon + 1);
+    let base = null;
+    while (slice.includes("/") && !base) {
+      slice = slice.slice(0, slice.lastIndexOf("/"));
+      const candidate = node.sdx.byId.get(`${prefix}:${slice}`);
+      if (candidate && candidate.slicing) base = candidate;
+    }
+    if (!base) base = node.sdx.byId.get(prefix);
+    return ((base && base.slicing && base.slicing.discriminator) || []).filter((d) => d.path).map((d) => ({ type: d.type || "value", path: d.path }));
   }
 
-  return { root, children, expandable, chain, discriminators };
+  function resourceType(node) {
+    if (node.code !== "Resource" || !node.typeUrl) return null;
+    return sdLoaded.get(sdKey(ctx.version, ctx.profiles, node.typeUrl))?.sd.type || null;
+  }
+
+  return { root, children, expandable, chain, discriminators, resourceType };
 }
 
 /** Keys and their count of instances, from the keys of saved mappings. */
@@ -236,6 +258,7 @@ export function compile(tree, values, iterations, translations, conditions) {
     entries.push({ key, condition: condition.trim(), path: node.path, order: node === tree.root ? [] : nodes.map((n) => n.index) });
   }
   const mapped = new Set([...values.keys()].filter((k) => values.get(k).trim() !== ""));
+  const checkedSlices = new Set();
   for (const key of mapped) {
     const nodes = tree.chain(key);
     if (!nodes) continue;
@@ -261,7 +284,29 @@ export function compile(tree, values, iterations, translations, conditions) {
       if (container !== tree.root && container.fixed && container.jsonName != null && !fixed.has(container.key)) {
         fixed.set(container.key, { key: container.key, element: container.key, fixed: container.fixed.value, when, path: container.path });
       }
-      const discriminators = tree.discriminators(container);
+      const resourceType = tree.resourceType(container);
+      if (resourceType) {
+        const typeKey = `${container.key}.resourceType`;
+        if (!fixed.has(typeKey)) fixed.set(typeKey, { key: typeKey, element: typeKey, fixed: resourceType, when, path: container.path.concat([["resourceType"]]) });
+      }
+      if (container.sliceName && !checkedSlices.has(container.key)) {
+        checkedSlices.add(container.key);
+        for (const discriminator of tree.discriminators(container)) {
+          if (discriminator.type === "value" || discriminator.type === "pattern") continue;
+          if (discriminator.type === "type" && discriminator.path === "$this" && container.code && lastSegment(container.el.id).split(":")[0].endsWith("[x]")) continue;
+          if (discriminator.type === "profile" && discriminator.path === "$this" && resourceType) continue;
+          if (discriminator.type === "exists") {
+            let target = container;
+            for (const part of discriminator.path.split(".")) target = target && (tree.children(target) || []).find((child) =>
+              child.instance === 0 && (child.jsonName === part || lastSegment(child.el.id).split(":")[0] === part));
+            let raw = container.el;
+            for (const part of discriminator.path.split(".")) raw = raw && (container.sdx.byParent.get(raw.id) || []).find((child) => lastSegment(child.id).split(":")[0] === part);
+            if ((target || raw) && ((target || raw).max === "0" || target?.fixed || (target && [...mapped].some((mappedKey) => mappedKey === target.key || mappedKey.startsWith(target.key + "."))))) continue;
+          }
+          throw new Error(`Slice ${container.key}: discriminator ${discriminator.type}(${discriminator.path}) cannot be generated automatically; map the discriminator explicitly or use a concrete contained resource profile.`);
+        }
+      }
+      const discriminators = tree.discriminators(container).filter((d) => d.type === "value" || d.type === "pattern").map((d) => d.path).filter((p) => p !== "$this");
       const walk = (node, rel, required) => {
         for (const d of tree.children(node) || []) {
           if (d.instance || onChain.has(d.key) || mapped.has(d.key) || d.jsonName == null) continue;

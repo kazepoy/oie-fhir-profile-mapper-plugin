@@ -96,7 +96,7 @@ Travail du 10 novembre, un commit, non fusionné. Ce qu'il apporte et ce qui man
 |---|---|
 | Étape `FhirFmlTransformStep` : script Rhino qui passe le message (XML interne ou JSON) et un contexte à `FmlFacade.run` | Pas de rebase sur `main` (`docs/` renommé en `doc/` depuis) |
 | Moteur FML du core HL7 **6.9.12** livré par FHIR Data Type, sans Matchbox (62 Mo, classes du core remplacées) : décision argumentée | **Pas thread-safe** : une transformation à la fois par contexte ; non mesuré |
-| Modèle logique générique `OieMessage` (nom, position, occurrence, valeur, contexte) construit directement en `Element` | Incompatible avec les maps **typées** de l'organisation (`aphm.ig.hl7v2` : `PID_3`, `CX_5`, `ORU__R01_PATIENT__RESULT`) et avec le style v2-to-FHIR |
+| Modèle logique générique `OieMessage` (nom, position, occurrence, valeur, contexte) construit directement en `Element` | Incompatible avec les maps **typées** de l'organisation (`xxx.ig.hl7v2` : `PID_3`, `CX_5`, `ORU__R01_PATIENT__RESULT`) et avec le style v2-to-FHIR |
 | Pont dans un JAR séparé chargé par le chargeur HAPI du datatype ; `listMaps`, `source`, `transform`, `reload` ; tests Java et Node | Les maps sont des **fichiers serveur** uniquement : rien n'est versionné dans le canal, rien ne s'édite dans Web Admin |
 | Éditeur à deux onglets (Properties, Test), modèle reçu visible | **Aucune assistance** FML : ni coloration, ni complétion, ni diagnostic positionné |
 | Validation du résultat par FHIR Data Type, publication comme le mappeur | Pas de trace, pas de partage de Bundles avec le mappeur, `resolveReference`/`performSearch` absents |
@@ -316,7 +316,7 @@ reprise de la branche) :
 - `oie-message` : le modèle générique de la branche (nom, position, occurrence),
   pour tout type de données sans IG.
 - `hl7v2-logical` : adaptateur du XML du **Strict Parser** d'OIE vers une
-  instance d'un modèle logique d'IG. La convention de nommage de `aphm.ig.hl7v2`
+  instance d'un modèle logique d'IG. La convention de nommage de `xxx.ig.hl7v2`
   est mécanique (`.` → `_`, `_` → `__` : `ORU_R01.PATIENT_RESULT` →
   `ORU__R01_PATIENT__RESULT`, `CX.5` → `CX_5`, texte d'une feuille → `value`),
   ce qui permet d'exécuter **les maps existantes de l'organisation**
@@ -400,7 +400,7 @@ Les tailles sont indicatives pour une personne outillée.
   complétion limité aux éditeurs du plugin, marqueurs. Sortie : prototype dans la
   démo, liste des limites WA.
 - **S-2 FML sur core 6.9.12 avec modèle typé** : exécuter `PIDtoPatient` et
-  `ORUR01toBundle` d'`aphm-ig-oru` sur l'XML du Strict Parser converti ; mesurer
+  `ORUR01toBundle` d'`xxx-ig-oru` sur l'XML du Strict Parser converti ; mesurer
   ; comparer avec Matchbox (chargeur isolé). Sortie : décision moteur, convention
   de nommage, risques.
 - **S-3 Charge** : reproduire l'effondrement du canal labo avec un profil JVM
@@ -500,7 +500,7 @@ Les tailles sont indicatives pour une personne outillée.
    restent lus pour la compatibilité.
 3. **`mappings` reste une chaîne JSON** dans l'XML (recommandé, contrainte XStream).
 4. **Map FML inline par défaut**, canonique du contexte en option (recommandé).
-5. **Convention `aphm.ig.hl7v2`** comme premier modèle typé (recommandé, maps
+5. **Convention `xxx.ig.hl7v2`** comme premier modèle typé (recommandé, maps
    existantes) ; v2-to-FHIR officiel à vérifier s'il publie des modèles logiques.
 6. Moteur FML : core 6.9.12 (recommandé) ou Matchbox, après S-2.
 7. Ordre des phases 4 et 5 selon la priorité FML.
@@ -573,10 +573,10 @@ Sous `/api/extensions/fhir-profile-mapper` (permissions entre parenthèses).
   "__type": "org.oie.fhir.fml.FhirFmlTransformStep",
   "formatVersion": 2,
   "name": "ORU vers Bundle",
-  "context": "aphm-oru",
+  "context": "xxx-oru",
   "sourceModel": "hl7v2-logical",
-  "sourceModelUrl": "http://fhir.ap-hm.fr/hl7v2/StructureDefinition/ORU__R01",
-  "mapUrl": "http://fhir.ap-hm.fr/oru/StructureMap/ORUR01toBundle",
+  "sourceModelUrl": "http://fhir.xxx.fr/hl7v2/StructureDefinition/ORU__R01",
+  "mapUrl": "http://fhir.xxx.fr/oru/StructureMap/ORUR01toBundle",
   "mapSource": "",
   "validation": "inherit"
 }
@@ -586,17 +586,3 @@ Le message est lu par le Strict Parser (`Use Strict Parser`, `Strip Namespaces`)
 puis `ORU_R01.PATIENT_RESULT/ORU_R01.PATIENT/PID/PID.3/CX.5` devient
 `ORU__R01_PATIENT__RESULT.ORU__R01_PATIENT.PID.PID_3.CX_5.value` dans l'instance
 du modèle logique.
-
-
-
-TODO : dans l'onglet test, ce serait bien de voir comment on pourrait et si il possible de visualiser ou representer les liens entre les données source et resulat ? par exemple pid.5.1 -> patient.id.  cela premettrait de remonter les erreurs de mapping plus facilemen et de visualiser les regles en cause. A etudier
-
-TODO revoir la disposition dans les onglets, cela devient confus et pas ergonomique
-
-TODO voir si editer en json peut aller dans la fenetre json deja presente dans oie ou si on fait un onglet dédié
-
-TODO voir les liens vers definition fhir officielle comment dans le cas d'ig publiées on peut aller vers le bon endroit pour avoir les details de la ressource ou du type (ex : Patient.id) et non pas juste la page de base de la spec Fhir.
-
-TODO pour les champ avec fonction (ex : fhirFind(msg['PID']['PID.3'], function (cx) { return cx['PID.3.5'] == 'PI'; })['PID.3.1'].toString()) voir si possible d'evaluer en live a partir de l'exempleTODO : dans le mapping, il serait bien de pouvoir selectionner un element du modele source et
-
-TODO pour fml si map selectionnée, pouvoir la recup dans ecran editeur pour "surcharger". si map qui imbrique d'autre maps en cascade, voir comment faire pour choisir ou voir si on surcharge l'arbre des maps interpendantes.  A voir si on peut le faire avec un simple selecteur de map...

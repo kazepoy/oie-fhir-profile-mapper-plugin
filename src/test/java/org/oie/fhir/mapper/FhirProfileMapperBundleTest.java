@@ -8,6 +8,7 @@ import org.oie.fhir.mapper.integration.FhirTerminology;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -314,6 +315,34 @@ public class FhirProfileMapperBundleTest {
                 + entry("Patient.name", "HumanName", "({family:'DUPONT', given:['Jean']})", "[[\"name\",\"#0\"]]") + ","
                 + entry("Patient.name.given[1]", "string", "'Pierre'", "[[\"name\",\"#0\"],[\"given\",\"#1\"]]") + "]")));
         assertEquals("[{family=DUPONT, given=[Jean, Pierre]}]", r.get("name").toString());
+    }
+
+    @Test
+    public void primitiveExtensionsUseUnderscorePropertiesAndKeepArrayAlignment() throws Exception {
+        Map<?, ?> scalar = parse(run(step("Patient", "["
+                + entry("Patient.birthDate", "date", "'1980-01-15'", "[[\"birthDate\"]]") + ","
+                + entry("Patient.birthDate.extension:source.valueString", "string", "'registry'", "[[\"_birthDate\"],[\"extension\",\"source#0\"],[\"valueString\"]]") + ","
+                + "{\"key\":\"Patient.birthDate.extension:source.url\",\"fixed\":\"http://example.org/source\",\"when\":2,\"path\":[[\"_birthDate\"],[\"extension\",\"source#0\"],[\"url\"]]}]")));
+        assertEquals("1980-01-15", scalar.get("birthDate"));
+        assertEquals("{extension=[{valueString=registry, url=http://example.org/source}]}", scalar.get("_birthDate").toString());
+
+        Map<?, ?> repeated = parse(run(step("Patient", "["
+                + entry("Patient.name.given", "string", "'Jean'", "[[\"name\",\"#0\"],[\"given\",\"#0\"]]") + ","
+                + entry("Patient.name.given[1]", "string", "'Pierre'", "[[\"name\",\"#0\"],[\"given\",\"#1\"]]") + ","
+                + entry("Patient.name.given[1].extension:source.valueString", "string", "'import'", "[[\"name\",\"#0\"],[\"_given\",\"#1\"],[\"extension\",\"source#0\"],[\"valueString\"]]") + "]")));
+        Map<?, ?> name = (Map<?, ?>) ((List<?>) repeated.get("name")).get(0);
+        assertEquals("[Jean, Pierre]", name.get("given").toString());
+        List<?> metadata = (List<?>) name.get("_given");
+        assertSame(FhirJson.NULL, metadata.get(0));
+        assertEquals("{extension=[{valueString=import}]}", metadata.get(1).toString());
+    }
+
+    @Test
+    public void aContainedResourceCanReceiveItsCompiledResourceType() throws Exception {
+        Map<?, ?> patient = parse(run(step("Patient", "["
+                + entry("Patient.contained:observation.status", "code", "'final'", "[[\"contained\",\"observation#0\"],[\"status\"]]") + ","
+                + "{\"key\":\"Patient.contained:observation.resourceType\",\"fixed\":\"Observation\",\"when\":1,\"path\":[[\"contained\",\"observation#0\"],[\"resourceType\"]]}]")));
+        assertEquals("{status=final, resourceType=Observation}", ((List<?>) patient.get("contained")).get(0).toString());
     }
 
     @Test

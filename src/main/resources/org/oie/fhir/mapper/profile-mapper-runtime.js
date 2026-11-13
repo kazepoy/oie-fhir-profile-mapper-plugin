@@ -108,9 +108,10 @@
         return result;
     }
 
-    function FhirArray() {
+    function FhirArray(preserveHoles) {
         this.keys = [];
         this.items = {};
+        this.preserveHoles = preserveHoles === true;
     }
 
     // A FHIR decimal with its exact text. Recognized by its mark, not instanceof: every step has
@@ -146,7 +147,8 @@
         if (!create && !isArray(value)) {
             return undefined;
         }
-        var arr = new FhirArray();
+        // Primitive metadata arrays (_name) must align with the primitive values, including nulls.
+        var arr = new FhirArray(name.charAt(0) === '_');
         if (isArray(value)) {
             for (var i = 0; i < value.length; i++) {
                 arr.keys.push('#' + i);
@@ -462,8 +464,13 @@
         if (value instanceof FhirArray) {
             var list = [];
             for (i = 0; i < value.keys.length; i++) {
-                var item = finish(value.items[value.keys[i]]);
-                if (!empty(item)) {
+                var arrayKey = value.keys[i];
+                var item = finish(value.items[arrayKey]);
+                var position = value.preserveHoles && /^#\d+$/.test(arrayKey) ? Number(arrayKey.substring(1)) : -1;
+                if (position >= 0) {
+                    while (list.length < position) list.push(null);
+                    list[position] = empty(item) ? null : item;
+                } else if (!empty(item)) {
                     list.push(item);
                 }
             }

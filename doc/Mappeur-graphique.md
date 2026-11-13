@@ -328,7 +328,13 @@ cibles avant application ; **Undo** annule l’import en une opération. Voir
 
 ## 10. Limites et vérification
 
-L'administration Swing ne connaît pas cet éditeur. Ne sont pas pris en charge : les extensions primitives, les ressources `contained`, les sous-slices et les discriminants de slicing `type`, `profile` et `exists` ; la traduction locale sans `dependsOn`/`product` ni traduction inverse.
+L'administration Swing ne connaît pas cet éditeur. Le studio prend en charge les
+sous-slices, les extensions de primitives, les `contained` à profil concret et
+les discriminants `type`, `profile` ou `exists` que la structure JSON permet de
+démontrer. Il refuse explicitement les cas non matérialisables, notamment
+`profile($this)` sur une `Reference`; un `contained` générique sans profil reste
+masqué. La traduction locale sans `dependsOn`/`product` ni traduction inverse
+n'est pas prise en charge.
 
 Les [tests de l'éditeur](../webadmin/test/unit/profile-mapper.test.js) se lancent avec :
 

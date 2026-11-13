@@ -36,6 +36,16 @@ RUN curl --fail --silent --show-error --location --max-time 300 \
       --output /tmp/flow-ui.zip \
     && echo 'c51b410e25405cefbcf5937256c8236e40af99b25174e647e2f9e1ad7f43b198  /tmp/flow-ui.zip' | sha256sum -c -
 
+# Profils publics de la démo, versions permanentes publiées par HL7 France et HL7 Europe.
+RUN curl --fail --silent --show-error --location --max-time 300 \
+      https://hl7.fr/ig/fhir/core/2.2.0/package.tgz \
+      --output /tmp/hl7.fhir.fr.core-2.2.0.tgz \
+    && echo '085e61bf579829a6d5520c6f388d763d27ba400f9f6ca548bc88da5545ba13f9  /tmp/hl7.fhir.fr.core-2.2.0.tgz' | sha256sum -c - \
+    && curl --fail --silent --show-error --location --max-time 300 \
+      https://hl7.eu/fhir/laboratory/2.0.0/package.tgz \
+      --output /tmp/hl7.fhir.eu.laboratory-2.0.0.tgz \
+    && echo '097aa45c6efcdbc3f25ead8b7d448fee5011b5e7ecf264aa400c5e2c69c5c488  /tmp/hl7.fhir.eu.laboratory-2.0.0.tgz' | sha256sum -c -
+
 FROM ${BUSYBOX_IMAGE} AS plugins
 COPY --from=downloads /tmp/*.zip /downloads/
 
@@ -81,6 +91,7 @@ RUN --mount=type=cache,target=/root/.m2 \
 FROM oie-engine
 COPY --from=plugins --chown=engine:engine /extensions/ /opt/engine/extensions/
 COPY --from=mapper --chown=engine:engine /extensions/ /opt/engine/extensions/
+COPY --from=downloads --chown=engine:engine /tmp/hl7.fhir.fr.core-2.2.0.tgz /tmp/hl7.fhir.eu.laboratory-2.0.0.tgz /fhir-packages/
 # OIE ne journalise que les erreurs par défaut pour les loggers non configurés.
 RUN printf '\nlogger.fhirProfileMapper.name = org.oie.fhir.mapper\nlogger.fhirProfileMapper.level = INFO\nlogger.fhirFml.name = org.oie.fhir.fml\nlogger.fhirFml.level = INFO\n' >> conf/log4j2.properties
 LABEL org.opencontainers.image.title="OIE 4.7.0, Web Support, FHIR Data Type, RBAC, Flow UI et FHIR Profile Mapper"

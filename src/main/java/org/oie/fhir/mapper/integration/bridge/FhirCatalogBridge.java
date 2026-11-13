@@ -279,8 +279,10 @@ public final class FhirCatalogBridge {
                 for (JsonNode element : queue.poll().path("snapshot").path("element")) {
                     for (JsonNode type : element.path("type")) {
                         String code = type.path("code").asText("");
-                        if (code.isEmpty() || Character.isLowerCase(code.charAt(0)) || code.startsWith("http://hl7.org/fhirpath/") || NOT_EXPANDED.contains(code)) continue;
-                        String typeUrl = type.path("profile").path(0).asText(FHIR_BASE + code);
+                        if (code.isEmpty() || Character.isLowerCase(code.charAt(0)) || code.startsWith("http://hl7.org/fhirpath/")) continue;
+                        String profile = type.path("profile").path(0).asText("");
+                        if (NOT_EXPANDED.contains(code) && profile.isEmpty()) continue;
+                        String typeUrl = profile.isEmpty() ? FHIR_BASE + code : profile;
                         if (!seen.add(typeUrl)) continue;
                         try {
                             JsonNode sd = prune(mapper, mapper.readTree(snapshotJson(cached, typeUrl)));

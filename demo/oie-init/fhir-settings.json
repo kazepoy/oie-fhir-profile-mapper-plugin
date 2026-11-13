@@ -9,6 +9,26 @@
       "cacheSeconds": 300,
       "timeoutSeconds": 10,
       "validation": "always"
+    },
+    {
+      "name": "fr-core-2.2.0",
+      "fhirVersion": "R4",
+      "packages": ["/fhir-packages/hl7.fhir.fr.core-2.2.0.tgz"],
+      "terminologyServer": "",
+      "terminologyAuthorization": "",
+      "cacheSeconds": 300,
+      "timeoutSeconds": 10,
+      "validation": "always"
+    },
+    {
+      "name": "eu-laboratory-2.0.0",
+      "fhirVersion": "R4",
+      "packages": ["/fhir-packages/hl7.fhir.eu.laboratory-2.0.0.tgz"],
+      "terminologyServer": "",
+      "terminologyAuthorization": "",
+      "cacheSeconds": 300,
+      "timeoutSeconds": 10,
+      "validation": "always"
     }
   ]
 }

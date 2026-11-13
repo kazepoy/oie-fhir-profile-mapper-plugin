@@ -332,6 +332,89 @@ test("compile: values in tree order, slices, instances, fixed discriminators", (
   assert.equal(entries.at(-1).when, 1);
 });
 
+test("compile: sub-slices use their nearest slicing declaration", () => {
+  const sd = indexSd({ resourceType: "StructureDefinition", url: "http://example.org/sub-slices", type: "Observation", snapshot: { element: [
+    { id: "Observation", path: "Observation", min: 0, max: "*" },
+    el("Observation.component", 0, "*", ["BackboneElement"], { slicing: { discriminator: [{ type: "value", path: "code.coding.code" }] } }),
+    el("Observation.component:panel", 0, "*", ["BackboneElement"], { sliceName: "panel", baseMax: "*", slicing: { discriminator: [{ type: "value", path: "code.coding.system" }] } }),
+    el("Observation.component:panel.code", 1, "1", ["CodeableConcept"]),
+    el("Observation.component:panel.code.coding", 1, "*", ["Coding"]),
+    el("Observation.component:panel.code.coding.code", 1, "1", ["code"], { fixedCode: "panel" }),
+    el("Observation.component:panel/detail", 0, "*", ["BackboneElement"], { sliceName: "panel/detail", baseMax: "*" }),
+    el("Observation.component:panel/detail.code", 1, "1", ["CodeableConcept"]),
+    el("Observation.component:panel/detail.code.coding", 1, "*", ["Coding"]),
+    el("Observation.component:panel/detail.code.coding.system", 0, "1", ["uri"], { fixedUri: "urn:detail" }),
+    el("Observation.component:panel/detail.value[x]", 0, "1", ["string"])
+  ] } });
+  const target = makeTree(sd, { version: "R4", profiles: "", instances: new Map(), showAll: true });
+  const entries = compile(target, new Map([["Observation.component:panel/detail.valueString", "'x'"]]), new Map(), new Map(), new Map());
+  assert.equal(entries.find(rule => rule.key.endsWith("coding.system")).fixed, "urn:detail");
+  assert.deepEqual(plain(entries.find(rule => rule.key.endsWith("coding.system")).path), [["component", "panel/detail#0"], ["code"], ["coding", "#0"], ["system"]]);
+});
+
+test("compile: primitive extensions use the underscore sibling and preserve the primitive index", () => {
+  const sd = indexSd({ resourceType: "StructureDefinition", url: "http://example.org/primitive-extension", type: "Patient", snapshot: { element: [
+    { id: "Patient", path: "Patient", min: 0, max: "*" },
+    el("Patient.name", 0, "*", ["HumanName"]),
+    el("Patient.name.given", 0, "*", ["string"]),
+    el("Patient.name.given.extension:source", 0, "1", [{ code: "Extension", profile: ["http://example.org/source"] }], { sliceName: "source", baseMax: "*" }),
+    el("Patient.name.given.extension:source.url", 1, "1", ["uri"], { fixedUri: "http://example.org/source" }),
+    el("Patient.name.given.extension:source.value[x]", 1, "1", ["string"])
+  ] } });
+  const target = makeTree(sd, { version: "R4", profiles: "", instances: instancesOf(["Patient.name.given[1].extension:source.valueString"]), showAll: true });
+  const entries = compile(target, new Map([["Patient.name.given[1].extension:source.valueString", "'import'"]]), new Map(), new Map(), new Map());
+  assert.deepEqual(plain(entries.find(rule => rule.expression).path), [["name", "#0"], ["_given", "#1"], ["extension", "source#0"], ["valueString"]]);
+  assert.deepEqual(plain(entries.find(rule => rule.key.endsWith(".url")).path), [["name", "#0"], ["_given", "#1"], ["extension", "source#0"], ["url"]]);
+});
+
+test("compile: a profiled contained resource is expanded and gets its resourceType", () => {
+  const profile = "http://example.org/StructureDefinition/contained-observation";
+  const sd = indexSd({ resourceType: "StructureDefinition", url: "http://example.org/contained", type: "Patient", snapshot: { element: [
+    { id: "Patient", path: "Patient", min: 0, max: "*" },
+    el("Patient.contained", 0, "*", [{ code: "Resource", profile: [profile] }], { sliceName: "observation", baseMax: "*" })
+  ] } });
+  sdLoaded.set(sdKey("R4", "", profile), indexSd({ resourceType: "StructureDefinition", url: profile, type: "Observation", snapshot: { element: [
+    { id: "Observation", path: "Observation", min: 0, max: "*" }, el("Observation.status", 1, "1", ["code"])
+  ] } }));
+  const target = makeTree(sd, { version: "R4", profiles: "", instances: new Map(), showAll: false });
+  assert.ok(labels(target, target.root).includes("contained:observation"));
+  const entries = compile(target, new Map([["Patient.contained:observation.status", "'final'"]]), new Map(), new Map(), new Map());
+  const type = entries.find(rule => rule.key.endsWith(".resourceType"));
+  assert.equal(type.fixed, "Observation");
+  assert.deepEqual(plain(type.path), [["contained", "observation#0"], ["resourceType"]]);
+});
+
+test("compile: type and false exists discriminators need no synthetic value", () => {
+  const sd = indexSd({ resourceType: "StructureDefinition", url: "http://example.org/discriminators", type: "Observation", snapshot: { element: [
+    { id: "Observation", path: "Observation", min: 0, max: "*" },
+    el("Observation.value[x]", 0, "1", ["string", "Quantity"], { slicing: { discriminator: [{ type: "type", path: "$this" }] } }),
+    el("Observation.value[x]:valueString", 0, "1", ["string"], { sliceName: "valueString" }),
+    el("Observation.component", 0, "*", ["BackboneElement"], { slicing: { discriminator: [{ type: "exists", path: "value[x]" }] } }),
+    el("Observation.component:noValue", 0, "*", ["BackboneElement"], { sliceName: "noValue", baseMax: "*" }),
+    el("Observation.component:noValue.code", 1, "1", ["CodeableConcept"]),
+    el("Observation.component:noValue.code.text", 0, "1", ["string"]),
+    el("Observation.component:noValue.value[x]", 0, "0", ["string"])
+  ] } });
+  const target = makeTree(sd, { version: "R4", profiles: "", instances: new Map(), showAll: true });
+  const entries = compile(target, new Map([
+    ["Observation.valueString", "'text'"], ["Observation.component:noValue.code.text", "'absent' "]
+  ]), new Map(), new Map(), new Map());
+  assert.ok(entries.some(rule => rule.key === "Observation.valueString"));
+  assert.ok(entries.some(rule => rule.key === "Observation.component:noValue.code.text"));
+});
+
+test("compile: an unsupported profile discriminator is explicit", () => {
+  const sd = indexSd({ resourceType: "StructureDefinition", url: "http://example.org/reference-profile", type: "Observation", snapshot: { element: [
+    { id: "Observation", path: "Observation", min: 0, max: "*" },
+    el("Observation.subject", 0, "1", ["Reference"], { slicing: { discriminator: [{ type: "profile", path: "$this" }] } }),
+    el("Observation.subject:patient", 0, "1", [{ code: "Reference", profile: ["http://hl7.org/fhir/StructureDefinition/Patient"] }], { sliceName: "patient" }),
+    el("Observation.subject:patient.reference", 0, "1", ["string"])
+  ] } });
+  const target = makeTree(sd, { version: "R4", profiles: "", instances: new Map(), showAll: true });
+  assert.throws(() => compile(target, new Map([["Observation.subject:patient.reference", "'Patient/1'"]]), new Map(), new Map(), new Map()),
+    /profile\(\$this\) cannot be generated automatically/);
+});
+
 test("compile: iterations, conditions and translations, also on the resource", () => {
   const values = new Map([["Patient.identifier.value", "id['PID.3.1']"], ["Patient.gender", "msg['PID']['PID.8']"]]);
   const iterations = new Map([["Patient.identifier", { expression: "msg['PID']['PID.3']", variable: "id" }], ["Patient", { expression: "msg['PID']", variable: "pid" }], ["Patient.gender", { expression: "x", variable: "g" }]]);

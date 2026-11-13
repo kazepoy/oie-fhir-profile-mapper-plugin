@@ -40,7 +40,7 @@ ne doit pas être présentée comme terminée.
 | 4 — fait | Terminer le socle : découpage ciblé des éditeurs, anglais/français, thèmes, contrôle frontend et assemblage reproductible | Tests des modules sans VM pour le code extrait ; interface dans les deux langues ; ZIP construit depuis des sources frontend modifiées ; parcours clair/sombre et rôle restreint. |
 | 5 — fait | Aperçu multi-étapes, puis outil de rejeu des samples et import/export de tableaux/documentation | Patient + Observation avec référence réelle ; deux Bundles nommés ; erreur localisée par étape ; mêmes sorties dans l'aperçu et dans la démo ; outil en échec si résultat attendu différent. |
 | 6 — fait | FML : S-2 sur les maps typées, adaptateur Strict Parser, complétion et squelette, puis concurrence/pool selon mesure | `PIDtoPatient` et `ORUR01toBundle` rejoués avec modèles typés ; démo et documentation ; tests de transformations concurrentes sans contamination. |
-| 7 — suivant | Sous-slices, discriminants complémentaires, contained, extensions des primitives, R4B/R5 | Cas de test par capacité et release ; profils FR Core/EU Lab dans la démo ; erreurs explicites pour les limites restantes. |
+| 7 — fait | Sous-slices, discriminants complémentaires, contained, extensions des primitives, R4B/R5 | Cas de test par capacité et release ; profils FR Core/EU Lab dans la démo ; erreurs explicites pour les limites restantes. |
 | 8 | S-3 puis performance, durcissement, namespace et préparation 1.0 | Mesures avant/après versionnées ; seuils convenus tenus ; permissions et compatibilité des exports anciens vérifiées ; documentation et CHANGELOG à jour. |
 
 L'ordre reprend le plan en terminant le studio avant les fonctions multi-étapes
@@ -192,11 +192,11 @@ Prochain lot : FML, S-2 sur les modèles typés et adaptateur Strict Parser (lot
   alimenté par le Strict Parser, et ressource FHIR JSON/XML directe. Les anciens
   exports restent en `oie-message` par défaut.
 - Adaptateur typé fondé sur le `StructureDefinition` des emplacements. Convention
-  AP-HM/HAPI vérifiée sur la hiérarchie réelle ORU_R01, y compris le groupe
+  xxx/HAPI vérifiée sur la hiérarchie réelle ORU_R01, y compris le groupe
   répétable `OBSERVATION`, les composants CX/XPN/CE et les valeurs variables.
 - Fixtures représentatives `PIDtoPatient` et `ORUR01toBundle` ; la seconde importe
   la première et construit un Bundle transaction Patient + Observation. Aucun IG
-  AP-HM canonique n'étant présent dans le dépôt, elles restent explicitement des
+  xxx canonique n'étant présent dans le dépôt, elles restent explicitement des
   fixtures de contrat.
 - Complétion FML locale : mots-clés, transformations, fonctions FHIRPath, aliases,
   groupes, variables et chemins de catalogue. Générateur de squelette avec `uses`,
@@ -212,5 +212,81 @@ Prochain lot : FML, S-2 sur les modèles typés et adaptateur Strict Parser (lot
   fiablement tous les chemins de modèles logiques ; l'exécution sur exemple est
   le contrôle sémantique final.
 
-Prochain lot : sous-slices, discriminants, contained, extensions primitives et
-couverture R4B/R5 (lot 7).
+## Vérification du lot 7 — 13 novembre 2026
+
+- Les sous-slices reprennent la déclaration de slicing la plus proche. Les
+  discriminants `value`/`pattern`, `type` sur `[x]`, `profile` sur un `contained`
+  concret et `exists` démontrable sont couverts ; un cas non matérialisable est
+  refusé explicitement au lieu de produire une ressource ambiguë.
+- Un `contained` profilé est développé par le catalogue et reçoit son
+  `resourceType`. Les extensions de primitives utilisent `_nom` et les tableaux
+  de métadonnées conservent leurs `null` d'alignement.
+- Conversion, validation et catalogue passent sur R4, R4B et R5. La démo embarque
+  FR Core 2.2.0 et HL7 Europe Laboratory 2.0.0, téléchargés depuis leurs versions
+  permanentes et vérifiés par SHA-256, dans deux contextes R4 dédiés.
+- `mvn clean package` : 147 tests Java et 43 tests Node ; 13 tests Python passent.
+  L'image Docker complète se construit, packages publics inclus.
+
+Prochain lot : S-3, performance, durcissement, namespace et préparation 1.0
+(lot 8).
+
+
+## mes todos a reflechir /en discusion
+
+
+
+TODO : dans l'onglet test, ce serait bien de voir comment on pourrait et si il possible de visualiser ou representer les liens entre les données source et resulat ? par exemple pid.5.1 -> patient.id.  cela premettrait de remonter les erreurs de mapping plus facilemen et de visualiser les regles en cause. A etudier plus tard
+
+TODO revoir la disposition dans les onglets, cela devient confus et pas ergonomique
+
+TODO voir si editer en json peut aller dans la fenetre json deja dexistante de base dans oie ou si on fait un onglet dédié
+
+TODO voir les liens vers definition fhir officielle comment dans le cas d'ig publiées on peut aller vers le bon endroit pour avoir les details de la ressource ou du type (ex : Patient.id) et non pas juste la page de base de la spec Fhir.
+
+TODO pour les champ avec fonction (ex : fhirFind(msg['PID']['PID.3'], function (cx) { return cx['PID.3.5'] == 'PI'; })['PID.3.1'].toString()) voir si possible d'evaluer en live a partir de l'exempleTODO : dans le mapping, il serait bien de pouvoir selectionner un element du modele source et
+
+TODO pour fml si map selectionnée, pouvoir la recup dans ecran editeur pour "surcharger". si map qui imbrique d'autre maps en cascade, voir comment faire pour choisir ou voir si on surcharge l'arbre des maps interpendantes.  A voir si on peut le faire avec un simple selecteur de map...
+
+TODO avec les contained et sous slices. l'ui deveient complexe. peut etre un mode avancé en settings qui permet d'activer les features avancées. cela permettrait de ne pas surcharger l'ui. voir quels fc mettre?
+ou alors mettre mode simple/avancé dans l'ecran du step qu'il faut de toute facon revoir
+
+TODO voir settings pour activer ou non des focntions avancés (genre de flag qui change comportment) comme auto completion ou IA/trace  ou autre pas trop au point
+
+TODO voir pour autocompletion si ameliorable
+
+FIXME : gestion du i18n non prevu dans webadmin? donc a mettre en settings?
+
+TODO : channels de test FML
+       - avec map simple sur ressources R4 (Patient)
+       - avec map complexe sur ressource R5 (organization avec champ qui n'existe qu'en r5 je crois)
+       - avec map en R4 et profil exemple (devdays.r4.example.conformanceresources-1.0.0.tgz ???)
+       - avec map existante dans une ig tgz
+       - avec map surchargée (surcharge de map existante)
+       - avec map imbriquée (map qui appelle d'autres maps)
+       - avec map et  une ig hl7v2 source exemple (me demander)
+       - avec mapper sur un message hl7v2 (ex : ORU_R01)
+       - avec mapper sur un message hl7v2 strict parser
+       - avec mapper de et vers une ig avec strcture definition inventée (qui herite pas des ressources mais d'element de base)
+       - avec mapper depuis CSV
+       - avec mapper depuis XML
+       - avec mapper depuis json
+       - avec mapper et serveur de termino externe (voir pour trouver un truc leger (containerur) a ajouter dans demo et a precharger avec des CM)
+       - avec fr.core
+       - ... non exhaustif. voir les cas interessants  classiques et plus limites. les cas qui provoque des erreurs et que l'outil permet de debugguer.
+
+      il faudra les classer dans des groupes et les tagguer par focntionnalités
+
+      chaque channel devra embarquer des exemples de test pré chargés
+
+
+TODO faire une revue complete et tests complet/ analyse appronfondie du focntionnement, de la veracité , de l'etat art et de l'outil, du moteur d'execution et de l'ui
+
+TODO revoir doc et traduction
+
+TODO figer le contrat / format du fichier produit par le mappeur car une fois utilisé, il sera difficilement modifiable. idem pour la strcturedefinition d'un message OIE. ces points feront l'objet d'une doc specifique.
+
+TODO liste des hacks et bidouille vis a vis de oie et plugins pre requis pour faire PR. il faudra aussi lister les modif pour que le moteur hapi puisse focntionner (si il y en a)
+
+TODO dans la DOC genrale il faudr bien preciser le role des 2 transformeurs et que le FML et ig sont toujours preferables car independant de la plateforme. le mappeur reste specifique a OIE e a son format interne de representation
+
+TODO reorganiser le doc (user, developpeur, technique et archi)

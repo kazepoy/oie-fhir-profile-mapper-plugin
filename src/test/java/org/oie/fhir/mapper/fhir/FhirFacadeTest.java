@@ -22,6 +22,18 @@ public class FhirFacadeTest {
     }
 
     @Test
+    public void coreProfilesParseConvertValidateAndBuildCataloguesOnEverySupportedRelease() throws Exception {
+        for (String release : List.of("R4", "R4B", "R5")) {
+            String patient = "{\"resourceType\":\"Patient\",\"active\":true}";
+            String xml = FhirFacade.toXml(patient, release);
+            assertEquals(release, Boolean.TRUE, ((Map<?, ?>) FhirFacade.parse(FhirFacade.toJson(xml, release))).get("active"));
+            assertTrue(release, FhirFacade.validate(patient, "", "", release).isValid());
+            Map<?, ?> tree = (Map<?, ?>) FhirFacade.parse(FhirFacade.elements("http://hl7.org/fhir/StructureDefinition/Patient", release, ""));
+            assertEquals(release, "Patient", ((Map<?, ?>) tree.get("root")).get("type"));
+        }
+    }
+
+    @Test
     public void validatesWithTheOfficialEngineAndReturnsMapperOwnedIssues() throws Exception {
         String profiles = fixture("profiles");
         FhirValidation invalid = FhirFacade.validate("{\"resourceType\":\"Patient\"}", PROFILE, profiles, "R4");
@@ -89,5 +101,13 @@ public class FhirFacadeTest {
         assertEquals("4", codes.get("total").toString());
         Map<?, ?> filtered = (Map<?, ?>) FhirFacade.parse(FhirFacade.expand("http://hl7.org/fhir/ValueSet/administrative-gender", "fem", "R4", profiles));
         assertEquals("female", ((Map<?, ?>) ((List<?>) filtered.get("codes")).get(0)).get("code"));
+    }
+
+    @Test
+    public void loadsTheConcreteProfileOfAContainedResource() throws Exception {
+        String profiles = fixture("contained-profiles");
+        Map<?, ?> tree = (Map<?, ?>) FhirFacade.parse(FhirFacade.elements(
+                "http://example.org/fhir/StructureDefinition/patient-with-contained-observation", "R4", profiles));
+        assertTrue(((Map<?, ?>) tree.get("types")).containsKey("http://example.org/fhir/StructureDefinition/contained-observation"));
     }
 }

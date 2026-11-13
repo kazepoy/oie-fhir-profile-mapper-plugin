@@ -38,6 +38,7 @@ y ajoutent leurs ressources.
 - [Trace d'un message traité](trace-messages.md)
 
 L’aperçu peut tester une étape isolée ou les Profile Mapper du même transformeur.
-Les autres étapes et les transports demandent un essai déployé. Les extensions
-de primitives, `contained`, sous-slices et certains discriminants restent hors du
-périmètre actuel ; voir les [limites techniques](../../Mappeur-graphique.md).
+Les autres étapes et les transports demandent un essai déployé. Les sous-slices,
+les extensions de primitives et les ressources `contained` contraintes par un
+profil concret sont prises en charge ; les limites des discriminants sont
+détaillées dans [Types choix, slices et valeurs fixes](types-et-slices.md).

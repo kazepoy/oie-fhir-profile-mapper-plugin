@@ -14,6 +14,16 @@ Exemples de contenu :
 /opt/fhir/packages/mon-guide.tgz
 ```
 
+L'image de démonstration fournit aussi deux chemins vérifiés au build :
+
+```text
+/fhir-packages/hl7.fhir.fr.core-2.2.0.tgz
+/fhir-packages/hl7.fhir.eu.laboratory-2.0.0.tgz
+```
+
+Ils alimentent respectivement les contextes `fr-core-2.2.0` et
+`eu-laboratory-2.0.0` installés dans le panneau Settings de la démo.
+
 Les emplacements peuvent fournir profils StructureDefinition, ValueSets,
 ConceptMaps, StructureMaps et fichiers FML. Un dossier est utile pour les
 ressources d'un guide ; un `.tgz` fournit un package. L'accès se fait depuis le
