@@ -5,8 +5,8 @@
 - **Documentation** : `doc/` est organisé par public entre manuel multilingue,
   référence, architecture, développement, démo et historique. Un index principal
   et des index de section définissent l'autorité de chaque document ; la CI
-  refuse les liens locaux cassés et les pages orphelines. Un `AGENTS.md` racine
-  dirige les agents vers le guide de construction des canaux FHIR.
+  refuse les liens locaux cassés et les pages orphelines. Les agents de
+  développement et les agents utilisateurs d'OIE disposent de manuels séparés.
 - **Rupture de namespace** : les classes Java, les types sérialisés des
   transformeurs, les ponts isolés et le `groupId` Maven utilisent désormais
   `fr.kazepoy.fhir`. Les canaux de développement du dépôt ont été réécrits ;

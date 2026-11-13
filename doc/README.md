@@ -17,6 +17,7 @@ plusieurs documents.
 | Besoin | Section | Autorité |
 |---|---|---|
 | Utiliser les écrans et leurs fonctions | [Manuel utilisateur](user-manual/README.md) | Procédures et captures |
+| Construire des canaux avec un agent utilisateur | [Manuel agent](agent-manual/README.md) | Instructions d'utilisation dans OIE |
 | Comprendre les formats, API et comportements | [Référence](reference/README.md) | Contrats techniques actifs |
 | Comprendre les composants et contraintes OIE/HAPI | [Architecture](architecture/README.md) | Décisions et limites de plateforme |
 | Compiler, tester et contribuer | [Développement](development/README.md) | Processus contributeur |

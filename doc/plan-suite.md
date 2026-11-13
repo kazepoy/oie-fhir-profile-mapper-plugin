@@ -267,6 +267,8 @@ Organisation cible :
 doc/
   user-manual/       index des langues
     fr/              procédures et captures en français
+  agent-manual/      index des instructions pour agents utilisateurs d'OIE
+    fr/              consignes de construction de canaux en français
   reference/         formats, contrats, API et compatibilité
   architecture/      composants, chargeurs, runtime et décisions
   development/       build, tests, contribution et release
@@ -293,9 +295,10 @@ fonction n'est décrite contradictoirement dans deux références actives.
 Sous-lot structurel livré le 13 novembre 2026 : index principal et index par
 public, manuel français isolé, exemples regroupés avec la démo, ancien plan
 archivé, `TEMP.md` classé sans suppression, liens réparés et contrôle automatique
-des liens et orphelins ajouté à la CI. Le `AGENTS.md` racine rend le guide de
-construction des canaux découvrable. La revue des traductions, des captures et
-des recouvrements de fond reste à conduire avec les lots fonctionnels concernés.
+des liens et orphelins ajouté à la CI. Les instructions de développement du
+plugin et le manuel des agents utilisateurs d'OIE sont séparés. La revue des
+traductions, des captures et des recouvrements de fond reste à conduire avec
+les lots fonctionnels concernés.
 
 ## 4. Registre exhaustif des écarts et idées
 

@@ -1,19 +1,21 @@
-# Instructions projet pour les agents
+# Instructions pour développer le plugin
 
-## Construire ou modifier un canal FHIR
+Ce fichier s'adresse aux agents qui modifient les sources Java, frontend,
+outils, tests ou documentation de ce dépôt. Il ne constitue pas le manuel d'un
+agent utilisateur chargé de construire des canaux OIE.
 
-Avant de créer ou modifier un export de canal OIE, lire intégralement
-[`doc/reference/Construire-un-channel.md`](doc/reference/Construire-un-channel.md).
+## Règles du projet
 
-Règles minimales :
+- Lire [le guide de développement](doc/development/Developpement.md) et la
+  [feuille de route active](doc/plan-suite.md) avant un changement structurel.
+- Conserver le namespace `fr.kazepoy.fhir` et ne pas ajouter de compatibilité
+  avec les anciens types de développement.
+- Ne pas modifier directement `webadmin/web/plugin.js` : le reconstruire depuis
+  `webadmin/src`.
+- Préserver les changements utilisateur sans rapport avec la tâche, notamment
+  les fichiers non suivis.
+- Vérifier au minimum `mvn clean package`, les tests Python concernés et
+  `python3 tools/check_doc_links.py` lorsque la documentation change.
 
-- choisir FML lorsqu'une map portable convient ; utiliser Profile Mapper pour
-  une transformation graphique spécifique au runtime OIE ;
-- utiliser uniquement les types `fr.kazepoy.fhir.*` ;
-- préserver les UUID, `sequenceNumber`, IDs de règles et parties XML sans
-  rapport avec la modification ;
-- préférer `tools/channel_mapping.py` à une réécriture globale d'un export ;
-- valider les mappings, relire l'export produit et exécuter ses samples avant
-  de considérer le canal terminé ;
-- ne jamais importer, déployer ou modifier un serveur externe sans demande
-  explicite. La démo locale du dépôt peut être utilisée pour les vérifications.
+Les instructions destinées aux agents utilisateurs d'OIE sont dans le
+[manuel agent](doc/agent-manual/README.md).
