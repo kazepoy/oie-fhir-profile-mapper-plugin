@@ -266,22 +266,23 @@ function FmlTransformEditor({ element, onChange, platform }) {
   const result = st.result;
   const test = h(
     "div",
-    null,
-    h("div", { className: "fml-settings" },
+    { className: "fml-test" + (result ? " fml-test--result" : "") },
+    h("div", { className: "fml-test-toolbar" },
       field(tr("Data type"), h("select", { value: st.sample.dataType, onChange: (e) => { st.sample.dataType = e.target.value; saveSample(); rerender(); } },
         DATA_TYPES.map((v) => h("option", { key: v, value: v }, v)))),
-      h("div", { className: "field" }, h("label", null, " "),
-        h("button", { type: "button", className: "btn btn-primary", disabled: st.testing || !(element.mapUrl || inline), onClick: runTest }, st.testing ? tr("Running…") : tr("Run test"))),
-      field(tr("Sample message"), h(CodeBox, { value: st.sample.message, language: languageOf(st.sample.dataType), height: "190px", label: tr("Sample message"),
-        onChange: (text) => { if (text !== st.sample.message) { st.sample.message = text; saveSample(); rerender(); } } }), null, true)),
-    result ? h("div", null,
+      h("button", { type: "button", className: "btn btn-primary", disabled: st.testing || !(element.mapUrl || inline), onClick: runTest }, st.testing ? tr("Running…") : tr("Run test"))),
+    h("div", { className: "fml-test-inputs" },
+      field(tr("Sample message"), h(CodeBox, { value: st.sample.message, language: languageOf(st.sample.dataType), height: "100%", label: tr("Sample message"),
+        onChange: (text) => { if (text !== st.sample.message) { st.sample.message = text; saveSample(); rerender(); } } })),
+      result?.model ? field(tr("Source instance received by the map"), h(CodeBox, { value: pretty(result.model), language: "json", readOnly: true, height: "100%", label: tr("Source instance") })) : null),
+    result ? h("div", { className: "fml-test-result" },
+      h("div", { className: "fml-test-diagnostics" },
       (result.errors || []).map((e, i) => h("div", { key: `e${i}`, className: "fml-error" }, tr("{p0}: {p1}", { p0: e.phase, p1: e.message }))),
       result.validationPerformed && !(result.issues || []).some((i) => ["error", "fatal"].includes(i.severity)) && !(result.errors || []).length
         ? h("div", { className: "fml-ok" }, tr("Valid.")) : null,
       (result.issues || []).filter((i) => i.severity !== "information").map((i, n) =>
-        h("div", { key: `i${n}`, className: i.severity === "warning" ? "fml-issue-warning" : "fml-error" }, tr("{p0} {p1}: {p2}", { p0: i.severity, p1: i.location || "", p2: i.message }))),
-      result.output ? h("div", null, h("h4", null, tr("Result")), h(CodeBox, { value: pretty(result.output), language: "json", readOnly: true, height: "360px", label: tr("Result") })) : null,
-      result.model ? h("details", null, h("summary", null, tr("Source instance received by the map")), h(CodeBox, { value: pretty(result.model), language: "json", readOnly: true, height: "360px", label: tr("Source instance") })) : null)
+        h("div", { key: `i${n}`, className: i.severity === "warning" ? "fml-issue-warning" : "fml-error" }, tr("{p0} {p1}: {p2}", { p0: i.severity, p1: i.location || "", p2: i.message })))),
+      result.output ? field(tr("Result"), h(CodeBox, { value: pretty(result.output), language: "json", readOnly: true, height: "100%", label: tr("Result") })) : null)
       : null
   );
 
@@ -296,7 +297,7 @@ function FmlTransformEditor({ element, onChange, platform }) {
   const current = tabs.find((t) => t.id === st.tab) || tabs[0];
   return h(
     "div",
-    { className: "fhir-fml" + (st.fullScreen ? " mapper-fullscreen" : "") },
+    { className: "fhir-fml" + (st.fullScreen ? " mapper-fullscreen" : "") + (current.id === "test" ? " fml-testing-layout" : "") },
     h("div", { className: "fml-tabs", role: "tablist" }, tabs.map((t) =>
       h("button", { key: t.id, type: "button", role: "tab", "aria-selected": t.id === current.id, onClick: () => { st.tab = t.id; rerender(); } }, t.label)),
       h("span", { style: { marginLeft: "auto", alignSelf: "center", marginRight: "6px", display: "inline-flex" } }, h(HelpButton, { key: current.id, ...(FML_HELP[current.id] || FML_HELP.settings) })),

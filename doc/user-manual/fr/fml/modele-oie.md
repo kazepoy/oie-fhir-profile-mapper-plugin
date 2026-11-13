@@ -9,7 +9,8 @@ composants HAPI, choisir plutôt le [modèle HL7 v2 typé](modeles-sources.md).
 ![Arbre JSON du modèle OIE reçu par la map](images/modele-oie.png)
 
 1. Exécuter un [test](tester.md).
-2. Ouvrir **Source instance received by the map**.
+2. Examiner **Source instance received by the map**, à côté du message exemple
+   ou dessous si la zone est étroite.
 3. Repérer les nœuds `node`, leurs `name`, `position`, `occurrence` et `value`.
 4. Reprendre ces informations dans les règles FML.
 

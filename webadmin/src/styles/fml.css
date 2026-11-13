@@ -15,4 +15,17 @@
 .fhir-fml .fml-error { color: var(--err, #b91c1c); overflow-wrap: anywhere; }
 .fhir-fml .fml-issue-warning { color: var(--warn, #b45309); }
 .fhir-fml .fml-ok { color: var(--ok, #15803d); }
+.fhir-fml.fml-testing-layout { display: flex; flex-direction: column; height: 100%; min-height: 0; box-sizing: border-box; overflow: hidden; }
+.fhir-fml.fml-testing-layout > .fml-tabs { flex: none; }
+.fhir-fml.fml-testing-layout > [role=tabpanel] { flex: 1; min-height: 0; }
+.fhir-fml .fml-test { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; height: 100%; }
+.fhir-fml .fml-test--result { grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr); }
+.fhir-fml .fml-test-toolbar { display: flex; align-items: end; gap: 12px; }
+.fhir-fml .fml-test-toolbar .field { flex: 1; }
+.fhir-fml .fml-test-toolbar button { flex: none; }
+.fhir-fml .fml-test-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 12px; min-height: 0; }
+.fhir-fml .fml-test-result { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+.fhir-fml .fml-test-diagnostics { flex: none; max-height: 35%; overflow: auto; }
+.fhir-fml .fml-test-inputs > .field, .fhir-fml .fml-test-result > .field { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.fhir-fml .fml-test .fm-code-box { flex: 1; min-height: 0; }
 @container (max-width: 640px) { .fhir-fml .fml-settings { grid-template-columns: minmax(0, 1fr); } }

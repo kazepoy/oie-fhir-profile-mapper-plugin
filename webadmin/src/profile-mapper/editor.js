@@ -1563,10 +1563,11 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
   const testPanel = tree
       ? h(
             "div",
-            null,
+            { className: "mapper-test" },
+            h("div", { className: "mapper-test-controls" },
             h(
               "div",
-              { style: { display: "flex", gap: "6px", alignItems: "center", margin: "6px 0" } },
+              { style: { display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center", margin: "6px 0" } },
               h(
                 "select",
                 {
@@ -1605,23 +1606,30 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
                 disabled: !st.traceOptions.enabled, style: { width: "80px" },
                 onChange: (e) => { st.traceOptions.maxEvents = Number(e.target.value); rerender(); } }))
             ),
-            h(CodeBox, {
-              value: st.sample.message, language: languageOf(st.sample.dataType), height: "170px", label: tr("Sample message"),
+            ),
+            h("div", { className: "mapper-test-inputs" },
+            field(tr("Sample message"), h(CodeBox, {
+              value: st.sample.message, language: languageOf(st.sample.dataType), height: "100%", label: tr("Sample message"),
               onChange: (text) => {
                 if (text === st.sample.message) return;
                 st.sample.message = text;
                 if (activeSample) updateActive({ message: text }); else saveSample();
                 rerender();
               }
-            }),
-            st.suite ? h("table", { className: "dt", style: { margin: "8px 0", width: "100%" }, "aria-label": tr("Results of the saved samples") },
+            })),
+            testResult?.source ? field(tr("Prepared message"), h(CodeBox, {
+              value: testResult.source.dataType === "JSON" ? prettyJson(testResult.source.message) : testResult.source.message,
+              language: languageOf(testResult.source.dataType), readOnly: true, height: "100%", label: tr("Prepared message") })) : null),
+            testResult || st.suite || st.scriptResult ? h("div", { className: "mapper-test-results" },
+            st.suite ? h("div", { className: "mapper-test-diagnostics" }, h("table", { className: "dt", style: { margin: "8px 0", width: "100%" }, "aria-label": tr("Results of the saved samples") },
               h("tbody", null, st.suite.map((r) => h("tr", { key: r.id, style: { cursor: "pointer" }, onClick: () => selectSample(r.id) },
                 h("td", { style: { width: "70px", color: r.ok ? "var(--ok, #15803d)" : "var(--err, #b91c1c)", fontWeight: 600 } }, r.ok ? tr("passed") : tr("failed")),
-                h("td", null, r.name), h("td", { className: "text-text-faint" }, r.detail))))) : null,
+                h("td", null, r.name), h("td", { className: "text-text-faint" }, r.detail)))))) : null,
             testResult
               ? h(
                   "div",
-                  { style: { marginTop: "6px" } },
+                  { className: "mapper-test-result" },
+                  h("div", { className: "mapper-test-diagnostics" },
                   testResult.errors.map((e, i) => diagnosticView(e, `e${i}`)),
                   testResult.steps ? h("details", { open: true },
                     h("summary", null, tr("Produced resources by step")),
@@ -1647,11 +1655,12 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
                           event.reason ? h("div", null, event.reason) : null,
                           event.count !== undefined ? h("div", null, tr("{p0} item(s)", { p0: event.count })) : null,
                           event.value ? h("pre", { style: { whiteSpace: "pre-wrap", margin: "4px 0" } }, JSON.stringify(event.value)) : null)))
-                    ) : null,
+                    ) : null),
                   testResult.output !== null && testResult.output !== undefined
                     ? h(
                         "div",
-                        null,
+                        { className: "mapper-test-output" },
+                        h("div", { className: "mapper-test-diagnostics" },
                         h(
                           "div",
                           { style: { fontSize: "12px", margin: "4px 0", color: testResult.issues.some((i) => i.severity === "error" || i.severity === "fatal") ? "var(--err, #b91c1c)" : "var(--ok, #15803d)" } },
@@ -1665,8 +1674,8 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
                             activeSample.expected ? tr("Replace the expected result with this one") : tr("Use this result as expected")),
                           activeSample.expected ? h("button", { type: "button", className: "btn btn-sm", onClick: () => updateActive({ expected: null }) }, tr("Clear the expected result")) : null) : null,
                         activeSample && sampleVerdict(activeSample, testResult) === false
-                          ? h(ResultDiff, { expected: normalizeResult(activeSample.expected), actual: normalizeResult(testResult.output) }) : null,
-                        h(CodeBox, { value: prettyJson(testResult.output), language: String(testResult.output).trim().startsWith("<") ? "xml" : "json", readOnly: true, height: "360px", label: tr("Result") })
+                          ? h(ResultDiff, { expected: normalizeResult(activeSample.expected), actual: normalizeResult(testResult.output) }) : null),
+                        h(CodeBox, { value: prettyJson(testResult.output), language: String(testResult.output).trim().startsWith("<") ? "xml" : "json", readOnly: true, height: "100%", label: tr("Result") })
                       )
                     : null
                 )
@@ -1674,11 +1683,11 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
             st.scriptResult
               ? h(
                   "div",
-                  { style: { marginTop: "6px" } },
+                  { className: "mapper-test-script" },
                   st.scriptResult.errors.map((e, i) => diagnosticView(e, `s${i}`)),
-                  h(CodeBox, { value: st.scriptResult.script || "", language: "javascript", readOnly: true, height: "360px", label: tr("Generated script") })
+                  h(CodeBox, { value: st.scriptResult.script || "", language: "javascript", readOnly: true, height: "100%", label: tr("Generated script") })
                 )
-              : null
+              : null) : null
           )
       : h("div", { className: "hint" }, st.loading ? tr("Loading the target profile…") : tr("Load a target profile in Properties to test this step."));
 
@@ -1702,7 +1711,7 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
   };
   return h(
     "div",
-    { className: "fhir-profile-mapper" + (st.fullScreen ? " mapper-fullscreen" : "") },
+    { className: "fhir-profile-mapper" + (st.fullScreen ? " mapper-fullscreen" : "") + (current.id === "test" && tree ? " mapper-testing-layout" : "") },
     h("div", { className: "mapper-tabs", role: "tablist", "aria-label": tr("FHIR mapper sections"), onKeyDown: tabKeys },
       tabs.map((t) => h("button", {
         key: t.id, id: `${tabId}-${t.id}`, type: "button", role: "tab", "aria-selected": t === current, "aria-controls": `${tabId}-panel`,

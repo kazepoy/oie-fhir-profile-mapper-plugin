@@ -186,6 +186,13 @@ invalides, et des tests qui échouent sur toute rupture non versionnée.
 
 **Statut : proposé ; conception avant code.**
 
+Ajustement ciblé du 13 novembre 2026 : les onglets Test FML et Profile Mapper
+partagent la hauteur disponible entre exemple, source préparée et résultat,
+sans défilement supplémentaire du panneau. La source est placée à droite de
+l'exemple, ou dessous en zone étroite ; le Profile Mapper expose aussi cette
+source dans les deux périmètres d'aperçu. Ce correctif ne clôture pas la revue
+ergonomique ni la conception du studio ci-dessous.
+
 Questions à trancher ensemble :
 
 - organisation cible des onglets et des trois zones source, cible et inspecteur ;

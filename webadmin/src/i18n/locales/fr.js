@@ -6,6 +6,7 @@ export default {
   "Generic OIE message": "Message OIE générique",
   "Required. Dots become underscores and existing underscores are doubled.": "Obligatoire. Les points deviennent des tirets bas et les tirets bas existants sont doublés.",
   "Source instance": "Instance source",
+  "Prepared message": "Message préparé",
   "Source instance received by the map": "Instance source reçue par la map",
   "Source model": "Modèle source",
   "Source model canonical URL": "URL canonique du modèle source",

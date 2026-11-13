@@ -2,6 +2,11 @@
 
 ## Non publié (branche `feat/refonte`)
 
+- **Tests FML et Profile Mapper** : instance source FML et message préparé du
+  Profile Mapper affichés à côté de l'exemple, ou dessous en zone étroite.
+  Résultats dimensionnés dans l'espace disponible pour éviter le double
+  défilement du panneau et de l'éditeur. L'API Profile Mapper renvoie `source`
+  après préparation de l'entrée, y compris si le mapping échoue ensuite.
 - **Catalogue** : préchauffage du validateur avant le verrou du moteur, pour
   éviter un interblocage avec une validation concurrente.
 - **Canaux complémentaires** : JSON métier vers Organization R5 (8090), Patient

@@ -8,6 +8,8 @@ plugin, version 1.5.1 ([release](https://github.com/matthydehoog/fhir-datatype-E
 FHIR Profile Mapper is a separate project, not part of FHIR Data Type: please report
 its issues [here](https://github.com/kazepoy/oie-fhir-profile-mapper-plugin/issues).
 
+TODO ajouter aussi discussions de github
+
 ## FHIR Profile Mapper
 
 A transformer step that maps a message onto a FHIR profile: profile tree, slices,

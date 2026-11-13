@@ -13,6 +13,17 @@ L'onglet **Test** exécute l'étape sur le serveur, sans déployer le canal. Le 
 3. Cliquer **Run**.
 4. Lire les erreurs, le statut de validation et le résultat coloré.
 
+Après l'exécution, **Prepared message** affiche le message sérialisé transmis
+au mapping, à droite de l'exemple ou dessous si la zone est étroite. Pour une
+entrée HL7 v2, il s'agit du XML produit par le sérialiseur de l'aperçu. Cette vue
+reste disponible si une règle échoue après la préparation de l'entrée.
+Elle ne simule pas les JavaScriptSteps ou le nettoyage d'un connecteur : fournir
+un exemple déjà préparé lorsque ces traitements sont nécessaires.
+
+Les zones exemple, message préparé et résultat partagent la hauteur disponible.
+Le défilement du code reste dans chaque éditeur, sans second défilement du panneau.
+**Full screen** agrandit l'espace ; les traces et diagnostics restent consultables.
+
 `Valid.` signifie que la validation demandée n'a pas rapporté d'erreur.
 `FHIR validation disabled.` signifie qu'elle n'a pas été exécutée.
 

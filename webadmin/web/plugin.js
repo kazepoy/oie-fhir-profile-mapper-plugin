@@ -8,6 +8,7 @@ var en_default = Object.fromEntries([
   "Generic OIE message",
   "Required. Dots become underscores and existing underscores are doubled.",
   "Source instance",
+  "Prepared message",
   "Source instance received by the map",
   "Source model",
   "Source model canonical URL",
@@ -571,6 +572,7 @@ var fr_default = {
   "Generic OIE message": "Message OIE générique",
   "Required. Dots become underscores and existing underscores are doubled.": "Obligatoire. Les points deviennent des tirets bas et les tirets bas existants sont doublés.",
   "Source instance": "Instance source",
+  "Prepared message": "Message préparé",
   "Source instance received by the map": "Instance source reçue par la map",
   "Source model": "Modèle source",
   "Source model canonical URL": "URL canonique du modèle source",
@@ -1685,10 +1687,10 @@ var editor_default = `/* SPDX-License-Identifier: MPL-2.0
 `;
 
 // src/styles/profile-mapper.css
-var profile_mapper_default = "/* SPDX-License-Identifier: MPL-2.0 */\n\n.fhir-profile-mapper { container-type: inline-size; min-width: 0; }\n.fhir-profile-mapper .mapper-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; align-items: start; }\n.fhir-profile-mapper .mapper-settings > *, .fhir-profile-mapper .field { min-width: 0; }\n.fhir-profile-mapper .mapper-settings .field { margin-bottom: 0; }\n.fhir-profile-mapper .mapper-wide { grid-column: 1 / -1; }\n.fhir-profile-mapper .mapper-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }\n.fhir-profile-mapper .mapper-actions input[type=text] { flex: 1 1 240px; min-width: 0; width: auto; }\n.fhir-profile-mapper .mapper-actions select { flex: none; width: auto; }\n.fhir-profile-mapper .mapper-actions button { flex: none; white-space: nowrap; }\n.fhir-profile-mapper .mapper-checks { display: flex; flex-wrap: wrap; gap: 10px 20px; }\n.fhir-profile-mapper .check { white-space: nowrap; }\n.fhir-profile-mapper .mapper-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; }\n.fhir-profile-mapper .mapper-toolbar select { width: auto; max-width: 100%; }\n.fhir-profile-mapper .mapper-toolbar .hint { flex: 1 1 280px; }\n.fhir-profile-mapper .mapper-expression { display: inline-flex; width: 100%; min-width: 0; }\n.fhir-profile-mapper .mapper-functions { position: fixed; inset: auto; margin: 0; padding: 4px; border: 1px solid #94a3b8; border-radius: 6px; background: var(--bg, white); color: var(--text, #1e293b); box-shadow: 0 4px 16px #0003; overflow: auto; box-sizing: border-box; }\n.fhir-profile-mapper .mapper-functions [role=option] { padding: 6px 8px; cursor: pointer; border-radius: 4px; font-size: 12px; white-space: normal; }\n.fhir-profile-mapper .mapper-functions [aria-selected=true] { background: color-mix(in srgb, var(--accent, #2563eb) 18%, var(--bg2, white)); color: var(--text, #1e293b); }\n.fhir-profile-mapper .mapper-functions code { display: block; overflow-wrap: anywhere; }\n.fhir-profile-mapper table.mapper-tree td { padding: 3px 8px; }\n.fhir-profile-mapper .mapper-tree input:not([type=checkbox]), .fhir-profile-mapper .mapper-tree select { box-sizing: border-box; height: 26px; min-height: 26px; padding: 2px 6px; line-height: 20px; }\n.fhir-profile-mapper .mapper-tree .mapper-expression { padding: 0; min-height: 0; vertical-align: middle; }\n.fhir-profile-mapper .mapper-tree .btn { height: 22px; min-height: 22px; line-height: 18px; font-size: 11px; }\n.fhir-profile-mapper .mapper-help { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex: 0 0 16px; width: 16px; height: 16px; min-height: 0; padding: 0; margin: 0; border: 1px solid currentColor; border-radius: 50%; font-size: 11px; line-height: 1; text-decoration: none; }\n.fhir-profile-mapper .mapper-help:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 2px; }\n.fhir-profile-mapper .mapper-tree tbody > tr > td:first-child { position: relative; border-left: 2px solid transparent; }\n.fhir-profile-mapper .mapper-tree .mapper-branch-open > tr > td { background: color-mix(in srgb, var(--accent, #2563eb) 4%, var(--bg2, white)); }\n.fhir-profile-mapper .mapper-tree .mapper-branch-open > tr > td:first-child { border-left-color: color-mix(in srgb, var(--accent, #2563eb) 40%, transparent); }\n.fhir-profile-mapper .mapper-tree .mapper-branch-open > tr:first-child > td { border-top: 1px solid color-mix(in srgb, var(--accent, #2563eb) 25%, transparent); background: color-mix(in srgb, var(--accent, #2563eb) 8%, var(--bg2, white)); }\n.fhir-profile-mapper .mapper-tree .mapper-branch-open > tr:last-child > td { border-bottom: 1px solid color-mix(in srgb, var(--accent, #2563eb) 25%, transparent); }\n.fhir-profile-mapper .mapper-node-open .mapper-node-label { font-weight: 600; }\n.fhir-profile-mapper .mapper-tree tr:focus-within > td, .fhir-profile-mapper .mapper-tree .mapper-branch-open tr:focus-within > td { background: color-mix(in srgb, var(--accent, #2563eb) 12%, var(--bg2, white)); }\n.fhir-profile-mapper .mapper-tree-guides { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }\n.fhir-profile-mapper .mapper-tree-guides i { position: absolute; top: -1px; bottom: -1px; border-left: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 45%, transparent); }\n.fhir-profile-mapper .mapper-tree-guides b { position: absolute; top: 50%; width: 20px; border-top: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 45%, transparent); }\n.fhir-profile-mapper .bundle-routing { padding: 14px; border: 1px solid #93c5fd; border-radius: 8px; background: color-mix(in srgb, #3b82f6 7%, var(--bg, white)); }\n.fhir-profile-mapper .bundle-routing-title { margin-bottom: 4px; font-weight: 600; }\n.fhir-profile-mapper .bundle-target { margin-top: 10px; padding: 12px; border: 1px solid #bfdbfe; border-radius: 6px; background: var(--bg, white); }\n.fhir-profile-mapper .bundle-choice { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; text-transform: none; letter-spacing: normal; font-weight: 600; }\n.fhir-profile-mapper .bundle-choice input[type=checkbox] { width: 16px; height: 16px; margin: 0; flex: none; }\n.fhir-profile-mapper .bundle-request { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; margin-top: 10px; }\n.fhir-profile-mapper .bundle-target .field { margin-top: 8px; }\n.fhir-profile-mapper .mapper-tabs { display: flex; gap: 2px; margin-bottom: 12px; border-bottom: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 35%, transparent); }\n.fhir-profile-mapper .mapper-tabs [role=tab] { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-faint, #64748b); font: inherit; font-weight: 600; cursor: pointer; }\n.fhir-profile-mapper .mapper-tabs [role=tab]:hover { color: var(--text, #1e293b); }\n.fhir-profile-mapper .mapper-tabs [role=tab][aria-selected=true] { color: var(--text, #1e293b); border-bottom-color: var(--accent, #2563eb); }\n.fhir-profile-mapper .mapper-tabs [role=tab]:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: -2px; }\n.fhir-profile-mapper .mapper-tab-badge { min-width: 16px; padding: 0 5px; border-radius: 8px; background: #b91c1c; color: white; font-size: 11px; line-height: 16px; text-align: center; }\n.fhir-profile-mapper .mapper-tab-panel > details:first-child, .fhir-profile-mapper .mapper-tab-panel > .mapper-settings + details { margin-top: 14px; }\n@container (max-width: 640px) {\n  .fhir-profile-mapper .mapper-settings { grid-template-columns: minmax(0, 1fr); }\n}\n";
+var profile_mapper_default = "/* SPDX-License-Identifier: MPL-2.0 */\n\n.fhir-profile-mapper { container-type: inline-size; min-width: 0; }\n.fhir-profile-mapper .mapper-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; align-items: start; }\n.fhir-profile-mapper .mapper-settings > *, .fhir-profile-mapper .field { min-width: 0; }\n.fhir-profile-mapper .mapper-settings .field { margin-bottom: 0; }\n.fhir-profile-mapper .mapper-wide { grid-column: 1 / -1; }\n.fhir-profile-mapper .mapper-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }\n.fhir-profile-mapper .mapper-actions input[type=text] { flex: 1 1 240px; min-width: 0; width: auto; }\n.fhir-profile-mapper .mapper-actions select { flex: none; width: auto; }\n.fhir-profile-mapper .mapper-actions button { flex: none; white-space: nowrap; }\n.fhir-profile-mapper .mapper-checks { display: flex; flex-wrap: wrap; gap: 10px 20px; }\n.fhir-profile-mapper .check { white-space: nowrap; }\n.fhir-profile-mapper .mapper-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; }\n.fhir-profile-mapper .mapper-toolbar select { width: auto; max-width: 100%; }\n.fhir-profile-mapper .mapper-toolbar .hint { flex: 1 1 280px; }\n.fhir-profile-mapper .mapper-expression { display: inline-flex; width: 100%; min-width: 0; }\n.fhir-profile-mapper .mapper-functions { position: fixed; inset: auto; margin: 0; padding: 4px; border: 1px solid #94a3b8; border-radius: 6px; background: var(--bg, white); color: var(--text, #1e293b); box-shadow: 0 4px 16px #0003; overflow: auto; box-sizing: border-box; }\n.fhir-profile-mapper .mapper-functions [role=option] { padding: 6px 8px; cursor: pointer; border-radius: 4px; font-size: 12px; white-space: normal; }\n.fhir-profile-mapper .mapper-functions [aria-selected=true] { background: color-mix(in srgb, var(--accent, #2563eb) 18%, var(--bg2, white)); color: var(--text, #1e293b); }\n.fhir-profile-mapper .mapper-functions code { display: block; overflow-wrap: anywhere; }\n.fhir-profile-mapper table.mapper-tree td { padding: 3px 8px; }\n.fhir-profile-mapper .mapper-tree input:not([type=checkbox]), .fhir-profile-mapper .mapper-tree select { box-sizing: border-box; height: 26px; min-height: 26px; padding: 2px 6px; line-height: 20px; }\n.fhir-profile-mapper .mapper-tree .mapper-expression { padding: 0; min-height: 0; vertical-align: middle; }\n.fhir-profile-mapper .mapper-tree .btn { height: 22px; min-height: 22px; line-height: 18px; font-size: 11px; }\n.fhir-profile-mapper .mapper-help { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex: 0 0 16px; width: 16px; height: 16px; min-height: 0; padding: 0; margin: 0; border: 1px solid currentColor; border-radius: 50%; font-size: 11px; line-height: 1; text-decoration: none; }\n.fhir-profile-mapper .mapper-help:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 2px; }\n.fhir-profile-mapper .mapper-tree tbody > tr > td:first-child { position: relative; border-left: 2px solid transparent; }\n.fhir-profile-mapper .mapper-tree .mapper-branch-open > tr > td { background: color-mix(in srgb, var(--accent, #2563eb) 4%, var(--bg2, white)); }\n.fhir-profile-mapper .mapper-tree .mapper-branch-open > tr > td:first-child { border-left-color: color-mix(in srgb, var(--accent, #2563eb) 40%, transparent); }\n.fhir-profile-mapper .mapper-tree .mapper-branch-open > tr:first-child > td { border-top: 1px solid color-mix(in srgb, var(--accent, #2563eb) 25%, transparent); background: color-mix(in srgb, var(--accent, #2563eb) 8%, var(--bg2, white)); }\n.fhir-profile-mapper .mapper-tree .mapper-branch-open > tr:last-child > td { border-bottom: 1px solid color-mix(in srgb, var(--accent, #2563eb) 25%, transparent); }\n.fhir-profile-mapper .mapper-node-open .mapper-node-label { font-weight: 600; }\n.fhir-profile-mapper .mapper-tree tr:focus-within > td, .fhir-profile-mapper .mapper-tree .mapper-branch-open tr:focus-within > td { background: color-mix(in srgb, var(--accent, #2563eb) 12%, var(--bg2, white)); }\n.fhir-profile-mapper .mapper-tree-guides { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }\n.fhir-profile-mapper .mapper-tree-guides i { position: absolute; top: -1px; bottom: -1px; border-left: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 45%, transparent); }\n.fhir-profile-mapper .mapper-tree-guides b { position: absolute; top: 50%; width: 20px; border-top: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 45%, transparent); }\n.fhir-profile-mapper .bundle-routing { padding: 14px; border: 1px solid #93c5fd; border-radius: 8px; background: color-mix(in srgb, #3b82f6 7%, var(--bg, white)); }\n.fhir-profile-mapper .bundle-routing-title { margin-bottom: 4px; font-weight: 600; }\n.fhir-profile-mapper .bundle-target { margin-top: 10px; padding: 12px; border: 1px solid #bfdbfe; border-radius: 6px; background: var(--bg, white); }\n.fhir-profile-mapper .bundle-choice { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; text-transform: none; letter-spacing: normal; font-weight: 600; }\n.fhir-profile-mapper .bundle-choice input[type=checkbox] { width: 16px; height: 16px; margin: 0; flex: none; }\n.fhir-profile-mapper .bundle-request { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; margin-top: 10px; }\n.fhir-profile-mapper .bundle-target .field { margin-top: 8px; }\n.fhir-profile-mapper .mapper-tabs { display: flex; gap: 2px; margin-bottom: 12px; border-bottom: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 35%, transparent); }\n.fhir-profile-mapper .mapper-tabs [role=tab] { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-faint, #64748b); font: inherit; font-weight: 600; cursor: pointer; }\n.fhir-profile-mapper .mapper-tabs [role=tab]:hover { color: var(--text, #1e293b); }\n.fhir-profile-mapper .mapper-tabs [role=tab][aria-selected=true] { color: var(--text, #1e293b); border-bottom-color: var(--accent, #2563eb); }\n.fhir-profile-mapper .mapper-tabs [role=tab]:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: -2px; }\n.fhir-profile-mapper .mapper-tab-badge { min-width: 16px; padding: 0 5px; border-radius: 8px; background: #b91c1c; color: white; font-size: 11px; line-height: 16px; text-align: center; }\n.fhir-profile-mapper .mapper-tab-panel > details:first-child, .fhir-profile-mapper .mapper-tab-panel > .mapper-settings + details { margin-top: 14px; }\n.fhir-profile-mapper.mapper-testing-layout { display: flex; flex-direction: column; height: 100%; min-height: 0; box-sizing: border-box; overflow: hidden; }\n.fhir-profile-mapper.mapper-testing-layout > :not([role=tabpanel]) { flex: none; }\n.fhir-profile-mapper.mapper-testing-layout > [role=tabpanel] { flex: 1; min-height: 0; }\n.fhir-profile-mapper .mapper-test { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 10px; height: 100%; }\n.fhir-profile-mapper .mapper-test:has(.mapper-test-results) { grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr); }\n.fhir-profile-mapper .mapper-test-controls { max-height: 180px; overflow: auto; }\n.fhir-profile-mapper .mapper-test-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 12px; min-height: 0; }\n.fhir-profile-mapper .mapper-test-results, .fhir-profile-mapper .mapper-test-result, .fhir-profile-mapper .mapper-test-output, .fhir-profile-mapper .mapper-test-script { display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 6px; }\n.fhir-profile-mapper .mapper-test-diagnostics { flex: none; max-height: 40%; overflow: auto; }\n.fhir-profile-mapper .mapper-test-diagnostics:empty { display: none; }\n.fhir-profile-mapper .mapper-test-inputs > .field { display: flex; flex-direction: column; min-height: 0; }\n.fhir-profile-mapper .mapper-test .fm-code-box { flex: 1; min-height: 0; }\n@container (max-width: 640px) {\n  .fhir-profile-mapper .mapper-settings { grid-template-columns: minmax(0, 1fr); }\n}\n";
 
 // src/styles/fml.css
-var fml_default = "/* SPDX-License-Identifier: MPL-2.0 */\n\n.fhir-fml { container-type: inline-size; min-width: 0; }\n.fhir-fml .fml-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; align-items: start; }\n.fhir-fml .fml-settings > *, .fhir-fml .field { min-width: 0; }\n.fhir-fml .fml-wide { grid-column: 1 / -1; }\n.fhir-fml .fml-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }\n.fhir-fml .fml-row > select, .fhir-fml .fml-row > input[type=text] { flex: 1 1 240px; min-width: 0; width: auto; }\n.fhir-fml .fml-row > button { flex: none; white-space: nowrap; }\n.fhir-fml .fml-tabs { display: flex; gap: 2px; margin-bottom: 12px; border-bottom: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 35%, transparent); }\n.fhir-fml .fml-tabs [role=tab] { padding: 6px 14px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-faint, #64748b); font: inherit; font-weight: 600; cursor: pointer; }\n.fhir-fml .fml-tabs [role=tab]:hover { color: var(--text, #1e293b); }\n.fhir-fml .fml-tabs [role=tab][aria-selected=true] { color: var(--text, #1e293b); border-bottom-color: var(--accent, #2563eb); }\n.fhir-fml pre.fml-json { max-height: 420px; overflow: auto; padding: 8px; border: 1px solid var(--border, #cbd5e1); border-radius: 4px; font-size: 12px; white-space: pre; }\n.fhir-fml .fml-error { color: var(--err, #b91c1c); overflow-wrap: anywhere; }\n.fhir-fml .fml-issue-warning { color: var(--warn, #b45309); }\n.fhir-fml .fml-ok { color: var(--ok, #15803d); }\n@container (max-width: 640px) { .fhir-fml .fml-settings { grid-template-columns: minmax(0, 1fr); } }\n";
+var fml_default = "/* SPDX-License-Identifier: MPL-2.0 */\n\n.fhir-fml { container-type: inline-size; min-width: 0; }\n.fhir-fml .fml-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; align-items: start; }\n.fhir-fml .fml-settings > *, .fhir-fml .field { min-width: 0; }\n.fhir-fml .fml-wide { grid-column: 1 / -1; }\n.fhir-fml .fml-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }\n.fhir-fml .fml-row > select, .fhir-fml .fml-row > input[type=text] { flex: 1 1 240px; min-width: 0; width: auto; }\n.fhir-fml .fml-row > button { flex: none; white-space: nowrap; }\n.fhir-fml .fml-tabs { display: flex; gap: 2px; margin-bottom: 12px; border-bottom: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 35%, transparent); }\n.fhir-fml .fml-tabs [role=tab] { padding: 6px 14px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-faint, #64748b); font: inherit; font-weight: 600; cursor: pointer; }\n.fhir-fml .fml-tabs [role=tab]:hover { color: var(--text, #1e293b); }\n.fhir-fml .fml-tabs [role=tab][aria-selected=true] { color: var(--text, #1e293b); border-bottom-color: var(--accent, #2563eb); }\n.fhir-fml pre.fml-json { max-height: 420px; overflow: auto; padding: 8px; border: 1px solid var(--border, #cbd5e1); border-radius: 4px; font-size: 12px; white-space: pre; }\n.fhir-fml .fml-error { color: var(--err, #b91c1c); overflow-wrap: anywhere; }\n.fhir-fml .fml-issue-warning { color: var(--warn, #b45309); }\n.fhir-fml .fml-ok { color: var(--ok, #15803d); }\n.fhir-fml.fml-testing-layout { display: flex; flex-direction: column; height: 100%; min-height: 0; box-sizing: border-box; overflow: hidden; }\n.fhir-fml.fml-testing-layout > .fml-tabs { flex: none; }\n.fhir-fml.fml-testing-layout > [role=tabpanel] { flex: 1; min-height: 0; }\n.fhir-fml .fml-test { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; height: 100%; }\n.fhir-fml .fml-test--result { grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr); }\n.fhir-fml .fml-test-toolbar { display: flex; align-items: end; gap: 12px; }\n.fhir-fml .fml-test-toolbar .field { flex: 1; }\n.fhir-fml .fml-test-toolbar button { flex: none; }\n.fhir-fml .fml-test-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 12px; min-height: 0; }\n.fhir-fml .fml-test-result { display: flex; flex-direction: column; gap: 6px; min-height: 0; }\n.fhir-fml .fml-test-diagnostics { flex: none; max-height: 35%; overflow: auto; }\n.fhir-fml .fml-test-inputs > .field, .fhir-fml .fml-test-result > .field { display: flex; flex-direction: column; flex: 1; min-height: 0; }\n.fhir-fml .fml-test .fm-code-box { flex: 1; min-height: 0; }\n@container (max-width: 640px) { .fhir-fml .fml-settings { grid-template-columns: minmax(0, 1fr); } }\n";
 
 // src/fhir/mapping-table.js
 var escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -5021,208 +5023,235 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
   ) : h("div", { className: "hint" }, st.loading ? t("Loading the target profile…") : t("Load a target profile in Properties to map its elements."));
   const testPanel = tree ? h(
     "div",
-    null,
+    { className: "mapper-test" },
     h(
       "div",
-      { style: { display: "flex", gap: "6px", alignItems: "center", margin: "6px 0" } },
+      { className: "mapper-test-controls" },
       h(
-        "select",
-        {
-          style: { width: "auto", flex: "none" },
-          value: st.sample.dataType,
-          onChange: (e) => {
-            st.sample.dataType = e.target.value;
-            if (activeSample) updateActive({ dataType: e.target.value });
-            else saveSample();
-            rerender();
-          }
-        },
-        ["HL7V2", "XML", "JSON", "RAW"].map((v) => h("option", { key: v, value: v }, v))
-      ),
-      h(
-        "select",
-        {
-          style: { width: "auto", flex: "none", maxWidth: "260px" },
-          value: activeSample ? activeSample.id : "",
-          "aria-label": t("Sample"),
-          title: t("Samples saved with the step"),
-          onChange: (e) => selectSample(e.target.value)
-        },
-        h("option", { value: "" }, t("(unsaved sample, this browser)")),
-        samples.map((s) => h("option", { key: s.id, value: s.id }, s.name + (s.expected ? " ✓" : "")))
-      ),
-      h(
-        "select",
-        {
-          value: st.previewScope,
-          "aria-label": t("Preview scope"),
-          style: { width: "auto", flex: "none" },
-          disabled: st.testing,
-          onChange: (e) => {
-            st.previewScope = e.target.value;
-            st.testResult = null;
-            if (activeSample) updateActive({ scope: st.previewScope });
-            rerender();
-          }
-        },
-        h("option", { value: "step" }, t("This step only")),
-        h("option", { value: "transformer", disabled: !mapperContext(platform2, element) }, t("Profile Mapper steps of this transformer"))
-      ),
-      h("button", { type: "button", className: "btn btn-sm", disabled: st.testing || !st.sample.message.trim(), onClick: runTest }, st.testing ? t("Running…") : t("Run")),
-      !activeSample ? h("button", { type: "button", className: "btn btn-sm", disabled: !st.sample.message.trim(), title: t("Keep this message in the step, so it is saved with the channel"), onClick: saveAsSample }, t("Save as sample")) : null,
-      activeSample ? h("button", { type: "button", className: "btn btn-sm", title: t("Remove this sample from the step"), onClick: () => {
-        st.activeSample = null;
-        writeSamples(samples.filter((s) => s.id !== activeSample.id));
-      } }, t("Delete sample")) : null,
-      samples.length ? h("button", { type: "button", className: "btn btn-sm", disabled: st.testing, title: t("Run every saved sample and compare with its expected result"), onClick: runAllSamples }, t("Run all ({p0})", { p0: samples.length })) : null,
-      h("button", { type: "button", className: "btn btn-sm", onClick: showScript }, st.scriptResult ? t("Hide the script") : t("Generated script")),
-      h("span", { className: "text-text-faint", style: { fontSize: "11px" } }, st.previewScope === "transformer" ? t("Runs enabled Profile Mapper steps in order, with real references and Bundle finalization. Other step types are excluded.") : t("Runs this step on the server and validates what it makes; fhirRef() of earlier steps gives stand-ins."))
-    ),
-    h(
-      "div",
-      { style: { display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", marginBottom: "6px" } },
-      h("label", null, h("input", {
-        type: "checkbox",
-        checked: st.traceOptions.enabled,
-        onChange: (e) => {
-          st.traceOptions.enabled = e.target.checked;
-          if (!e.target.checked) st.traceOptions.captureValues = false;
-          rerender();
-        }
-      }), t(" Trace")),
-      h(
-        "label",
-        { title: t("Explicitly include scalar values in the trace and its JSON export (256 characters per value).") },
-        h("input", {
-          type: "checkbox",
-          checked: st.traceOptions.captureValues,
-          disabled: !st.traceOptions.enabled,
-          onChange: (e) => {
-            st.traceOptions.captureValues = e.target.checked;
-            rerender();
-          }
-        }),
-        t(" Include scalar values")
-      ),
-      h("label", null, t("Max events "), h("input", {
-        type: "number",
-        min: 1,
-        max: 1e3,
-        value: st.traceOptions.maxEvents,
-        disabled: !st.traceOptions.enabled,
-        style: { width: "80px" },
-        onChange: (e) => {
-          st.traceOptions.maxEvents = Number(e.target.value);
-          rerender();
-        }
-      }))
-    ),
-    h(CodeBox, {
-      value: st.sample.message,
-      language: languageOf(st.sample.dataType),
-      height: "170px",
-      label: t("Sample message"),
-      onChange: (text2) => {
-        if (text2 === st.sample.message) return;
-        st.sample.message = text2;
-        if (activeSample) updateActive({ message: text2 });
-        else saveSample();
-        rerender();
-      }
-    }),
-    st.suite ? h(
-      "table",
-      { className: "dt", style: { margin: "8px 0", width: "100%" }, "aria-label": t("Results of the saved samples") },
-      h("tbody", null, st.suite.map((r) => h(
-        "tr",
-        { key: r.id, style: { cursor: "pointer" }, onClick: () => selectSample(r.id) },
-        h("td", { style: { width: "70px", color: r.ok ? "var(--ok, #15803d)" : "var(--err, #b91c1c)", fontWeight: 600 } }, r.ok ? t("passed") : t("failed")),
-        h("td", null, r.name),
-        h("td", { className: "text-text-faint" }, r.detail)
-      )))
-    ) : null,
-    testResult ? h(
-      "div",
-      { style: { marginTop: "6px" } },
-      testResult.errors.map((e, i) => diagnosticView(e, `e${i}`)),
-      testResult.steps ? h(
-        "details",
-        { open: true },
-        h("summary", null, t("Produced resources by step")),
-        testResult.steps.map((result, i) => h(
-          "details",
-          { key: i },
-          h("summary", null, `${result.step.sequenceNumber} · ${result.step.name || result.step.resourceType} (${result.resources.length})`),
-          result.resources.map((resource, j) => h("pre", { key: j, style: { maxHeight: "300px", overflow: "auto", whiteSpace: "pre-wrap" } }, prettyJson(resource)))
-        ))
-      ) : null,
-      Object.keys(testResult.variables || {}).length ? h(
-        "details",
-        { open: true },
-        h("summary", null, t("Published channel variables")),
-        Object.entries(testResult.variables).map(([name, value]) => h(
-          "details",
-          { key: name },
-          h("summary", null, name),
-          h("pre", { style: { maxHeight: "360px", overflow: "auto", whiteSpace: "pre-wrap" } }, prettyJson(value))
-        ))
-      ) : null,
-      testResult.trace ? h(
-        "details",
-        { style: { marginTop: "8px" } },
-        h(
-          "summary",
-          { style: { cursor: "pointer" } },
-          t("Execution trace: {p0} event(s){p1}", { p0: testResult.trace.events.length, p1: testResult.trace.truncated ? " — truncated" : "" })
-        ),
-        h("button", { type: "button", className: "btn btn-sm", onClick: () => downloadMapperTrace(testResult.trace) }, t("Export trace JSON")),
-        h("div", { className: "hint" }, testResult.trace.captureValues ? t("Scalar values included.") : t("Runtime values not captured.")),
-        h(
-          "ol",
-          { style: { maxHeight: "360px", overflow: "auto", fontSize: "12px" } },
-          traceRows(testResult.trace).map(({ event, label, duration, iterations }, index) => h(
-            "li",
-            { key: index, style: { margin: "6px 0" } },
-            h("strong", null, t("{p0} · {p1}", { p0: label, p1: event.status })),
-            h("span", { style: { marginLeft: "6px" } }, duration),
-            event.key && tree && diagnosticHere({ step: testResult.trace.steps?.find((step) => String(step.sequenceNumber) === String(event.step)) || testResult.trace.step }) ? h("button", { type: "button", className: "btn btn-sm", onClick: () => revealDiagnostic({ ...event, step: testResult.trace.steps?.find((step) => String(step.sequenceNumber) === String(event.step)) || testResult.trace.step }) }, t("Go to rule")) : null,
-            iterations ? h("div", null, iterations) : null,
-            event.reason ? h("div", null, event.reason) : null,
-            event.count !== void 0 ? h("div", null, t("{p0} item(s)", { p0: event.count })) : null,
-            event.value ? h("pre", { style: { whiteSpace: "pre-wrap", margin: "4px 0" } }, JSON.stringify(event.value)) : null
-          ))
-        )
-      ) : null,
-      testResult.output !== null && testResult.output !== void 0 ? h(
         "div",
-        null,
+        { style: { display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center", margin: "6px 0" } },
+        h(
+          "select",
+          {
+            style: { width: "auto", flex: "none" },
+            value: st.sample.dataType,
+            onChange: (e) => {
+              st.sample.dataType = e.target.value;
+              if (activeSample) updateActive({ dataType: e.target.value });
+              else saveSample();
+              rerender();
+            }
+          },
+          ["HL7V2", "XML", "JSON", "RAW"].map((v) => h("option", { key: v, value: v }, v))
+        ),
+        h(
+          "select",
+          {
+            style: { width: "auto", flex: "none", maxWidth: "260px" },
+            value: activeSample ? activeSample.id : "",
+            "aria-label": t("Sample"),
+            title: t("Samples saved with the step"),
+            onChange: (e) => selectSample(e.target.value)
+          },
+          h("option", { value: "" }, t("(unsaved sample, this browser)")),
+          samples.map((s) => h("option", { key: s.id, value: s.id }, s.name + (s.expected ? " ✓" : "")))
+        ),
+        h(
+          "select",
+          {
+            value: st.previewScope,
+            "aria-label": t("Preview scope"),
+            style: { width: "auto", flex: "none" },
+            disabled: st.testing,
+            onChange: (e) => {
+              st.previewScope = e.target.value;
+              st.testResult = null;
+              if (activeSample) updateActive({ scope: st.previewScope });
+              rerender();
+            }
+          },
+          h("option", { value: "step" }, t("This step only")),
+          h("option", { value: "transformer", disabled: !mapperContext(platform2, element) }, t("Profile Mapper steps of this transformer"))
+        ),
+        h("button", { type: "button", className: "btn btn-sm", disabled: st.testing || !st.sample.message.trim(), onClick: runTest }, st.testing ? t("Running…") : t("Run")),
+        !activeSample ? h("button", { type: "button", className: "btn btn-sm", disabled: !st.sample.message.trim(), title: t("Keep this message in the step, so it is saved with the channel"), onClick: saveAsSample }, t("Save as sample")) : null,
+        activeSample ? h("button", { type: "button", className: "btn btn-sm", title: t("Remove this sample from the step"), onClick: () => {
+          st.activeSample = null;
+          writeSamples(samples.filter((s) => s.id !== activeSample.id));
+        } }, t("Delete sample")) : null,
+        samples.length ? h("button", { type: "button", className: "btn btn-sm", disabled: st.testing, title: t("Run every saved sample and compare with its expected result"), onClick: runAllSamples }, t("Run all ({p0})", { p0: samples.length })) : null,
+        h("button", { type: "button", className: "btn btn-sm", onClick: showScript }, st.scriptResult ? t("Hide the script") : t("Generated script")),
+        h("span", { className: "text-text-faint", style: { fontSize: "11px" } }, st.previewScope === "transformer" ? t("Runs enabled Profile Mapper steps in order, with real references and Bundle finalization. Other step types are excluded.") : t("Runs this step on the server and validates what it makes; fhirRef() of earlier steps gives stand-ins."))
+      ),
+      h(
+        "div",
+        { style: { display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", marginBottom: "6px" } },
+        h("label", null, h("input", {
+          type: "checkbox",
+          checked: st.traceOptions.enabled,
+          onChange: (e) => {
+            st.traceOptions.enabled = e.target.checked;
+            if (!e.target.checked) st.traceOptions.captureValues = false;
+            rerender();
+          }
+        }), t(" Trace")),
+        h(
+          "label",
+          { title: t("Explicitly include scalar values in the trace and its JSON export (256 characters per value).") },
+          h("input", {
+            type: "checkbox",
+            checked: st.traceOptions.captureValues,
+            disabled: !st.traceOptions.enabled,
+            onChange: (e) => {
+              st.traceOptions.captureValues = e.target.checked;
+              rerender();
+            }
+          }),
+          t(" Include scalar values")
+        ),
+        h("label", null, t("Max events "), h("input", {
+          type: "number",
+          min: 1,
+          max: 1e3,
+          value: st.traceOptions.maxEvents,
+          disabled: !st.traceOptions.enabled,
+          style: { width: "80px" },
+          onChange: (e) => {
+            st.traceOptions.maxEvents = Number(e.target.value);
+            rerender();
+          }
+        }))
+      )
+    ),
+    h(
+      "div",
+      { className: "mapper-test-inputs" },
+      field(t("Sample message"), h(CodeBox, {
+        value: st.sample.message,
+        language: languageOf(st.sample.dataType),
+        height: "100%",
+        label: t("Sample message"),
+        onChange: (text2) => {
+          if (text2 === st.sample.message) return;
+          st.sample.message = text2;
+          if (activeSample) updateActive({ message: text2 });
+          else saveSample();
+          rerender();
+        }
+      })),
+      testResult?.source ? field(t("Prepared message"), h(CodeBox, {
+        value: testResult.source.dataType === "JSON" ? prettyJson(testResult.source.message) : testResult.source.message,
+        language: languageOf(testResult.source.dataType),
+        readOnly: true,
+        height: "100%",
+        label: t("Prepared message")
+      })) : null
+    ),
+    testResult || st.suite || st.scriptResult ? h(
+      "div",
+      { className: "mapper-test-results" },
+      st.suite ? h("div", { className: "mapper-test-diagnostics" }, h(
+        "table",
+        { className: "dt", style: { margin: "8px 0", width: "100%" }, "aria-label": t("Results of the saved samples") },
+        h("tbody", null, st.suite.map((r) => h(
+          "tr",
+          { key: r.id, style: { cursor: "pointer" }, onClick: () => selectSample(r.id) },
+          h("td", { style: { width: "70px", color: r.ok ? "var(--ok, #15803d)" : "var(--err, #b91c1c)", fontWeight: 600 } }, r.ok ? t("passed") : t("failed")),
+          h("td", null, r.name),
+          h("td", { className: "text-text-faint" }, r.detail)
+        )))
+      )) : null,
+      testResult ? h(
+        "div",
+        { className: "mapper-test-result" },
         h(
           "div",
-          { style: { fontSize: "12px", margin: "4px 0", color: testResult.issues.some((i) => i.severity === "error" || i.severity === "fatal") ? "var(--err, #b91c1c)" : "var(--ok, #15803d)" } },
-          testResult.validationPerformed === false ? t("FHIR validation disabled.") : testResult.issues.length ? t("{p0} validation issue(s):", { p0: testResult.issues.length }) : t("Valid.")
+          { className: "mapper-test-diagnostics" },
+          testResult.errors.map((e, i) => diagnosticView(e, `e${i}`)),
+          testResult.steps ? h(
+            "details",
+            { open: true },
+            h("summary", null, t("Produced resources by step")),
+            testResult.steps.map((result, i) => h(
+              "details",
+              { key: i },
+              h("summary", null, `${result.step.sequenceNumber} · ${result.step.name || result.step.resourceType} (${result.resources.length})`),
+              result.resources.map((resource, j) => h("pre", { key: j, style: { maxHeight: "300px", overflow: "auto", whiteSpace: "pre-wrap" } }, prettyJson(resource)))
+            ))
+          ) : null,
+          Object.keys(testResult.variables || {}).length ? h(
+            "details",
+            { open: true },
+            h("summary", null, t("Published channel variables")),
+            Object.entries(testResult.variables).map(([name, value]) => h(
+              "details",
+              { key: name },
+              h("summary", null, name),
+              h("pre", { style: { maxHeight: "360px", overflow: "auto", whiteSpace: "pre-wrap" } }, prettyJson(value))
+            ))
+          ) : null,
+          testResult.trace ? h(
+            "details",
+            { style: { marginTop: "8px" } },
+            h(
+              "summary",
+              { style: { cursor: "pointer" } },
+              t("Execution trace: {p0} event(s){p1}", { p0: testResult.trace.events.length, p1: testResult.trace.truncated ? " — truncated" : "" })
+            ),
+            h("button", { type: "button", className: "btn btn-sm", onClick: () => downloadMapperTrace(testResult.trace) }, t("Export trace JSON")),
+            h("div", { className: "hint" }, testResult.trace.captureValues ? t("Scalar values included.") : t("Runtime values not captured.")),
+            h(
+              "ol",
+              { style: { maxHeight: "360px", overflow: "auto", fontSize: "12px" } },
+              traceRows(testResult.trace).map(({ event, label, duration, iterations }, index) => h(
+                "li",
+                { key: index, style: { margin: "6px 0" } },
+                h("strong", null, t("{p0} · {p1}", { p0: label, p1: event.status })),
+                h("span", { style: { marginLeft: "6px" } }, duration),
+                event.key && tree && diagnosticHere({ step: testResult.trace.steps?.find((step) => String(step.sequenceNumber) === String(event.step)) || testResult.trace.step }) ? h("button", { type: "button", className: "btn btn-sm", onClick: () => revealDiagnostic({ ...event, step: testResult.trace.steps?.find((step) => String(step.sequenceNumber) === String(event.step)) || testResult.trace.step }) }, t("Go to rule")) : null,
+                iterations ? h("div", null, iterations) : null,
+                event.reason ? h("div", null, event.reason) : null,
+                event.count !== void 0 ? h("div", null, t("{p0} item(s)", { p0: event.count })) : null,
+                event.value ? h("pre", { style: { whiteSpace: "pre-wrap", margin: "4px 0" } }, JSON.stringify(event.value)) : null
+              ))
+            )
+          ) : null
         ),
-        testResult.issues.map((i, n) => h("div", { key: `i${n}`, style: { fontSize: "11px", fontFamily: "monospace" } }, t("{p0} {p1}: {p2}", { p0: i.severity, p1: i.location, p2: i.message }))),
-        activeSample ? h(
+        testResult.output !== null && testResult.output !== void 0 ? h(
           "div",
-          { style: { display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap", margin: "6px 0" } },
-          sampleVerdict(activeSample, testResult) === true ? h("strong", { style: { color: "var(--ok, #15803d)" } }, t("Matches the expected result.")) : null,
-          sampleVerdict(activeSample, testResult) === false ? h("strong", { style: { color: "var(--err, #b91c1c)" } }, t("Differs from the expected result.")) : null,
+          { className: "mapper-test-output" },
           h(
-            "button",
-            { type: "button", className: "btn btn-sm", title: t("Random identities (urn:uuid) and meta.lastUpdated are ignored when comparing"), onClick: () => updateActive({ expected: testResult.output }) },
-            activeSample.expected ? t("Replace the expected result with this one") : t("Use this result as expected")
+            "div",
+            { className: "mapper-test-diagnostics" },
+            h(
+              "div",
+              { style: { fontSize: "12px", margin: "4px 0", color: testResult.issues.some((i) => i.severity === "error" || i.severity === "fatal") ? "var(--err, #b91c1c)" : "var(--ok, #15803d)" } },
+              testResult.validationPerformed === false ? t("FHIR validation disabled.") : testResult.issues.length ? t("{p0} validation issue(s):", { p0: testResult.issues.length }) : t("Valid.")
+            ),
+            testResult.issues.map((i, n) => h("div", { key: `i${n}`, style: { fontSize: "11px", fontFamily: "monospace" } }, t("{p0} {p1}: {p2}", { p0: i.severity, p1: i.location, p2: i.message }))),
+            activeSample ? h(
+              "div",
+              { style: { display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap", margin: "6px 0" } },
+              sampleVerdict(activeSample, testResult) === true ? h("strong", { style: { color: "var(--ok, #15803d)" } }, t("Matches the expected result.")) : null,
+              sampleVerdict(activeSample, testResult) === false ? h("strong", { style: { color: "var(--err, #b91c1c)" } }, t("Differs from the expected result.")) : null,
+              h(
+                "button",
+                { type: "button", className: "btn btn-sm", title: t("Random identities (urn:uuid) and meta.lastUpdated are ignored when comparing"), onClick: () => updateActive({ expected: testResult.output }) },
+                activeSample.expected ? t("Replace the expected result with this one") : t("Use this result as expected")
+              ),
+              activeSample.expected ? h("button", { type: "button", className: "btn btn-sm", onClick: () => updateActive({ expected: null }) }, t("Clear the expected result")) : null
+            ) : null,
+            activeSample && sampleVerdict(activeSample, testResult) === false ? h(ResultDiff, { expected: normalizeResult(activeSample.expected), actual: normalizeResult(testResult.output) }) : null
           ),
-          activeSample.expected ? h("button", { type: "button", className: "btn btn-sm", onClick: () => updateActive({ expected: null }) }, t("Clear the expected result")) : null
-        ) : null,
-        activeSample && sampleVerdict(activeSample, testResult) === false ? h(ResultDiff, { expected: normalizeResult(activeSample.expected), actual: normalizeResult(testResult.output) }) : null,
-        h(CodeBox, { value: prettyJson(testResult.output), language: String(testResult.output).trim().startsWith("<") ? "xml" : "json", readOnly: true, height: "360px", label: t("Result") })
+          h(CodeBox, { value: prettyJson(testResult.output), language: String(testResult.output).trim().startsWith("<") ? "xml" : "json", readOnly: true, height: "100%", label: t("Result") })
+        ) : null
+      ) : null,
+      st.scriptResult ? h(
+        "div",
+        { className: "mapper-test-script" },
+        st.scriptResult.errors.map((e, i) => diagnosticView(e, `s${i}`)),
+        h(CodeBox, { value: st.scriptResult.script || "", language: "javascript", readOnly: true, height: "100%", label: t("Generated script") })
       ) : null
-    ) : null,
-    st.scriptResult ? h(
-      "div",
-      { style: { marginTop: "6px" } },
-      st.scriptResult.errors.map((e, i) => diagnosticView(e, `s${i}`)),
-      h(CodeBox, { value: st.scriptResult.script || "", language: "javascript", readOnly: true, height: "360px", label: t("Generated script") })
     ) : null
   ) : h("div", { className: "hint" }, st.loading ? t("Loading the target profile…") : t("Load a target profile in Properties to test this step."));
   const tabs = [
@@ -5252,7 +5281,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
   };
   return h(
     "div",
-    { className: "fhir-profile-mapper" + (st.fullScreen ? " mapper-fullscreen" : "") },
+    { className: "fhir-profile-mapper" + (st.fullScreen ? " mapper-fullscreen" : "") + (current2.id === "test" && tree ? " mapper-testing-layout" : "") },
     h(
       "div",
       { className: "mapper-tabs", role: "tablist", "aria-label": t("FHIR mapper sections"), onKeyDown: tabKeys },
@@ -5828,10 +5857,10 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
   const result = st.result;
   const test = h2(
     "div",
-    null,
+    { className: "fml-test" + (result ? " fml-test--result" : "") },
     h2(
       "div",
-      { className: "fml-settings" },
+      { className: "fml-test-toolbar" },
       field(t("Data type"), h2(
         "select",
         { value: st.sample.dataType, onChange: (e) => {
@@ -5841,16 +5870,15 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
         } },
         DATA_TYPES.map((v) => h2("option", { key: v, value: v }, v))
       )),
-      h2(
-        "div",
-        { className: "field" },
-        h2("label", null, " "),
-        h2("button", { type: "button", className: "btn btn-primary", disabled: st.testing || !(element.mapUrl || inline), onClick: runTest }, st.testing ? t("Running…") : t("Run test"))
-      ),
+      h2("button", { type: "button", className: "btn btn-primary", disabled: st.testing || !(element.mapUrl || inline), onClick: runTest }, st.testing ? t("Running…") : t("Run test"))
+    ),
+    h2(
+      "div",
+      { className: "fml-test-inputs" },
       field(t("Sample message"), h2(CodeBox, {
         value: st.sample.message,
         language: languageOf(st.sample.dataType),
-        height: "190px",
+        height: "100%",
         label: t("Sample message"),
         onChange: (text2) => {
           if (text2 !== st.sample.message) {
@@ -5859,16 +5887,20 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
             rerender();
           }
         }
-      }), null, true)
+      })),
+      result?.model ? field(t("Source instance received by the map"), h2(CodeBox, { value: pretty(result.model), language: "json", readOnly: true, height: "100%", label: t("Source instance") })) : null
     ),
     result ? h2(
       "div",
-      null,
-      (result.errors || []).map((e, i) => h2("div", { key: `e${i}`, className: "fml-error" }, t("{p0}: {p1}", { p0: e.phase, p1: e.message }))),
-      result.validationPerformed && !(result.issues || []).some((i) => ["error", "fatal"].includes(i.severity)) && !(result.errors || []).length ? h2("div", { className: "fml-ok" }, t("Valid.")) : null,
-      (result.issues || []).filter((i) => i.severity !== "information").map((i, n) => h2("div", { key: `i${n}`, className: i.severity === "warning" ? "fml-issue-warning" : "fml-error" }, t("{p0} {p1}: {p2}", { p0: i.severity, p1: i.location || "", p2: i.message }))),
-      result.output ? h2("div", null, h2("h4", null, t("Result")), h2(CodeBox, { value: pretty(result.output), language: "json", readOnly: true, height: "360px", label: t("Result") })) : null,
-      result.model ? h2("details", null, h2("summary", null, t("Source instance received by the map")), h2(CodeBox, { value: pretty(result.model), language: "json", readOnly: true, height: "360px", label: t("Source instance") })) : null
+      { className: "fml-test-result" },
+      h2(
+        "div",
+        { className: "fml-test-diagnostics" },
+        (result.errors || []).map((e, i) => h2("div", { key: `e${i}`, className: "fml-error" }, t("{p0}: {p1}", { p0: e.phase, p1: e.message }))),
+        result.validationPerformed && !(result.issues || []).some((i) => ["error", "fatal"].includes(i.severity)) && !(result.errors || []).length ? h2("div", { className: "fml-ok" }, t("Valid.")) : null,
+        (result.issues || []).filter((i) => i.severity !== "information").map((i, n) => h2("div", { key: `i${n}`, className: i.severity === "warning" ? "fml-issue-warning" : "fml-error" }, t("{p0} {p1}: {p2}", { p0: i.severity, p1: i.location || "", p2: i.message })))
+      ),
+      result.output ? field(t("Result"), h2(CodeBox, { value: pretty(result.output), language: "json", readOnly: true, height: "100%", label: t("Result") })) : null
     ) : null
   );
   React2.useEffect(() => {
@@ -5886,7 +5918,7 @@ function FmlTransformEditor({ element, onChange, platform: platform2 }) {
   const current2 = tabs.find((t2) => t2.id === st.tab) || tabs[0];
   return h2(
     "div",
-    { className: "fhir-fml" + (st.fullScreen ? " mapper-fullscreen" : "") },
+    { className: "fhir-fml" + (st.fullScreen ? " mapper-fullscreen" : "") + (current2.id === "test" ? " fml-testing-layout" : "") },
     h2(
       "div",
       { className: "fml-tabs", role: "tablist" },

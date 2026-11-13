@@ -11,8 +11,13 @@ L'onglet **Test** exécute la map sur le serveur avec le message fourni. Le droi
 2. Choisir **Data type** et coller le **Sample message** correspondant.
 3. Cliquer **Run test**.
 4. Lire les erreurs, le statut de validation et **Result**.
-5. Ouvrir **Source instance received by the map** pour examiner la source
-   réellement remise au groupe d'entrée.
+5. Comparer le message avec **Source instance received by the map**, affichée
+   à droite de l'exemple, ou juste dessous lorsque la zone est étroite.
+   C'est la source réellement remise au groupe d'entrée.
+
+Les éditeurs partagent la hauteur disponible : le résultat reste sous les deux
+sources, sans ajouter un défilement du panneau autour de celui des éditeurs.
+Utiliser **Full screen** pour agrandir l'espace de comparaison.
 
 Le template entrant du transformeur initialise le message. Le dernier exemple
 est mémorisé dans ce navigateur pour ce canal/transformeur. Il n'existe pas

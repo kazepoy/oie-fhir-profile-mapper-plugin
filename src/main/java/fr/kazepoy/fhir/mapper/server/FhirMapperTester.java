@@ -76,7 +76,7 @@ public final class FhirMapperTester {
 
     /**
      * Runs a step on a message: {"step": {...}, "message": "...", "dataType": "HL7V2" | "XML" | "JSON" | "RAW"}.
-     * Answers {"output": the outbound message, "issues": [{"severity", "location", "message"}], "errors": [...]}.
+     * Answers output, validation issues/errors and source (the prepared msg before mapping, when available).
      */
     public static String test(String requestJson, Environment environment) {
         Map<String, Object> out = new LinkedHashMap<>();
@@ -127,6 +127,8 @@ public final class FhirMapperTester {
                     throw new IllegalArgumentException("The sample message cannot be read as " + dataType + ": " + e.getMessage(), e);
                 }
                 if (trace != null) trace.phase("input", "success", inputStarted, "parsed");
+                out.put("source", Map.of("dataType", "HL7V2".equals(dataType) ? "XML" : dataType,
+                        "message", Context.toString(scope.get("__message", scope))));
                 for (String function : environment.functions()) {
                     try {
                         cx.evaluateString(scope, function, "code template", 1, null);
@@ -240,6 +242,8 @@ public final class FhirMapperTester {
                 scope.put("configurationMap", scope, Context.javaToJS(new HashMap<>(environment.configuration()), scope));
                 scope.put("logger", scope, Context.javaToJS(logger, scope));
                 cx.evaluateString(scope, SANDBOX, "sandbox", 1, null);
+                out.put("source", Map.of("dataType", "HL7V2".equals(dataType) ? "XML" : dataType,
+                        "message", Context.toString(scope.get("__message", scope))));
                 for (String function : environment.functions()) {
                     try { cx.evaluateString(scope, function, "code template", 1, null); }
                     catch (RhinoException ignored) { /* Same code-template tolerance as isolated previews. */ }

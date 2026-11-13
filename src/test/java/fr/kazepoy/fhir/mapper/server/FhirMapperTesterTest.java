@@ -55,6 +55,25 @@ public class FhirMapperTesterTest {
         assertTrue(result.get("output").toString(), result.get("output").toString().contains("\"active\":true"));
     }
 
+    @Test public void previewsReturnTheSerializedInputBeforeMappingEvenWhenMappingFails() {
+        String xml = "<message><PID><PID.3>00123</PID.3></PID></message>";
+        FhirMapperTester.Environment environment = new FhirMapperTester.Environment() {
+            public List<String> functions() { return List.of(); }
+            public Map<String, String> configuration() { return Map.of(); }
+            public String serialize(String type, String message) { return xml; }
+        };
+        Object config = FhirJson.parse(step("[" + value("Patient.gender", "code", "missingFunction()", "[[\"gender\"]]") + "]"));
+        for (String selection : List.of("step", "steps")) {
+            Map<?, ?> result = (Map<?, ?>) FhirJson.parse(FhirMapperTester.test(FhirJson.write(Map.of(
+                    selection, "steps".equals(selection) ? List.of(config) : config,
+                    "dataType", "HL7V2", "message", "raw HL7 input")), environment));
+            assertEquals(Map.of("dataType", "XML", "message", xml), result.get("source"));
+            assertTrue(!((List<?>) result.get("errors")).isEmpty());
+        }
+        Map<?, ?> result = preview("[]", "{\"active\":false,\"id\":\"00123\"}", false);
+        assertEquals(Map.of("dataType", "JSON", "message", "{\"active\":false,\"id\":\"00123\"}"), result.get("source"));
+    }
+
     @Test public void stableRuleIdsSurviveDiagnosticsAndDuplicateIdsAreRejected() {
         String rule = value("Patient.gender", "code", "msg.absent.value", "[[\"gender\"]]");
         rule = rule.replace("{\"key\"", "{\"id\":\"patient-gender\",\"key\"");

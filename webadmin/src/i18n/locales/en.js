@@ -6,6 +6,7 @@ export default Object.fromEntries([
   "Generic OIE message",
   "Required. Dots become underscores and existing underscores are doubled.",
   "Source instance",
+  "Prepared message",
   "Source instance received by the map",
   "Source model",
   "Source model canonical URL",

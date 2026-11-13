@@ -368,7 +368,12 @@ mapper steps**, car il exécute le code de l'étape sur le serveur ; les autres 
 exigent **Edit FHIR mappings** ([permissions](Mappeur-graphique.md#9-contrôles-et-échanges-serveur)). Types sources : `HL7V2` (défaut), `XML`, `JSON`, `RAW`.
 
 `/script` renvoie `script` et `errors`. `/test` renvoie `output` (texte ou null),
-`validationPerformed`, `issues` et `errors`. Un diagnostic conserve `key` (ou
+`validationPerformed`, `issues` et `errors`. Après préparation réussie de l'entrée,
+`source` contient `{ "dataType": "XML|JSON|RAW", "message": "..." }` : le texte
+sérialisé reçu par le mapping avant exécution, en XML pour HL7 v2. Ce champ est
+présent dans les deux périmètres d'aperçu, même si une règle échoue ensuite ; il
+est absent si la configuration ou la lecture de l'entrée échoue avant ce point.
+Il n'inclut pas les traitements d'autres types d'étapes. Un diagnostic conserve `key` (ou
 null), `line` (numéro du script généré sérialisé en chaîne, ou null) et `message`.
 Il contient aussi :
 
