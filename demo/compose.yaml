@@ -104,4 +104,4 @@ services:
 configs:
   oie-jvm-options:
     content: |
-      -Xmx${OIE_JAVA_MAX_HEAP:-2g}
+      -Xmx${OIE_JAVA_MAX_HEAP:-4g}

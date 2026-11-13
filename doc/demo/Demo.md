@@ -18,16 +18,16 @@ de leur SHA-256. Les packages officiels
 [HL7 Europe Laboratory 2.0.0](https://hl7.eu/fhir/laboratory/2.0.0/) sont eux
 aussi épinglés et vérifiés. Le mapper est compilé avec Maven à partir de l'API de l'image OIE
 cible, puis installé dans cette même image. Le compilateur, le runtime et
-l'éditeur graphique sont repris du POC. L'initialisation importe et déploie neuf
-canaux, avec leur IG de démonstration montée dans `/fhir-ig`, la map FML générique
-de [demo/fml](../../demo/fml) montée dans `/fhir-fml`, et les fixtures du modèle FML
+l'éditeur graphique sont repris du POC. L'initialisation importe et déploie dix-sept
+canaux (dans huit groupes `<Source> - <Transfo>`), avec leur IG de démonstration montée dans `/fhir-ig`, les maps FML
+de [demo/fml](../../demo/fml) montées dans `/fhir-fml`, et les fixtures du modèle FML
 typé montées dans `/fhir-typed`.
 
-L'initialisation crée trois contextes dans *Settings › FHIR Mapper* :
-`demo-labo`, `fr-core-2.2.0` et `eu-laboratory-2.0.0`. Les deux derniers rendent
-les profils publiés sélectionnables dans une étape R4 sans téléchargement manuel.
-Le contexte FR Core fournit aussi les dépendances directes non-core utilisées
-par le canal du port 8091 ; voir [leur périmètre](JSON-FR-Core-et-FML.md#packages-du-contexte).
+L'initialisation crée cinq contextes dans *Settings › FHIR Mapper* :
+`demo-labo`, `fr-core-2.2.0`, `eu-laboratory-2.0.0`, `external-terminology` et `demo-r5`.
+Les deux contextes d'IG rendent les profils publiés sélectionnables dans une étape R4 sans téléchargement manuel.
+Le contexte FR Core et le contexte EU Laboratory fournissent aussi leurs dépendances directes non-core ; voir [leur périmètre](JSON-FR-Core-et-FML.md#packages-du-contexte).
+`external-terminology` pointe vers le mock HTTP de terminologie interne (`http://127.0.0.1:8099/fhir`).
 Sur un volume déjà initialisé, lancer une fois avec `OIE_INIT_FORCE=true` pour
 remplacer les anciens réglages de démonstration.
 
@@ -35,25 +35,30 @@ remplacer les anciens réglages de démonstration.
 
 La [matrice des exemples](Matrice-exemples.md) classe les canaux par groupes et
 tags, précise les samples disponibles et distingue les capacités démontrées
-des cas encore à construire. Les neuf canaux Profile Mapper ont des samples
-enregistrés avec attendu ; les trois aperçus FML sont rejoués par `check.py`.
-Les douze canaux sont classés dans trois groupes natifs OIE et portent des tags
-fonctionnels (version, source, transformeur, fonctions illustrées).
+des cas encore à construire. Les onze canaux Profile Mapper ont des samples
+enregistrés avec attendu ; cinq aperçus FML sont rejoués par `check.py`, plus un mock HTTP de terminologie.
+Les dix-sept canaux sont classés dans huit groupes natifs OIE (`HL7v2 - Mapper`, `HL7v2 - FML`, `JSON - Mapper`, `CSV - Mapper`, `CSV - FML`, `XML - Mapper`, `FHIR - FML`, `HTTP - Mock`) et portent des tags
+fonctionnels colorés (sans tags IG/profil) ordonnés uniformément : version, source, transformeur, puis fonctions illustrées triées alphabétiquement.
 
 | Canal | Port | Fonctions montrées |
 |---|---|---|
-| ORU R01 vers Bundle FHIR | 8081 | Bundle nommé, sept étapes, itérations de ressources, références entre étapes (`fhirRef`), traductions ConceptMap, **trace des messages traités** (action *FHIR mapping trace* dans Messages), **exemples enregistrés** sur l'étape Patient |
-| ORU R01 vers Patient FHIR | 8082 | Une ressource seule, sur le **contexte FHIR `demo-labo`** (installé par l'initialisation, visible dans *Settings › FHIR Mapper*) ; slices, itération, condition, traduction ; **deux exemples avec résultat attendu** (*Run all* dans l'onglet Test) |
-| ORU R01 vers deux Bundles labo FHIR | 8083 | Deux Bundles (transaction et document) qui partagent les mêmes ressources, résultat en variable, chaînes de destinations ; sample multi-étapes sur Patient |
-| SQL XML vers Patient FHIR | 8084 | Source XML, accents et zéros initiaux ; sample avec Patient attendu |
-| CSV patients métier vers Patient FHIR | 8085 | Nettoyage à la source, mapping en destination ; sample XML nettoyé |
-| CSV patients métier vers collection | 8086 | Bundle `collection` ; sample multi-étapes des dix lignes nettoyées |
-| ORU R01 vers Bundle FHIR (FML typé) | 8087 | Strict Parser, modèle logique HL7 v2 typé, map `ORUR01toBundle` important `PIDtoPatient`, Bundle transaction Patient + Observation |
-| ORU R01 vers Patient FHIR (strict) | 8088 | Strict Parser HL7 v2 : mêmes règles, autres chemins |
-| ORU R01 vers Patient FHIR (FML inline) | 8089 | **Map FML écrite dans l'étape** (onglet Map, *Check*), sans fichier de map, sur le contexte `demo-labo` |
-| JSON métier vers Organization R5 | 8090 | Source JSON, champ `description` de type markdown propre à R5, attendu et erreur de conversion |
-| JSON métier vers Patient FR Core | 8091 | FR Core 2.2.0, identifiant PI, lieu de naissance ; contrainte d'usage de l'identifiant testée |
-| Patient FHIR vers résumé FML | 8092 | Source FHIR JSON validée, map de projection, `active: false` conservé, code de sexe invalide refusé |
+| ORU R01 to FHIR Bundle | 8081 | Bundle nommé, sept étapes, itérations de ressources, références entre étapes (`fhirRef`), traductions ConceptMap, **trace des messages traités** (action *FHIR mapping trace* dans Messages), **exemples enregistrés** sur l'étape Patient |
+| ORU R01 to FHIR Patient | 8082 | Une ressource seule, sur le **contexte FHIR `demo-labo`** (installé par l'initialisation, visible dans *Settings › FHIR Mapper*) ; slices, itération, condition, traduction ; **deux exemples avec résultat attendu** (*Run all* dans l'onglet Test) |
+| ORU R01 to Two Lab Bundles | 8083 | Deux Bundles (transaction et document) qui partagent les mêmes ressources, résultat en variable, chaînes de destinations ; sample multi-étapes sur Patient |
+| SQL XML to FHIR Patient | 8084 | Source XML, accents et zéros initiaux ; sample avec Patient attendu |
+| CSV Business Patients to Patient | 8085 | Nettoyage à la source, mapping en destination ; sample XML nettoyé |
+| CSV Business Patients to Collection | 8086 | Bundle `collection` ; sample multi-étapes des dix lignes nettoyées |
+| ORU R01 to FHIR Bundle (FML typed) | 8087 | Strict Parser, modèle logique HL7 v2 typé, map `ORUR01toBundle` important `PIDtoPatient`, Bundle transaction Patient + Observation |
+| ORU R01 to FHIR Patient (strict) | 8088 | Strict Parser HL7 v2 : mêmes règles, autres chemins |
+| ORU R01 to FHIR Patient (FML inline) | 8089 | **Map FML écrite dans l'étape** (onglet Map, *Check*), sans fichier de map, sur le contexte `demo-labo` |
+| Business JSON to Organization R5 | 8090 | Source JSON, champ `description` de type markdown propre à R5, attendu et erreur de conversion |
+| Business JSON to Patient FR Core | 8091 | FR Core 2.2.0, identifiant PI, lieu de naissance ; contrainte d'usage de l'identifiant testée |
+| FHIR Patient to Summary (FML) | 8092 | Source FHIR JSON validée, map de projection, `active: false` conservé, code de sexe invalide refusé |
+| Business JSON to Obs EU Lab | 8093 | Contexte `eu-laboratory-2.0.0`, profil `Observation-resultslab-eu-lab`, attendu et champ obligatoire `effective[x]` manquant refusé |
+| CSV to Permission R5 (FML) | 8094 | Source CSV par défaut, map FML R5 produisant un Bundle transaction `Organization` + `Permission` (spécifique R5) |
+| ORU R01 to FHIR Patient (FML IG) | 8095 | Map `StructureMap` JSON publiée dans `/fhir-ig`, résolue par `mapUrl` sans map inline ni fichier `.fml` |
+| Business JSON to Obs (External TX) | 8096 | Serveur de terminologie externe (`external-terminology`), traduction `GLU` → LOINC, repli sur code inconnu et erreur HTTP 503 |
+| HTTP Terminology Mock ($translate) | 8099 | Mock OIE HTTP implémentant `GET /fhir/ConceptMap/$translate` pour les essais de terminologie externe et d'indisponibilité |
 
 Pour voir l'assistance à la saisie : ouvrir le canal du port 8082, son transformeur
 source, l'étape *Patient*, puis **Full screen**. Cliquer un champ pour l'éditer avec
@@ -129,7 +134,7 @@ que [run_tests.py](Rejeu-tests.md).
 | 8088 | `/patient/` | Patient par le Strict Parser HL7 v2, identique à celui du port 8082 |
 | 8089 | `/patient/` | Patient par la map FML écrite dans l'étape, identique à celui du port 8082 |
 
-Le canal du port 8088, *ORU R01 vers Patient FHIR (strict)*, reprend celui du
+Le canal du port 8088, *ORU R01 to FHIR Patient (strict)*, reprend celui du
 port 8082 avec **Use Strict Parser** et **Strip Namespaces** dans les propriétés
 HL7 v2 entrantes de la source. `msg` est alors le XML HAPI : segments rangés dans
 les groupes du message et composants nommés d'après leur type. Seuls les chemins
@@ -152,7 +157,7 @@ terminales sont exposées sous `.value`. Les fixtures montées sont représentat
 du contrat de la démo, pas un IG xxx canonique.
 
 Les destinations portent le nom du système visé, simulé par un JavaScript Writer :
-*Serveur FHIR*, *Entrepôt FHIR*, *Entrepôt documentaire*, *Archive PCA/PRA*. Le canal
+*FHIR Server*, *FHIR Repository*, *Document Repository*, *PCA/PRA Archive*. Le canal
 labo a deux chaînes de destinations, visibles dans Channel Flow : le serveur FHIR
 reçoit la transaction en parallèle de l'entrepôt documentaire, suivi de l'archive
 PCA/PRA. Un filtre n'archive le document que si l'entrepôt l'a accepté ; l'archive
@@ -186,7 +191,7 @@ la capture explicite des valeurs et la troncature à trois événements.
 Dans l'éditeur, activer **Trace**, exécuter le test, puis utiliser
 **Export trace JSON**. Voir le [contrat de trace](../reference/Trace.md).
 
-Le channel *ORU R01 vers Bundle FHIR* trace aussi ses messages traités : ses
+Le channel *ORU R01 to FHIR Bundle* trace aussi ses messages traités : ses
 étapes Patient et Observation ont **Trace processed messages**. Après un envoi,
 ouvrir **Messages**, le message, puis **Mappings** : la variable `fhirMapperTrace`
 contient les règles exécutées, les références réelles et la finalisation du

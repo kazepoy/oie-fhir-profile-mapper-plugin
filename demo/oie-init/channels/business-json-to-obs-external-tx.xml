@@ -1,8 +1,8 @@
 <channel version="4.7.0">
-  <id>c5792091-b613-4f1a-b899-4e8670f58092</id>
+  <id>6a2b9104-4d15-4a2b-8f30-809600000001</id>
   <nextMetaDataId>2</nextMetaDataId>
-  <name>Patient FHIR vers résumé FML</name>
-  <description>Projection FML explicite de Patient FHIR R4 vers Patient : identité et données démographiques conservées, telecom omis. POST application/json sur /patient-summary/, port 8092. Exemples nominaux et invalides dans demo/examples/. Validation active.</description>
+  <name>Business JSON to Obs (External TX)</name>
+  <description>Observation code translation against an external FHIR terminology server (ConceptMap/$translate on http://127.0.0.1:8099/fhir, context external-terminology). POST application/json to /obs-external-tx/, port 8096. Covers match, unmatched fallback, and 503 unavailability.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8092</port>
+        <port>8096</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>
@@ -39,58 +39,51 @@
       <responseHeadersVariable />
       <useResponseHeadersVariable>false</useResponseHeadersVariable>
       <charset>UTF-8</charset>
-      <contextPath>/patient-summary</contextPath>
+      <contextPath>/obs-external-tx</contextPath>
       <timeout>30000</timeout>
       <staticResources />
     </properties>
     <transformer version="4.7.0">
       <elements>
-        <fr.kazepoy.fhir.fml.FhirFmlTransformStep version="4.7.0">
-          <name>Résumé Patient</name>
+        <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+          <name>Observation</name>
           <sequenceNumber>0</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig;/fhir-fml</profiles>
-          <mapUrl>http://example.org/fhir/oru2fhir/StructureMap/PatientSummary</mapUrl>
-          <sourceModel>fhir</sourceModel>
-          <sourceModelUrl>http://hl7.org/fhir/StructureDefinition/Patient</sourceModelUrl>
-          <validateOutput>true</validateOutput>
+          <profiles />
+          <profileUrl>http://hl7.org/fhir/StructureDefinition/Observation</profileUrl>
+          <profileVersion>4.0.1</profileVersion>
+          <resourceType>Observation</resourceType>
+          <addMetaProfile>true</addMetaProfile>
+          <setLastUpdated>false</setLastUpdated>
           <variable />
-          <contextVariables />
-        </fr.kazepoy.fhir.fml.FhirFmlTransformStep>
+          <action>resource</action>
+          <bundleTargets>[]</bundleTargets>
+          <refName />
+          <terminologyServer>http://127.0.0.1:8099/fhir</terminologyServer>
+          <terminologyAuthorization />
+          <terminologyCacheSeconds>0</terminologyCacheSeconds>
+          <terminologyTimeoutSeconds>3</terminologyTimeoutSeconds>
+          <mappings>[{"id": "Observation.id", "key": "Observation.id", "element": "Observation.id", "type": "id", "expression": "msg.id", "path": [["id"]]}, {"id": "Observation.status", "key": "Observation.status", "element": "Observation.status", "type": "code", "fixed": "final", "path": [["status"]]}, {"id": "Observation.code", "key": "Observation.code", "element": "Observation.code", "type": "CodeableConcept", "expression": "msg.code", "path": [["code"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/lab-codes-to-loinc", "source": "http://example.org/fhir/oru2fhir/CodeSystem/lab-codes", "target": "", "unmapped": "fixed", "keepSource": false, "value": "http://terminology.hl7.org/CodeSystem/data-absent-reason|unknown"}}, {"id": "Observation.valueQuantity.value", "key": "Observation.valueQuantity.value", "element": "Observation.valueQuantity.value", "type": "decimal", "expression": "msg.value", "path": [["valueQuantity"], ["value"]]}, {"id": "Observation.valueQuantity.unit", "key": "Observation.valueQuantity.unit", "element": "Observation.valueQuantity.unit", "type": "string", "expression": "msg.unit", "path": [["valueQuantity"], ["unit"]]}, {"id": "Observation.valueQuantity.system", "key": "Observation.valueQuantity.system", "element": "Observation.valueQuantity.system", "type": "uri", "fixed": "http://unitsofmeasure.org", "path": [["valueQuantity"], ["system"]]}, {"id": "Observation.valueQuantity.code", "key": "Observation.valueQuantity.code", "element": "Observation.valueQuantity.code", "type": "code", "expression": "msg.unit", "path": [["valueQuantity"], ["code"]]}]</mappings>
+          <samples>[{"id": "6a2b9104-4d15-4a2b-8f30-809600000001", "name": "External TX - matched GLU code", "message": "{\n  \"id\": \"obs-tx-001\",\n  \"code\": \"GLU\",\n  \"value\": 5.1,\n  \"unit\": \"mmol/L\"\n}\n", "dataType": "JSON", "scope": "step", "expected": "{\n  \"resourceType\": \"Observation\",\n  \"id\": \"obs-tx-001\",\n  \"meta\": {\n    \"profile\": [\n      \"http://hl7.org/fhir/StructureDefinition/Observation\"\n    ]\n  },\n  \"status\": \"final\",\n  \"code\": {\n    \"coding\": [\n      {\n        \"system\": \"http://loinc.org\",\n        \"code\": \"14749-6\",\n        \"display\": \"Glucose [Moles/volume] in Serum or Plasma\"\n      }\n    ]\n  },\n  \"valueQuantity\": {\n    \"value\": 5.1,\n    \"unit\": \"mmol/L\",\n    \"system\": \"http://unitsofmeasure.org\",\n    \"code\": \"mmol/L\"\n  }\n}\n"}, {"id": "6a2b9104-4d15-4a2b-8f30-809600000002", "name": "External TX - unmatched fallback", "message": "{\n  \"id\": \"obs-tx-unknown\",\n  \"code\": \"UNKNOWN\",\n  \"value\": 1.0,\n  \"unit\": \"mmol/L\"\n}\n", "dataType": "JSON", "scope": "step", "expected": "{\n  \"resourceType\": \"Observation\",\n  \"id\": \"obs-tx-unknown\",\n  \"meta\": {\n    \"profile\": [\n      \"http://hl7.org/fhir/StructureDefinition/Observation\"\n    ]\n  },\n  \"status\": \"final\",\n  \"code\": {\n    \"coding\": [\n      {\n        \"system\": \"http://terminology.hl7.org/CodeSystem/data-absent-reason\",\n        \"code\": \"unknown\"\n      }\n    ]\n  },\n  \"valueQuantity\": {\n    \"value\": 1,\n    \"unit\": \"mmol/L\",\n    \"system\": \"http://unitsofmeasure.org\",\n    \"code\": \"mmol/L\"\n  }\n}\n"}]</samples>
+          <context>external-terminology</context>
+          <validateOutput>true</validateOutput>
+          <formatVersion>2</formatVersion>
+          <validation>always</validation>
+        </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
       </elements>
       <inboundTemplate>{
-  "resourceType": "Patient",
-  "id": "source-fhir-001",
-  "active": false,
-  "identifier": [{"system": "https://example.org/fhir/sid/demo-ipp", "value": "000123456"}],
-  "name": [{"use": "official", "family": "Durand", "given": ["Élodie"]}],
-  "gender": "female",
-  "birthDate": "1985-04-12",
-  "telecom": [{"system": "email", "value": "elodie.durand@example.org"}]
+  "id": "obs-tx-001",
+  "code": "GLU",
+  "value": 5.1,
+  "unit": "mmol/L"
 }
 </inboundTemplate>
-      <inboundDataType>FHIR</inboundDataType>
+      <inboundDataType>JSON</inboundDataType>
       <outboundDataType>FHIR</outboundDataType>
-      <inboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
-        <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
-          <fhirVersion>R4</fhirVersion>
-          <transformerFormat>JSON</transformerFormat>
-          <stripNamespaces>true</stripNamespaces>
-          <outputFormat>JSON</outputFormat>
-          <prettyPrint>true</prettyPrint>
-          <validateInbound>true</validateInbound>
-          <validateOutbound>false</validateOutbound>
-          <invalidMessages>Reject</invalidMessages>
-          <failOn>Errors</failOn>
-          <profiles />
-          <requiredProfile />
-          <unknownCodeSystems>Warning</unknownCodeSystems>
-          <anyExtensionsAllowed>true</anyExtensionsAllowed>
-          <terminologyServer />
-        </serializationProperties>
-        <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
-          <splitType>Bundle_Entry</splitType>
+      <inboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="4.7.0">
+        <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="4.7.0">
+          <splitType>JavaScript</splitType>
           <batchScript />
         </batchProperties>
       </inboundProperties>
@@ -128,7 +121,7 @@
   <destinationConnectors>
     <connector version="4.7.0">
       <metaDataId>1</metaDataId>
-      <name>Résultat FHIR</name>
+      <name>FHIR Result</name>
       <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
         <pluginProperties />
         <destinationConnectorProperties version="4.7.0">
@@ -270,93 +263,80 @@
     </metadata>
     <channelTags>
       <channelTag>
-        <id>8bc4cff6-98e8-5658-899c-4b37619846ad</id>
+        <id>612284a7-41e3-5f8f-a137-093fab0a405c</id>
         <name>R4</name>
         <channelIds>
-          <string>c5792091-b613-4f1a-b899-4e8670f58092</string>
+          <string>6a2b9104-4d15-4a2b-8f30-809600000001</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>37</red>
+          <green>99</green>
+          <blue>235</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>86a4c048-2a03-5977-9143-a4fdc45f3440</id>
-        <name>FHIR</name>
-        <channelIds>
-          <string>c5792091-b613-4f1a-b899-4e8670f58092</string>
-        </channelIds>
-        <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
-          <alpha>255</alpha>
-        </backgroundColor>
-      </channelTag>
-      <channelTag>
-        <id>c9a2a013-41f1-5b3b-b3d5-9ffc4c68cc04</id>
+        <id>995050ef-de77-5f4e-827c-a4f14b07d384</id>
         <name>JSON</name>
         <channelIds>
-          <string>c5792091-b613-4f1a-b899-4e8670f58092</string>
+          <string>6a2b9104-4d15-4a2b-8f30-809600000001</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>2</red>
+          <green>132</green>
+          <blue>199</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>99a78d8c-460e-5857-a0fa-85bcde1e3f98</id>
-        <name>FML</name>
+        <id>c2c74737-3123-52e7-886d-ee30e924db89</id>
+        <name>Mapper</name>
         <channelIds>
-          <string>c5792091-b613-4f1a-b899-4e8670f58092</string>
+          <string>6a2b9104-4d15-4a2b-8f30-809600000001</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>29</red>
+          <green>78</green>
+          <blue>216</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>3f730042-13e5-5dee-87eb-d31c309eacd3</id>
-        <name>sourceModel-fhir</name>
+        <id>2f748322-8987-5e9c-adc0-53e19fa358a6</id>
+        <name>contexts</name>
         <channelIds>
-          <string>c5792091-b613-4f1a-b899-4e8670f58092</string>
+          <string>6a2b9104-4d15-4a2b-8f30-809600000001</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>51</red>
+          <green>65</green>
+          <blue>85</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>b6b5d25d-a27e-57ff-86ff-2f1596a04a40</id>
-        <name>projection</name>
+        <id>c4d7ebc7-3a79-5a6b-8de8-a085e32eb26f</id>
+        <name>external-terminology</name>
         <channelIds>
-          <string>c5792091-b613-4f1a-b899-4e8670f58092</string>
+          <string>6a2b9104-4d15-4a2b-8f30-809600000001</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>225</red>
+          <green>29</green>
+          <blue>72</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>4d57083a-d785-5392-8c1c-a80cadee7c35</id>
+        <id>929033f3-6b85-505f-821c-89057b1277aa</id>
         <name>validation</name>
         <channelIds>
-          <string>c5792091-b613-4f1a-b899-4e8670f58092</string>
+          <string>6a2b9104-4d15-4a2b-8f30-809600000001</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>22</red>
+          <green>163</green>
+          <blue>74</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>

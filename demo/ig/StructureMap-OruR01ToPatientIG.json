@@ -1,0 +1,331 @@
+{
+  "resourceType": "StructureMap",
+  "id": "OruR01ToPatientIG",
+  "url": "http://example.org/fhir/oru2fhir/StructureMap/OruR01ToPatientIG",
+  "name": "OruR01ToPatientIG",
+  "status": "draft",
+  "description": "Demo: the PID of an ORU^R01 becomes a Patient conforming to ExampleLabPatient (/fhir-ig), like\r\nthe \"ORU R01 to FHIR Patient\" Profile Mapper channel, but in FML.\r\nSource: the generic OIE logical model (OieMessage). A node is addressed by name\r\n(PID, PID.5) or position (component 1, 2...); its value is in value.",
+  "structure": [ {
+    "url": "http://oie.org/fhir/StructureDefinition/OieMessage",
+    "mode": "source",
+    "alias": "OieMessage"
+  }, {
+    "url": "http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient",
+    "mode": "target",
+    "alias": "Patient"
+  } ],
+  "group": [ {
+    "name": "OruR01ToPatient",
+    "typeMode": "none",
+    "input": [ {
+      "name": "src",
+      "type": "OieMessage",
+      "mode": "source"
+    }, {
+      "name": "patient",
+      "type": "Patient",
+      "mode": "target"
+    } ],
+    "rule": [ {
+      "name": "profile",
+      "source": [ {
+        "context": "src"
+      } ],
+      "target": [ {
+        "context": "patient",
+        "contextType": "variable",
+        "element": "meta",
+        "variable": "meta"
+      }, {
+        "context": "meta",
+        "contextType": "variable",
+        "element": "profile",
+        "transform": "copy",
+        "parameter": [ {
+          "valueString": "http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient"
+        } ]
+      } ]
+    }, {
+      "name": "pid",
+      "source": [ {
+        "context": "src",
+        "element": "node",
+        "variable": "pid",
+        "condition": "name = 'PID'"
+      } ],
+      "rule": [ {
+        "name": "identifiers",
+        "source": [ {
+          "context": "pid",
+          "element": "node",
+          "variable": "cx",
+          "condition": "(name = 'PID.3') and node.where((position = 5) and (value = 'PI')).exists()"
+        } ],
+        "rule": [ {
+          "name": "ipp",
+          "source": [ {
+            "context": "cx",
+            "element": "node",
+            "variable": "number",
+            "condition": "position = 1"
+          } ],
+          "target": [ {
+            "context": "patient",
+            "contextType": "variable",
+            "element": "identifier",
+            "variable": "identifier"
+          } ],
+          "rule": [ {
+            "name": "ippsystem",
+            "source": [ {
+              "context": "number"
+            } ],
+            "target": [ {
+              "context": "identifier",
+              "contextType": "variable",
+              "element": "system",
+              "transform": "copy",
+              "parameter": [ {
+                "valueString": "http://example.org/fhir/oru2fhir/sid/ipp"
+              } ]
+            } ]
+          }, {
+            "name": "ippvalue",
+            "source": [ {
+              "context": "number",
+              "element": "value",
+              "variable": "v"
+            } ],
+            "target": [ {
+              "context": "identifier",
+              "contextType": "variable",
+              "element": "value",
+              "transform": "copy",
+              "parameter": [ {
+                "valueId": "v"
+              } ]
+            } ]
+          } ]
+        } ],
+        "documentation": "IPP: the PID-3 whose identifier type (component 5) equals PI."
+      }, {
+        "name": "name",
+        "source": [ {
+          "context": "pid",
+          "element": "node",
+          "variable": "xpn",
+          "condition": "name = 'PID.5'"
+        } ],
+        "target": [ {
+          "context": "patient",
+          "contextType": "variable",
+          "element": "name",
+          "variable": "name"
+        } ],
+        "rule": [ {
+          "name": "familyname",
+          "source": [ {
+            "context": "xpn",
+            "element": "node",
+            "variable": "family",
+            "condition": "position = 1"
+          } ],
+          "rule": [ {
+            "name": "family",
+            "source": [ {
+              "context": "family",
+              "element": "value",
+              "variable": "v"
+            } ],
+            "target": [ {
+              "context": "name",
+              "contextType": "variable",
+              "element": "family",
+              "transform": "copy",
+              "parameter": [ {
+                "valueId": "v"
+              } ]
+            } ]
+          } ]
+        }, {
+          "name": "givenname",
+          "source": [ {
+            "context": "xpn",
+            "element": "node",
+            "variable": "given",
+            "condition": "position = 2"
+          } ],
+          "rule": [ {
+            "name": "given",
+            "source": [ {
+              "context": "given",
+              "element": "value",
+              "variable": "v"
+            } ],
+            "target": [ {
+              "context": "name",
+              "contextType": "variable",
+              "element": "given",
+              "transform": "copy",
+              "parameter": [ {
+                "valueId": "v"
+              } ]
+            } ]
+          } ]
+        }, {
+          "name": "secondgivenname",
+          "source": [ {
+            "context": "xpn",
+            "element": "node",
+            "variable": "second",
+            "condition": "position = 3"
+          } ],
+          "rule": [ {
+            "name": "secondgiven",
+            "source": [ {
+              "context": "second",
+              "element": "value",
+              "variable": "v"
+            } ],
+            "target": [ {
+              "context": "name",
+              "contextType": "variable",
+              "element": "given",
+              "transform": "copy",
+              "parameter": [ {
+                "valueId": "v"
+              } ]
+            } ]
+          } ]
+        }, {
+          "name": "useofficial",
+          "source": [ {
+            "context": "xpn",
+            "element": "node",
+            "variable": "type",
+            "condition": "(position = 7) and (value = 'L')"
+          } ],
+          "target": [ {
+            "context": "name",
+            "contextType": "variable",
+            "element": "use",
+            "transform": "copy",
+            "parameter": [ {
+              "valueString": "official"
+            } ]
+          } ]
+        }, {
+          "name": "useusual",
+          "source": [ {
+            "context": "xpn",
+            "element": "node",
+            "variable": "type",
+            "condition": "(position = 7) and (value = 'D')"
+          } ],
+          "target": [ {
+            "context": "name",
+            "contextType": "variable",
+            "element": "use",
+            "transform": "copy",
+            "parameter": [ {
+              "valueString": "usual"
+            } ]
+          } ]
+        }, {
+          "name": "usemaiden",
+          "source": [ {
+            "context": "xpn",
+            "element": "node",
+            "variable": "type",
+            "condition": "(position = 7) and (value = 'M')"
+          } ],
+          "target": [ {
+            "context": "name",
+            "contextType": "variable",
+            "element": "use",
+            "transform": "copy",
+            "parameter": [ {
+              "valueString": "maiden"
+            } ]
+          } ]
+        } ],
+        "documentation": "Each name (repeatable PID-5): family name, given names, use based on name type."
+      }, {
+        "name": "sex",
+        "source": [ {
+          "context": "pid",
+          "element": "node",
+          "variable": "sex",
+          "condition": "name = 'PID.8'"
+        } ],
+        "rule": [ {
+          "name": "sexcode",
+          "source": [ {
+            "context": "sex",
+            "element": "node",
+            "variable": "code",
+            "condition": "position = 1"
+          } ],
+          "rule": [ {
+            "name": "gender",
+            "source": [ {
+              "context": "code",
+              "element": "value",
+              "variable": "v"
+            } ],
+            "target": [ {
+              "context": "patient",
+              "contextType": "variable",
+              "element": "gender",
+              "transform": "translate",
+              "parameter": [ {
+                "valueId": "v"
+              }, {
+                "valueString": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0001-to-gender"
+              }, {
+                "valueString": "code"
+              } ]
+            } ]
+          } ]
+        } ],
+        "documentation": "Gender: HL7 table 0001 to administrative-gender via the ConceptMap in /fhir-ig."
+      }, {
+        "name": "dateofbirth",
+        "source": [ {
+          "context": "pid",
+          "element": "node",
+          "variable": "dob",
+          "condition": "name = 'PID.7'"
+        } ],
+        "rule": [ {
+          "name": "birthtime",
+          "source": [ {
+            "context": "dob",
+            "element": "node",
+            "variable": "time",
+            "condition": "position = 1"
+          } ],
+          "rule": [ {
+            "name": "birthDate",
+            "source": [ {
+              "context": "time",
+              "element": "value",
+              "variable": "v",
+              "condition": "v.length() >= 8"
+            } ],
+            "target": [ {
+              "context": "patient",
+              "contextType": "variable",
+              "element": "birthDate",
+              "transform": "evaluate",
+              "parameter": [ {
+                "valueString": "v.substring(0, 4) & '-' & v.substring(4, 2) & '-' & v.substring(6, 2)"
+              } ]
+            } ]
+          } ]
+        } ],
+        "documentation": "Birth date: YYYYMMDD to YYYY-MM-DD."
+      } ]
+    } ]
+  } ]
+}

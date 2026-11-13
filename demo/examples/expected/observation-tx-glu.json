@@ -1,0 +1,26 @@
+{
+  "resourceType": "Observation",
+  "id": "obs-tx-001",
+  "meta": {
+    "profile": [
+      "http://hl7.org/fhir/StructureDefinition/Observation"
+    ]
+  },
+  "status": "final",
+  "code": {
+    "coding": [
+      {
+        "system": "http://loinc.org",
+        "code": "14749-6",
+        "display": "Glucose [Moles/volume] in Serum or Plasma"
+      }
+    ]
+  },
+  "valueQuantity": {
+    "value": 5.1,
+    "unit": "mmol/L",
+    "system": "http://unitsofmeasure.org",
+    "code": "mmol/L"
+  }
+}
+

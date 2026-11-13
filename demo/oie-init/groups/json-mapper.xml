@@ -1,0 +1,22 @@
+<set>
+  <channelGroup version="4.7.0">
+    <id>ce3d058f-a54e-55fd-b2d8-2221bd51da02</id>
+    <name>JSON - Mapper</name>
+    <revision>1</revision>
+    <description>Business JSON sources mapped with Profile Mapper</description>
+    <channels>
+      <channel version="4.7.0">
+        <id>89c98d20-f9c1-4ae4-a7eb-4133f8708090</id>
+      </channel>
+      <channel version="4.7.0">
+        <id>4eb632c8-a774-4fea-aefa-838b56818091</id>
+      </channel>
+      <channel version="4.7.0">
+        <id>6a2b9104-4d15-4a2b-8f30-809300000001</id>
+      </channel>
+      <channel version="4.7.0">
+        <id>6a2b9104-4d15-4a2b-8f30-809600000001</id>
+      </channel>
+    </channels>
+  </channelGroup>
+</set>

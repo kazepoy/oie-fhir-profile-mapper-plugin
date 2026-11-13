@@ -1,8 +1,8 @@
 <channel version="4.7.0">
-  <id>4eb632c8-a774-4fea-aefa-838b56818091</id>
+  <id>6a2b9104-4d15-4a2b-8f30-809300000001</id>
   <nextMetaDataId>2</nextMetaDataId>
-  <name>JSON métier vers Patient FR Core</name>
-  <description>JSON métier vers le profil FR Core Patient 2.2.0, identifiant PI et lieu de naissance. POST application/json sur /patient-fr-core/, port 8091. Exemples nominaux et invalides dans demo/examples/. Validation active.</description>
+  <name>Business JSON to Obs EU Lab</name>
+  <description>Business JSON to the HL7 Europe Laboratory 2.0.0 Observation profile (Observation-resultslab-eu-lab). POST application/json to /eu-lab-observation/, port 8093. Nominal and invalid examples in demo/examples/.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8091</port>
+        <port>8093</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>
@@ -39,21 +39,21 @@
       <responseHeadersVariable />
       <useResponseHeadersVariable>false</useResponseHeadersVariable>
       <charset>UTF-8</charset>
-      <contextPath>/patient-fr-core</contextPath>
+      <contextPath>/eu-lab-observation</contextPath>
       <timeout>30000</timeout>
       <staticResources />
     </properties>
     <transformer version="4.7.0">
       <elements>
         <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
-          <name>Patient</name>
+          <name>Observation</name>
           <sequenceNumber>0</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
           <profiles />
-          <profileUrl>https://hl7.fr/ig/fhir/core/StructureDefinition/fr-core-patient</profileUrl>
-          <profileVersion>2.2.0</profileVersion>
-          <resourceType>Patient</resourceType>
+          <profileUrl>http://hl7.eu/fhir/laboratory/StructureDefinition/Observation-resultslab-eu-lab</profileUrl>
+          <profileVersion>2.0.0</profileVersion>
+          <resourceType>Observation</resourceType>
           <addMetaProfile>true</addMetaProfile>
           <setLastUpdated>false</setLastUpdated>
           <variable />
@@ -64,23 +64,25 @@
           <terminologyAuthorization />
           <terminologyCacheSeconds>300</terminologyCacheSeconds>
           <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
-          <mappings>[{"id":"Patient.id","key":"Patient.id","element":"Patient.id","type":"id","expression":"msg.id","path":[["id"]]},{"id":"Patient.identifier-PI.use","key":"Patient.identifier:PI.use","element":"Patient.identifier:PI.use","type":"code","expression":"msg.usage_ipp","path":[["identifier","PI#0"],["use"]]},{"id":"Patient.identifier-PI.type","key":"Patient.identifier:PI.type","fixed":{"coding":[{"system":"http://terminology.hl7.org/CodeSystem/v2-0203","code":"PI","display":"Patient internal identifier"}]},"path":[["identifier","PI#0"],["type"]]},{"id":"Patient.identifier-PI.system","key":"Patient.identifier:PI.system","fixed":"https://example.org/fhir/sid/demo-ipp","path":[["identifier","PI#0"],["system"]]},{"id":"Patient.identifier-PI.value","key":"Patient.identifier:PI.value","element":"Patient.identifier:PI.value","type":"string","expression":"msg.ipp","path":[["identifier","PI#0"],["value"]]},{"id":"Patient.name-officialName.use","key":"Patient.name:officialName.use","fixed":"official","path":[["name","officialName#0"],["use"]]},{"id":"Patient.name-officialName.family","key":"Patient.name:officialName.family","element":"Patient.name:officialName.family","type":"string","expression":"msg.nom_naissance","path":[["name","officialName#0"],["family"]]},{"id":"Patient.name-officialName.given","key":"Patient.name:officialName.given","element":"Patient.name:officialName.given","type":"string","expression":"msg.prenom","path":[["name","officialName#0"],["given","#0"]]},{"id":"Patient.gender","key":"Patient.gender","element":"Patient.gender","type":"code","expression":"msg.sexe","path":[["gender"]]},{"id":"Patient.birthDate","key":"Patient.birthDate","element":"Patient.birthDate","type":"date","expression":"msg.date_naissance","path":[["birthDate"]]},{"id":"Patient.extension-birthPlace.url","key":"Patient.extension:birthPlace.url","fixed":"http://hl7.org/fhir/StructureDefinition/patient-birthPlace","path":[["extension","birthPlace#0"],["url"]]},{"id":"Patient.extension-birthPlace.valueAddress.city","key":"Patient.extension:birthPlace.valueAddress.city","element":"Patient.extension:birthPlace.valueAddress.city","type":"string","expression":"msg.ville_naissance","path":[["extension","birthPlace#0"],["valueAddress"],["city"]]}]</mappings>
-          <samples>[{"id":"4eb632c8-a774-4fea-aefa-838b56818091","name":"JSON métier vers Patient FR Core — nominal","message":"{\n  \"id\": \"fr-demo-001\",\n  \"ipp\": \"000123456\",\n  \"usage_ipp\": \"usual\",\n  \"nom_naissance\": \"Durand\",\n  \"prenom\": \"Élodie\",\n  \"sexe\": \"female\",\n  \"date_naissance\": \"1985-04-12\",\n  \"ville_naissance\": \"Lyon\"\n}\n","dataType":"JSON","scope":"step","expected":"{\n  \"resourceType\": \"Patient\",\n  \"id\": \"fr-demo-001\",\n  \"meta\": {\"profile\": [\"https://hl7.fr/ig/fhir/core/StructureDefinition/fr-core-patient\"]},\n  \"extension\": [{\n    \"url\": \"http://hl7.org/fhir/StructureDefinition/patient-birthPlace\",\n    \"valueAddress\": {\"city\": \"Lyon\"}\n  }],\n  \"identifier\": [{\n    \"use\": \"usual\",\n    \"type\": {\"coding\": [{\"system\": \"http://terminology.hl7.org/CodeSystem/v2-0203\", \"code\": \"PI\", \"display\": \"Patient internal identifier\"}]},\n    \"system\": \"https://example.org/fhir/sid/demo-ipp\",\n    \"value\": \"000123456\"\n  }],\n  \"name\": [{\"use\": \"official\", \"family\": \"Durand\", \"given\": [\"Élodie\"]}],\n  \"gender\": \"female\",\n  \"birthDate\": \"1985-04-12\"\n}\n"}]</samples>
-          <context>fr-core-2.2.0</context>
+          <mappings>[{"id": "Observation.id", "key": "Observation.id", "element": "Observation.id", "type": "id", "expression": "msg.id", "path": [["id"]]}, {"id": "Observation.status", "key": "Observation.status", "element": "Observation.status", "type": "code", "expression": "msg.status", "path": [["status"]]}, {"id": "Observation.category-laboratory", "key": "Observation.category:laboratory", "element": "Observation.category:laboratory", "fixed": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}, "path": [["category", "laboratory#0"]]}, {"id": "Observation.code.coding.system", "key": "Observation.code.coding.system", "element": "Observation.code.coding.system", "type": "uri", "fixed": "http://loinc.org", "path": [["code"], ["coding", "#0"], ["system"]]}, {"id": "Observation.code.coding.code", "key": "Observation.code.coding.code", "element": "Observation.code.coding.code", "type": "code", "expression": "msg.loinc", "path": [["code"], ["coding", "#0"], ["code"]]}, {"id": "Observation.code.coding.display", "key": "Observation.code.coding.display", "element": "Observation.code.coding.display", "type": "string", "expression": "msg.display", "path": [["code"], ["coding", "#0"], ["display"]]}, {"id": "Observation.subject.reference", "key": "Observation.subject.reference", "element": "Observation.subject.reference", "type": "string", "expression": "msg.patient_ref", "path": [["subject"], ["reference"]]}, {"id": "Observation.effectiveDateTime", "key": "Observation.effectiveDateTime", "element": "Observation.effectiveDateTime", "type": "dateTime", "expression": "msg.effective", "path": [["effectiveDateTime"]]}, {"id": "Observation.performer.reference", "key": "Observation.performer.reference", "element": "Observation.performer.reference", "type": "string", "expression": "msg.performer_ref", "path": [["performer", "#0"], ["reference"]]}, {"id": "Observation.valueQuantity.value", "key": "Observation.valueQuantity.value", "element": "Observation.valueQuantity.value", "type": "decimal", "expression": "msg.value", "path": [["valueQuantity"], ["value"]]}, {"id": "Observation.valueQuantity.unit", "key": "Observation.valueQuantity.unit", "element": "Observation.valueQuantity.unit", "type": "string", "expression": "msg.unit", "path": [["valueQuantity"], ["unit"]]}, {"id": "Observation.valueQuantity.system", "key": "Observation.valueQuantity.system", "element": "Observation.valueQuantity.system", "type": "uri", "fixed": "http://unitsofmeasure.org", "path": [["valueQuantity"], ["system"]]}, {"id": "Observation.valueQuantity.code", "key": "Observation.valueQuantity.code", "element": "Observation.valueQuantity.code", "type": "code", "expression": "msg.ucum", "path": [["valueQuantity"], ["code"]]}]</mappings>
+          <samples>[{"id": "6a2b9104-4d15-4a2b-8f30-809300000001", "name": "Business JSON to Obs EU Lab - nominal", "message": "{\n  \"id\": \"obs-eu-lab-001\",\n  \"status\": \"final\",\n  \"patient_ref\": \"Patient/pat-eu-001\",\n  \"performer_ref\": \"Organization/lab-eu-001\",\n  \"effective\": \"2026-01-15T08:30:00+01:00\",\n  \"loinc\": \"20448-7\",\n  \"display\": \"Insulin [Units/volume] in Serum or Plasma\",\n  \"value\": 12.5,\n  \"unit\": \"uIU/mL\",\n  \"ucum\": \"[iU]/mL\"\n}\n", "dataType": "JSON", "scope": "step", "expected": "{\n  \"resourceType\": \"Observation\",\n  \"id\": \"obs-eu-lab-001\",\n  \"meta\": {\n    \"profile\": [\n      \"http://hl7.eu/fhir/laboratory/StructureDefinition/Observation-resultslab-eu-lab\"\n    ]\n  },\n  \"status\": \"final\",\n  \"category\": [\n    {\n      \"coding\": [\n        {\n          \"system\": \"http://terminology.hl7.org/CodeSystem/observation-category\",\n          \"code\": \"laboratory\"\n        }\n      ]\n    }\n  ],\n  \"code\": {\n    \"coding\": [\n      {\n        \"system\": \"http://loinc.org\",\n        \"code\": \"20448-7\",\n        \"display\": \"Insulin [Units/volume] in Serum or Plasma\"\n      }\n    ]\n  },\n  \"subject\": {\n    \"reference\": \"Patient/pat-eu-001\"\n  },\n  \"effectiveDateTime\": \"2026-01-15T08:30:00+01:00\",\n  \"performer\": [\n    {\n      \"reference\": \"Organization/lab-eu-001\"\n    }\n  ],\n  \"valueQuantity\": {\n    \"value\": 12.5,\n    \"unit\": \"uIU/mL\",\n    \"system\": \"http://unitsofmeasure.org\",\n    \"code\": \"[iU]/mL\"\n  }\n}\n"}]</samples>
+          <context>eu-laboratory-2.0.0</context>
           <validateOutput>true</validateOutput>
           <formatVersion>2</formatVersion>
           <validation>always</validation>
         </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
       </elements>
       <inboundTemplate>{
-  "id": "fr-demo-001",
-  "ipp": "000123456",
-  "usage_ipp": "usual",
-  "nom_naissance": "Durand",
-  "prenom": "Élodie",
-  "sexe": "female",
-  "date_naissance": "1985-04-12",
-  "ville_naissance": "Lyon"
+  "id": "obs-eu-lab-001",
+  "status": "final",
+  "patient_ref": "Patient/pat-eu-001",
+  "performer_ref": "Organization/lab-eu-001",
+  "effective": "2026-01-15T08:30:00+01:00",
+  "loinc": "20448-7",
+  "display": "Insulin [Units/volume] in Serum or Plasma",
+  "value": 12.5,
+  "unit": "uIU/mL",
+  "ucum": "[iU]/mL"
 }
 </inboundTemplate>
       <inboundDataType>JSON</inboundDataType>
@@ -125,7 +127,7 @@
   <destinationConnectors>
     <connector version="4.7.0">
       <metaDataId>1</metaDataId>
-      <name>Résultat FHIR</name>
+      <name>FHIR Result</name>
       <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
         <pluginProperties />
         <destinationConnectorProperties version="4.7.0">
@@ -267,93 +269,67 @@
     </metadata>
     <channelTags>
       <channelTag>
-        <id>8bc4cff6-98e8-5658-899c-4b37619846ad</id>
+        <id>612284a7-41e3-5f8f-a137-093fab0a405c</id>
         <name>R4</name>
         <channelIds>
-          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
+          <string>6a2b9104-4d15-4a2b-8f30-809300000001</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>37</red>
+          <green>99</green>
+          <blue>235</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>c9a2a013-41f1-5b3b-b3d5-9ffc4c68cc04</id>
+        <id>995050ef-de77-5f4e-827c-a4f14b07d384</id>
         <name>JSON</name>
         <channelIds>
-          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
+          <string>6a2b9104-4d15-4a2b-8f30-809300000001</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>2</red>
+          <green>132</green>
+          <blue>199</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>c08e8827-9b46-5121-8715-af264f5decbd</id>
-        <name>FR-Core-2-2-0</name>
+        <id>c2c74737-3123-52e7-886d-ee30e924db89</id>
+        <name>Mapper</name>
         <channelIds>
-          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
+          <string>6a2b9104-4d15-4a2b-8f30-809300000001</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>29</red>
+          <green>78</green>
+          <blue>216</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>d7b522e6-239d-5a9d-b1a1-fe7971b38ed9</id>
-        <name>IG</name>
+        <id>2f748322-8987-5e9c-adc0-53e19fa358a6</id>
+        <name>contexts</name>
         <channelIds>
-          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
+          <string>6a2b9104-4d15-4a2b-8f30-809300000001</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>51</red>
+          <green>65</green>
+          <blue>85</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>f5b855be-127c-5f5f-80a2-045e8030d443</id>
-        <name>PI</name>
-        <channelIds>
-          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
-        </channelIds>
-        <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
-          <alpha>255</alpha>
-        </backgroundColor>
-      </channelTag>
-      <channelTag>
-        <id>c3b0d40a-6af8-528d-b824-d736657c0215</id>
-        <name>birthPlace</name>
-        <channelIds>
-          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
-        </channelIds>
-        <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
-          <alpha>255</alpha>
-        </backgroundColor>
-      </channelTag>
-      <channelTag>
-        <id>4d57083a-d785-5392-8c1c-a80cadee7c35</id>
+        <id>929033f3-6b85-505f-821c-89057b1277aa</id>
         <name>validation</name>
         <channelIds>
-          <string>4eb632c8-a774-4fea-aefa-838b56818091</string>
+          <string>6a2b9104-4d15-4a2b-8f30-809300000001</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>22</red>
+          <green>163</green>
+          <blue>74</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>

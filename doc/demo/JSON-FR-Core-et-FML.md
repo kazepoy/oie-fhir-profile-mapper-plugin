@@ -5,9 +5,14 @@ données fictives, des attendus versionnés et un contre-exemple chacun.
 
 | Canal | Groupe OIE | Port et chemin | But |
 |---|---|---|---|
-| JSON métier vers Organization R5 | FHIR - Mapper metier | `8090/organization-r5/` | Source JSON et champ `Organization.description` propre à R5 |
-| JSON métier vers Patient FR Core | FHIR - Mapper metier | `8091/patient-fr-core/` | Profil publié FR Core 2.2.0, slice d'identifiant PI et lieu de naissance |
-| Patient FHIR vers résumé FML | FHIR - FML | `8092/patient-summary/` | Une ressource FHIR reçue directement par une map FML |
+| Business JSON to Organization R5 | JSON - Mapper | `8090/organization-r5/` | Source JSON et champ `Organization.description` propre à R5 |
+| Business JSON to Patient FR Core | JSON - Mapper | `8091/patient-fr-core/` | Profil publié FR Core 2.2.0, slice d'identifiant PI et lieu de naissance |
+| FHIR Patient to Summary (FML) | FHIR - FML | `8092/patient-summary/` | Une ressource FHIR reçue directement par une map FML |
+| Business JSON to Obs EU Lab | JSON - Mapper | `8093/eu-lab-observation/` | Profil publié HL7 Europe Laboratory 2.0.0 et champ obligatoire `effective[x]` |
+| CSV to Permission R5 (FML) | CSV - FML | `8094/permission-r5/` | Source CSV vers `Bundle` R5 contenant `Organization` et `Permission` |
+| ORU R01 to FHIR Patient (FML IG) | HL7v2 - FML | `8095/patient-fml-ig/` | `StructureMap` JSON publiée dans `/fhir-ig`, appelée par `mapUrl` |
+| Business JSON to Obs (External TX) | JSON - Mapper | `8096/obs-external-tx/` | `ConceptMap/$translate` vers un serveur HTTP externe, repli et panne 503 |
+| HTTP Terminology Mock ($translate) | HTTP - Mock | `8099/fhir/` | Mock léger `ConceptMap/$translate` hébergé dans OIE |
 
 Les requêtes nominales et invalides figurent dans
 [`demo.http`](../../demo/examples/demo.http). Chaque POST utilise
@@ -71,7 +76,7 @@ Sur une installation existante, reconstruire l'image et relancer
 l'initialisation avec `OIE_INIT_FORCE=true` pour mettre à jour le contexte et les
 canaux de démo. Cette option remplace leurs personnalisations locales.
 
-## Patient FHIR vers FML
+## FHIR Patient to Summary (FML)
 
 La [source](../../demo/examples/patient-fhir-source.json) est déjà un Patient
 FHIR R4. Le datatype FHIR valide l'entrée puis la présente en JSON au
@@ -84,15 +89,24 @@ conserve explicitement l'id, les identifiants, le nom, le sexe, la naissance et
 `active: false`. `telecom` et les autres propriétés sont omis par cette
 projection ; ce canal ne constitue pas une anonymisation.
 
-Dans l'étape **Résumé Patient**, l'onglet **Test** est préchargé avec la
+Dans l'étape **Patient Summary**, l'onglet **Test** est préchargé avec la
 source JSON. Le [contre-exemple](../../demo/examples/patient-fhir-source-invalide.json)
 fournit un sexe `inconnu`, hors du ValueSet FHIR : l'aperçu signale l'erreur de
 validation et le datatype entrant du canal déployé refuse le message.
+
+## EU Laboratory 2.0.0, FML R5, map d'IG et terminologie externe
+
+Les cinq canaux suivants complètent la matrice sans modification du contrat plugin :
+
+- **Business JSON to Obs EU Lab (`8093`)** : Observation conforme à `hl7.fhir.eu.laboratory#2.0.0` (contexte `eu-laboratory-2.0.0` avec dépendances directes `eu.base`, `eu.extensions.r4`, `uv.xver-r5.r4`, `terminology.r4` et `uv.extensions.r4`), avec [entrée nominale](../../demo/examples/observation-eu-lab.json) et [contre-exemple](../../demo/examples/observation-eu-lab-invalide.json) sur `status`.
+- **CSV to Permission R5 (FML) (`8094`)** : CSV vers `Bundle` R5 (`Organization` + `Permission`) avec [`PermissionR5.fml`](../../demo/fml/PermissionR5.fml) en contexte `demo-r5`, [CSV nominal](../../demo/examples/permissions-r5.csv) et [CSV invalide](../../demo/examples/permissions-r5-invalide.csv).
+- **ORU R01 to FHIR Patient (FML IG) (`8095`)** : résolution d'une `StructureMap` publiée dans `/fhir-ig` via `mapUrl` ([`StructureMap-OruR01ToPatientIG.json`](../../demo/ig/StructureMap-OruR01ToPatientIG.json)).
+- **Business JSON to Obs (External TX) (`8096`) & HTTP Terminology Mock (`8099`)** : mock OIE léger exposant `ConceptMap/$translate` (`GLU` → LOINC `14749-6`, inconnu → `result=false` avec repli `data-absent-reason#unknown`, `UNAVAILABLE` → HTTP `503` sur [observation indisponible](../../demo/examples/observation-tx-unavailable.json)).
 
 ## Contrôles automatisés
 
 `python3 demo/examples/check.py` compare les réponses HTTP aux attendus, rejoue
 les aperçus et vérifie que chaque contre-exemple produit un nouveau message
-OIE en erreur avec le diagnostic attendu. Les samples positifs Profile Mapper
-restent rejouables avec `tools/run_tests.py` ; les trois aperçus FML sont
+OIE en erreur avec le diagnostic attendu. Les quatorze samples positifs Profile
+Mapper restent rejouables avec `tools/run_tests.py` ; les cinq aperçus FML sont
 contrôlés depuis le manifeste de démonstration.

@@ -8,7 +8,7 @@ test("a transformer preview assembles two Bundles and exposes every step and pub
   const session = await signIn();
   const { page } = session;
   try {
-    await openStep(page, "ORU R01 vers deux Bundles labo FHIR", "Observation");
+    await openStep(page, "ORU R01 to Two Lab Bundles", "Observation");
     const mapper = page.locator(".fhir-profile-mapper");
     await mapper.getByRole("tab", { name: "Test", exact: true }).click();
     await mapper.locator(".fm-code-box[data-language=hl7v2] .monaco-editor").waitFor();
@@ -43,7 +43,7 @@ test("value tables import atomically, undo in one operation and export with thei
   const { page } = session;
   try {
     // Exercise the host's standard download fallback in an automated browser.
-    await openStep(page, "ORU R01 vers Patient FHIR", "Patient");
+    await openStep(page, "ORU R01 to FHIR Patient", "Patient");
     await page.evaluate(() => { window.showSaveFilePicker = undefined; });
     const mapper = page.locator(".fhir-profile-mapper");
     await mapper.getByRole("tab", { name: "Properties", exact: true }).click();

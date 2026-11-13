@@ -46,7 +46,7 @@ RUN curl --fail --silent --show-error --location --max-time 300 \
       --output /tmp/hl7.fhir.eu.laboratory-2.0.0.tgz \
     && echo '097aa45c6efcdbc3f25ead8b7d448fee5011b5e7ecf264aa400c5e2c69c5c488  /tmp/hl7.fhir.eu.laboratory-2.0.0.tgz' | sha256sum -c -
 
-# Dépendances directes FR Core utilisées par le contexte de démonstration.
+# Dépendances directes FR Core et EU Laboratory utilisées par les contextes de démonstration.
 RUN curl --fail --silent --show-error --location --max-time 300 \
       https://packages.fhir.org/hl7.fhir.uv.extensions.r4/5.2.0 \
       --output /tmp/hl7.fhir.uv.extensions.r4-5.2.0.tgz \
@@ -58,7 +58,19 @@ RUN curl --fail --silent --show-error --location --max-time 300 \
     && curl --fail --silent --show-error --location --max-time 300 \
       https://packages.fhir.org/ans.fr.terminologies/1.7.0 \
       --output /tmp/ans.fr.terminologies-1.7.0.tgz \
-    && echo '7239d21c228b59849dee4003fe47e4fdcf40da78ccca25c0af50a26f6122baaa  /tmp/ans.fr.terminologies-1.7.0.tgz' | sha256sum -c -
+    && echo '7239d21c228b59849dee4003fe47e4fdcf40da78ccca25c0af50a26f6122baaa  /tmp/ans.fr.terminologies-1.7.0.tgz' | sha256sum -c - \
+    && curl --fail --silent --show-error --location --max-time 300 \
+      https://packages.fhir.org/hl7.fhir.eu.base/2.0.0 \
+      --output /tmp/hl7.fhir.eu.base-2.0.0.tgz \
+    && echo 'b2858677ae11245bbc768ced2e205c5354ebf71ae8d7a7a0f2915c3eb6124999  /tmp/hl7.fhir.eu.base-2.0.0.tgz' | sha256sum -c - \
+    && curl --fail --silent --show-error --location --max-time 300 \
+      https://packages.fhir.org/hl7.fhir.eu.extensions.r4/1.3.0 \
+      --output /tmp/hl7.fhir.eu.extensions.r4-1.3.0.tgz \
+    && echo '8510e930856961d550c04d43f243ef0bdcb27089431fe183ab11c7f805f0c2f1  /tmp/hl7.fhir.eu.extensions.r4-1.3.0.tgz' | sha256sum -c - \
+    && curl --fail --silent --show-error --location --max-time 300 \
+      https://packages.fhir.org/hl7.fhir.uv.xver-r5.r4/0.1.0 \
+      --output /tmp/hl7.fhir.uv.xver-r5.r4-0.1.0.tgz \
+    && echo '7ee6f04d78ced803dd567559a0d178bafbd2d3b71db61bbbf6b15c796a1a664d  /tmp/hl7.fhir.uv.xver-r5.r4-0.1.0.tgz' | sha256sum -c -
 
 FROM ${BUSYBOX_IMAGE} AS plugins
 COPY --from=downloads /tmp/*.zip /downloads/
@@ -107,7 +119,7 @@ FROM oie-engine
 COPY --from=plugins --chown=engine:engine /extensions/ /opt/engine/extensions/
 COPY --from=mapper --chown=engine:engine /extensions/ /opt/engine/extensions/
 COPY --from=downloads --chown=engine:engine /tmp/hl7.fhir.fr.core-2.2.0.tgz /tmp/hl7.fhir.eu.laboratory-2.0.0.tgz /fhir-packages/
-COPY --from=downloads --chown=engine:engine /tmp/hl7.fhir.uv.extensions.r4-5.2.0.tgz /tmp/hl7.terminology.r4-7.1.0.tgz /tmp/ans.fr.terminologies-1.7.0.tgz /fhir-packages/
+COPY --from=downloads --chown=engine:engine /tmp/hl7.fhir.uv.extensions.r4-5.2.0.tgz /tmp/hl7.terminology.r4-7.1.0.tgz /tmp/ans.fr.terminologies-1.7.0.tgz /tmp/hl7.fhir.eu.base-2.0.0.tgz /tmp/hl7.fhir.eu.extensions.r4-1.3.0.tgz /tmp/hl7.fhir.uv.xver-r5.r4-0.1.0.tgz /fhir-packages/
 # OIE ne journalise que les erreurs par défaut pour les loggers non configurés.
 RUN printf '\nlogger.fhirProfileMapper.name = fr.kazepoy.fhir.mapper\nlogger.fhirProfileMapper.level = INFO\nlogger.fhirFml.name = fr.kazepoy.fhir.fml\nlogger.fhirFml.level = INFO\n' >> conf/log4j2.properties
 LABEL org.opencontainers.image.title="OIE 4.7.0, Web Support, FHIR Data Type, RBAC, Flow UI et FHIR Profile Mapper"

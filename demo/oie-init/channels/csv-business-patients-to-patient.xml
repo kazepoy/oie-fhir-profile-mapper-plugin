@@ -1,8 +1,8 @@
 <channel version="4.7.0">
   <id>bfd48a62-4376-4c9a-91b3-ff294b5e2570</id>
   <nextMetaDataId>2</nextMetaDataId>
-  <name>CSV patients métier vers Patient FHIR</name>
-  <description>CSV UTF-8 de 10 patients métier, séparateur point-virgule et en-tête : POST /csv-patients/, port 8085. Batch natif OIE : une ligne par message. Source : trim des colonnes, sexe en majuscules, date AAAAMMJJ vers AAAA-MM-JJ. Destination : FHIR Profile Mapper vers ExampleLabPatient. Dix résultats dans le dashboard ; réponse HTTP = dernier Patient.</description>
+  <name>CSV Business Patients to Patient</name>
+  <description>UTF-8 CSV of 10 business patients, semicolon delimiter and header: POST /csv-patients/, port 8085. Native OIE batch: one row per message. Source: trim columns, uppercase sex, YYYYMMDD to YYYY-MM-DD date. Destination: FHIR Profile Mapper to ExampleLabPatient. Ten results in the dashboard; HTTP response = last Patient.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -46,12 +46,12 @@
     <transformer version="4.7.0">
       <elements>
         <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
-          <name>Nettoyer la ligne CSV</name>
+          <name>Clean CSV row</name>
           <sequenceNumber>0</sequenceNumber>
           <enabled>true</enabled>
-          <script>// Le batch natif a isolé une ligne et le type Delimited Text l'a parsée en XML.
-// Nettoyage métier uniquement ; la construction FHIR appartient à la destination.
-channelMap.put('__demoEtape', 'NETTOYAGE_SOURCE');
+          <script>// Native batch isolated one row and Delimited Text parsed it into XML.
+// Business cleanup only; FHIR construction belongs in the destination.
+channelMap.put('__demoEtape', 'SOURCE_CLEANUP');
 var row = msg['row'][0];
 for each (var field in row.children()) {
     row[field.name().toString()] = field.toString().trim();
@@ -60,10 +60,10 @@ row['sexe'] = row['sexe'].toString().toUpperCase();
 var birthDate = row['date_naissance'].toString();
 if (birthDate !== '') {
     try {
-        if (!/^\d{8}$/.test(birthDate)) throw new Error('format attendu : AAAAMMJJ');
+        if (!/^\d{8}$/.test(birthDate)) throw new Error('expected format: YYYYMMDD');
         row['date_naissance'] = String(java.time.LocalDate.parse(birthDate, java.time.format.DateTimeFormatter.BASIC_ISO_DATE));
     } catch (e) {
-        throw new Error('Patient métier ' + row['id_patient'] + ', date_naissance invalide : "' + birthDate + '" (attendu : AAAAMMJJ, date réelle).');
+        throw new Error('Business patient ' + row['id_patient'] + ', invalid birth date: "' + birthDate + '" (expected: YYYYMMDD, valid date).');
     }
 }</script>
         </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
@@ -124,7 +124,7 @@ if (birthDate !== '') {
   <destinationConnectors>
     <connector version="4.7.0">
       <metaDataId>1</metaDataId>
-      <name>Serveur FHIR (Patient)</name>
+      <name>FHIR Server (Patient)</name>
       <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
         <pluginProperties />
         <destinationConnectorProperties version="4.7.0">
@@ -147,18 +147,18 @@ if (birthDate !== '') {
           <queueBufferSize>1000</queueBufferSize>
           <reattachAttachments>true</reattachAttachments>
         </destinationConnectorProperties>
-        <script>// La source fournit une ligne métier nettoyée, au format XML (visible dans Raw).
-// Le transformeur de CETTE destination construit et valide le Patient ExampleLabPatient.
-// Encoded contient le Patient JSON. En batch, HTTP renvoie le résultat de la dernière ligne.
+        <script>// The source provides one cleaned business row in XML format (visible in Raw).
+// THIS destination transformer builds and validates the ExampleLabPatient.
+// Encoded contains the Patient JSON. In batch mode, HTTP returns the last row result.
 return connectorMessage.getEncodedData();</script>
       </properties>
       <transformer version="4.7.0">
         <elements>
           <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
-            <name>Début chronométrage transformation</name>
+            <name>Start transformation timing</name>
             <sequenceNumber>0</sequenceNumber>
             <enabled>true</enabled>
-            <script>channelMap.put('__demoEtape', 'TRANSFORMATION_FHIR');
+            <script>channelMap.put('__demoEtape', 'FHIR_TRANSFORMATION');
 channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
           <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
@@ -181,17 +181,17 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
             <terminologyCacheSeconds>300</terminologyCacheSeconds>
             <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
             <mappings>[{"key": "Patient.id", "element": "Patient.id", "type": "id", "expression": "'metier-' + msg['row']['id_patient'].toString()", "path": [["id"]]}, {"key": "Patient.active", "element": "Patient.active", "type": "boolean", "expression": "msg['row']['actif'].toString()", "path": [["active"]]}, {"key": "Patient.identifier:ipp.value", "element": "Patient.identifier:ipp.value", "type": "string", "expression": "msg['row']['ipp'].toString()", "path": [["identifier", "ipp#0"], ["value"]]}, {"key": "Patient.name.use", "element": "Patient.name.use", "type": "code", "expression": "'official'", "path": [["name", "#0"], ["use"]]}, {"key": "Patient.name.family", "element": "Patient.name.family", "type": "string", "expression": "msg['row']['nom_naissance'].toString()", "path": [["name", "#0"], ["family"]]}, {"key": "Patient.name.given", "element": "Patient.name.given", "type": "string", "expression": "msg['row']['prenom'].toString()", "path": [["name", "#0"], ["given", "#0"]]}, {"key": "Patient.gender", "element": "Patient.gender", "type": "code", "expression": "({M: 'male', F: 'female', I: 'unknown'})[msg['row']['sexe'].toString()]", "path": [["gender"]]}, {"key": "Patient.birthDate", "element": "Patient.birthDate", "type": "date", "expression": "msg['row']['date_naissance'].toString()", "path": [["birthDate"]]}, {"key": "Patient.identifier:ipp.system", "element": "Patient.identifier:ipp.system", "fixed": "http://example.org/fhir/oru2fhir/sid/ipp", "when": 1, "path": [["identifier", "ipp#0"], ["system"]]}]</mappings>
-            <samples>[{"id":"demo-csv-patients-metier-vers-patient-fhir","name":"Ligne CSV déjà nettoyée : Patient 2001","message":"&lt;delimited&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2001&lt;/id_patient&gt;\n    &lt;ipp&gt;000200001&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Durand&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Élodie&lt;/prenom&gt;\n    &lt;date_naissance&gt;1985-04-12&lt;/date_naissance&gt;\n    &lt;sexe&gt;F&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n&lt;/delimited&gt;","dataType":"XML","scope":"step","expected":"{\"resourceType\":\"Patient\",\"id\":\"metier-2001\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200001\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Durand\",\"given\":[\"Élodie\"]}],\"gender\":\"female\",\"birthDate\":\"1985-04-12\"}"}]</samples>
-        </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
+            <samples>[{"id":"demo-csv-patients-metier-vers-patient-fhir","name":"Already cleaned CSV row: Patient 2001","message":"&lt;delimited&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2001&lt;/id_patient&gt;\n    &lt;ipp&gt;000200001&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Durand&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Élodie&lt;/prenom&gt;\n    &lt;date_naissance&gt;1985-04-12&lt;/date_naissance&gt;\n    &lt;sexe&gt;F&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n&lt;/delimited&gt;","dataType":"XML","scope":"step","expected":"{\"resourceType\":\"Patient\",\"id\":\"metier-2001\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200001\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Durand\",\"given\":[\"Élodie\"]}],\"gender\":\"female\",\"birthDate\":\"1985-04-12\"}"}]</samples>
+          </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
           <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
-            <name>Fin chronométrage transformation</name>
+            <name>End transformation timing</name>
             <sequenceNumber>2</sequenceNumber>
             <enabled>true</enabled>
             <script>var end = channelMap.get('__fhirMapperBuildFinishedNano') || java.lang.System.nanoTime();
 var elapsed = Number(end) - Number(channelMap.get('__demoTransfoDebut'));
 channelMap.put('TRANSFO_MS', Math.round(elapsed / 1000) / 1000);
 channelMap.remove('__fhirMapperPhase');
-channelMap.put('__demoEtape', 'SORTIE / Patient FHIR');</script>
+channelMap.put('__demoEtape', 'OUTPUT / FHIR Patient');</script>
           </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
         </elements>
         <inboundTemplate>&lt;delimited&gt;
@@ -268,16 +268,16 @@ channelMap.put('__demoEtape', 'SORTIE / Patient FHIR');</script>
       <waitForPrevious>true</waitForPrevious>
     </connector>
   </destinationConnectors>
-  <preprocessingScript>// Réinitialisé pour chaque message, y compris après retraitement.
+  <preprocessingScript>// Reset for every message, including after reprocessing.
 channelMap.put('TOTAL_MS', 0);
 channelMap.remove('TRANSFO_MS');
-channelMap.put('ERREUR_ETAPE', 'OK');
-channelMap.put('__demoEtape', 'LECTURE_CSV');
+channelMap.put('ERROR_STEP', 'OK');
+channelMap.put('__demoEtape', 'READ_CSV');
 channelMap.remove('__fhirMapperPhase');
 channelMap.remove('__fhirMapperBuildFinishedNano');
 channelMap.remove('__fhirMapperValidationNanos');
 return message;</preprocessingScript>
-  <postprocessingScript>// Exécuté après les destinations, aussi après une erreur de lecture/transformation/validation.
+  <postprocessingScript>// Runs after destinations, including after a read/transformation/validation error.
 var source = message.getConnectorMessages().get(java.lang.Integer.valueOf(0));
 var total = Math.max(0, java.lang.System.currentTimeMillis() - source.getReceivedDate().getTimeInMillis());
 var errorLabel = 'OK';
@@ -288,8 +288,8 @@ while (connectors.hasNext()) {
     if (error) {
         var phase = cm.getChannelMap();
         var stage = cm.getMetaDataId() == 0
-            ? String(phase.get('__demoEtape') || 'LECTURE_CSV')
-            : phase.get('__fhirMapperPhase') == 'VALIDATION' ? 'VALIDATION_FHIR_SORTIE'
+            ? String(phase.get('__demoEtape') || 'READ_CSV')
+            : phase.get('__fhirMapperPhase') == 'VALIDATION' ? 'OUTBOUND_FHIR_VALIDATION'
             : phase.get('__demoTransfoDebut') != null ? String(phase.get('__demoEtape'))
             : 'LECTURE_XML_DESTINATION';
         var details = String(error);
@@ -301,11 +301,11 @@ while (connectors.hasNext()) {
     }
 }
 
-// OIE enregistre les métadonnées avant le postprocesseur : mettre à jour la ligne source
-// via son DAO pour conserver le temps complet et les erreurs survenues en sortie.
+// OIE stores metadata before the postprocessor: update the source row
+// via its DAO to keep total time and outbound errors.
 var values = new java.util.HashMap();
 values.put('TOTAL_MS', new java.math.BigDecimal(String(total)));
-// Le mapper s'exécute en destination : ses mesures sont dans la map de ce connecteur.
+// The mapper runs in the destination: its metrics are in that connector map.
 var destination = message.getConnectorMessages().get(java.lang.Integer.valueOf(1));
 var measures = destination != null ? destination.getChannelMap() : source.getChannelMap();
 var transfo = measures.get('TRANSFO_MS');
@@ -316,7 +316,7 @@ if (transfo == null &amp;&amp; finished != null) {
 if (transfo != null) {
     values.put('TRANSFO_MS', new java.math.BigDecimal(String(transfo)));
 }
-values.put('ERREUR_ETAPE', errorLabel);
+values.put('ERROR_STEP', errorLabel);
 var record = new Packages.com.mirth.connect.donkey.model.message.ConnectorMessage();
 record.setChannelId(channelId);
 record.setMessageId(message.getMessageId());
@@ -361,9 +361,9 @@ return;</postprocessingScript>
         <mappingName>TRANSFO_MS</mappingName>
       </com.mirth.connect.donkey.model.channel.MetaDataColumn>
       <com.mirth.connect.donkey.model.channel.MetaDataColumn>
-        <name>ERREUR_ETAPE</name>
+        <name>ERROR_STEP</name>
         <type>STRING</type>
-        <mappingName>ERREUR_ETAPE</mappingName>
+        <mappingName>ERROR_STEP</mappingName>
       </com.mirth.connect.donkey.model.channel.MetaDataColumn>
     </metaDataColumns>
     <attachmentProperties version="4.7.0">
@@ -392,67 +392,80 @@ return;</postprocessingScript>
     </metadata>
     <channelTags>
       <channelTag>
-        <id>8bc4cff6-98e8-5658-899c-4b37619846ad</id>
+        <id>612284a7-41e3-5f8f-a137-093fab0a405c</id>
         <name>R4</name>
         <channelIds>
           <string>bfd48a62-4376-4c9a-91b3-ff294b5e2570</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>37</red>
+          <green>99</green>
+          <blue>235</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>00a3fe96-b413-591e-8504-fa5e1b6955c1</id>
+        <id>495672ac-ebfb-5846-9140-696728752566</id>
         <name>CSV</name>
         <channelIds>
           <string>bfd48a62-4376-4c9a-91b3-ff294b5e2570</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>5</red>
+          <green>150</green>
+          <blue>105</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>17cd2326-7d8f-5f4f-b4b8-132f22087937</id>
+        <id>c2c74737-3123-52e7-886d-ee30e924db89</id>
+        <name>Mapper</name>
+        <channelIds>
+          <string>bfd48a62-4376-4c9a-91b3-ff294b5e2570</string>
+        </channelIds>
+        <backgroundColor>
+          <red>29</red>
+          <green>78</green>
+          <blue>216</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>ac35082c-a0af-5150-90cf-055bf877ec3e</id>
         <name>batch</name>
         <channelIds>
           <string>bfd48a62-4376-4c9a-91b3-ff294b5e2570</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>202</red>
+          <green>138</green>
+          <blue>4</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>90807695-9869-5ec1-9e47-dd80fa6bbcfe</id>
-        <name>nettoyage</name>
+        <id>ca65d3fe-2f30-5824-800d-009a8807e50c</id>
+        <name>cleanup</name>
         <channelIds>
           <string>bfd48a62-4376-4c9a-91b3-ff294b5e2570</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>101</red>
+          <green>163</green>
+          <blue>13</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>b68f3907-134b-5211-b6a7-4b919fd6a3d4</id>
-        <name>mapping-destination</name>
+        <id>d63f14a6-0b7d-5140-8c84-06f9e0a0ce3b</id>
+        <name>destination-mapping</name>
         <channelIds>
           <string>bfd48a62-4376-4c9a-91b3-ff294b5e2570</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>180</red>
+          <green>83</green>
+          <blue>9</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>

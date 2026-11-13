@@ -30,16 +30,16 @@ diagnostics et comptes rendus ; les travaux livrés figurent dans le
 ## À prioriser — D et E : exemples et FML
 
 La [matrice](doc/demo/Matrice-exemples.md) fait autorité sur la couverture.
-Les douze canaux sont groupés et tagués dans OIE ; JSON, CSV, XML, HL7 v2,
-Strict Parser, source FHIR, Organization R5 et Patient FR Core sont démontrés.
-Organization R5 est un cas Profile Mapper : ce n'est pas une preuve FML R5.
+Les dix-sept canaux de démo sont rangés dans huit groupes `<Source> - <Transfo>`
+avec tags colorés ordonnés (`[Release, Source, Transfo, ...fonctionnalités]`,
+sans tags IG/profil) : JSON, CSV, XML, HL7 v2, Strict Parser, source FHIR,
+Organization R5, FR Core, EU Laboratory 2.0.0, FML R5 `Permission`, map `mapUrl`
+d'IG et terminologie externe (`$translate` + repli + 503) sont démontrés. R4B
+est écarté de la démo par choix utilisateur.
 
-- [ ] Choisir les prochains cas utiles : canal R4B, FML R5 avec Organization et `Permission`,
-  profil R4 externe (package DevDays à évaluer), EU Laboratory, map publiée
-  dans un package IG et modèle logique métier arbitraire source/cible.
-- [ ] Demander à l'utilisateur l'IG HL7 v2 source à utiliser.
-- [ ] Démontrer une terminologie externe légère préchargée avec ConceptMaps,
-  avec absence de correspondance, indisponibilité et diagnostics.
+- [ ] Choisir les cas nécessitant conception : profil R4 externe (`DevDays`),
+  modèle logique métier arbitraire source/cible dans FML et IG HL7 v2 source à
+  utiliser.
 - [ ] Concevoir la dérivation éditable d'une map canonique et la navigation
   dans les imports imbriqués, avec diagnostics dans la bonne source.
 - [ ] Ajouter les jeux d'essai FML enregistrés avec résultats attendus ; étudier

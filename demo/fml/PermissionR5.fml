@@ -1,0 +1,55 @@
+map "http://example.org/fhir/r5/StructureMap/CsvToPermissionR5" = "CsvToPermissionR5"
+
+// Demo R5: a business CSV row parsed into OieMessage produces an R5 transaction Bundle
+// containing an Organization and a Permission (resource introduced in FHIR R5).
+// Uses OIE's default Delimited columns (column1..column7) so preview and channel agree:
+// column1=permission_id, column2=status, column3=combining, column4=org_id,
+// column5=org_name, column6=rule_type, column7=action_code.
+
+uses "http://oie.org/fhir/StructureDefinition/OieMessage" alias OieMessage as source
+uses "http://hl7.org/fhir/StructureDefinition/Bundle" alias Bundle as target
+uses "http://hl7.org/fhir/StructureDefinition/Organization" alias Organization as target
+uses "http://hl7.org/fhir/StructureDefinition/Permission" alias Permission as target
+
+group CsvToPermissionR5(source src : OieMessage, target bundle : Bundle) {
+  src -> bundle.type = 'transaction' "bundle-type";
+  src.node as row where name = 'row' and node.where(name = 'column2' and value != 'status').exists() then {
+    row.node as orgId where name = 'column4' then {
+      orgId.value as oid -> bundle.entry as orgEntry, orgEntry.fullUrl = ('http://example.org/fhir/Organization/' & oid),
+          orgEntry.resource = create('Organization') as org,
+          org.id = oid,
+          org.active = true,
+          orgEntry.request as req, req.method = 'POST', req.url = 'Organization' then {
+        row.node as orgName where name = 'column5' then {
+          orgName.value as oname -> org.name = oname "org-name";
+        } "org-name-node";
+      } "organization";
+    } "org-id-node";
+
+    row -> bundle.entry as permEntry, permEntry.resource = create('Permission') as perm,
+        permEntry.request as req, req.method = 'POST', req.url = 'Permission' then {
+      row.node as pid where name = 'column1' then {
+        pid.value as id -> perm.id = id, permEntry.fullUrl = ('http://example.org/fhir/Permission/' & id) "perm-id";
+      } "perm-id-node";
+      row.node as st where name = 'column2' then {
+        st.value as s -> perm.status = s "perm-status";
+      } "perm-status-node";
+      row.node as comb where name = 'column3' then {
+        comb.value as c -> perm.combining = c "perm-combining";
+      } "perm-combining-node";
+      row.node as oid where name = 'column4' then {
+        oid.value as orgRef -> perm.asserter as asserter, asserter.reference = ('http://example.org/fhir/Organization/' & orgRef) "perm-asserter";
+      } "perm-asserter-node";
+      row -> perm.rule as rule then {
+        row.node as rt where name = 'column6' then {
+          rt.value as t -> rule.type = t "rule-type";
+        } "rule-type-node";
+        row.node as act where name = 'column7' then {
+          act.value as a -> rule.activity as activity, activity.action as cc, cc.coding as coding,
+              coding.system = 'http://terminology.hl7.org/CodeSystem/consentaction',
+              coding.code = a "rule-action";
+        } "rule-action-node";
+      } "perm-rule";
+    } "permission";
+  } "row";
+}

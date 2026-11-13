@@ -30,7 +30,7 @@ class MappingSchemaTest(unittest.TestCase):
 
     def test_all_demo_channels(self):
         channels = list((ROOT / "demo/oie-init/channels").glob("*.xml"))
-        self.assertEqual(12, len(channels))  # neuf canaux Profile Mapper, trois canaux FML
+        self.assertEqual(17, len(channels))  # 11 Profile Mapper, 5 FML, 1 HTTP mock
         count = 0
         for path in channels:
             # OIE stocke le nom dans CHANNEL.NAME, varchar(40) : un nom plus long fait échouer l'import.
@@ -68,6 +68,8 @@ class MappingSchemaTest(unittest.TestCase):
                     samples = [sample for step in mappers for sample in json.loads(step.findtext("samples") or "[]")]
                     self.assertTrue(samples)
                     self.assertTrue(all(sample.get("message") and sample.get("expected") for sample in samples))
+                elif case.get("mock"):
+                    self.assertEqual(0, len(list(root.iter("fr.kazepoy.fhir.fml.FhirFmlTransformStep"))))
                 else:
                     preview = case["preview"]
                     self.assertTrue((examples / preview["input"]).is_file())
@@ -113,13 +115,42 @@ class MappingSchemaTest(unittest.TestCase):
             self.assertFalse(members & actual)
             members.update(actual)
         self.assertEqual({root.findtext("id") for root in exports.values()}, members)
+        seen_tags = {}
+        forbidden_tags = {"IG", "FR-Core-2-2-0", "EU-Lab-2-0-0", "profil-local", "local-profile"}
+        releases = {"R4", "R5"}
+        sources = {"CSV", "FHIR", "HL7v2", "HTTP", "JSON", "XML"}
+        transfos = {"FML", "Mapper", "Mock"}
         for case in manifest["channels"]:
             root = exports[case["channel"]]
             tags = root.findall("exportData/channelTags/channelTag")
-            self.assertEqual(set(case["tags"]), {tag.findtext("name") for tag in tags})
+            xml_tag_names = [tag.findtext("name") for tag in tags]
+            self.assertEqual(case["tags"], xml_tag_names, f"Tag order mismatch in {case['channel']}")
+            canonical = (
+                sorted([t for t in xml_tag_names if t in releases])
+                + sorted([t for t in xml_tag_names if t in sources])
+                + sorted([t for t in xml_tag_names if t in transfos])
+                + sorted([t for t in xml_tag_names if t not in releases and t not in sources and t not in transfos])
+            )
+            self.assertEqual(canonical, xml_tag_names, f"Non-canonical tag order in {case['channel']}: {xml_tag_names}")
             for tag in tags:
-                self.assertRegex(tag.findtext("name"), r"^[A-Za-z_0-9\s-]+$")
+                name = tag.findtext("name")
+                if name in releases or name in sources or name in transfos:
+                    self.assertRegex(name, r"^[A-Za-z0-9-]+$")
+                else:
+                    self.assertRegex(name, r"^[a-z0-9-]+$", f"Feature tag {name} must be lowercase kebab-case")
+                self.assertNotIn(name, forbidden_tags)
                 self.assertEqual([root.findtext("id")], [s.text for s in tag.findall("channelIds/string")])
+                color = (
+                    int(tag.findtext("backgroundColor/red")),
+                    int(tag.findtext("backgroundColor/green")),
+                    int(tag.findtext("backgroundColor/blue")),
+                )
+                self.assertNotEqual((192, 192, 192), color, f"Tag {name} uses default gray color")
+                tag_spec = (tag.findtext("id"), color)
+                if name in seen_tags:
+                    self.assertEqual(seen_tags[name], tag_spec, f"Inconsistent tag spec for {name}")
+                else:
+                    seen_tags[name] = tag_spec
 
     def test_step_actions_and_wire_representation(self):
         for step in (

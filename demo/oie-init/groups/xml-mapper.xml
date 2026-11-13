@@ -1,0 +1,13 @@
+<set>
+  <channelGroup version="4.7.0">
+    <id>ce3d058f-a54e-55fd-b2d8-2221bd51da05</id>
+    <name>XML - Mapper</name>
+    <revision>1</revision>
+    <description>Business XML sources mapped with Profile Mapper</description>
+    <channels>
+      <channel version="4.7.0">
+        <id>8b031c27-0c2e-40e1-b7f3-69ce531e7a24</id>
+      </channel>
+    </channels>
+  </channelGroup>
+</set>

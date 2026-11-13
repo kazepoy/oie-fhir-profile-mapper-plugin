@@ -1,0 +1,13 @@
+{
+  "id": "obs-eu-lab-001",
+  "status": "final",
+  "patient_ref": "Patient/pat-eu-001",
+  "performer_ref": "Organization/lab-eu-001",
+  "effective": "2026-01-15T08:30:00+01:00",
+  "loinc": "20448-7",
+  "display": "Insulin [Units/volume] in Serum or Plasma",
+  "value": 12.5,
+  "unit": "uIU/mL",
+  "ucum": "[iU]/mL"
+}
+

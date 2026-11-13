@@ -1,8 +1,8 @@
 <channel version="4.7.0">
-  <id>007924d5-6deb-40d3-ac19-c4c8715a4091</id>
+  <id>5f1f6c2e-2b8e-4f0a-9d7a-0c1e8f6a7b31</id>
   <nextMetaDataId>2</nextMetaDataId>
-  <name>ORU R01 vers Patient FHIR</name>
-  <description>Démo oru2fhir : un ORU^R01 (POST ER7 sur /patient/, port 8082) devient une seule ressource Patient FHIR R4, conforme au profil ExampleLabPatient de /fhir-ig. Une étape FHIR Profile Mapper ; la réponse HTTP est le Patient.</description>
+  <name>ORU R01 to FHIR Bundle (FML typed)</name>
+  <description>An ORU^R01 read by the Strict Parser (POST /bundle, port 8087) is adapted to the ORU__R01 logical model, then ORUR01toBundle and PIDtoPatient maps produce a FHIR R4 Bundle. The response contains a Patient and an Observation.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8082</port>
+        <port>8087</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>
@@ -39,53 +39,40 @@
       <responseHeadersVariable />
       <useResponseHeadersVariable>false</useResponseHeadersVariable>
       <charset>UTF-8</charset>
-      <contextPath>/patient</contextPath>
+      <contextPath>/bundle</contextPath>
       <timeout>30000</timeout>
       <staticResources />
     </properties>
     <transformer version="4.7.0">
       <elements>
         <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
-          <name>Début chronométrage transformation</name>
+          <name>Start transformation timing</name>
           <sequenceNumber>0</sequenceNumber>
           <enabled>true</enabled>
           <script>channelMap.put('__demoEtape', 'TRANSFORMATION');
 channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
         </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
-        <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
-          <name>Patient</name>
+        <fr.kazepoy.fhir.fml.FhirFmlTransformStep version="4.7.0">
+          <name>Bundle (FML typed)</name>
           <sequenceNumber>1</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles></profiles>
-          <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient</profileUrl>
-          <profileVersion>0.1.0</profileVersion>
-          <resourceType>Patient</resourceType>
-          <addMetaProfile>true</addMetaProfile>
-          <setLastUpdated>false</setLastUpdated>
+          <profiles>/fhir-typed</profiles>
+          <mapUrl>http://example.org/typed/StructureMap/ORUR01toBundle</mapUrl>
+          <sourceModel>hl7v2-logical</sourceModel>
+          <sourceModelUrl>http://example.org/hl7v2/StructureDefinition/ORU__R01</sourceModelUrl>
           <variable />
-  <action>resource</action>
-  <bundleTargets>[]</bundleTargets>
-          <bundleType>transaction</bundleType>
-          <refName />
-          <terminologyServer>n/a</terminologyServer>
-          <terminologyAuthorization />
-          <terminologyCacheSeconds>300</terminologyCacheSeconds>
-          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
-          <mappings>[{"key": "Patient.identifier:ipp.value", "element": "Patient.identifier:ipp.value", "type": "string", "expression": "fhirFind(msg['PID']['PID.3'], function (cx) { return cx['PID.3.5'] == 'PI'; })['PID.3.1'].toString()", "path": [["identifier", "ipp#0"], ["value"]]}, {"key": "Patient.name", "each": "msg['PID']['PID.5']", "variable": "n", "path": [["name", "#0"]]}, {"key": "Patient.name.use", "element": "Patient.name.use", "type": "code", "expression": "({L: 'official', D: 'usual', M: 'maiden'})[n['PID.5.7'].toString()]", "path": [["name", "#0"], ["use"]]}, {"key": "Patient.name.family", "element": "Patient.name.family", "type": "string", "expression": "n['PID.5.1']['PID.5.1.1'].toString() || n['PID.5.1'].toString()", "path": [["name", "#0"], ["family"]]}, {"key": "Patient.name.given", "element": "Patient.name.given", "type": "string", "expression": "n['PID.5.2'].toString()", "path": [["name", "#0"], ["given", "#0"]]}, {"key": "Patient.name.given[1]", "element": "Patient.name.given[1]", "type": "string", "expression": "n['PID.5.3'].toString()", "path": [["name", "#0"], ["given", "#1"]]}, {"key": "Patient.gender", "element": "Patient.gender", "type": "code", "expression": "msg['PID']['PID.8']['PID.8.1'].toString()", "path": [["gender"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0001-to-gender", "source": "http://terminology.hl7.org/CodeSystem/v2-0001", "target": "", "unmapped": "none", "keepSource": false}}, {"key": "Patient.birthDate", "element": "Patient.birthDate", "type": "date", "expression": "msg['PID']['PID.7']['PID.7.1'].toString()", "path": [["birthDate"]]}, {"key": "Patient.identifier:ipp.system", "element": "Patient.identifier:ipp.system", "fixed": "http://example.org/fhir/oru2fhir/sid/ipp", "when": 1, "path": [["identifier", "ipp#0"], ["system"]]}]</mappings>
-          <samples>[{&quot;id&quot;: &quot;8a344391-6118-58c7-a84c-4e4a010f9c4b&quot;, &quot;name&quot;: &quot;ORU minimal&quot;, &quot;dataType&quot;: &quot;HL7V2&quot;, &quot;message&quot;: &quot;MSH|^~\\&amp;|LAB|EXAMPLE-LAB|OIE|EXAMPLE-HOSP|20260114171908||ORU^R01^ORU_R01|MSG-0002|P|2.5.1|||||FRA|UNICODE UTF-8|FR\nPID|1||100001^^^EXAMPLE^PI||MARTIN^CLAIRE^ANNE^^Mme^^L||19800215|F|||12 rue de l&#x27;Exemple^Bât B^MARSEILLE^^13005^FRA||^PRN^PH^^^^^^^^^0491000001~^PRN^CP^^^^^^^^^0600000001~^NET^Internet^claire.martin@example.org\nORC|SC|ORD-2001^LAB|LAB-2001^LAB||CM||||20260114080000|||\nOBR|1|ORD-2001^LAB|LAB-2001^LAB|BIOCHEM^Bilan biochimique^L|||20260114073000|||||||||||||||20260114170000||CH|F\nOBX|1|NM|GLU^Glucose^L||5.10|mmol/L^mmol/L^UCUM|3.90-5.50|N|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||\n&quot;, &quot;expected&quot;: &quot;{\n \&quot;resourceType\&quot;: \&quot;Patient\&quot;,\n \&quot;meta\&quot;: {\n  \&quot;profile\&quot;: [\n   \&quot;http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\&quot;\n  ]\n },\n \&quot;identifier\&quot;: [\n  {\n   \&quot;value\&quot;: \&quot;100001\&quot;,\n   \&quot;system\&quot;: \&quot;http://example.org/fhir/oru2fhir/sid/ipp\&quot;\n  }\n ],\n \&quot;name\&quot;: [\n  {\n   \&quot;use\&quot;: \&quot;official\&quot;,\n   \&quot;family\&quot;: \&quot;MARTIN\&quot;,\n   \&quot;given\&quot;: [\n    \&quot;CLAIRE\&quot;,\n    \&quot;ANNE\&quot;\n   ]\n  }\n ],\n \&quot;gender\&quot;: \&quot;female\&quot;,\n \&quot;birthDate\&quot;: \&quot;1980-02-15\&quot;\n}&quot;}, {&quot;id&quot;: &quot;af591969-6b01-5273-8284-9637248c4faf&quot;, &quot;name&quot;: &quot;ORU laboratoire complet&quot;, &quot;dataType&quot;: &quot;HL7V2&quot;, &quot;message&quot;: &quot;MSH|^~\\&amp;|LAB|EXAMPLE-LAB|OIE|EXAMPLE-HOSP|20260114171908||ORU^R01^ORU_R01|MSG-0001|P|2.5.1|||||FRA|UNICODE UTF-8|FR\nPID|1||100001^^^EXAMPLE^PI||MARTIN^CLAIRE^ANNE^^Mme^^L||19800215|F|||12 rue de l&#x27;Exemple^Bât B^MARSEILLE^^13005^FRA||^PRN^PH^^^^^^^^^0491000001~^PRN^CP^^^^^^^^^0600000001~^NET^Internet^claire.martin@example.org\nPV1|1|I|CARDIO^101^1||||||||||||||||V-2026-0001^^^^VN|||||||||||||||||||||||||20260110083000\nORC|SC|ORD-1001^LAB|LAB-1001^LAB||CM||||20260114080000|||DOC1^MEDECIN^PAUL^^^^^^L\nOBR|1|ORD-1001^LAB|LAB-1001^LAB|BIOCHEM^Bilan biochimique^L|||20260114073000|||||||||DOC1^MEDECIN^PAUL^^^^^^L||||||20260114170000||CH|F\nOBX|1|NM|GLU^Glucose^L||6.80|mmol/L^mmol/L^UCUM|3.90-5.50|H|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||20260114100000\nOBX|2|NM|K^Potassium^L||4.10|mmol/L^mmol/L^UCUM|3.50-5.00|N|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||20260114100500\nOBX|3|NM|NA^Sodium^L||140|mmol/L^mmol/L^UCUM|135-145|N|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||20260114100500\nOBX|4|NM|CREA^Créatinine^L||78|umol/L^umol/L^UCUM|45-90|N|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||20260114101000\nOBX|5|ST|COMMENT^Commentaire du laboratoire^L||Prélèvement légèrement hémolysé, potassium à contrôler.||||||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||\nSPM|1|SPM-1001&amp;LAB||SER^Sérum^L|||||||||||||20260114073000|20260114080500\nORC|SC|ORD-1002^LAB|LAB-1002^LAB||CM||||20260114080000|||\nOBR|2|ORD-1002^LAB|LAB-1002^LAB|CR_PDF^Compte rendu PDF^L|||20260114073000|||||||||||||||20260114170000||CH|F\nOBX|1|ED|CR_PDF^Compte rendu PDF^L||^application^pdf^Base64^JVBERi0xLjQKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgNTk1IDg0Ml0vQ29udGVudHMgNCAwIFIvUmVzb3VyY2VzPDwvRm9udDw8L0YxIDUgMCBSPj4+Pj4+ZW5kb2JqCjQgMCBvYmo8PC9MZW5ndGggNjk+PnN0cmVhbQpCVCAvRjEgMTYgVGYgNzIgNzcwIFRkIChDb21wdGUgcmVuZHUgZCdleGVtcGxlIC0gZGVtbyBvcnUyZmhpcikgVGogRVQKZW5kc3RyZWFtZW5kb2JqCjUgMCBvYmo8PC9UeXBlL0ZvbnQvU3VidHlwZS9UeXBlMS9CYXNlRm9udC9IZWx2ZXRpY2E+PmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1MiAwMDAwMCBuIAowMDAwMDAwMTAxIDAwMDAwIG4gCjAwMDAwMDAyMTEgMDAwMDAgbiAKMDAwMDAwMDMyNSAwMDAwMCBuIAp0cmFpbGVyPDwvU2l6ZSA2L1Jvb3QgMSAwIFI+PgpzdGFydHhyZWYKMzg2CiUlRU9GCg||||||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||\n&quot;, &quot;expected&quot;: &quot;{\n \&quot;resourceType\&quot;: \&quot;Patient\&quot;,\n \&quot;meta\&quot;: {\n  \&quot;profile\&quot;: [\n   \&quot;http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\&quot;\n  ]\n },\n \&quot;identifier\&quot;: [\n  {\n   \&quot;value\&quot;: \&quot;100001\&quot;,\n   \&quot;system\&quot;: \&quot;http://example.org/fhir/oru2fhir/sid/ipp\&quot;\n  }\n ],\n \&quot;name\&quot;: [\n  {\n   \&quot;use\&quot;: \&quot;official\&quot;,\n   \&quot;family\&quot;: \&quot;MARTIN\&quot;,\n   \&quot;given\&quot;: [\n    \&quot;CLAIRE\&quot;,\n    \&quot;ANNE\&quot;\n   ]\n  }\n ],\n \&quot;gender\&quot;: \&quot;female\&quot;,\n \&quot;birthDate\&quot;: \&quot;1980-02-15\&quot;\n}&quot;}]</samples>
-          <formatVersion>2</formatVersion>
-          <context>demo-labo</context>
-          <validation>inherit</validation>
-        </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
+          <validateOutput>true</validateOutput>
+          <contextVariables />
+        </fr.kazepoy.fhir.fml.FhirFmlTransformStep>
         <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
-          <name>Fin chronométrage transformation</name>
+          <name>End transformation timing</name>
           <sequenceNumber>2</sequenceNumber>
           <enabled>true</enabled>
           <script>var end = channelMap.get('__fhirMapperBuildFinishedNano') || java.lang.System.nanoTime();
 var elapsed = Number(end) - Number(channelMap.get('__demoTransfoDebut'));
 channelMap.put('TRANSFO_MS', Math.round(elapsed / 1000) / 1000);
-channelMap.put('__demoEtape', 'VALIDATION_FHIR_SORTIE');</script>
+channelMap.put('__demoEtape', 'OUTBOUND_FHIR_VALIDATION');</script>
         </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
       </elements>
       <inboundTemplate>MSH|^~\&amp;|LAB|EXAMPLE-LAB|OIE|EXAMPLE-HOSP|20260114171908||ORU^R01^ORU_R01|MSG-0002|P|2.5.1|||||FRA|UNICODE UTF-8|FR
@@ -100,9 +87,9 @@ OBX|1|NM|GLU^Glucose^L||5.10|mmol/L^mmol/L^UCUM|3.90-5.50|N|||F|||20260114073000
         <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="4.7.0">
           <handleRepetitions>true</handleRepetitions>
           <handleSubcomponents>true</handleSubcomponents>
-          <useStrictParser>false</useStrictParser>
+          <useStrictParser>true</useStrictParser>
           <useStrictValidation>false</useStrictValidation>
-          <stripNamespaces>false</stripNamespaces>
+          <stripNamespaces>true</stripNamespaces>
           <segmentDelimiter>\r</segmentDelimiter>
           <convertLineBreaks>true</convertLineBreaks>
         </serializationProperties>
@@ -169,7 +156,7 @@ OBX|1|NM|GLU^Glucose^L||5.10|mmol/L^mmol/L^UCUM|3.90-5.50|N|||F|||20260114073000
   <destinationConnectors>
     <connector version="4.7.0">
       <metaDataId>1</metaDataId>
-      <name>Serveur FHIR (Patient)</name>
+      <name>FHIR Server (Typed Bundle)</name>
       <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
         <pluginProperties />
         <destinationConnectorProperties version="4.7.0">
@@ -269,16 +256,16 @@ OBX|1|NM|GLU^Glucose^L||5.10|mmol/L^mmol/L^UCUM|3.90-5.50|N|||F|||20260114073000
       <waitForPrevious>true</waitForPrevious>
     </connector>
   </destinationConnectors>
-  <preprocessingScript>// Réinitialisé pour chaque message, y compris après retraitement.
+  <preprocessingScript>// Reset for every message, including after reprocessing.
 channelMap.put('TOTAL_MS', 0);
 channelMap.remove('TRANSFO_MS');
-channelMap.put('ERREUR_ETAPE', 'OK');
-channelMap.put('__demoEtape', 'LECTURE_HL7');
+channelMap.put('ERROR_STEP', 'OK');
+channelMap.put('__demoEtape', 'READ_HL7');
 channelMap.remove('__fhirMapperPhase');
 channelMap.remove('__fhirMapperBuildFinishedNano');
 channelMap.remove('__fhirMapperValidationNanos');
 return message;</preprocessingScript>
-  <postprocessingScript>// Exécuté après les destinations, aussi après une erreur de lecture/transformation/validation.
+  <postprocessingScript>// Runs after destinations, including after a read/transformation/validation error.
 var source = message.getConnectorMessages().get(java.lang.Integer.valueOf(0));
 var total = Math.max(0, java.lang.System.currentTimeMillis() - source.getReceivedDate().getTimeInMillis());
 var errorLabel = 'OK';
@@ -288,8 +275,8 @@ while (connectors.hasNext()) {
     var error = cm.getProcessingError() || cm.getResponseError() || cm.getPostProcessorError();
     if (error) {
         var stage = cm.getMetaDataId() == 0
-            ? String(source.getChannelMap().get('__fhirMapperPhase') == 'VALIDATION' ? 'VALIDATION_FHIR_SORTIE' : (source.getChannelMap().get('__demoEtape') || 'LECTURE_HL7'))
-            : 'SORTIE / ' + cm.getConnectorName();
+            ? String(source.getChannelMap().get('__fhirMapperPhase') == 'VALIDATION' ? 'OUTBOUND_FHIR_VALIDATION' : (source.getChannelMap().get('__demoEtape') || 'READ_HL7'))
+            : 'OUTPUT / ' + cm.getConnectorName();
         var details = String(error);
         var issue = /(?:^|\n)(?:error|fatal)\s+@?\s*([^\r\n]+)/i.exec(details);
         var cause = /DETAILS:\s*([^\r\n]+)/.exec(details);
@@ -299,8 +286,8 @@ while (connectors.hasNext()) {
     }
 }
 
-// OIE enregistre les métadonnées avant le postprocesseur : mettre à jour la ligne source
-// via son DAO pour conserver le temps complet et les erreurs survenues en sortie.
+// OIE stores metadata before the postprocessor: update the source row
+// via its DAO to keep total time and outbound errors.
 var values = new java.util.HashMap();
 values.put('TOTAL_MS', new java.math.BigDecimal(String(total)));
 var transfo = source.getChannelMap().get('TRANSFO_MS');
@@ -311,7 +298,7 @@ if (transfo == null &amp;&amp; finished != null) {
 if (transfo != null) {
     values.put('TRANSFO_MS', new java.math.BigDecimal(String(transfo)));
 }
-values.put('ERREUR_ETAPE', errorLabel);
+values.put('ERROR_STEP', errorLabel);
 var record = new Packages.com.mirth.connect.donkey.model.message.ConnectorMessage();
 record.setChannelId(channelId);
 record.setMessageId(message.getMessageId());
@@ -356,9 +343,9 @@ return;</postprocessingScript>
         <mappingName>TRANSFO_MS</mappingName>
       </com.mirth.connect.donkey.model.channel.MetaDataColumn>
       <com.mirth.connect.donkey.model.channel.MetaDataColumn>
-        <name>ERREUR_ETAPE</name>
+        <name>ERROR_STEP</name>
         <type>STRING</type>
-        <mappingName>ERREUR_ETAPE</mappingName>
+        <mappingName>ERROR_STEP</mappingName>
       </com.mirth.connect.donkey.model.channel.MetaDataColumn>
     </metaDataColumns>
     <attachmentProperties version="4.7.0">
@@ -387,80 +374,93 @@ return;</postprocessingScript>
     </metadata>
     <channelTags>
       <channelTag>
-        <id>8bc4cff6-98e8-5658-899c-4b37619846ad</id>
+        <id>612284a7-41e3-5f8f-a137-093fab0a405c</id>
         <name>R4</name>
         <channelIds>
-          <string>007924d5-6deb-40d3-ac19-c4c8715a4091</string>
+          <string>5f1f6c2e-2b8e-4f0a-9d7a-0c1e8f6a7b31</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>37</red>
+          <green>99</green>
+          <blue>235</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>ebc3a8b2-0cd6-5765-a837-34acbcb351cc</id>
-        <name>HL7V2</name>
+        <id>1ed4bc87-95fb-5e07-b044-d587765ed0fc</id>
+        <name>HL7v2</name>
         <channelIds>
-          <string>007924d5-6deb-40d3-ac19-c4c8715a4091</string>
+          <string>5f1f6c2e-2b8e-4f0a-9d7a-0c1e8f6a7b31</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>13</red>
+          <green>148</green>
+          <blue>136</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>a9c2c7e1-232f-5bbb-9a7a-534313f7a58a</id>
-        <name>profil-local</name>
+        <id>6f8d86d3-a582-5edb-9836-94587030a667</id>
+        <name>FML</name>
         <channelIds>
-          <string>007924d5-6deb-40d3-ac19-c4c8715a4091</string>
+          <string>5f1f6c2e-2b8e-4f0a-9d7a-0c1e8f6a7b31</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>124</red>
+          <green>58</green>
+          <blue>237</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>53a848db-aecf-5660-b9e4-6be9f14399e4</id>
-        <name>slices</name>
+        <id>a4f9c150-1b4e-573c-891a-19c57330b72b</id>
+        <name>imports</name>
         <channelIds>
-          <string>007924d5-6deb-40d3-ac19-c4c8715a4091</string>
+          <string>5f1f6c2e-2b8e-4f0a-9d7a-0c1e8f6a7b31</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>162</red>
+          <green>28</green>
+          <blue>175</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>eda51870-f5b9-5351-880a-97f3c9ab0708</id>
-        <name>contextes</name>
+        <id>c57a0ea3-5335-5a75-9a37-51c5a8ff78d8</id>
+        <name>logical-model</name>
         <channelIds>
-          <string>007924d5-6deb-40d3-ac19-c4c8715a4091</string>
+          <string>5f1f6c2e-2b8e-4f0a-9d7a-0c1e8f6a7b31</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>126</red>
+          <green>34</green>
+          <blue>206</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>57ec8949-d7c4-5f70-b3ca-d81f1e053e79</id>
-        <name>samples</name>
+        <id>4f924f3a-8dfd-564f-a497-ec2267555c9d</id>
+        <name>strict-parser</name>
         <channelIds>
-          <string>007924d5-6deb-40d3-ac19-c4c8715a4091</string>
+          <string>5f1f6c2e-2b8e-4f0a-9d7a-0c1e8f6a7b31</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>109</red>
+          <green>40</green>
+          <blue>217</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>d2cf4cf5-3948-5407-a3a6-71f0cb5ae60f</id>
+        <name>transaction</name>
+        <channelIds>
+          <string>5f1f6c2e-2b8e-4f0a-9d7a-0c1e8f6a7b31</string>
+        </channelIds>
+        <backgroundColor>
+          <red>217</red>
+          <green>119</green>
+          <blue>6</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>

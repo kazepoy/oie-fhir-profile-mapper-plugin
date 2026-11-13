@@ -2,8 +2,8 @@
 
 [Accueil du manuel](README.md)
 
-Pour suivre exactement les captures, ouvrir le canal **ORU R01 vers Patient
-FHIR** dans la démonstration.
+Pour suivre exactement les captures, ouvrir le canal **ORU R01 to FHIR Patient**
+dans la démonstration.
 
 1. Dans **Channels**, ouvrir le canal.
 2. Choisir **Source**, puis **Edit Transformer**.

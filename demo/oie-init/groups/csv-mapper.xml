@@ -1,0 +1,16 @@
+<set>
+  <channelGroup version="4.7.0">
+    <id>ce3d058f-a54e-55fd-b2d8-2221bd51da06</id>
+    <name>CSV - Mapper</name>
+    <revision>1</revision>
+    <description>CSV sources mapped with Profile Mapper</description>
+    <channels>
+      <channel version="4.7.0">
+        <id>bfd48a62-4376-4c9a-91b3-ff294b5e2570</id>
+      </channel>
+      <channel version="4.7.0">
+        <id>33517dba-5b87-465d-988a-e291f5e88470</id>
+      </channel>
+    </channels>
+  </channelGroup>
+</set>

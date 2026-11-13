@@ -15,14 +15,14 @@ describe("the JSON, FR Core and FHIR demo channels", () => {
   test("native groups and functional tags are visible in Channels", async () => {
     const { page } = session;
     await page.locator("[data-nav-item]").filter({ hasText: /^Channels$/ }).first().click();
-    for (const name of ["FHIR - Mapper HL7 v2", "FHIR - Mapper metier", "FHIR - FML"])
+    for (const name of ["HL7v2 - Mapper", "HL7v2 - FML", "JSON - Mapper", "CSV - Mapper", "CSV - FML", "XML - Mapper", "FHIR - FML", "HTTP - Mock"])
       await page.getByText(`[${name}]`, { exact: true }).waitFor();
-    const row = page.locator("tr").filter({ has: page.getByText("JSON métier vers Organization R5", { exact: true }) }).first();
-    assert.match(await row.innerText(), /Organization-description/);
+    const row = page.locator("tr").filter({ has: page.getByText("Business JSON to Organization R5", { exact: true }) }).first();
+    assert.match(await row.innerText(), /org-description/);
     assert.match(await row.innerText(), /R5/);
   });
 
-  for (const [channel, step] of [["JSON métier vers Organization R5", "Organization"], ["JSON métier vers Patient FR Core", "Patient"]]) {
+  for (const [channel, step] of [["Business JSON to Organization R5", "Organization"], ["Business JSON to Patient FR Core", "Patient"]]) {
     test(`${channel}: its saved sample matches the expected resource`, async () => {
       const { page } = session;
       await openStep(page, channel, step);
@@ -40,7 +40,7 @@ describe("the JSON, FR Core and FHIR demo channels", () => {
 
   test("the FML source defaults to JSON and its projection keeps false", async () => {
     const { page } = session;
-    await openStep(page, "Patient FHIR vers résumé FML", "Résumé Patient");
+    await openStep(page, "FHIR Patient to Summary (FML)", "Patient Summary");
     const fml = page.locator(".fhir-fml");
     await fml.getByRole("tab", { name: "Test", exact: true }).click();
     assert.equal(await fml.locator("select").first().inputValue(), "JSON");
@@ -57,7 +57,7 @@ describe("the JSON, FR Core and FHIR demo channels", () => {
 
   test("FML keeps the source beside or below the sample without a second page scrollbar", async () => {
     const { page } = session;
-    await openStep(page, "Patient FHIR vers résumé FML", "Résumé Patient");
+    await openStep(page, "FHIR Patient to Summary (FML)", "Patient Summary");
     const fml = page.locator(".fhir-fml");
     await fml.getByRole("tab", { name: "Test", exact: true }).click();
     await fml.getByRole("button", { name: "Run test", exact: true }).click();
@@ -107,7 +107,7 @@ describe("the JSON, FR Core and FHIR demo channels", () => {
 
   test("Profile Mapper shows the prepared HL7 XML in both preview scopes without page overflow", async () => {
     const { page } = session;
-    await openStep(page, "ORU R01 vers Patient FHIR", "Patient");
+    await openStep(page, "ORU R01 to FHIR Patient", "Patient");
     const mapper = page.locator(".fhir-profile-mapper");
     await mapper.locator("table.mapper-tree tbody tr").first().waitFor();
     await mapper.getByRole("tab", { name: "Test", exact: true }).click();

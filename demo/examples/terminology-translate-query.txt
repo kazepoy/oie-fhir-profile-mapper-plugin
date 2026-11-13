@@ -1,0 +1,2 @@
+GET /fhir/ConceptMap/$translate?url=http://example.org/fhir/oru2fhir/ConceptMap/lab-codes-to-loinc&code=GLU&system=http://example.org/fhir/oru2fhir/CodeSystem/lab-codes
+

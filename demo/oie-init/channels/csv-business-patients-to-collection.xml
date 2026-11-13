@@ -1,8 +1,8 @@
 <channel version="4.7.0">
   <id>33517dba-5b87-465d-988a-e291f5e88470</id>
   <nextMetaDataId>2</nextMetaDataId>
-  <name>CSV patients métier vers collection FHIR</name>
-  <description>Le CSV complet de 10 patients est traité en un message : nettoyage des colonnes et dates en source, puis création explicite en destination d’un Bundle collection contenant les 10 ExampleLabPatient. POST /csv-patients-collection/, port 8086. Le fichier doit contenir son en-tête ; aucun découpage batch.</description>
+  <name>CSV Business Patients to Collection</name>
+  <description>The full 10-patient CSV is processed as a single message: column and date cleanup in source, then explicit creation in destination of a collection Bundle containing all 10 ExampleLabPatient resources. POST /csv-patients-collection/, port 8086. File must include its header; no batch splitting.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -46,15 +46,15 @@
     <transformer version="4.7.0">
       <elements>
         <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
-          <name>Nettoyer les lignes CSV</name>
+          <name>Clean CSV rows</name>
           <sequenceNumber>0</sequenceNumber>
           <enabled>true</enabled>
-          <script>// Le CSV complet est parsé en XML ; chaque ligne métier sera nettoyée.
-// Nettoyage métier uniquement ; la construction FHIR appartient à la destination.
-channelMap.put('__demoEtape', 'NETTOYAGE_SOURCE');
-// Sans batch, l'en-tête est une première ligne parsée par le type Delimited Text.
+          <script>// The full CSV is parsed into XML; each business row will be cleaned.
+// Business cleanup only; FHIR construction belongs in the destination.
+channelMap.put('__demoEtape', 'SOURCE_CLEANUP');
+// Without batching, the header is the first row parsed by Delimited Text.
 if (msg['row'][0]['id_patient'].toString() !== 'id_patient') {
-    throw new Error('En-tête CSV attendu : id_patient;ipp;nom_naissance;prenom;date_naissance;sexe;actif');
+    throw new Error('Expected CSV header: id_patient;ipp;nom_naissance;prenom;date_naissance;sexe;actif');
 }
 delete msg['row'][0];
 for each (var row in msg['row']) {
@@ -65,10 +65,10 @@ for each (var row in msg['row']) {
     var birthDate = row['date_naissance'].toString();
     if (birthDate !== '') {
         try {
-            if (!/^\d{8}$/.test(birthDate)) throw new Error('format attendu : AAAAMMJJ');
+            if (!/^\d{8}$/.test(birthDate)) throw new Error('expected format: YYYYMMDD');
             row['date_naissance'] = String(java.time.LocalDate.parse(birthDate, java.time.format.DateTimeFormatter.BASIC_ISO_DATE));
         } catch (e) {
-            throw new Error('Patient métier ' + row['id_patient'] + ', date_naissance invalide : "' + birthDate + '" (attendu : AAAAMMJJ, date réelle).');
+            throw new Error('Business patient ' + row['id_patient'] + ', invalid birth date: "' + birthDate + '" (expected: YYYYMMDD, valid date).');
         }
     }
 }</script>
@@ -140,7 +140,7 @@ for each (var row in msg['row']) {
   <destinationConnectors>
     <connector version="4.7.0">
       <metaDataId>1</metaDataId>
-      <name>Entrepôt FHIR (collection)</name>
+      <name>FHIR Repository (collection)</name>
       <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
         <pluginProperties />
         <destinationConnectorProperties version="4.7.0">
@@ -163,23 +163,23 @@ for each (var row in msg['row']) {
           <queueBufferSize>1000</queueBufferSize>
           <reattachAttachments>true</reattachAttachments>
         </destinationConnectorProperties>
-        <script>// La source transmet le XML métier nettoyé des dix patients.
-// Le transformeur de CETTE destination crée le Bundle "patients" de type collection,
-// puis une ressource ExampleLabPatient par ligne et l'ajoute à cette collection.
-// Encoded et la réponse HTTP contiennent le Bundle collection complet.
+        <script>// The source passes the cleaned business XML for all ten patients.
+// THIS destination transformer creates the "patients" collection Bundle,
+// then one ExampleLabPatient resource per row and adds it to that collection.
+// Encoded and the HTTP response contain the complete collection Bundle.
 return connectorMessage.getEncodedData();</script>
       </properties>
       <transformer version="4.7.0">
         <elements>
           <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
-            <name>Début chronométrage transformation</name>
+            <name>Start transformation timing</name>
             <sequenceNumber>0</sequenceNumber>
             <enabled>true</enabled>
-            <script>channelMap.put('__demoEtape', 'TRANSFORMATION_FHIR');
+            <script>channelMap.put('__demoEtape', 'FHIR_TRANSFORMATION');
 channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
           <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
-            <name>Créer la collection de patients</name>
+            <name>Create patient collection</name>
             <sequenceNumber>1</sequenceNumber>
             <enabled>true</enabled>
             <fhirVersion>R4</fhirVersion>
@@ -221,17 +221,17 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
             <terminologyCacheSeconds>300</terminologyCacheSeconds>
             <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
             <mappings>[{"key": "Patient", "each": "msg['row']", "variable": "patient", "path": []}, {"key": "Patient.id", "element": "Patient.id", "type": "id", "expression": "'metier-' + patient['id_patient'].toString()", "path": [["id"]]}, {"key": "Patient.active", "element": "Patient.active", "type": "boolean", "expression": "patient['actif'].toString()", "path": [["active"]]}, {"key": "Patient.identifier:ipp.value", "element": "Patient.identifier:ipp.value", "type": "string", "expression": "patient['ipp'].toString()", "path": [["identifier", "ipp#0"], ["value"]]}, {"key": "Patient.name.use", "element": "Patient.name.use", "type": "code", "expression": "'official'", "path": [["name", "#0"], ["use"]]}, {"key": "Patient.name.family", "element": "Patient.name.family", "type": "string", "expression": "patient['nom_naissance'].toString()", "path": [["name", "#0"], ["family"]]}, {"key": "Patient.name.given", "element": "Patient.name.given", "type": "string", "expression": "patient['prenom'].toString()", "path": [["name", "#0"], ["given", "#0"]]}, {"key": "Patient.gender", "element": "Patient.gender", "type": "code", "expression": "({M: 'male', F: 'female', I: 'unknown'})[patient['sexe'].toString()]", "path": [["gender"]]}, {"key": "Patient.birthDate", "element": "Patient.birthDate", "type": "date", "expression": "patient['date_naissance'].toString()", "path": [["birthDate"]]}, {"key": "Patient.identifier:ipp.system", "element": "Patient.identifier:ipp.system", "fixed": "http://example.org/fhir/oru2fhir/sid/ipp", "when": 1, "path": [["identifier", "ipp#0"], ["system"]]}]</mappings>
-            <samples>[{"id":"demo-csv-patients-metier-vers-bundle-collection-fhir","name":"Dix lignes CSV nettoyées : collection","message":"&lt;delimited&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2001&lt;/id_patient&gt;\n    &lt;ipp&gt;000200001&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Durand&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Élodie&lt;/prenom&gt;\n    &lt;date_naissance&gt;1985-04-12&lt;/date_naissance&gt;\n    &lt;sexe&gt;F&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2002&lt;/id_patient&gt;\n    &lt;ipp&gt;000200002&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Martin&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Hugo&lt;/prenom&gt;\n    &lt;date_naissance&gt;1978-11-03&lt;/date_naissance&gt;\n    &lt;sexe&gt;M&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2003&lt;/id_patient&gt;\n    &lt;ipp&gt;000200003&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Ben Salah&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Inès&lt;/prenom&gt;\n    &lt;date_naissance&gt;2000-02-29&lt;/date_naissance&gt;\n    &lt;sexe&gt;F&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2004&lt;/id_patient&gt;\n    &lt;ipp&gt;000200004&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Müller&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Léon&lt;/prenom&gt;\n    &lt;date_naissance&gt;1960-02-29&lt;/date_naissance&gt;\n    &lt;sexe&gt;M&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2005&lt;/id_patient&gt;\n    &lt;ipp&gt;000200005&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Le Gall&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Camille&lt;/prenom&gt;\n    &lt;date_naissance&gt;1995-12-31&lt;/date_naissance&gt;\n    &lt;sexe&gt;I&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2006&lt;/id_patient&gt;\n    &lt;ipp&gt;000200006&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Moreau&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Chloé&lt;/prenom&gt;\n    &lt;date_naissance&gt;1990-07-08&lt;/date_naissance&gt;\n    &lt;sexe&gt;F&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2007&lt;/id_patient&gt;\n    &lt;ipp&gt;000200007&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Lefèvre&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Raphaël&lt;/prenom&gt;\n    &lt;date_naissance&gt;1982-06-15&lt;/date_naissance&gt;\n    &lt;sexe&gt;M&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2008&lt;/id_patient&gt;\n    &lt;ipp&gt;000200008&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Petit&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Anaïs&lt;/prenom&gt;\n    &lt;date_naissance&gt;1974-03-21&lt;/date_naissance&gt;\n    &lt;sexe&gt;F&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2009&lt;/id_patient&gt;\n    &lt;ipp&gt;000200009&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Roux&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Gabriel&lt;/prenom&gt;\n    &lt;date_naissance&gt;1969-09-30&lt;/date_naissance&gt;\n    &lt;sexe&gt;M&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2010&lt;/id_patient&gt;\n    &lt;ipp&gt;000200010&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Nguyen&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Maëlys&lt;/prenom&gt;\n    &lt;date_naissance&gt;2001-12-05&lt;/date_naissance&gt;\n    &lt;sexe&gt;F&lt;/sexe&gt;\n    &lt;actif&gt;0&lt;/actif&gt;\n  &lt;/row&gt;\n&lt;/delimited&gt;","dataType":"XML","scope":"transformer","expected":"{\"resourceType\":\"Bundle\",\"meta\":{\"profile\":[\"http://hl7.org/fhir/StructureDefinition/Bundle\"]},\"type\":\"collection\",\"entry\":[{\"fullUrl\":\"urn:uuid:098ba154-13b2-4f0a-aefa-076c51618993\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2001\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200001\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Durand\",\"given\":[\"Élodie\"]}],\"gender\":\"female\",\"birthDate\":\"1985-04-12\"}},{\"fullUrl\":\"urn:uuid:bbbf6d2b-e45f-4350-b22e-680b809bfc3f\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2002\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200002\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Martin\",\"given\":[\"Hugo\"]}],\"gender\":\"male\",\"birthDate\":\"1978-11-03\"}},{\"fullUrl\":\"urn:uuid:604c0aed-ca19-48b3-9d16-c7fad1afdea1\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2003\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200003\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Ben Salah\",\"given\":[\"Inès\"]}],\"gender\":\"female\",\"birthDate\":\"2000-02-29\"}},{\"fullUrl\":\"urn:uuid:0d33b5fc-a31b-4a6c-9874-bbedfeddee84\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2004\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200004\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Müller\",\"given\":[\"Léon\"]}],\"gender\":\"male\",\"birthDate\":\"1960-02-29\"}},{\"fullUrl\":\"urn:uuid:30dfff00-052a-4f0e-b163-35db863b5f59\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2005\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200005\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Le Gall\",\"given\":[\"Camille\"]}],\"gender\":\"unknown\",\"birthDate\":\"1995-12-31\"}},{\"fullUrl\":\"urn:uuid:40047a7a-cb52-4381-a859-c85f68019c67\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2006\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200006\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Moreau\",\"given\":[\"Chloé\"]}],\"gender\":\"female\",\"birthDate\":\"1990-07-08\"}},{\"fullUrl\":\"urn:uuid:87fc1ef2-dd70-4336-a69d-9f50da3e1ca3\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2007\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200007\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Lefèvre\",\"given\":[\"Raphaël\"]}],\"gender\":\"male\",\"birthDate\":\"1982-06-15\"}},{\"fullUrl\":\"urn:uuid:f71087c2-8fd9-4dc1-bb07-b5a3ef5fddbc\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2008\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200008\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Petit\",\"given\":[\"Anaïs\"]}],\"gender\":\"female\",\"birthDate\":\"1974-03-21\"}},{\"fullUrl\":\"urn:uuid:ea11641c-5978-481c-befb-4126fb032f47\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2009\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200009\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Roux\",\"given\":[\"Gabriel\"]}],\"gender\":\"male\",\"birthDate\":\"1969-09-30\"}},{\"fullUrl\":\"urn:uuid:b7ba94c5-cc3e-4a1e-b71a-3ef00fdc0b97\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2010\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200010\"}],\"active\":false,\"name\":[{\"use\":\"official\",\"family\":\"Nguyen\",\"given\":[\"Maëlys\"]}],\"gender\":\"female\",\"birthDate\":\"2001-12-05\"}}]}"}]</samples>
-        </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
+            <samples>[{"id":"demo-csv-patients-metier-vers-bundle-collection-fhir","name":"Ten cleaned CSV rows: collection","message":"&lt;delimited&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2001&lt;/id_patient&gt;\n    &lt;ipp&gt;000200001&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Durand&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Élodie&lt;/prenom&gt;\n    &lt;date_naissance&gt;1985-04-12&lt;/date_naissance&gt;\n    &lt;sexe&gt;F&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2002&lt;/id_patient&gt;\n    &lt;ipp&gt;000200002&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Martin&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Hugo&lt;/prenom&gt;\n    &lt;date_naissance&gt;1978-11-03&lt;/date_naissance&gt;\n    &lt;sexe&gt;M&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2003&lt;/id_patient&gt;\n    &lt;ipp&gt;000200003&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Ben Salah&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Inès&lt;/prenom&gt;\n    &lt;date_naissance&gt;2000-02-29&lt;/date_naissance&gt;\n    &lt;sexe&gt;F&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2004&lt;/id_patient&gt;\n    &lt;ipp&gt;000200004&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Müller&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Léon&lt;/prenom&gt;\n    &lt;date_naissance&gt;1960-02-29&lt;/date_naissance&gt;\n    &lt;sexe&gt;M&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2005&lt;/id_patient&gt;\n    &lt;ipp&gt;000200005&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Le Gall&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Camille&lt;/prenom&gt;\n    &lt;date_naissance&gt;1995-12-31&lt;/date_naissance&gt;\n    &lt;sexe&gt;I&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2006&lt;/id_patient&gt;\n    &lt;ipp&gt;000200006&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Moreau&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Chloé&lt;/prenom&gt;\n    &lt;date_naissance&gt;1990-07-08&lt;/date_naissance&gt;\n    &lt;sexe&gt;F&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2007&lt;/id_patient&gt;\n    &lt;ipp&gt;000200007&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Lefèvre&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Raphaël&lt;/prenom&gt;\n    &lt;date_naissance&gt;1982-06-15&lt;/date_naissance&gt;\n    &lt;sexe&gt;M&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2008&lt;/id_patient&gt;\n    &lt;ipp&gt;000200008&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Petit&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Anaïs&lt;/prenom&gt;\n    &lt;date_naissance&gt;1974-03-21&lt;/date_naissance&gt;\n    &lt;sexe&gt;F&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2009&lt;/id_patient&gt;\n    &lt;ipp&gt;000200009&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Roux&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Gabriel&lt;/prenom&gt;\n    &lt;date_naissance&gt;1969-09-30&lt;/date_naissance&gt;\n    &lt;sexe&gt;M&lt;/sexe&gt;\n    &lt;actif&gt;1&lt;/actif&gt;\n  &lt;/row&gt;\n  &lt;row&gt;\n    &lt;id_patient&gt;2010&lt;/id_patient&gt;\n    &lt;ipp&gt;000200010&lt;/ipp&gt;\n    &lt;nom_naissance&gt;Nguyen&lt;/nom_naissance&gt;\n    &lt;prenom&gt;Maëlys&lt;/prenom&gt;\n    &lt;date_naissance&gt;2001-12-05&lt;/date_naissance&gt;\n    &lt;sexe&gt;F&lt;/sexe&gt;\n    &lt;actif&gt;0&lt;/actif&gt;\n  &lt;/row&gt;\n&lt;/delimited&gt;","dataType":"XML","scope":"transformer","expected":"{\"resourceType\":\"Bundle\",\"meta\":{\"profile\":[\"http://hl7.org/fhir/StructureDefinition/Bundle\"]},\"type\":\"collection\",\"entry\":[{\"fullUrl\":\"urn:uuid:098ba154-13b2-4f0a-aefa-076c51618993\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2001\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200001\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Durand\",\"given\":[\"Élodie\"]}],\"gender\":\"female\",\"birthDate\":\"1985-04-12\"}},{\"fullUrl\":\"urn:uuid:bbbf6d2b-e45f-4350-b22e-680b809bfc3f\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2002\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200002\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Martin\",\"given\":[\"Hugo\"]}],\"gender\":\"male\",\"birthDate\":\"1978-11-03\"}},{\"fullUrl\":\"urn:uuid:604c0aed-ca19-48b3-9d16-c7fad1afdea1\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2003\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200003\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Ben Salah\",\"given\":[\"Inès\"]}],\"gender\":\"female\",\"birthDate\":\"2000-02-29\"}},{\"fullUrl\":\"urn:uuid:0d33b5fc-a31b-4a6c-9874-bbedfeddee84\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2004\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200004\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Müller\",\"given\":[\"Léon\"]}],\"gender\":\"male\",\"birthDate\":\"1960-02-29\"}},{\"fullUrl\":\"urn:uuid:30dfff00-052a-4f0e-b163-35db863b5f59\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2005\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200005\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Le Gall\",\"given\":[\"Camille\"]}],\"gender\":\"unknown\",\"birthDate\":\"1995-12-31\"}},{\"fullUrl\":\"urn:uuid:40047a7a-cb52-4381-a859-c85f68019c67\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2006\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200006\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Moreau\",\"given\":[\"Chloé\"]}],\"gender\":\"female\",\"birthDate\":\"1990-07-08\"}},{\"fullUrl\":\"urn:uuid:87fc1ef2-dd70-4336-a69d-9f50da3e1ca3\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2007\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200007\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Lefèvre\",\"given\":[\"Raphaël\"]}],\"gender\":\"male\",\"birthDate\":\"1982-06-15\"}},{\"fullUrl\":\"urn:uuid:f71087c2-8fd9-4dc1-bb07-b5a3ef5fddbc\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2008\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200008\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Petit\",\"given\":[\"Anaïs\"]}],\"gender\":\"female\",\"birthDate\":\"1974-03-21\"}},{\"fullUrl\":\"urn:uuid:ea11641c-5978-481c-befb-4126fb032f47\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2009\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200009\"}],\"active\":true,\"name\":[{\"use\":\"official\",\"family\":\"Roux\",\"given\":[\"Gabriel\"]}],\"gender\":\"male\",\"birthDate\":\"1969-09-30\"}},{\"fullUrl\":\"urn:uuid:b7ba94c5-cc3e-4a1e-b71a-3ef00fdc0b97\",\"resource\":{\"resourceType\":\"Patient\",\"id\":\"metier-2010\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"000200010\"}],\"active\":false,\"name\":[{\"use\":\"official\",\"family\":\"Nguyen\",\"given\":[\"Maëlys\"]}],\"gender\":\"female\",\"birthDate\":\"2001-12-05\"}}]}"}]</samples>
+          </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
           <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
-            <name>Fin chronométrage transformation</name>
+            <name>End transformation timing</name>
             <sequenceNumber>3</sequenceNumber>
             <enabled>true</enabled>
             <script>var end = channelMap.get('__fhirMapperBuildFinishedNano') || java.lang.System.nanoTime();
 var elapsed = Number(end) - Number(channelMap.get('__demoTransfoDebut'));
 channelMap.put('TRANSFO_MS', Math.round(elapsed / 1000) / 1000);
 channelMap.remove('__fhirMapperPhase');
-channelMap.put('__demoEtape', 'SORTIE / Bundle collection FHIR');</script>
+channelMap.put('__demoEtape', 'OUTPUT / FHIR Collection Bundle');</script>
           </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
         </elements>
         <inboundTemplate>&lt;delimited&gt;
@@ -389,16 +389,16 @@ channelMap.put('__demoEtape', 'SORTIE / Bundle collection FHIR');</script>
       <waitForPrevious>true</waitForPrevious>
     </connector>
   </destinationConnectors>
-  <preprocessingScript>// Réinitialisé pour chaque message, y compris après retraitement.
+  <preprocessingScript>// Reset for every message, including after reprocessing.
 channelMap.put('TOTAL_MS', 0);
 channelMap.remove('TRANSFO_MS');
-channelMap.put('ERREUR_ETAPE', 'OK');
-channelMap.put('__demoEtape', 'LECTURE_CSV');
+channelMap.put('ERROR_STEP', 'OK');
+channelMap.put('__demoEtape', 'READ_CSV');
 channelMap.remove('__fhirMapperPhase');
 channelMap.remove('__fhirMapperBuildFinishedNano');
 channelMap.remove('__fhirMapperValidationNanos');
 return message;</preprocessingScript>
-  <postprocessingScript>// Exécuté après les destinations, aussi après une erreur de lecture/transformation/validation.
+  <postprocessingScript>// Runs after destinations, including after a read/transformation/validation error.
 var source = message.getConnectorMessages().get(java.lang.Integer.valueOf(0));
 var total = Math.max(0, java.lang.System.currentTimeMillis() - source.getReceivedDate().getTimeInMillis());
 var errorLabel = 'OK';
@@ -409,8 +409,8 @@ while (connectors.hasNext()) {
     if (error) {
         var phase = cm.getChannelMap();
         var stage = cm.getMetaDataId() == 0
-            ? String(phase.get('__demoEtape') || 'LECTURE_CSV')
-            : phase.get('__fhirMapperPhase') == 'VALIDATION' ? 'VALIDATION_FHIR_SORTIE'
+            ? String(phase.get('__demoEtape') || 'READ_CSV')
+            : phase.get('__fhirMapperPhase') == 'VALIDATION' ? 'OUTBOUND_FHIR_VALIDATION'
             : phase.get('__demoTransfoDebut') != null ? String(phase.get('__demoEtape'))
             : 'LECTURE_XML_DESTINATION';
         var details = String(error);
@@ -422,11 +422,11 @@ while (connectors.hasNext()) {
     }
 }
 
-// OIE enregistre les métadonnées avant le postprocesseur : mettre à jour la ligne source
-// via son DAO pour conserver le temps complet et les erreurs survenues en sortie.
+// OIE stores metadata before the postprocessor: update the source row
+// via its DAO to keep total time and outbound errors.
 var values = new java.util.HashMap();
 values.put('TOTAL_MS', new java.math.BigDecimal(String(total)));
-// Le mapper s'exécute en destination : ses mesures sont dans la map de ce connecteur.
+// The mapper runs in the destination: its metrics are in that connector map.
 var destination = message.getConnectorMessages().get(java.lang.Integer.valueOf(1));
 var measures = destination != null ? destination.getChannelMap() : source.getChannelMap();
 var transfo = measures.get('TRANSFO_MS');
@@ -437,7 +437,7 @@ if (transfo == null &amp;&amp; finished != null) {
 if (transfo != null) {
     values.put('TRANSFO_MS', new java.math.BigDecimal(String(transfo)));
 }
-values.put('ERREUR_ETAPE', errorLabel);
+values.put('ERROR_STEP', errorLabel);
 var record = new Packages.com.mirth.connect.donkey.model.message.ConnectorMessage();
 record.setChannelId(channelId);
 record.setMessageId(message.getMessageId());
@@ -482,9 +482,9 @@ return;</postprocessingScript>
         <mappingName>TRANSFO_MS</mappingName>
       </com.mirth.connect.donkey.model.channel.MetaDataColumn>
       <com.mirth.connect.donkey.model.channel.MetaDataColumn>
-        <name>ERREUR_ETAPE</name>
+        <name>ERROR_STEP</name>
         <type>STRING</type>
-        <mappingName>ERREUR_ETAPE</mappingName>
+        <mappingName>ERROR_STEP</mappingName>
       </com.mirth.connect.donkey.model.channel.MetaDataColumn>
     </metaDataColumns>
     <attachmentProperties version="4.7.0">
@@ -513,67 +513,80 @@ return;</postprocessingScript>
     </metadata>
     <channelTags>
       <channelTag>
-        <id>8bc4cff6-98e8-5658-899c-4b37619846ad</id>
+        <id>612284a7-41e3-5f8f-a137-093fab0a405c</id>
         <name>R4</name>
         <channelIds>
           <string>33517dba-5b87-465d-988a-e291f5e88470</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>37</red>
+          <green>99</green>
+          <blue>235</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>00a3fe96-b413-591e-8504-fa5e1b6955c1</id>
+        <id>495672ac-ebfb-5846-9140-696728752566</id>
         <name>CSV</name>
         <channelIds>
           <string>33517dba-5b87-465d-988a-e291f5e88470</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>5</red>
+          <green>150</green>
+          <blue>105</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>96bca779-d363-51f1-93ea-7f6b54023070</id>
+        <id>c2c74737-3123-52e7-886d-ee30e924db89</id>
+        <name>Mapper</name>
+        <channelIds>
+          <string>33517dba-5b87-465d-988a-e291f5e88470</string>
+        </channelIds>
+        <backgroundColor>
+          <red>29</red>
+          <green>78</green>
+          <blue>216</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>ca65d3fe-2f30-5824-800d-009a8807e50c</id>
+        <name>cleanup</name>
+        <channelIds>
+          <string>33517dba-5b87-465d-988a-e291f5e88470</string>
+        </channelIds>
+        <backgroundColor>
+          <red>101</red>
+          <green>163</green>
+          <blue>13</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>323292a3-260c-5e32-8a83-009a5d3bfe7e</id>
         <name>collection</name>
         <channelIds>
           <string>33517dba-5b87-465d-988a-e291f5e88470</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>202</red>
+          <green>138</green>
+          <blue>4</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>90807695-9869-5ec1-9e47-dd80fa6bbcfe</id>
-        <name>nettoyage</name>
+        <id>d63f14a6-0b7d-5140-8c84-06f9e0a0ce3b</id>
+        <name>destination-mapping</name>
         <channelIds>
           <string>33517dba-5b87-465d-988a-e291f5e88470</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
-          <alpha>255</alpha>
-        </backgroundColor>
-      </channelTag>
-      <channelTag>
-        <id>b68f3907-134b-5211-b6a7-4b919fd6a3d4</id>
-        <name>mapping-destination</name>
-        <channelIds>
-          <string>33517dba-5b87-465d-988a-e291f5e88470</string>
-        </channelIds>
-        <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>180</red>
+          <green>83</green>
+          <blue>9</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>

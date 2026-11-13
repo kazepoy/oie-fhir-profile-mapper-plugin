@@ -104,10 +104,10 @@ Prérequis : Python et les dépendances de `tools/requirements.txt`. Depuis la
 racine du dépôt, créer `target/`, puis :
 
 ```sh
-python3 tools/channel_mapping.py list demo/oie-init/channels/sql-xml-vers-patient-fhir.xml
-python3 tools/channel_mapping.py extract demo/oie-init/channels/sql-xml-vers-patient-fhir.xml --connector 0 --sequence 1 --assign-ids --output target/patient.json
+python3 tools/channel_mapping.py list demo/oie-init/channels/sql-xml-to-fhir-patient.xml
+python3 tools/channel_mapping.py extract demo/oie-init/channels/sql-xml-to-fhir-patient.xml --connector 0 --sequence 1 --assign-ids --output target/patient.json
 python3 tools/check_mapping.py target/patient.json
-python3 tools/channel_mapping.py apply demo/oie-init/channels/sql-xml-vers-patient-fhir.xml --connector 0 --sequence 1 --step target/patient.json --output target/channel-modifie.xml
+python3 tools/channel_mapping.py apply demo/oie-init/channels/sql-xml-to-fhir-patient.xml --connector 0 --sequence 1 --step target/patient.json --output target/channel-modifie.xml
 python3 tools/channel_mapping.py explain target/channel-modifie.xml --connector 0 --sequence 1
 ```
 

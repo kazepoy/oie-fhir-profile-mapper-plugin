@@ -1,8 +1,8 @@
 <channel version="4.7.0">
-  <id>aa431dca-b805-4ac6-8dbd-e272b6fc4c18</id>
-  <nextMetaDataId>3</nextMetaDataId>
-  <name>ORU R01 vers deux Bundles labo FHIR</name>
-  <description>Un ORU^R01 construit une fois les ressources de laboratoire et les ajoute à deux Bundles : labo-transaction (Serveur FHIR, réponse HTTP sur /labo/, 8083) et labo-document (variable bundleDocument). Deux chaînes en parallèle : le serveur FHIR, et l'entrepôt documentaire suivi de l'archive PCA/PRA, qui n'archive que les documents acceptés (fichiers dans appdata/archive-pca). Identités et références communes ; requêtes seulement dans la transaction.</description>
+  <id>5d0f6c2a-8b3e-4f1a-9c7d-2e6b1a0f3c48</id>
+  <nextMetaDataId>2</nextMetaDataId>
+  <name>ORU R01 to FHIR Bundle</name>
+  <description>Demo oru2fhir: an ORU^R01 (POST ER7 to /oru/, port 8081) becomes a FHIR R4 transaction Bundle conforming to the example profiles in /fhir-ig. Seven FHIR Profile Mapper steps, with no FML or mapping script. The HTTP response is the Bundle.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8083</port>
+        <port>8081</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>
@@ -39,21 +39,21 @@
       <responseHeadersVariable />
       <useResponseHeadersVariable>false</useResponseHeadersVariable>
       <charset>UTF-8</charset>
-      <contextPath>/labo</contextPath>
+      <contextPath>/oru</contextPath>
       <timeout>30000</timeout>
       <staticResources />
     </properties>
     <transformer version="4.7.0">
       <elements>
         <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
-          <name>Début chronométrage transformation</name>
+          <name>Start transformation timing</name>
           <sequenceNumber>0</sequenceNumber>
           <enabled>true</enabled>
           <script>channelMap.put('__demoEtape', 'TRANSFORMATION');
 channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
         </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
         <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
-          <name>Bundle transaction labo</name>
+          <name>Bundle</name>
           <sequenceNumber>1</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
@@ -65,7 +65,8 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <setLastUpdated>false</setLastUpdated>
           <variable />
           <action>createBundle</action>
-          <bundleName>labo-transaction</bundleName>
+          <bundleTargets>[]</bundleTargets>
+          <bundleName>labo</bundleName>
           <bundleType>transaction</bundleType>
           <refName />
           <terminologyServer>n/a</terminologyServer>
@@ -73,78 +74,10 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <terminologyCacheSeconds>300</terminologyCacheSeconds>
           <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
           <mappings>[{"key": "Bundle.identifier.system", "element": "Bundle.identifier.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/sid/message-control-id'", "path": [["identifier"], ["system"]]}, {"key": "Bundle.identifier.value", "element": "Bundle.identifier.value", "type": "string", "expression": "msg['MSH']['MSH.10']['MSH.10.1'].toString()", "path": [["identifier"], ["value"]]}, {"key": "Bundle.timestamp", "element": "Bundle.timestamp", "type": "instant", "expression": "msg['MSH']['MSH.7']['MSH.7.1'].toString()", "path": [["timestamp"]]}, {"key": "Bundle.type", "element": "Bundle.type", "fixed": "transaction", "when": 0, "path": [["type"]]}]</mappings>
-          <bundleTargets>[]</bundleTargets>
-        </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
-        <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
-          <name>Bundle document labo</name>
-          <sequenceNumber>2</sequenceNumber>
-          <enabled>true</enabled>
-          <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
-          <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabDocument</profileUrl>
-          <profileVersion />
-          <resourceType>Bundle</resourceType>
-          <addMetaProfile>true</addMetaProfile>
-          <setLastUpdated>false</setLastUpdated>
-          <variable>bundleDocument</variable>
-          <action>createBundle</action>
-          <bundleName>labo-document</bundleName>
-          <bundleType>document</bundleType>
-          <refName />
-          <terminologyServer>n/a</terminologyServer>
-          <terminologyAuthorization />
-          <terminologyCacheSeconds>300</terminologyCacheSeconds>
-          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
-          <mappings>[{"key": "Bundle.identifier.system", "element": "Bundle.identifier.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/sid/lab-document'", "path": [["identifier"], ["system"]]}, {"key": "Bundle.identifier.value", "element": "Bundle.identifier.value", "type": "string", "expression": "msg['MSH']['MSH.10']['MSH.10.1'].toString()", "path": [["identifier"], ["value"]]}, {"key": "Bundle.timestamp", "element": "Bundle.timestamp", "type": "instant", "expression": "msg['MSH']['MSH.7']['MSH.7.1'].toString()", "path": [["timestamp"]]}, {"key": "Bundle.type", "element": "Bundle.type", "fixed": "document", "when": 0, "path": [["type"]]}]</mappings>
-          <bundleTargets>[]</bundleTargets>
-        </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
-        <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
-          <name>Composition du document labo</name>
-          <sequenceNumber>3</sequenceNumber>
-          <enabled>true</enabled>
-          <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
-          <profileUrl>http://hl7.org/fhir/StructureDefinition/Composition</profileUrl>
-          <profileVersion />
-          <resourceType>Composition</resourceType>
-          <addMetaProfile>true</addMetaProfile>
-          <setLastUpdated>false</setLastUpdated>
-          <variable />
-          <action>resource</action>
-          <bundleType>transaction</bundleType>
-          <refName>'composition'</refName>
-          <terminologyServer>n/a</terminologyServer>
-          <terminologyAuthorization />
-          <terminologyCacheSeconds>300</terminologyCacheSeconds>
-          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
-          <mappings>[{"key": "Composition.status", "element": "Composition.status", "type": "code", "expression": "'final'", "path": [["status"]]}, {"key": "Composition.type", "element": "Composition.type", "type": "CodeableConcept", "expression": "({coding:[{system:'http://loinc.org',code:'11502-2',display:'Laboratory report'}]})", "path": [["type"]]}, {"key": "Composition.date", "element": "Composition.date", "type": "dateTime", "expression": "msg['MSH']['MSH.7']['MSH.7.1'].toString()", "path": [["date"]]}, {"key": "Composition.title", "element": "Composition.title", "type": "string", "expression": "'Compte rendu de laboratoire'", "path": [["title"]]}, {"key": "Composition.subject.reference", "element": "Composition.subject.reference", "type": "string", "expression": "fhirRef('patient')", "path": [["subject"], ["reference"]]}, {"key": "Composition.author.reference", "element": "Composition.author.reference", "type": "string", "expression": "fhirRef('laboratoire', 0, true)", "path": [["author", "#0"], ["reference"]]}, {"key": "Composition.section", "each": "msg['OBR']", "variable": "sectionObr", "path": [["section", "#0"]]}, {"key": "Composition.section.title", "element": "Composition.section.title", "type": "string", "expression": "sectionObr['OBR.4']['OBR.4.2'].toString() || 'Résultats de laboratoire'", "path": [["section", "#0"], ["title"]]}, {"key": "Composition.section.entry.reference", "element": "Composition.section.entry.reference", "type": "string", "expression": "fhirRef('report-' + sectionObrIndex, 0, true)", "path": [["section", "#0"], ["entry", "#0"], ["reference"]]}]</mappings>
-          <bundleTargets>[{"name": "labo-document"}]</bundleTargets>
-        </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
-        <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
-          <name>Laboratoire auteur</name>
-          <sequenceNumber>4</sequenceNumber>
-          <enabled>true</enabled>
-          <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
-          <profileUrl>http://hl7.org/fhir/StructureDefinition/Organization</profileUrl>
-          <profileVersion />
-          <resourceType>Organization</resourceType>
-          <addMetaProfile>true</addMetaProfile>
-          <setLastUpdated>false</setLastUpdated>
-          <variable />
-          <action>resource</action>
-          <bundleType>transaction</bundleType>
-          <refName>'laboratoire'</refName>
-          <terminologyServer>n/a</terminologyServer>
-          <terminologyAuthorization />
-          <terminologyCacheSeconds>300</terminologyCacheSeconds>
-          <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
-          <mappings>[{"key": "Organization.active", "element": "Organization.active", "type": "boolean", "expression": "true", "path": [["active"]]}, {"key": "Organization.name", "element": "Organization.name", "type": "string", "expression": "'Laboratoire de démonstration'", "path": [["name"]]}]</mappings>
-          <bundleTargets>[{"name": "labo-document"}]</bundleTargets>
         </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
         <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
           <name>Patient</name>
-          <sequenceNumber>5</sequenceNumber>
+          <sequenceNumber>2</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
           <profiles>/fhir-ig</profiles>
@@ -155,6 +88,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <setLastUpdated>false</setLastUpdated>
           <variable />
           <action>resource</action>
+          <bundleTargets>[{"name": "labo", "requestMethod": "PUT", "requestUrl": "'Patient?identifier=http://example.org/fhir/oru2fhir/sid/ipp|' + fhirFind(msg['PID']['PID.3'], function (cx) { return cx['PID.3.5'] == 'PI'; })['PID.3.1']", "ifNoneExist": ""}]</bundleTargets>
           <bundleType>transaction</bundleType>
           <refName>'patient'</refName>
           <terminologyServer>n/a</terminologyServer>
@@ -162,12 +96,12 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <terminologyCacheSeconds>300</terminologyCacheSeconds>
           <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
           <mappings>[{"key": "Patient.identifier:ipp.value", "element": "Patient.identifier:ipp.value", "type": "string", "expression": "fhirFind(msg['PID']['PID.3'], function (cx) { return cx['PID.3.5'] == 'PI'; })['PID.3.1'].toString()", "path": [["identifier", "ipp#0"], ["value"]]}, {"key": "Patient.name", "each": "msg['PID']['PID.5']", "variable": "n", "path": [["name", "#0"]]}, {"key": "Patient.name.use", "element": "Patient.name.use", "type": "code", "expression": "({L: 'official', D: 'usual', M: 'maiden'})[n['PID.5.7'].toString()]", "path": [["name", "#0"], ["use"]]}, {"key": "Patient.name.family", "element": "Patient.name.family", "type": "string", "expression": "n['PID.5.1'].toString()", "path": [["name", "#0"], ["family"]]}, {"key": "Patient.name.given", "element": "Patient.name.given", "type": "string", "expression": "n['PID.5.2'].toString()", "path": [["name", "#0"], ["given", "#0"]]}, {"key": "Patient.name.given[1]", "element": "Patient.name.given[1]", "type": "string", "expression": "n['PID.5.3'].toString()", "path": [["name", "#0"], ["given", "#1"]]}, {"key": "Patient.name.prefix", "element": "Patient.name.prefix", "type": "string", "expression": "n['PID.5.5'].toString()", "path": [["name", "#0"], ["prefix", "#0"]]}, {"key": "Patient.telecom", "each": "msg['PID']['PID.13']", "variable": "t", "path": [["telecom", "#0"]]}, {"key": "Patient.telecom.system", "element": "Patient.telecom.system", "type": "code", "expression": "t['PID.13.3'].toString() == 'Internet' ? 'email' : 'phone'", "path": [["telecom", "#0"], ["system"]]}, {"key": "Patient.telecom.value", "element": "Patient.telecom.value", "type": "string", "expression": "t['PID.13.4'].toString() || t['PID.13.12'].toString()", "path": [["telecom", "#0"], ["value"]]}, {"key": "Patient.telecom.use", "element": "Patient.telecom.use", "type": "code", "expression": "({CP: 'mobile', PH: 'home'})[t['PID.13.3'].toString()]", "path": [["telecom", "#0"], ["use"]]}, {"key": "Patient.gender", "element": "Patient.gender", "type": "code", "expression": "msg['PID']['PID.8']['PID.8.1'].toString()", "path": [["gender"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0001-to-gender", "source": "http://terminology.hl7.org/CodeSystem/v2-0001", "target": "", "unmapped": "none", "keepSource": false}}, {"key": "Patient.birthDate", "element": "Patient.birthDate", "type": "date", "expression": "msg['PID']['PID.7']['PID.7.1'].toString()", "path": [["birthDate"]]}, {"key": "Patient.address.line", "element": "Patient.address.line", "type": "string", "expression": "msg['PID']['PID.11']['PID.11.1'].toString()", "path": [["address", "#0"], ["line", "#0"]]}, {"key": "Patient.address.line[1]", "element": "Patient.address.line[1]", "type": "string", "expression": "msg['PID']['PID.11']['PID.11.2'].toString()", "path": [["address", "#0"], ["line", "#1"]]}, {"key": "Patient.address.city", "element": "Patient.address.city", "type": "string", "expression": "msg['PID']['PID.11']['PID.11.3'].toString()", "path": [["address", "#0"], ["city"]]}, {"key": "Patient.address.postalCode", "element": "Patient.address.postalCode", "type": "string", "expression": "msg['PID']['PID.11']['PID.11.5'].toString()", "path": [["address", "#0"], ["postalCode"]]}, {"key": "Patient.address.country", "element": "Patient.address.country", "type": "string", "expression": "msg['PID']['PID.11']['PID.11.6'].toString()", "path": [["address", "#0"], ["country"]]}, {"key": "Patient.identifier:ipp.system", "element": "Patient.identifier:ipp.system", "fixed": "http://example.org/fhir/oru2fhir/sid/ipp", "when": 1, "path": [["identifier", "ipp#0"], ["system"]]}]</mappings>
-          <bundleTargets>[{"name": "labo-transaction", "requestMethod": "PUT", "requestUrl": "'Patient?identifier=http://example.org/fhir/oru2fhir/sid/ipp|' + fhirFind(msg['PID']['PID.3'], function (cx) { return cx['PID.3.5'] == 'PI'; })['PID.3.1']", "ifNoneExist": ""}, {"name": "labo-document"}]</bundleTargets>
-          <samples>[{"id":"demo-oru-r01-vers-deux-bundles-labo-fhir","name":"ORU complet : transaction et document","message":"MSH|^~\\&amp;|LAB|EXAMPLE-LAB|OIE|EXAMPLE-HOSP|20260114171908||ORU^R01^ORU_R01|MSG-0001|P|2.5.1|||||FRA|UNICODE UTF-8|FR\nPID|1||100001^^^EXAMPLE^PI||MARTIN^CLAIRE^ANNE^^Mme^^L||19800215|F|||12 rue de l'Exemple^Bât B^MARSEILLE^^13005^FRA||^PRN^PH^^^^^^^^^0491000001~^PRN^CP^^^^^^^^^0600000001~^NET^Internet^claire.martin@example.org\nPV1|1|I|CARDIO^101^1||||||||||||||||V-2026-0001^^^^VN|||||||||||||||||||||||||20260110083000\nORC|SC|ORD-1001^LAB|LAB-1001^LAB||CM||||20260114080000|||DOC1^MEDECIN^PAUL^^^^^^L\nOBR|1|ORD-1001^LAB|LAB-1001^LAB|BIOCHEM^Bilan biochimique^L|||20260114073000|||||||||DOC1^MEDECIN^PAUL^^^^^^L||||||20260114170000||CH|F\nOBX|1|NM|GLU^Glucose^L||6.80|mmol/L^mmol/L^UCUM|3.90-5.50|H|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||20260114100000\nOBX|2|NM|K^Potassium^L||4.10|mmol/L^mmol/L^UCUM|3.50-5.00|N|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||20260114100500\nOBX|3|NM|NA^Sodium^L||140|mmol/L^mmol/L^UCUM|135-145|N|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||20260114100500\nOBX|4|NM|CREA^Créatinine^L||78|umol/L^umol/L^UCUM|45-90|N|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||20260114101000\nOBX|5|ST|COMMENT^Commentaire du laboratoire^L||Prélèvement légèrement hémolysé, potassium à contrôler.||||||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||\nSPM|1|SPM-1001&amp;LAB||SER^Sérum^L|||||||||||||20260114073000|20260114080500\nORC|SC|ORD-1002^LAB|LAB-1002^LAB||CM||||20260114080000|||\nOBR|2|ORD-1002^LAB|LAB-1002^LAB|CR_PDF^Compte rendu PDF^L|||20260114073000|||||||||||||||20260114170000||CH|F\nOBX|1|ED|CR_PDF^Compte rendu PDF^L||^application^pdf^Base64^JVBERi0xLjQKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgNTk1IDg0Ml0vQ29udGVudHMgNCAwIFIvUmVzb3VyY2VzPDwvRm9udDw8L0YxIDUgMCBSPj4+Pj4+ZW5kb2JqCjQgMCBvYmo8PC9MZW5ndGggNjk+PnN0cmVhbQpCVCAvRjEgMTYgVGYgNzIgNzcwIFRkIChDb21wdGUgcmVuZHUgZCdleGVtcGxlIC0gZGVtbyBvcnUyZmhpcikgVGogRVQKZW5kc3RyZWFtZW5kb2JqCjUgMCBvYmo8PC9UeXBlL0ZvbnQvU3VidHlwZS9UeXBlMS9CYXNlRm9udC9IZWx2ZXRpY2E+PmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1MiAwMDAwMCBuIAowMDAwMDAwMTAxIDAwMDAwIG4gCjAwMDAwMDAyMTEgMDAwMDAgbiAKMDAwMDAwMDMyNSAwMDAwMCBuIAp0cmFpbGVyPDwvU2l6ZSA2L1Jvb3QgMSAwIFI+PgpzdGFydHhyZWYKMzg2CiUlRU9GCg||||||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||\n","dataType":"HL7V2","scope":"transformer","expected":"{\"resourceType\":\"Bundle\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleOruBundle\"]},\"identifier\":{\"system\":\"http://example.org/fhir/oru2fhir/sid/message-control-id\",\"value\":\"MSG-0001\"},\"type\":\"transaction\",\"timestamp\":\"2026-01-14T17:19:08+01:00\",\"entry\":[{\"fullUrl\":\"urn:uuid:36884430-2517-44aa-9ece-20dc80c53152\",\"resource\":{\"resourceType\":\"Patient\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]},\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/ipp\",\"value\":\"100001\"}],\"name\":[{\"use\":\"official\",\"family\":\"MARTIN\",\"given\":[\"CLAIRE\",\"ANNE\"],\"prefix\":[\"Mme\"]}],\"telecom\":[{\"system\":\"phone\",\"value\":\"0491000001\",\"use\":\"home\"},{\"system\":\"phone\",\"value\":\"0600000001\",\"use\":\"mobile\"},{\"system\":\"email\",\"value\":\"claire.martin@example.org\"}],\"gender\":\"female\",\"birthDate\":\"1980-02-15\",\"address\":[{\"line\":[\"12 rue de l'Exemple\",\"Bât B\"],\"city\":\"MARSEILLE\",\"postalCode\":\"13005\",\"country\":\"FRA\"}]},\"request\":{\"method\":\"PUT\",\"url\":\"Patient?identifier=http://example.org/fhir/oru2fhir/sid/ipp|100001\"}},{\"fullUrl\":\"urn:uuid:3836a3ca-5637-40ed-93fa-b9c3bb2d20d3\",\"resource\":{\"resourceType\":\"Encounter\",\"identifier\":[{\"system\":\"http://example.org/fhir/oru2fhir/sid/visit\",\"value\":\"V-2026-0001\"}],\"status\":\"in-progress\",\"class\":{\"system\":\"http://terminology.hl7.org/CodeSystem/v3-ActCode\",\"code\":\"IMP\"},\"subject\":{\"reference\":\"urn:uuid:36884430-2517-44aa-9ece-20dc80c53152\"},\"period\":{\"start\":\"2026-01-10T08:30:00+01:00\"}},\"request\":{\"method\":\"POST\",\"url\":\"Encounter\",\"ifNoneExist\":\"identifier=http://example.org/fhir/oru2fhir/sid/visit|V-2026-0001\"}},{\"fullUrl\":\"urn:uuid:892bedaa-d5e3-43e6-a102-f69da2603136\",\"resource\":{\"resourceType\":\"ServiceRequest\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabServiceRequest\"]},\"identifier\":[{\"type\":{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v2-0203\",\"code\":\"PLAC\"}]},\"value\":\"ORD-1001\"},{\"type\":{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v2-0203\",\"code\":\"FILL\"}]},\"value\":\"LAB-1001\"}],\"status\":\"completed\",\"intent\":\"order\",\"code\":{\"coding\":[{\"system\":\"http://example.org/fhir/oru2fhir/CodeSystem/lab-codes\",\"code\":\"BIOCHEM\",\"display\":\"Bilan biochimique\"}],\"text\":\"Bilan biochimique\"},\"subject\":{\"reference\":\"urn:uuid:36884430-2517-44aa-9ece-20dc80c53152\"},\"encounter\":{\"reference\":\"urn:uuid:3836a3ca-5637-40ed-93fa-b9c3bb2d20d3\"},\"authoredOn\":\"2026-01-14T08:00:00+01:00\",\"requester\":{\"display\":\"PAUL MEDECIN\"}},\"request\":{\"method\":\"POST\",\"url\":\"ServiceRequest\"}},{\"fullUrl\":\"urn:uuid:f662f573-2051-49cb-bc26-a57a625a848f\",\"resource\":{\"resourceType\":\"ServiceRequest\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabServiceRequest\"]},\"identifier\":[{\"type\":{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v2-0203\",\"code\":\"PLAC\"}]},\"value\":\"ORD-1002\"},{\"type\":{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v2-0203\",\"code\":\"FILL\"}]},\"value\":\"LAB-1002\"}],\"status\":\"completed\",\"intent\":\"order\",\"code\":{\"coding\":[{\"system\":\"http://example.org/fhir/oru2fhir/CodeSystem/lab-codes\",\"code\":\"CR_PDF\",\"display\":\"Compte rendu PDF\"}],\"text\":\"Compte rendu PDF\"},\"subject\":{\"reference\":\"urn:uuid:36884430-2517-44aa-9ece-20dc80c53152\"},\"encounter\":{\"reference\":\"urn:uuid:3836a3ca-5637-40ed-93fa-b9c3bb2d20d3\"},\"authoredOn\":\"2026-01-14T08:00:00+01:00\"},\"request\":{\"method\":\"POST\",\"url\":\"ServiceRequest\"}},{\"fullUrl\":\"urn:uuid:45ba34d6-b148-434a-9e95-ff4783bddecd\",\"resource\":{\"resourceType\":\"Specimen\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabSpecimen\"]},\"identifier\":[{\"value\":\"SPM-1001\"}],\"type\":{\"coding\":[{\"system\":\"http://example.org/fhir/oru2fhir/CodeSystem/lab-codes\",\"code\":\"SER\",\"display\":\"Sérum\"}],\"text\":\"Sérum\"},\"subject\":{\"reference\":\"urn:uuid:36884430-2517-44aa-9ece-20dc80c53152\"},\"receivedTime\":\"2026-01-14T08:05:00+01:00\",\"request\":[{\"reference\":\"urn:uuid:892bedaa-d5e3-43e6-a102-f69da2603136\"}],\"collection\":{\"collectedDateTime\":\"2026-01-14T07:30:00+01:00\"}},\"request\":{\"method\":\"POST\",\"url\":\"Specimen\"}},{\"fullUrl\":\"urn:uuid:99cc9e7e-9ce5-4b41-a916-14c0501a688b\",\"resource\":{\"resourceType\":\"Observation\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabObservation\"]},\"basedOn\":[{\"reference\":\"urn:uuid:892bedaa-d5e3-43e6-a102-f69da2603136\"}],\"status\":\"final\",\"category\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/observation-category\",\"code\":\"laboratory\"}]}],\"code\":{\"coding\":[{\"system\":\"http://example.org/fhir/oru2fhir/CodeSystem/lab-codes\",\"code\":\"GLU\",\"display\":\"Glucose\"},{\"system\":\"http://loinc.org\",\"code\":\"14749-6\",\"display\":\"Glucose [Moles/volume] in Serum or Plasma\"}],\"text\":\"Glucose\"},\"subject\":{\"reference\":\"urn:uuid:36884430-2517-44aa-9ece-20dc80c53152\"},\"encounter\":{\"reference\":\"urn:uuid:3836a3ca-5637-40ed-93fa-b9c3bb2d20d3\"},\"effectiveDateTime\":\"2026-01-14T07:30:00+01:00\",\"issued\":\"2026-01-14T10:00:00+01:00\",\"performer\":[{\"display\":\"JEAN BIOLOGISTE\"}],\"valueQuantity\":{\"value\":6.8,\"unit\":\"mmol/L\",\"system\":\"http://unitsofmeasure.org\",\"code\":\"mmol/L\"},\"interpretation\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation\",\"code\":\"H\",\"display\":\"High\"}]}],\"specimen\":{\"reference\":\"urn:uuid:45ba34d6-b148-434a-9e95-ff4783bddecd\"},\"referenceRange\":[{\"low\":{\"value\":3.9,\"unit\":\"mmol/L\",\"system\":\"http://unitsofmeasure.org\",\"code\":\"mmol/L\"},\"high\":{\"value\":5.5,\"unit\":\"mmol/L\",\"system\":\"http://unitsofmeasure.org\",\"code\":\"mmol/L\"}}]},\"request\":{\"method\":\"POST\",\"url\":\"Observation\"}},{\"fullUrl\":\"urn:uuid:859087a4-499b-4af8-8a56-2c91ffa11b7f\",\"resource\":{\"resourceType\":\"Observation\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabObservation\"]},\"basedOn\":[{\"reference\":\"urn:uuid:892bedaa-d5e3-43e6-a102-f69da2603136\"}],\"status\":\"final\",\"category\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/observation-category\",\"code\":\"laboratory\"}]}],\"code\":{\"coding\":[{\"system\":\"http://example.org/fhir/oru2fhir/CodeSystem/lab-codes\",\"code\":\"K\",\"display\":\"Potassium\"},{\"system\":\"http://loinc.org\",\"code\":\"2823-3\",\"display\":\"Potassium [Moles/volume] in Serum or Plasma\"}],\"text\":\"Potassium\"},\"subject\":{\"reference\":\"urn:uuid:36884430-2517-44aa-9ece-20dc80c53152\"},\"encounter\":{\"reference\":\"urn:uuid:3836a3ca-5637-40ed-93fa-b9c3bb2d20d3\"},\"effectiveDateTime\":\"2026-01-14T07:30:00+01:00\",\"issued\":\"2026-01-14T10:05:00+01:00\",\"performer\":[{\"display\":\"JEAN BIOLOGISTE\"}],\"valueQuantity\":{\"value\":4.1,\"unit\":\"mmol/L\",\"system\":\"http://unitsofmeasure.org\",\"code\":\"mmol/L\"},\"interpretation\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation\",\"code\":\"N\",\"display\":\"Normal\"}]}],\"specimen\":{\"reference\":\"urn:uuid:45ba34d6-b148-434a-9e95-ff4783bddecd\"},\"referenceRange\":[{\"low\":{\"value\":3.5,\"unit\":\"mmol/L\",\"system\":\"http://unitsofmeasure.org\",\"code\":\"mmol/L\"},\"high\":{\"value\":5.0,\"unit\":\"mmol/L\",\"system\":\"http://unitsofmeasure.org\",\"code\":\"mmol/L\"}}]},\"request\":{\"method\":\"POST\",\"url\":\"Observation\"}},{\"fullUrl\":\"urn:uuid:cc3e7517-0d8e-4e68-93a3-575001c8c954\",\"resource\":{\"resourceType\":\"Observation\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabObservation\"]},\"basedOn\":[{\"reference\":\"urn:uuid:892bedaa-d5e3-43e6-a102-f69da2603136\"}],\"status\":\"final\",\"category\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/observation-category\",\"code\":\"laboratory\"}]}],\"code\":{\"coding\":[{\"system\":\"http://example.org/fhir/oru2fhir/CodeSystem/lab-codes\",\"code\":\"NA\",\"display\":\"Sodium\"},{\"system\":\"http://loinc.org\",\"code\":\"2951-2\",\"display\":\"Sodium [Moles/volume] in Serum or Plasma\"}],\"text\":\"Sodium\"},\"subject\":{\"reference\":\"urn:uuid:36884430-2517-44aa-9ece-20dc80c53152\"},\"encounter\":{\"reference\":\"urn:uuid:3836a3ca-5637-40ed-93fa-b9c3bb2d20d3\"},\"effectiveDateTime\":\"2026-01-14T07:30:00+01:00\",\"issued\":\"2026-01-14T10:05:00+01:00\",\"performer\":[{\"display\":\"JEAN BIOLOGISTE\"}],\"valueQuantity\":{\"value\":140,\"unit\":\"mmol/L\",\"system\":\"http://unitsofmeasure.org\",\"code\":\"mmol/L\"},\"interpretation\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation\",\"code\":\"N\",\"display\":\"Normal\"}]}],\"specimen\":{\"reference\":\"urn:uuid:45ba34d6-b148-434a-9e95-ff4783bddecd\"},\"referenceRange\":[{\"low\":{\"value\":135,\"unit\":\"mmol/L\",\"system\":\"http://unitsofmeasure.org\",\"code\":\"mmol/L\"},\"high\":{\"value\":145,\"unit\":\"mmol/L\",\"system\":\"http://unitsofmeasure.org\",\"code\":\"mmol/L\"}}]},\"request\":{\"method\":\"POST\",\"url\":\"Observation\"}},{\"fullUrl\":\"urn:uuid:fc7b70d5-7ef5-4900-a2f8-07db07ec564e\",\"resource\":{\"resourceType\":\"Observation\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabObservation\"]},\"basedOn\":[{\"reference\":\"urn:uuid:892bedaa-d5e3-43e6-a102-f69da2603136\"}],\"status\":\"final\",\"category\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/observation-category\",\"code\":\"laboratory\"}]}],\"code\":{\"coding\":[{\"system\":\"http://example.org/fhir/oru2fhir/CodeSystem/lab-codes\",\"code\":\"CREA\",\"display\":\"Créatinine\"},{\"system\":\"http://loinc.org\",\"code\":\"14682-9\",\"display\":\"Creatinine [Moles/volume] in Serum or Plasma\"}],\"text\":\"Créatinine\"},\"subject\":{\"reference\":\"urn:uuid:36884430-2517-44aa-9ece-20dc80c53152\"},\"encounter\":{\"reference\":\"urn:uuid:3836a3ca-5637-40ed-93fa-b9c3bb2d20d3\"},\"effectiveDateTime\":\"2026-01-14T07:30:00+01:00\",\"issued\":\"2026-01-14T10:10:00+01:00\",\"performer\":[{\"display\":\"JEAN BIOLOGISTE\"}],\"valueQuantity\":{\"value\":78,\"unit\":\"umol/L\",\"system\":\"http://unitsofmeasure.org\",\"code\":\"umol/L\"},\"interpretation\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation\",\"code\":\"N\",\"display\":\"Normal\"}]}],\"specimen\":{\"reference\":\"urn:uuid:45ba34d6-b148-434a-9e95-ff4783bddecd\"},\"referenceRange\":[{\"low\":{\"value\":45,\"unit\":\"umol/L\",\"system\":\"http://unitsofmeasure.org\",\"code\":\"umol/L\"},\"high\":{\"value\":90,\"unit\":\"umol/L\",\"system\":\"http://unitsofmeasure.org\",\"code\":\"umol/L\"}}]},\"request\":{\"method\":\"POST\",\"url\":\"Observation\"}},{\"fullUrl\":\"urn:uuid:31d1f9b7-13e6-478f-9304-900d93fd531f\",\"resource\":{\"resourceType\":\"Observation\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabObservation\"]},\"basedOn\":[{\"reference\":\"urn:uuid:892bedaa-d5e3-43e6-a102-f69da2603136\"}],\"status\":\"final\",\"category\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/observation-category\",\"code\":\"laboratory\"}]}],\"code\":{\"coding\":[{\"system\":\"http://example.org/fhir/oru2fhir/CodeSystem/lab-codes\",\"code\":\"COMMENT\",\"display\":\"Commentaire du laboratoire\"}],\"text\":\"Commentaire du laboratoire\"},\"subject\":{\"reference\":\"urn:uuid:36884430-2517-44aa-9ece-20dc80c53152\"},\"encounter\":{\"reference\":\"urn:uuid:3836a3ca-5637-40ed-93fa-b9c3bb2d20d3\"},\"effectiveDateTime\":\"2026-01-14T07:30:00+01:00\",\"performer\":[{\"display\":\"JEAN BIOLOGISTE\"}],\"valueString\":\"Prélèvement légèrement hémolysé, potassium à contrôler.\",\"specimen\":{\"reference\":\"urn:uuid:45ba34d6-b148-434a-9e95-ff4783bddecd\"}},\"request\":{\"method\":\"POST\",\"url\":\"Observation\"}},{\"fullUrl\":\"urn:uuid:1115b3f3-1662-474e-9d70-9e77ab1e2b3f\",\"resource\":{\"resourceType\":\"DiagnosticReport\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabDiagnosticReport\"]},\"identifier\":[{\"type\":{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v2-0203\",\"code\":\"FILL\"}]},\"value\":\"LAB-1001\"}],\"basedOn\":[{\"reference\":\"urn:uuid:892bedaa-d5e3-43e6-a102-f69da2603136\"}],\"status\":\"final\",\"category\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v2-0074\",\"code\":\"LAB\"}]}],\"code\":{\"coding\":[{\"system\":\"http://example.org/fhir/oru2fhir/CodeSystem/lab-codes\",\"code\":\"BIOCHEM\",\"display\":\"Bilan biochimique\"}],\"text\":\"Bilan biochimique\"},\"subject\":{\"reference\":\"urn:uuid:36884430-2517-44aa-9ece-20dc80c53152\"},\"encounter\":{\"reference\":\"urn:uuid:3836a3ca-5637-40ed-93fa-b9c3bb2d20d3\"},\"effectiveDateTime\":\"2026-01-14T07:30:00+01:00\",\"issued\":\"2026-01-14T17:00:00+01:00\",\"specimen\":[{\"reference\":\"urn:uuid:45ba34d6-b148-434a-9e95-ff4783bddecd\"}],\"result\":[{\"reference\":\"urn:uuid:99cc9e7e-9ce5-4b41-a916-14c0501a688b\"},{\"reference\":\"urn:uuid:859087a4-499b-4af8-8a56-2c91ffa11b7f\"},{\"reference\":\"urn:uuid:cc3e7517-0d8e-4e68-93a3-575001c8c954\"},{\"reference\":\"urn:uuid:fc7b70d5-7ef5-4900-a2f8-07db07ec564e\"},{\"reference\":\"urn:uuid:31d1f9b7-13e6-478f-9304-900d93fd531f\"}]},\"request\":{\"method\":\"POST\",\"url\":\"DiagnosticReport\"}},{\"fullUrl\":\"urn:uuid:0837a9fb-b5cd-4625-abcc-e875048142f6\",\"resource\":{\"resourceType\":\"DiagnosticReport\",\"meta\":{\"profile\":[\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabDiagnosticReport\"]},\"identifier\":[{\"type\":{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v2-0203\",\"code\":\"FILL\"}]},\"value\":\"LAB-1002\"}],\"basedOn\":[{\"reference\":\"urn:uuid:f662f573-2051-49cb-bc26-a57a625a848f\"}],\"status\":\"final\",\"category\":[{\"coding\":[{\"system\":\"http://terminology.hl7.org/CodeSystem/v2-0074\",\"code\":\"LAB\"}]}],\"code\":{\"coding\":[{\"system\":\"http://example.org/fhir/oru2fhir/CodeSystem/lab-codes\",\"code\":\"CR_PDF\",\"display\":\"Compte rendu PDF\"}],\"text\":\"Compte rendu PDF\"},\"subject\":{\"reference\":\"urn:uuid:36884430-2517-44aa-9ece-20dc80c53152\"},\"encounter\":{\"reference\":\"urn:uuid:3836a3ca-5637-40ed-93fa-b9c3bb2d20d3\"},\"effectiveDateTime\":\"2026-01-14T07:30:00+01:00\",\"issued\":\"2026-01-14T17:00:00+01:00\",\"presentedForm\":[{\"contentType\":\"application/pdf\",\"data\":\"JVBERi0xLjQKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgNTk1IDg0Ml0vQ29udGVudHMgNCAwIFIvUmVzb3VyY2VzPDwvRm9udDw8L0YxIDUgMCBSPj4+Pj4+ZW5kb2JqCjQgMCBvYmo8PC9MZW5ndGggNjk+PnN0cmVhbQpCVCAvRjEgMTYgVGYgNzIgNzcwIFRkIChDb21wdGUgcmVuZHUgZCdleGVtcGxlIC0gZGVtbyBvcnUyZmhpcikgVGogRVQKZW5kc3RyZWFtZW5kb2JqCjUgMCBvYmo8PC9UeXBlL0ZvbnQvU3VidHlwZS9UeXBlMS9CYXNlRm9udC9IZWx2ZXRpY2E+PmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1MiAwMDAwMCBuIAowMDAwMDAwMTAxIDAwMDAwIG4gCjAwMDAwMDAyMTEgMDAwMDAgbiAKMDAwMDAwMDMyNSAwMDAwMCBuIAp0cmFpbGVyPDwvU2l6ZSA2L1Jvb3QgMSAwIFI+PgpzdGFydHhyZWYKMzg2CiUlRU9GCg==\",\"title\":\"Compte rendu PDF\"}]},\"request\":{\"method\":\"POST\",\"url\":\"DiagnosticReport\"}}]}"}]</samples>
+          <traceMessages>true</traceMessages>
+          <samples>[{"id": "3b53a204-2f64-5c01-8036-cc5033a90fb1", "name": "Complete laboratory ORU", "dataType": "HL7V2", "message": "MSH|^~\\&amp;|LAB|EXAMPLE-LAB|OIE|EXAMPLE-HOSP|20260114171908||ORU^R01^ORU_R01|MSG-0001|P|2.5.1|||||FRA|UNICODE UTF-8|FR\nPID|1||100001^^^EXAMPLE^PI||MARTIN^CLAIRE^ANNE^^Mme^^L||19800215|F|||12 rue de l'Exemple^Bât B^MARSEILLE^^13005^FRA||^PRN^PH^^^^^^^^^0491000001~^PRN^CP^^^^^^^^^0600000001~^NET^Internet^claire.martin@example.org\nPV1|1|I|CARDIO^101^1||||||||||||||||V-2026-0001^^^^VN|||||||||||||||||||||||||20260110083000\nORC|SC|ORD-1001^LAB|LAB-1001^LAB||CM||||20260114080000|||DOC1^MEDECIN^PAUL^^^^^^L\nOBR|1|ORD-1001^LAB|LAB-1001^LAB|BIOCHEM^Bilan biochimique^L|||20260114073000|||||||||DOC1^MEDECIN^PAUL^^^^^^L||||||20260114170000||CH|F\nOBX|1|NM|GLU^Glucose^L||6.80|mmol/L^mmol/L^UCUM|3.90-5.50|H|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||20260114100000\nOBX|2|NM|K^Potassium^L||4.10|mmol/L^mmol/L^UCUM|3.50-5.00|N|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||20260114100500\nOBX|3|NM|NA^Sodium^L||140|mmol/L^mmol/L^UCUM|135-145|N|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||20260114100500\nOBX|4|NM|CREA^Créatinine^L||78|umol/L^umol/L^UCUM|45-90|N|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||20260114101000\nOBX|5|ST|COMMENT^Commentaire du laboratoire^L||Prélèvement légèrement hémolysé, potassium à contrôler.||||||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||\nSPM|1|SPM-1001&amp;LAB||SER^Sérum^L|||||||||||||20260114073000|20260114080500\nORC|SC|ORD-1002^LAB|LAB-1002^LAB||CM||||20260114080000|||\nOBR|2|ORD-1002^LAB|LAB-1002^LAB|CR_PDF^Compte rendu PDF^L|||20260114073000|||||||||||||||20260114170000||CH|F\nOBX|1|ED|CR_PDF^Compte rendu PDF^L||^application^pdf^Base64^JVBERi0xLjQKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCjIgMCBvYmo8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PmVuZG9iagozIDAgb2JqPDwvVHlwZS9QYWdlL1BhcmVudCAyIDAgUi9NZWRpYUJveFswIDAgNTk1IDg0Ml0vQ29udGVudHMgNCAwIFIvUmVzb3VyY2VzPDwvRm9udDw8L0YxIDUgMCBSPj4+Pj4+ZW5kb2JqCjQgMCBvYmo8PC9MZW5ndGggNjk+PnN0cmVhbQpCVCAvRjEgMTYgVGYgNzIgNzcwIFRkIChDb21wdGUgcmVuZHUgZCdleGVtcGxlIC0gZGVtbyBvcnUyZmhpcikgVGogRVQKZW5kc3RyZWFtZW5kb2JqCjUgMCBvYmo8PC9UeXBlL0ZvbnQvU3VidHlwZS9UeXBlMS9CYXNlRm9udC9IZWx2ZXRpY2E+PmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1MiAwMDAwMCBuIAowMDAwMDAwMTAxIDAwMDAwIG4gCjAwMDAwMDAyMTEgMDAwMDAgbiAKMDAwMDAwMDMyNSAwMDAwMCBuIAp0cmFpbGVyPDwvU2l6ZSA2L1Jvb3QgMSAwIFI+PgpzdGFydHhyZWYKMzg2CiUlRU9GCg||||||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||\n", "expected": "{\n \"resourceType\": \"Patient\",\n \"meta\": {\n  \"profile\": [\n   \"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"\n  ]\n },\n \"identifier\": [\n  {\n   \"value\": \"100001\",\n   \"system\": \"http://example.org/fhir/oru2fhir/sid/ipp\"\n  }\n ],\n \"name\": [\n  {\n   \"use\": \"official\",\n   \"family\": \"MARTIN\",\n   \"given\": [\n    \"CLAIRE\",\n    \"ANNE\"\n   ],\n   \"prefix\": [\n    \"Mme\"\n   ]\n  }\n ],\n \"telecom\": [\n  {\n   \"system\": \"phone\",\n   \"value\": \"0491000001\",\n   \"use\": \"home\"\n  },\n  {\n   \"system\": \"phone\",\n   \"value\": \"0600000001\",\n   \"use\": \"mobile\"\n  },\n  {\n   \"system\": \"email\",\n   \"value\": \"claire.martin@example.org\"\n  }\n ],\n \"gender\": \"female\",\n \"birthDate\": \"1980-02-15\",\n \"address\": [\n  {\n   \"line\": [\n    \"12 rue de l'Exemple\",\n    \"Bât B\"\n   ],\n   \"city\": \"MARSEILLE\",\n   \"postalCode\": \"13005\",\n   \"country\": \"FRA\"\n  }\n ]\n}"}, {"id": "2cd150ea-abba-53d8-bd9f-9878d8b5569f", "name": "Minimal ORU", "dataType": "HL7V2", "message": "MSH|^~\\&amp;|LAB|EXAMPLE-LAB|OIE|EXAMPLE-HOSP|20260114171908||ORU^R01^ORU_R01|MSG-0002|P|2.5.1|||||FRA|UNICODE UTF-8|FR\nPID|1||100001^^^EXAMPLE^PI||MARTIN^CLAIRE^ANNE^^Mme^^L||19800215|F|||12 rue de l'Exemple^Bât B^MARSEILLE^^13005^FRA||^PRN^PH^^^^^^^^^0491000001~^PRN^CP^^^^^^^^^0600000001~^NET^Internet^claire.martin@example.org\nORC|SC|ORD-2001^LAB|LAB-2001^LAB||CM||||20260114080000|||\nOBR|1|ORD-2001^LAB|LAB-2001^LAB|BIOCHEM^Bilan biochimique^L|||20260114073000|||||||||||||||20260114170000||CH|F\nOBX|1|NM|GLU^Glucose^L||5.10|mmol/L^mmol/L^UCUM|3.90-5.50|N|||F|||20260114073000||BIO1^BIOLOGISTE^JEAN^^^^^^L|||\n", "expected": "{\"resourceType\": \"Patient\", \"meta\": {\"profile\": [\"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"]}, \"identifier\": [{\"system\": \"http://example.org/fhir/oru2fhir/sid/ipp\", \"value\": \"100001\"}], \"name\": [{\"use\": \"official\", \"family\": \"MARTIN\", \"given\": [\"CLAIRE\", \"ANNE\"], \"prefix\": [\"Mme\"]}], \"telecom\": [{\"system\": \"phone\", \"value\": \"0491000001\", \"use\": \"home\"}, {\"system\": \"phone\", \"value\": \"0600000001\", \"use\": \"mobile\"}, {\"system\": \"email\", \"value\": \"claire.martin@example.org\"}], \"gender\": \"female\", \"birthDate\": \"1980-02-15\", \"address\": [{\"line\": [\"12 rue de l'Exemple\", \"Bât B\"], \"city\": \"MARSEILLE\", \"postalCode\": \"13005\", \"country\": \"FRA\"}]}"}]</samples>
         </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
         <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
           <name>Encounter</name>
-          <sequenceNumber>6</sequenceNumber>
+          <sequenceNumber>3</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
           <profiles>/fhir-ig</profiles>
@@ -178,18 +112,18 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <setLastUpdated>false</setLastUpdated>
           <variable />
           <action>resource</action>
+          <bundleTargets>[{"name": "labo", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": "'identifier=http://example.org/fhir/oru2fhir/sid/visit|' + msg['PV1']['PV1.19']['PV1.19.1']"}]</bundleTargets>
           <bundleType>transaction</bundleType>
           <refName>'encounter'</refName>
           <terminologyServer>n/a</terminologyServer>
           <terminologyAuthorization />
           <terminologyCacheSeconds>300</terminologyCacheSeconds>
           <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
-          <mappings>[{"key": "Encounter", "condition": "msg['PV1'].length() &gt; 0", "path": []}, {"key": "Encounter.identifier.system", "element": "Encounter.identifier.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/sid/visit'", "path": [["identifier", "#0"], ["system"]]}, {"key": "Encounter.identifier.value", "element": "Encounter.identifier.value", "type": "string", "expression": "msg['PV1']['PV1.19']['PV1.19.1'].toString()", "path": [["identifier", "#0"], ["value"]]}, {"key": "Encounter.status", "element": "Encounter.status", "type": "code", "expression": "msg['PV1']['PV1.45']['PV1.45.1'].toString() ? 'finished' : 'in-progress'", "path": [["status"]]}, {"key": "Encounter.class.system", "element": "Encounter.class.system", "type": "uri", "expression": "'http://terminology.hl7.org/CodeSystem/v3-ActCode'", "path": [["class"], ["system"]]}, {"key": "Encounter.class.code", "element": "Encounter.class.code", "type": "code", "expression": "({I: 'IMP', O: 'AMB', E: 'EMER'})[msg['PV1']['PV1.2']['PV1.2.1'].toString()]", "path": [["class"], ["code"]]}, {"key": "Encounter.subject.reference", "element": "Encounter.subject.reference", "type": "string", "expression": "fhirRef('patient', 0, true)", "path": [["subject"], ["reference"]]}, {"key": "Encounter.period.start", "element": "Encounter.period.start", "type": "dateTime", "expression": "msg['PV1']['PV1.44']['PV1.44.1'].toString()", "path": [["period"], ["start"]]}, {"key": "Encounter.period.end", "element": "Encounter.period.end", "type": "dateTime", "expression": "msg['PV1']['PV1.45']['PV1.45.1'].toString()", "path": [["period"], ["end"]]}]</mappings>
-          <bundleTargets>[{"name": "labo-transaction", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": "'identifier=http://example.org/fhir/oru2fhir/sid/visit|' + msg['PV1']['PV1.19']['PV1.19.1']"}, {"name": "labo-document"}]</bundleTargets>
+          <mappings>[{"key": "Encounter", "condition": "msg['PV1'].length() &gt; 0", "path": []}, {"key": "Encounter.identifier.system", "element": "Encounter.identifier.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/sid/visit'", "path": [["identifier", "#0"], ["system"]]}, {"key": "Encounter.identifier.value", "element": "Encounter.identifier.value", "type": "string", "expression": "msg['PV1']['PV1.19']['PV1.19.1'].toString()", "path": [["identifier", "#0"], ["value"]]}, {"key": "Encounter.status", "element": "Encounter.status", "type": "code", "expression": "msg['PV1']['PV1.45']['PV1.45.1'].toString() ? 'finished' : 'in-progress'", "path": [["status"]]}, {"key": "Encounter.class.system", "element": "Encounter.class.system", "type": "uri", "expression": "'http://terminology.hl7.org/CodeSystem/v3-ActCode'", "path": [["class"], ["system"]]}, {"key": "Encounter.class.code", "element": "Encounter.class.code", "type": "code", "expression": "({I: 'IMP', O: 'AMB', E: 'EMER'})[msg['PV1']['PV1.2']['PV1.2.1'].toString()]", "path": [["class"], ["code"]]}, {"key": "Encounter.subject.reference", "element": "Encounter.subject.reference", "type": "string", "expression": "fhirRef('patient')", "path": [["subject"], ["reference"]]}, {"key": "Encounter.period.start", "element": "Encounter.period.start", "type": "dateTime", "expression": "msg['PV1']['PV1.44']['PV1.44.1'].toString()", "path": [["period"], ["start"]]}, {"key": "Encounter.period.end", "element": "Encounter.period.end", "type": "dateTime", "expression": "msg['PV1']['PV1.45']['PV1.45.1'].toString()", "path": [["period"], ["end"]]}]</mappings>
         </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
         <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
           <name>ServiceRequest</name>
-          <sequenceNumber>7</sequenceNumber>
+          <sequenceNumber>4</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
           <profiles>/fhir-ig</profiles>
@@ -200,6 +134,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <setLastUpdated>false</setLastUpdated>
           <variable />
           <action>resource</action>
+          <bundleTargets>[{"name": "labo", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": ""}]</bundleTargets>
           <bundleType>transaction</bundleType>
           <refName>'sr-' + obrIndex</refName>
           <terminologyServer>n/a</terminologyServer>
@@ -207,11 +142,10 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <terminologyCacheSeconds>300</terminologyCacheSeconds>
           <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
           <mappings>[{"key": "ServiceRequest", "each": "msg['OBR']", "variable": "obr", "path": []}, {"key": "ServiceRequest.identifier.type.coding.system", "element": "ServiceRequest.identifier.type.coding.system", "type": "uri", "expression": "'http://terminology.hl7.org/CodeSystem/v2-0203'", "path": [["identifier", "#0"], ["type"], ["coding", "#0"], ["system"]]}, {"key": "ServiceRequest.identifier.type.coding.code", "element": "ServiceRequest.identifier.type.coding.code", "type": "code", "expression": "'PLAC'", "path": [["identifier", "#0"], ["type"], ["coding", "#0"], ["code"]]}, {"key": "ServiceRequest.identifier.value", "element": "ServiceRequest.identifier.value", "type": "string", "expression": "obr['OBR.2']['OBR.2.1'].toString()", "path": [["identifier", "#0"], ["value"]]}, {"key": "ServiceRequest.identifier[1].type.coding.system", "element": "ServiceRequest.identifier[1].type.coding.system", "type": "uri", "expression": "'http://terminology.hl7.org/CodeSystem/v2-0203'", "path": [["identifier", "#1"], ["type"], ["coding", "#0"], ["system"]]}, {"key": "ServiceRequest.identifier[1].type.coding.code", "element": "ServiceRequest.identifier[1].type.coding.code", "type": "code", "expression": "'FILL'", "path": [["identifier", "#1"], ["type"], ["coding", "#0"], ["code"]]}, {"key": "ServiceRequest.identifier[1].value", "element": "ServiceRequest.identifier[1].value", "type": "string", "expression": "obr['OBR.3']['OBR.3.1'].toString()", "path": [["identifier", "#1"], ["value"]]}, {"key": "ServiceRequest.status", "element": "ServiceRequest.status", "type": "code", "expression": "hl7Preceding(obr, 'ORC')['ORC.5']['ORC.5.1'].toString()", "path": [["status"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0038-to-request-status", "source": "http://terminology.hl7.org/CodeSystem/v2-0038", "target": "", "unmapped": "none", "keepSource": false}}, {"key": "ServiceRequest.intent", "element": "ServiceRequest.intent", "type": "code", "expression": "'order'", "path": [["intent"]]}, {"key": "ServiceRequest.code.coding.system", "element": "ServiceRequest.code.coding.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/CodeSystem/lab-codes'", "path": [["code"], ["coding", "#0"], ["system"]]}, {"key": "ServiceRequest.code.coding.code", "element": "ServiceRequest.code.coding.code", "type": "code", "expression": "obr['OBR.4']['OBR.4.1'].toString()", "path": [["code"], ["coding", "#0"], ["code"]]}, {"key": "ServiceRequest.code.coding.display", "element": "ServiceRequest.code.coding.display", "type": "string", "expression": "obr['OBR.4']['OBR.4.2'].toString()", "path": [["code"], ["coding", "#0"], ["display"]]}, {"key": "ServiceRequest.code.text", "element": "ServiceRequest.code.text", "type": "string", "expression": "obr['OBR.4']['OBR.4.2'].toString()", "path": [["code"], ["text"]]}, {"key": "ServiceRequest.subject.reference", "element": "ServiceRequest.subject.reference", "type": "string", "expression": "fhirRef('patient')", "path": [["subject"], ["reference"]]}, {"key": "ServiceRequest.encounter.reference", "element": "ServiceRequest.encounter.reference", "type": "string", "expression": "fhirRef('encounter')", "path": [["encounter"], ["reference"]]}, {"key": "ServiceRequest.authoredOn", "element": "ServiceRequest.authoredOn", "type": "dateTime", "expression": "hl7Preceding(obr, 'ORC')['ORC.9']['ORC.9.1'].toString()", "path": [["authoredOn"]]}, {"key": "ServiceRequest.requester.display", "element": "ServiceRequest.requester.display", "type": "string", "expression": "(obr['OBR.16']['OBR.16.3'] + ' ' + obr['OBR.16']['OBR.16.2']).trim()", "path": [["requester"], ["display"]]}]</mappings>
-          <bundleTargets>[{"name": "labo-transaction", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": ""}, {"name": "labo-document"}]</bundleTargets>
         </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
         <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
           <name>Specimen</name>
-          <sequenceNumber>8</sequenceNumber>
+          <sequenceNumber>5</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
           <profiles>/fhir-ig</profiles>
@@ -222,6 +156,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <setLastUpdated>false</setLastUpdated>
           <variable />
           <action>resource</action>
+          <bundleTargets>[{"name": "labo", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": ""}]</bundleTargets>
           <bundleType>transaction</bundleType>
           <refName>'spm-' + hl7Ordinal(hl7Preceding(spm, 'OBR', []))</refName>
           <terminologyServer>n/a</terminologyServer>
@@ -229,11 +164,10 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <terminologyCacheSeconds>300</terminologyCacheSeconds>
           <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
           <mappings>[{"key": "Specimen", "each": "msg['SPM']", "variable": "spm", "path": []}, {"key": "Specimen.identifier.value", "element": "Specimen.identifier.value", "type": "string", "expression": "spm['SPM.2']['SPM.2.1']['SPM.2.1.1'].toString()", "path": [["identifier", "#0"], ["value"]]}, {"key": "Specimen.type.coding.system", "element": "Specimen.type.coding.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/CodeSystem/lab-codes'", "path": [["type"], ["coding", "#0"], ["system"]]}, {"key": "Specimen.type.coding.code", "element": "Specimen.type.coding.code", "type": "code", "expression": "spm['SPM.4']['SPM.4.1'].toString()", "path": [["type"], ["coding", "#0"], ["code"]]}, {"key": "Specimen.type.coding.display", "element": "Specimen.type.coding.display", "type": "string", "expression": "spm['SPM.4']['SPM.4.2'].toString()", "path": [["type"], ["coding", "#0"], ["display"]]}, {"key": "Specimen.type.text", "element": "Specimen.type.text", "type": "string", "expression": "spm['SPM.4']['SPM.4.2'].toString()", "path": [["type"], ["text"]]}, {"key": "Specimen.subject.reference", "element": "Specimen.subject.reference", "type": "string", "expression": "fhirRef('patient')", "path": [["subject"], ["reference"]]}, {"key": "Specimen.receivedTime", "element": "Specimen.receivedTime", "type": "dateTime", "expression": "spm['SPM.18']['SPM.18.1'].toString()", "path": [["receivedTime"]]}, {"key": "Specimen.request.reference", "element": "Specimen.request.reference", "type": "string", "expression": "fhirRef('sr-' + hl7Ordinal(hl7Preceding(spm, 'OBR', [])))", "path": [["request", "#0"], ["reference"]]}, {"key": "Specimen.collection.collectedDateTime", "element": "Specimen.collection.collectedDateTime", "type": "dateTime", "expression": "spm['SPM.17']['SPM.17.1'].toString()", "path": [["collection"], ["collectedDateTime"]]}]</mappings>
-          <bundleTargets>[{"name": "labo-transaction", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": ""}, {"name": "labo-document"}]</bundleTargets>
         </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
         <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
           <name>Observation</name>
-          <sequenceNumber>9</sequenceNumber>
+          <sequenceNumber>6</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
           <profiles>/fhir-ig</profiles>
@@ -244,6 +178,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <setLastUpdated>false</setLastUpdated>
           <variable />
           <action>resource</action>
+          <bundleTargets>[{"name": "labo", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": ""}]</bundleTargets>
           <bundleType>transaction</bundleType>
           <refName>'obs-' + hl7Ordinal(hl7Preceding(obx, 'OBR', []))</refName>
           <terminologyServer>n/a</terminologyServer>
@@ -251,11 +186,11 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <terminologyCacheSeconds>300</terminologyCacheSeconds>
           <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
           <mappings>[{"key": "Observation", "each": "msg['OBX']", "variable": "obx", "path": []}, {"key": "Observation", "condition": "obx['OBX.2']['OBX.2.1'].toString() != 'ED'", "path": []}, {"key": "Observation.basedOn.reference", "element": "Observation.basedOn.reference", "type": "string", "expression": "fhirRef('sr-' + hl7Ordinal(hl7Preceding(obx, 'OBR', [])))", "path": [["basedOn", "#0"], ["reference"]]}, {"key": "Observation.status", "element": "Observation.status", "type": "code", "expression": "obx['OBX.11']['OBX.11.1'].toString()", "path": [["status"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0085-to-observation-status", "source": "http://terminology.hl7.org/CodeSystem/v2-0085", "target": "", "unmapped": "fixed", "keepSource": false, "value": "unknown"}}, {"key": "Observation.code.coding.system", "element": "Observation.code.coding.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/CodeSystem/lab-codes'", "path": [["code"], ["coding", "#0"], ["system"]]}, {"key": "Observation.code.coding.code", "element": "Observation.code.coding.code", "type": "code", "expression": "obx['OBX.3']['OBX.3.1'].toString()", "path": [["code"], ["coding", "#0"], ["code"]]}, {"key": "Observation.code.coding.display", "element": "Observation.code.coding.display", "type": "string", "expression": "obx['OBX.3']['OBX.3.2'].toString()", "path": [["code"], ["coding", "#0"], ["display"]]}, {"key": "Observation.code.coding[1]", "element": "Observation.code.coding[1]", "type": "Coding", "expression": "obx['OBX.3']['OBX.3.1'].toString()", "path": [["code"], ["coding", "#1"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/lab-codes-to-loinc", "source": "http://example.org/fhir/oru2fhir/CodeSystem/lab-codes", "target": "", "unmapped": "none", "keepSource": false}}, {"key": "Observation.code.text", "element": "Observation.code.text", "type": "string", "expression": "obx['OBX.3']['OBX.3.2'].toString()", "path": [["code"], ["text"]]}, {"key": "Observation.subject.reference", "element": "Observation.subject.reference", "type": "string", "expression": "fhirRef('patient')", "path": [["subject"], ["reference"]]}, {"key": "Observation.encounter.reference", "element": "Observation.encounter.reference", "type": "string", "expression": "fhirRef('encounter')", "path": [["encounter"], ["reference"]]}, {"key": "Observation.effectiveDateTime", "element": "Observation.effectiveDateTime", "type": "dateTime", "expression": "obx['OBX.14']['OBX.14.1'].toString()", "path": [["effectiveDateTime"]]}, {"key": "Observation.issued", "element": "Observation.issued", "type": "instant", "expression": "obx['OBX.19']['OBX.19.1'].toString()", "path": [["issued"]]}, {"key": "Observation.performer.display", "element": "Observation.performer.display", "type": "string", "expression": "(obx['OBX.16']['OBX.16.3'] + ' ' + obx['OBX.16']['OBX.16.2']).trim()", "path": [["performer", "#0"], ["display"]]}, {"key": "Observation.value[x].valueQuantity", "condition": "obx['OBX.2']['OBX.2.1'].toString() == 'NM'", "path": [["valueQuantity"]]}, {"key": "Observation.value[x].valueQuantity.value", "element": "Observation.value[x].valueQuantity.value", "type": "decimal", "expression": "obx['OBX.5']['OBX.5.1'].toString()", "path": [["valueQuantity"], ["value"]]}, {"key": "Observation.value[x].valueQuantity.unit", "element": "Observation.value[x].valueQuantity.unit", "type": "string", "expression": "obx['OBX.6']['OBX.6.1'].toString()", "path": [["valueQuantity"], ["unit"]]}, {"key": "Observation.value[x].valueQuantity.system", "element": "Observation.value[x].valueQuantity.system", "type": "uri", "expression": "'http://unitsofmeasure.org'", "path": [["valueQuantity"], ["system"]]}, {"key": "Observation.value[x].valueQuantity.code", "element": "Observation.value[x].valueQuantity.code", "type": "code", "expression": "obx['OBX.6']['OBX.6.1'].toString()", "path": [["valueQuantity"], ["code"]]}, {"key": "Observation.value[x].valueString", "condition": "['ST', 'TX', 'FT'].indexOf(obx['OBX.2']['OBX.2.1'].toString()) &gt;= 0", "path": [["valueString"]]}, {"key": "Observation.value[x].valueString", "element": "Observation.value[x].valueString", "type": "string", "expression": "obx['OBX.5']['OBX.5.1'].toString()", "path": [["valueString"]]}, {"key": "Observation.interpretation", "element": "Observation.interpretation", "type": "CodeableConcept", "expression": "obx['OBX.8']['OBX.8.1'].toString()", "path": [["interpretation", "#0"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0078-to-interpretation", "source": "http://terminology.hl7.org/CodeSystem/v2-0078", "target": "", "unmapped": "none", "keepSource": false}}, {"key": "Observation.specimen.reference", "element": "Observation.specimen.reference", "type": "string", "expression": "fhirRef('spm-' + hl7Ordinal(hl7Preceding(obx, 'OBR', [])))", "path": [["specimen"], ["reference"]]}, {"key": "Observation.referenceRange", "condition": "obx['OBX.7']['OBX.7.1'].toString().indexOf('-') &gt; 0", "path": [["referenceRange", "#0"]]}, {"key": "Observation.referenceRange.low.value", "element": "Observation.referenceRange.low.value", "type": "decimal", "expression": "obx['OBX.7']['OBX.7.1'].toString().split('-')[0]", "path": [["referenceRange", "#0"], ["low"], ["value"]]}, {"key": "Observation.referenceRange.low.unit", "element": "Observation.referenceRange.low.unit", "type": "string", "expression": "obx['OBX.6']['OBX.6.1'].toString()", "path": [["referenceRange", "#0"], ["low"], ["unit"]]}, {"key": "Observation.referenceRange.low.system", "element": "Observation.referenceRange.low.system", "type": "uri", "expression": "'http://unitsofmeasure.org'", "path": [["referenceRange", "#0"], ["low"], ["system"]]}, {"key": "Observation.referenceRange.low.code", "element": "Observation.referenceRange.low.code", "type": "code", "expression": "obx['OBX.6']['OBX.6.1'].toString()", "path": [["referenceRange", "#0"], ["low"], ["code"]]}, {"key": "Observation.referenceRange.high.value", "element": "Observation.referenceRange.high.value", "type": "decimal", "expression": "obx['OBX.7']['OBX.7.1'].toString().split('-')[1]", "path": [["referenceRange", "#0"], ["high"], ["value"]]}, {"key": "Observation.referenceRange.high.unit", "element": "Observation.referenceRange.high.unit", "type": "string", "expression": "obx['OBX.6']['OBX.6.1'].toString()", "path": [["referenceRange", "#0"], ["high"], ["unit"]]}, {"key": "Observation.referenceRange.high.system", "element": "Observation.referenceRange.high.system", "type": "uri", "expression": "'http://unitsofmeasure.org'", "path": [["referenceRange", "#0"], ["high"], ["system"]]}, {"key": "Observation.referenceRange.high.code", "element": "Observation.referenceRange.high.code", "type": "code", "expression": "obx['OBX.6']['OBX.6.1'].toString()", "path": [["referenceRange", "#0"], ["high"], ["code"]]}, {"key": "Observation.category:laboratory", "element": "Observation.category:laboratory", "fixed": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory"}]}, "when": 0, "path": [["category", "laboratory#0"]]}]</mappings>
-          <bundleTargets>[{"name": "labo-transaction", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": ""}, {"name": "labo-document"}]</bundleTargets>
+          <traceMessages>true</traceMessages>
         </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
         <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
           <name>DiagnosticReport</name>
-          <sequenceNumber>10</sequenceNumber>
+          <sequenceNumber>7</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
           <profiles>/fhir-ig</profiles>
@@ -266,23 +201,23 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <setLastUpdated>false</setLastUpdated>
           <variable />
           <action>resource</action>
+          <bundleTargets>[{"name": "labo", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": ""}]</bundleTargets>
           <bundleType>transaction</bundleType>
-          <refName>'report-' + obrIndex</refName>
+          <refName />
           <terminologyServer>n/a</terminologyServer>
           <terminologyAuthorization />
           <terminologyCacheSeconds>300</terminologyCacheSeconds>
           <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
           <mappings>[{"key": "DiagnosticReport", "each": "msg['OBR']", "variable": "obr", "path": []}, {"key": "DiagnosticReport.identifier.type.coding.system", "element": "DiagnosticReport.identifier.type.coding.system", "type": "uri", "expression": "'http://terminology.hl7.org/CodeSystem/v2-0203'", "path": [["identifier", "#0"], ["type"], ["coding", "#0"], ["system"]]}, {"key": "DiagnosticReport.identifier.type.coding.code", "element": "DiagnosticReport.identifier.type.coding.code", "type": "code", "expression": "'FILL'", "path": [["identifier", "#0"], ["type"], ["coding", "#0"], ["code"]]}, {"key": "DiagnosticReport.identifier.value", "element": "DiagnosticReport.identifier.value", "type": "string", "expression": "obr['OBR.3']['OBR.3.1'].toString()", "path": [["identifier", "#0"], ["value"]]}, {"key": "DiagnosticReport.basedOn.reference", "element": "DiagnosticReport.basedOn.reference", "type": "string", "expression": "fhirRef('sr-' + obrIndex)", "path": [["basedOn", "#0"], ["reference"]]}, {"key": "DiagnosticReport.status", "element": "DiagnosticReport.status", "type": "code", "expression": "obr['OBR.25']['OBR.25.1'].toString()", "path": [["status"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0123-to-report-status", "source": "http://terminology.hl7.org/CodeSystem/v2-0123", "target": "", "unmapped": "fixed", "keepSource": false, "value": "unknown"}}, {"key": "DiagnosticReport.code.coding.system", "element": "DiagnosticReport.code.coding.system", "type": "uri", "expression": "'http://example.org/fhir/oru2fhir/CodeSystem/lab-codes'", "path": [["code"], ["coding", "#0"], ["system"]]}, {"key": "DiagnosticReport.code.coding.code", "element": "DiagnosticReport.code.coding.code", "type": "code", "expression": "obr['OBR.4']['OBR.4.1'].toString()", "path": [["code"], ["coding", "#0"], ["code"]]}, {"key": "DiagnosticReport.code.coding.display", "element": "DiagnosticReport.code.coding.display", "type": "string", "expression": "obr['OBR.4']['OBR.4.2'].toString()", "path": [["code"], ["coding", "#0"], ["display"]]}, {"key": "DiagnosticReport.code.text", "element": "DiagnosticReport.code.text", "type": "string", "expression": "obr['OBR.4']['OBR.4.2'].toString()", "path": [["code"], ["text"]]}, {"key": "DiagnosticReport.subject.reference", "element": "DiagnosticReport.subject.reference", "type": "string", "expression": "fhirRef('patient')", "path": [["subject"], ["reference"]]}, {"key": "DiagnosticReport.encounter.reference", "element": "DiagnosticReport.encounter.reference", "type": "string", "expression": "fhirRef('encounter')", "path": [["encounter"], ["reference"]]}, {"key": "DiagnosticReport.effectiveDateTime", "element": "DiagnosticReport.effectiveDateTime", "type": "dateTime", "expression": "obr['OBR.7']['OBR.7.1'].toString()", "path": [["effectiveDateTime"]]}, {"key": "DiagnosticReport.issued", "element": "DiagnosticReport.issued", "type": "instant", "expression": "obr['OBR.22']['OBR.22.1'].toString()", "path": [["issued"]]}, {"key": "DiagnosticReport.specimen", "each": "fhirRefs('spm-' + obrIndex)", "variable": "sref", "path": [["specimen", "#0"]]}, {"key": "DiagnosticReport.specimen.reference", "element": "DiagnosticReport.specimen.reference", "type": "string", "expression": "sref", "path": [["specimen", "#0"], ["reference"]]}, {"key": "DiagnosticReport.result", "each": "fhirRefs('obs-' + obrIndex)", "variable": "ref", "path": [["result", "#0"]]}, {"key": "DiagnosticReport.result.reference", "element": "DiagnosticReport.result.reference", "type": "string", "expression": "ref", "path": [["result", "#0"], ["reference"]]}, {"key": "DiagnosticReport.presentedForm", "each": "hl7Following(obr, 'OBX', ['OBR', 'ORC'])", "variable": "ed", "path": [["presentedForm", "#0"]]}, {"key": "DiagnosticReport.presentedForm", "condition": "ed['OBX.2']['OBX.2.1'].toString() == 'ED'", "path": [["presentedForm", "#0"]]}, {"key": "DiagnosticReport.presentedForm.contentType", "element": "DiagnosticReport.presentedForm.contentType", "type": "code", "expression": "ed['OBX.5']['OBX.5.2'] + '/' + ed['OBX.5']['OBX.5.3']", "path": [["presentedForm", "#0"], ["contentType"]]}, {"key": "DiagnosticReport.presentedForm.data", "element": "DiagnosticReport.presentedForm.data", "type": "base64Binary", "expression": "(function (d) { return d + ['', '', '==', '='][d.length % 4]; })(ed['OBX.5']['OBX.5.5'].toString())", "path": [["presentedForm", "#0"], ["data"]]}, {"key": "DiagnosticReport.presentedForm.title", "element": "DiagnosticReport.presentedForm.title", "type": "string", "expression": "ed['OBX.3']['OBX.3.2'].toString()", "path": [["presentedForm", "#0"], ["title"]]}, {"key": "DiagnosticReport.category:lab", "element": "DiagnosticReport.category:lab", "fixed": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v2-0074", "code": "LAB"}]}, "when": 0, "path": [["category", "lab#0"]]}]</mappings>
-          <bundleTargets>[{"name": "labo-transaction", "requestMethod": "POST", "requestUrl": "", "ifNoneExist": ""}, {"name": "labo-document"}]</bundleTargets>
         </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
         <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
-          <name>Fin chronométrage transformation</name>
-          <sequenceNumber>11</sequenceNumber>
+          <name>End transformation timing</name>
+          <sequenceNumber>8</sequenceNumber>
           <enabled>true</enabled>
           <script>var end = channelMap.get('__fhirMapperBuildFinishedNano') || java.lang.System.nanoTime();
 var elapsed = Number(end) - Number(channelMap.get('__demoTransfoDebut'));
 channelMap.put('TRANSFO_MS', Math.round(elapsed / 1000) / 1000);
-channelMap.put('__demoEtape', 'VALIDATION_FHIR_SORTIE');</script>
+channelMap.put('__demoEtape', 'OUTBOUND_FHIR_VALIDATION');</script>
         </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
       </elements>
       <inboundTemplate>MSH|^~\&amp;|LAB|EXAMPLE-LAB|OIE|EXAMPLE-HOSP|20260114171908||ORU^R01^ORU_R01|MSG-0001|P|2.5.1|||||FRA|UNICODE UTF-8|FR
@@ -375,7 +310,7 @@ OBX|1|ED|CR_PDF^Compte rendu PDF^L||^application^pdf^Base64^JVBERi0xLjQKMSAwIG9i
   <destinationConnectors>
     <connector version="4.7.0">
       <metaDataId>1</metaDataId>
-      <name>Serveur FHIR (transaction labo)</name>
+      <name>FHIR Server (Lab transaction)</name>
       <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
         <pluginProperties />
         <destinationConnectorProperties version="4.7.0">
@@ -398,11 +333,7 @@ OBX|1|ED|CR_PDF^Compte rendu PDF^L||^application^pdf^Base64^JVBERi0xLjQKMSAwIG9i
           <queueBufferSize>1000</queueBufferSize>
           <reattachAttachments>true</reattachAttachments>
         </destinationConnectorProperties>
-        <script>// Bundle renvoyé : labo-transaction (type transaction).
-// Le transformeur Source le publie dans le message sortant via l'étape
-// "Bundle transaction labo" (Result destination = Outbound message).
-// Cette destination conserve ce message : Encoded contient la transaction.
-return connectorMessage.getEncodedData();</script>
+        <script>return connectorMessage.getEncodedData();</script>
       </properties>
       <transformer version="4.7.0">
         <elements />
@@ -472,244 +403,6 @@ return connectorMessage.getEncodedData();</script>
       </responseTransformer>
       <filter version="4.7.0">
         <elements />
-      </filter>
-      <transportName>JavaScript Writer</transportName>
-      <mode>DESTINATION</mode>
-      <enabled>true</enabled>
-      <waitForPrevious>true</waitForPrevious>
-    </connector>
-    <connector version="4.7.0">
-      <metaDataId>2</metaDataId>
-      <name>Entrepôt documentaire</name>
-      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
-        <pluginProperties />
-        <destinationConnectorProperties version="4.7.0">
-          <queueEnabled>false</queueEnabled>
-          <sendFirst>false</sendFirst>
-          <retryIntervalMillis>10000</retryIntervalMillis>
-          <regenerateTemplate>false</regenerateTemplate>
-          <retryCount>0</retryCount>
-          <rotate>false</rotate>
-          <includeFilterTransformer>false</includeFilterTransformer>
-          <threadCount>1</threadCount>
-          <threadAssignmentVariable />
-          <validateResponse>false</validateResponse>
-          <resourceIds class="linked-hash-map">
-            <entry>
-              <string>Default Resource</string>
-              <string>[Default Resource]</string>
-            </entry>
-          </resourceIds>
-          <queueBufferSize>1000</queueBufferSize>
-          <reattachAttachments>true</reattachAttachments>
-        </destinationConnectorProperties>
-        <script>// Bundle renvoyé : labo-document (type document).
-// Le transformeur Source le conserve dans la Channel Map : bundleDocument.
-// Dans le transformeur de CETTE destination, l'étape "Utiliser le Bundle document"
-// sélectionne ce Bundle avec : msg = channelMap.get('bundleDocument');
-// Ce Writer renvoie le document transformé (Encoded). Raw reste la transaction reçue.
-return connectorMessage.getEncodedData();</script>
-      </properties>
-      <transformer version="4.7.0">
-        <elements>
-          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
-            <name>Utiliser le Bundle document</name>
-            <sequenceNumber>0</sequenceNumber>
-            <enabled>true</enabled>
-            <script>msg = channelMap.get('bundleDocument');</script>
-          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
-        </elements>
-        <inboundDataType>FHIR</inboundDataType>
-        <outboundDataType>FHIR</outboundDataType>
-        <inboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
-          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
-            <fhirVersion>R4</fhirVersion>
-            <transformerFormat>XML</transformerFormat>
-            <stripNamespaces>true</stripNamespaces>
-            <outputFormat>JSON</outputFormat>
-            <prettyPrint>true</prettyPrint>
-            <validateInbound>false</validateInbound>
-            <validateOutbound>false</validateOutbound>
-            <invalidMessages>Reject</invalidMessages>
-            <failOn>Errors</failOn>
-            <profiles />
-            <requiredProfile />
-            <unknownCodeSystems>Warning</unknownCodeSystems>
-            <anyExtensionsAllowed>true</anyExtensionsAllowed>
-            <terminologyServer />
-          </serializationProperties>
-          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
-            <splitType>Bundle_Entry</splitType>
-            <batchScript />
-          </batchProperties>
-        </inboundProperties>
-        <outboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
-          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
-            <fhirVersion>R4</fhirVersion>
-            <transformerFormat>XML</transformerFormat>
-            <stripNamespaces>true</stripNamespaces>
-            <outputFormat>JSON</outputFormat>
-            <prettyPrint>true</prettyPrint>
-            <validateInbound>false</validateInbound>
-            <validateOutbound>true</validateOutbound>
-            <invalidMessages>Reject</invalidMessages>
-            <failOn>Errors</failOn>
-            <profiles>/fhir-ig</profiles>
-            <requiredProfile>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabDocument</requiredProfile>
-            <unknownCodeSystems>Warning</unknownCodeSystems>
-            <anyExtensionsAllowed>true</anyExtensionsAllowed>
-            <terminologyServer />
-          </serializationProperties>
-          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
-            <splitType>Bundle_Entry</splitType>
-            <batchScript />
-          </batchProperties>
-        </outboundProperties>
-      </transformer>
-      <responseTransformer version="4.7.0">
-        <elements />
-        <inboundDataType>RAW</inboundDataType>
-        <outboundDataType>RAW</outboundDataType>
-        <inboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
-          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
-            <splitType>JavaScript</splitType>
-            <batchScript />
-          </batchProperties>
-        </inboundProperties>
-        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
-          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
-            <splitType>JavaScript</splitType>
-            <batchScript />
-          </batchProperties>
-        </outboundProperties>
-      </responseTransformer>
-      <filter version="4.7.0">
-        <elements />
-      </filter>
-      <transportName>JavaScript Writer</transportName>
-      <mode>DESTINATION</mode>
-      <enabled>true</enabled>
-      <waitForPrevious>false</waitForPrevious>
-    </connector>
-    <connector version="4.7.0">
-      <metaDataId>3</metaDataId>
-      <name>Archive PCA/PRA</name>
-      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
-        <pluginProperties />
-        <destinationConnectorProperties version="4.7.0">
-          <queueEnabled>false</queueEnabled>
-          <sendFirst>false</sendFirst>
-          <retryIntervalMillis>10000</retryIntervalMillis>
-          <regenerateTemplate>false</regenerateTemplate>
-          <retryCount>0</retryCount>
-          <rotate>false</rotate>
-          <includeFilterTransformer>false</includeFilterTransformer>
-          <threadCount>1</threadCount>
-          <threadAssignmentVariable />
-          <validateResponse>false</validateResponse>
-          <resourceIds class="linked-hash-map">
-            <entry>
-              <string>Default Resource</string>
-              <string>[Default Resource]</string>
-            </entry>
-          </resourceIds>
-          <queueBufferSize>1000</queueBufferSize>
-          <reattachAttachments>true</reattachAttachments>
-        </destinationConnectorProperties>
-        <script>// Archive de secours (PCA/PRA), simulée : après l'entrepôt documentaire, dans la
-// même chaîne, le document labo est écrit dans appdata/archive-pca, un fichier par
-// message. Le filtre n'archive que les documents acceptés par l'entrepôt (d2).
-var dir = java.nio.file.Paths.get('appdata', 'archive-pca');
-java.nio.file.Files.createDirectories(dir);
-var file = dir.resolve('labo-document-' + connectorMessage.getMessageId() + '.json');
-java.nio.file.Files.write(file, new java.lang.String(connectorMessage.getEncodedData()).getBytes('UTF-8'));
-return 'Archivé : ' + file;</script>
-      </properties>
-      <transformer version="4.7.0">
-        <elements>
-          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
-            <name>Utiliser le Bundle document</name>
-            <sequenceNumber>0</sequenceNumber>
-            <enabled>true</enabled>
-            <script>msg = channelMap.get('bundleDocument');</script>
-          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
-        </elements>
-        <inboundDataType>FHIR</inboundDataType>
-        <outboundDataType>FHIR</outboundDataType>
-        <inboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
-          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
-            <fhirVersion>R4</fhirVersion>
-            <transformerFormat>XML</transformerFormat>
-            <stripNamespaces>true</stripNamespaces>
-            <outputFormat>JSON</outputFormat>
-            <prettyPrint>true</prettyPrint>
-            <validateInbound>false</validateInbound>
-            <validateOutbound>false</validateOutbound>
-            <invalidMessages>Reject</invalidMessages>
-            <failOn>Errors</failOn>
-            <profiles />
-            <requiredProfile />
-            <unknownCodeSystems>Warning</unknownCodeSystems>
-            <anyExtensionsAllowed>true</anyExtensionsAllowed>
-            <terminologyServer />
-          </serializationProperties>
-          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
-            <splitType>Bundle_Entry</splitType>
-            <batchScript />
-          </batchProperties>
-        </inboundProperties>
-        <outboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
-          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
-            <fhirVersion>R4</fhirVersion>
-            <transformerFormat>XML</transformerFormat>
-            <stripNamespaces>true</stripNamespaces>
-            <outputFormat>JSON</outputFormat>
-            <prettyPrint>true</prettyPrint>
-            <validateInbound>false</validateInbound>
-            <validateOutbound>false</validateOutbound>
-            <invalidMessages>Reject</invalidMessages>
-            <failOn>Errors</failOn>
-            <profiles>/fhir-ig</profiles>
-            <requiredProfile>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabDocument</requiredProfile>
-            <unknownCodeSystems>Warning</unknownCodeSystems>
-            <anyExtensionsAllowed>true</anyExtensionsAllowed>
-            <terminologyServer />
-          </serializationProperties>
-          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
-            <splitType>Bundle_Entry</splitType>
-            <batchScript />
-          </batchProperties>
-        </outboundProperties>
-      </transformer>
-      <responseTransformer version="4.7.0">
-        <elements />
-        <inboundDataType>RAW</inboundDataType>
-        <outboundDataType>RAW</outboundDataType>
-        <inboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
-          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
-            <splitType>JavaScript</splitType>
-            <batchScript />
-          </batchProperties>
-        </inboundProperties>
-        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
-          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
-            <splitType>JavaScript</splitType>
-            <batchScript />
-          </batchProperties>
-        </outboundProperties>
-      </responseTransformer>
-      <filter version="4.7.0">
-        <elements>
-          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule version="4.7.0">
-            <name>Document accepté par l'entrepôt</name>
-            <sequenceNumber>0</sequenceNumber>
-            <enabled>true</enabled>
-            <operator>NONE</operator>
-            <script>// N'archiver que les documents acceptés par l'entrepôt documentaire.
-var accepted = $r('d2');
-return accepted != null &amp;&amp; String(accepted.getStatus()) == 'SENT';</script>
-          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
-        </elements>
       </filter>
       <transportName>JavaScript Writer</transportName>
       <mode>DESTINATION</mode>
@@ -717,16 +410,16 @@ return accepted != null &amp;&amp; String(accepted.getStatus()) == 'SENT';</scri
       <waitForPrevious>true</waitForPrevious>
     </connector>
   </destinationConnectors>
-  <preprocessingScript>// Réinitialisé pour chaque message, y compris après retraitement.
+  <preprocessingScript>// Reset for every message, including after reprocessing.
 channelMap.put('TOTAL_MS', 0);
 channelMap.remove('TRANSFO_MS');
-channelMap.put('ERREUR_ETAPE', 'OK');
-channelMap.put('__demoEtape', 'LECTURE_HL7');
+channelMap.put('ERROR_STEP', 'OK');
+channelMap.put('__demoEtape', 'READ_HL7');
 channelMap.remove('__fhirMapperPhase');
 channelMap.remove('__fhirMapperBuildFinishedNano');
 channelMap.remove('__fhirMapperValidationNanos');
 return message;</preprocessingScript>
-  <postprocessingScript>// Exécuté après les destinations, aussi après une erreur de lecture/transformation/validation.
+  <postprocessingScript>// Runs after destinations, including after a read/transformation/validation error.
 var source = message.getConnectorMessages().get(java.lang.Integer.valueOf(0));
 var total = Math.max(0, java.lang.System.currentTimeMillis() - source.getReceivedDate().getTimeInMillis());
 var errorLabel = 'OK';
@@ -736,8 +429,8 @@ while (connectors.hasNext()) {
     var error = cm.getProcessingError() || cm.getResponseError() || cm.getPostProcessorError();
     if (error) {
         var stage = cm.getMetaDataId() == 0
-            ? String(source.getChannelMap().get('__fhirMapperPhase') == 'VALIDATION' ? 'VALIDATION_FHIR_SORTIE' : (source.getChannelMap().get('__demoEtape') || 'LECTURE_HL7'))
-            : 'SORTIE / ' + cm.getConnectorName();
+            ? String(source.getChannelMap().get('__fhirMapperPhase') == 'VALIDATION' ? 'OUTBOUND_FHIR_VALIDATION' : (source.getChannelMap().get('__demoEtape') || 'READ_HL7'))
+            : 'OUTPUT / ' + cm.getConnectorName();
         var details = String(error);
         var issue = /(?:^|\n)(?:error|fatal)\s+@?\s*([^\r\n]+)/i.exec(details);
         var cause = /DETAILS:\s*([^\r\n]+)/.exec(details);
@@ -747,8 +440,8 @@ while (connectors.hasNext()) {
     }
 }
 
-// OIE enregistre les métadonnées avant le postprocesseur : mettre à jour la ligne source
-// via son DAO pour conserver le temps complet et les erreurs survenues en sortie.
+// OIE stores metadata before the postprocessor: update the source row
+// via its DAO to keep total time and outbound errors.
 var values = new java.util.HashMap();
 values.put('TOTAL_MS', new java.math.BigDecimal(String(total)));
 var transfo = source.getChannelMap().get('TRANSFO_MS');
@@ -759,7 +452,7 @@ if (transfo == null &amp;&amp; finished != null) {
 if (transfo != null) {
     values.put('TRANSFO_MS', new java.math.BigDecimal(String(transfo)));
 }
-values.put('ERREUR_ETAPE', errorLabel);
+values.put('ERROR_STEP', errorLabel);
 var record = new Packages.com.mirth.connect.donkey.model.message.ConnectorMessage();
 record.setChannelId(channelId);
 record.setMessageId(message.getMessageId());
@@ -804,9 +497,9 @@ return;</postprocessingScript>
         <mappingName>TRANSFO_MS</mappingName>
       </com.mirth.connect.donkey.model.channel.MetaDataColumn>
       <com.mirth.connect.donkey.model.channel.MetaDataColumn>
-        <name>ERREUR_ETAPE</name>
+        <name>ERROR_STEP</name>
         <type>STRING</type>
-        <mappingName>ERREUR_ETAPE</mappingName>
+        <mappingName>ERROR_STEP</mappingName>
       </com.mirth.connect.donkey.model.channel.MetaDataColumn>
     </metaDataColumns>
     <attachmentProperties version="4.7.0">
@@ -835,80 +528,93 @@ return;</postprocessingScript>
     </metadata>
     <channelTags>
       <channelTag>
-        <id>8bc4cff6-98e8-5658-899c-4b37619846ad</id>
+        <id>612284a7-41e3-5f8f-a137-093fab0a405c</id>
         <name>R4</name>
         <channelIds>
-          <string>aa431dca-b805-4ac6-8dbd-e272b6fc4c18</string>
+          <string>5d0f6c2a-8b3e-4f1a-9c7d-2e6b1a0f3c48</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>37</red>
+          <green>99</green>
+          <blue>235</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>ebc3a8b2-0cd6-5765-a837-34acbcb351cc</id>
-        <name>HL7V2</name>
+        <id>1ed4bc87-95fb-5e07-b044-d587765ed0fc</id>
+        <name>HL7v2</name>
         <channelIds>
-          <string>aa431dca-b805-4ac6-8dbd-e272b6fc4c18</string>
+          <string>5d0f6c2a-8b3e-4f1a-9c7d-2e6b1a0f3c48</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>13</red>
+          <green>148</green>
+          <blue>136</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>015e7461-c4d9-5281-bc8f-672734b61ce4</id>
+        <id>c2c74737-3123-52e7-886d-ee30e924db89</id>
+        <name>Mapper</name>
+        <channelIds>
+          <string>5d0f6c2a-8b3e-4f1a-9c7d-2e6b1a0f3c48</string>
+        </channelIds>
+        <backgroundColor>
+          <red>29</red>
+          <green>78</green>
+          <blue>216</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>5346aa74-9d3d-51ec-ac76-c02492ae086c</id>
+        <name>local-terminology</name>
+        <channelIds>
+          <string>5d0f6c2a-8b3e-4f1a-9c7d-2e6b1a0f3c48</string>
+        </channelIds>
+        <backgroundColor>
+          <red>225</red>
+          <green>29</green>
+          <blue>72</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>7cbdfc4d-f7cf-5294-9666-13a88afed84e</id>
+        <name>references</name>
+        <channelIds>
+          <string>5d0f6c2a-8b3e-4f1a-9c7d-2e6b1a0f3c48</string>
+        </channelIds>
+        <backgroundColor>
+          <red>217</red>
+          <green>119</green>
+          <blue>6</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>35849d4c-e192-5b7a-a2a9-1a3dfff090f0</id>
+        <name>trace</name>
+        <channelIds>
+          <string>5d0f6c2a-8b3e-4f1a-9c7d-2e6b1a0f3c48</string>
+        </channelIds>
+        <backgroundColor>
+          <red>219</red>
+          <green>39</green>
+          <blue>119</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>d2cf4cf5-3948-5407-a3a6-71f0cb5ae60f</id>
         <name>transaction</name>
         <channelIds>
-          <string>aa431dca-b805-4ac6-8dbd-e272b6fc4c18</string>
+          <string>5d0f6c2a-8b3e-4f1a-9c7d-2e6b1a0f3c48</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
-          <alpha>255</alpha>
-        </backgroundColor>
-      </channelTag>
-      <channelTag>
-        <id>5b8e5338-3a64-517b-bd0f-91b6cc9d724e</id>
-        <name>document</name>
-        <channelIds>
-          <string>aa431dca-b805-4ac6-8dbd-e272b6fc4c18</string>
-        </channelIds>
-        <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
-          <alpha>255</alpha>
-        </backgroundColor>
-      </channelTag>
-      <channelTag>
-        <id>96487117-a244-5a36-a4a2-d3ac58a67eba</id>
-        <name>multi-bundles</name>
-        <channelIds>
-          <string>aa431dca-b805-4ac6-8dbd-e272b6fc4c18</string>
-        </channelIds>
-        <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
-          <alpha>255</alpha>
-        </backgroundColor>
-      </channelTag>
-      <channelTag>
-        <id>90814bff-a5b6-5fce-bef4-9a3634192d76</id>
-        <name>variables</name>
-        <channelIds>
-          <string>aa431dca-b805-4ac6-8dbd-e272b6fc4c18</string>
-        </channelIds>
-        <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>217</red>
+          <green>119</green>
+          <blue>6</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>

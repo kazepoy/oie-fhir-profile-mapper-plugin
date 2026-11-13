@@ -184,14 +184,15 @@ def check_fml_previews():
 
 
 def check_additional_channels():
-    """Cas JSON/R5, FR Core et source FHIR : nominal et refus diagnostiqué."""
+    """Cas JSON/R5, FR Core, EU Lab, CSV FML R5, IG FML, terminologie externe et source FHIR : nominal et refus diagnostiqué."""
     from tools.run_tests import normalize
     manifest = json.loads((EXAMPLES / "channels.json").read_text())
     for case in manifest["channels"]:
         if "deployed" not in case:
             continue
         deployed = case["deployed"]
-        output = post(deployed["portEnv"], deployed["port"], deployed["route"], case["input"], "application/json")
+        content_type = deployed.get("contentType", "application/json")
+        output = post(deployed["portEnv"], deployed["port"], deployed["route"], case["input"], content_type)
         expected = (EXAMPLES / deployed["expected"]).read_text()
         assert normalize(output.decode()) == normalize(expected), case["channel"]
         export = ET.parse(EXAMPLES.parents[1] / "demo/oie-init/channels" / case["channel"]).getroot()
@@ -201,21 +202,32 @@ def check_additional_channels():
         assert encoded(nominal, 1) == json.loads(expected), case["channel"]
         before = int(nominal.findtext("messageId"))
 
-        node = export.find("sourceConnector/transformer/elements")[0]
+        node = export.find("sourceConnector/transformer/elements/fr.kazepoy.fhir.fml.FhirFmlTransformStep")
+        if node is None:
+            node = export.find("sourceConnector/transformer/elements/fr.kazepoy.fhir.mapper.FhirProfileMapperStep")
+        assert node is not None, case["channel"]
         step = {child.tag: child.text or "" for child in node}
         endpoint = "fhir-fml" if "fml" in node.tag else "fhir-profile-mapper"
         invalid = case["invalid"]
-        request = {"step": step, "dataType": "JSON", "message": (EXAMPLES / invalid["input"]).read_text()}
+        preview_type = invalid.get("dataType", deployed.get("previewType", "JSON"))
+        request = {"step": step, "dataType": preview_type, "message": (EXAMPLES / invalid["input"]).read_text()}
         result = json.loads(api(f"/extensions/{endpoint}/test", "application/json", json.dumps(request).encode()))
         diagnostics = result["errors"] + [i for i in result["issues"] if i.get("severity") in ("error", "fatal")]
         assert diagnostics and invalid["diagnostic"] in json.dumps(diagnostics), (case["channel"], result)
 
-        assert not post(deployed["portEnv"], deployed["port"], deployed["route"], invalid["input"], "application/json")
+        invalid_ct = invalid.get("contentType", content_type)
+        assert not post(deployed["portEnv"], deployed["port"], deployed["route"], invalid["input"], invalid_ct)
         rejected = ET.fromstring(api(history)).find("message")
         assert int(rejected.findtext("messageId")) > before
         errors = [c for c in rejected.findall(".//connectorMessage") if c.findtext("status") == "ERROR"]
         assert errors and invalid["diagnostic"] in "".join(ET.tostring(c, encoding="unicode") for c in errors), case["channel"]
         print(f"OK {case['channel']} : sortie attendue, exemple invalide refusé en aperçu et sur le canal")
+
+    # Terminologie externe : cas non mappé sur le mock HTTP 8099 (repli fixed)
+    unmatched = json.loads(post("EXTERNAL_TX_OBS_PORT", 8096, "obs-external-tx", "observation-tx-unmatched.json", "application/json"))
+    expected_unmatched = json.loads((EXAMPLES / "expected/observation-tx-unmatched.json").read_text())
+    assert unmatched == expected_unmatched, unmatched
+    print("OK terminologie externe : code inconnu -> repli fixed sur data-absent-reason#unknown")
 
 
 def check_channel_organization():
@@ -243,7 +255,7 @@ def main():
         value = json.loads(post("ORU_PORT", 8081, "oru", filename, "text/plain"))
         bundle(value, "transaction", count)
     print("OK ORU → transactions de 12 et 4 ressources, références résolues")
-    check_transformer_preview("oru-r01-vers-bundle-fhir.xml", "oru-r01-minimal.er7", value)
+    check_transformer_preview("oru-r01-to-fhir-bundle.xml", "oru-r01-minimal.er7", value)
     check_message_trace()
 
     patient = json.loads(post("PATIENT_PORT", 8082, "patient", "oru-r01-minimal.er7", "text/plain"))
@@ -282,7 +294,7 @@ def main():
     assert encoded(message, 3) == document
     assert "archive-pca/labo-document-" in archive.findtext("response/content")
     print("OK deux Bundles : transaction 12, document 14, mêmes ressources et identités ; document archivé")
-    check_transformer_preview("oru-r01-vers-deux-bundles-labo-fhir.xml", "oru-r01-labo.er7", transaction, document)
+    check_transformer_preview("oru-r01-to-two-lab-bundles.xml", "oru-r01-labo.er7", transaction, document)
 
     patient = json.loads(post("SQL_PATIENT_PORT", 8084, "sql-patient", "patient-result-sql.xml", "application/xml"))
     assert patient["id"] == "metier-1042" and patient["identifier"][0]["value"] == "000123456"

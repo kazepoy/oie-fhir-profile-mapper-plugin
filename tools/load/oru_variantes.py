@@ -2,7 +2,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
-"""Variantes du canal « ORU R01 vers Bundle FHIR » pour mesurer validation et trace.
+"""Variantes du canal « ORU R01 to FHIR Bundle » pour mesurer validation et trace.
 
     python3 tools/load/oru_variantes.py deploy    importe et déploie les variantes
     python3 tools/load/oru_variantes.py remove    les arrête et les supprime
@@ -22,7 +22,7 @@ import uuid
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / "demo/oie-init/channels/oru-r01-vers-bundle-fhir.xml"
+SOURCE = ROOT / "demo/oie-init/channels/oru-r01-to-fhir-bundle.xml"
 API = os.environ.get("OIE_API", "https://localhost:8443/api")
 AUTH = base64.b64encode(
     f"{os.environ.get('OIE_USER', 'admin')}:{os.environ.get('OIE_PASSWORD', 'demo-oie-password')}".encode()

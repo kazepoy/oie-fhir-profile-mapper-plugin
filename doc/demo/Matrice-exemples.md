@@ -1,38 +1,43 @@
 # Matrice des canaux et exemples
 
 Cette matrice classe les demandes du TODO selon les preuves disponibles. Le
-socle compte désormais douze canaux, dont trois parcours JSON/R5, FR Core et
-source FHIR ajoutés après la consolidation des neuf premiers.
+socle compte désormais dix-sept canaux répartis en huit groupes natifs `<Source> - <Transfo>` :
+**HL7v2 - Mapper**, **HL7v2 - FML**, **JSON - Mapper**, **CSV - Mapper**, **CSV - FML**,
+**XML - Mapper**, **FHIR - FML** et **HTTP - Mock**.
 
 Le [manifeste](../../demo/examples/channels.json) associe chaque export à un
-groupe, des tags et un fichier d'entrée. L'initialisation installe les groupes
-natifs **FHIR - Mapper HL7 v2**, **FHIR - Mapper metier** et **FHIR - FML**.
-Les tags fonctionnels sont portés par `exportData/channelTags` dans chaque
-export : ils sont visibles et filtrables dans OIE, et conservés à l'export.
+groupe, des tags et un fichier d'entrée.
+Les tags fonctionnels colorés (sans tags d'IG ni de profil) sont portés par `exportData/channelTags` dans chaque
+export et suivent partout le même ordre canonique (`version`, `source`, `transformeur`, puis capacités triées alphabétiquement) : ils sont visibles et filtrables dans OIE, et conservés à l'export.
 Le contrôle de démo vérifie leurs affectations réelles via l'API.
 
 ## Parcours disponibles
 
 Tous les transformeurs source ont un message entrant préchargé. Dans chaque
-canal Profile Mapper, ouvrir l'étape **Patient** (ou **Organization** sur 8090),
-puis **Test** : elle contient
-au moins un sample avec résultat attendu. Les deux canaux CSV mappent dans la
-première destination, après le nettoyage effectué par la source.
+canal Profile Mapper, ouvrir l'étape **Patient** (ou **Organization** sur 8090,
+**Observation** sur 8093 et 8096), puis **Test** : elle contient
+au moins un sample avec résultat attendu. Les deux canaux CSV Mapper transforment
+en destination après nettoyage ; le canal CSV FML R5 transforme directement en source.
 
 | Groupe | Canal (port) | Preuve distinctive | Exemple testable |
 |---|---|---|---|
-| `mapper-hl7v2` | ORU → Bundle (8081) | Transaction, références, terminologie locale, traces | Deux samples Patient ; rejeu du canal : 12 puis 4 ressources |
-| `mapper-hl7v2` | ORU → Patient (8082) | Contexte partagé, profil local, slices et traduction | Deux samples Patient avec attendu |
-| `mapper-hl7v2` | ORU → deux Bundles (8083) | Transaction et document partageant les ressources | Sample de portée **transformer** : transaction attendue ; rejeu vérifiant aussi le document et l'archive |
-| `mapper-metier` | SQL XML → Patient (8084) | XML de ligne SQL simulée, accents et zéros initiaux | Ligne XML et Patient attendu ; aucune base SQL requise |
-| `mapper-metier` | CSV → Patients (8085) | Découpage batch, nettoyage puis mapping en destination | Sample XML d'une ligne déjà nettoyée ; rejeu CSV vérifiant les dix messages |
-| `mapper-metier` | CSV → collection (8086) | Dix ressources dans un seul Bundle | Sample XML nettoyé, portée **transformer**, collection attendue |
-| `fml` | ORU Strict Parser → Bundle (8087) | Modèle logique HL7 v2 et map important une autre map | XML typé et Bundle attendu, contrôlés par l'API FML et le canal ER7 |
-| `mapper-hl7v2` | ORU Strict Parser → Patient (8088) | Chemins HAPI plutôt que chemins du parseur standard | Sample XML typé avec Patient attendu ; canal recevant l'ER7 |
-| `fml` | ORU → Patient inline (8089) | Map embarquée, modèle `OieMessage`, ConceptMap locale | Message ER7 préchargé ; Patient attendu vérifié par l'API FML et le canal |
-| `mapper-metier` | JSON → Organization R5 (8090) | JSON métier et champ markdown propre à R5 | Sample avec attendu ; conversion booléenne invalide refusée |
-| `mapper-metier` | JSON → Patient FR Core (8091) | Profil publié 2.2.0, slice PI, extension de lieu de naissance | Sample avec attendu ; usage PI `official` refusé par la validation |
-| `fml` | Patient FHIR → résumé (8092) | Source `fhir`, projection sans `OieMessage`, `false` conservé | JSON et attendu ; sexe non autorisé refusé |
+| `hl7v2-mapper` | ORU R01 to FHIR Bundle (8081) | Transaction, références, terminologie locale, traces | Deux samples Patient ; rejeu du canal : 12 puis 4 ressources |
+| `hl7v2-mapper` | ORU R01 to FHIR Patient (8082) | Contexte partagé, profil local, slices et traduction | Deux samples Patient avec attendu |
+| `hl7v2-mapper` | ORU R01 to Two Lab Bundles (8083) | Transaction et document partageant les ressources | Sample de portée **transformer** : transaction attendue ; rejeu vérifiant aussi le document et l'archive |
+| `hl7v2-mapper` | ORU R01 to FHIR Patient (strict) (8088) | Chemins HAPI plutôt que chemins du parseur standard | Sample XML typé avec Patient attendu ; canal recevant l'ER7 |
+| `hl7v2-fml` | ORU R01 to FHIR Bundle (FML typed) (8087) | Modèle logique HL7 v2 et map important une autre map | XML typé et Bundle attendu, contrôlés par l'API FML et le canal ER7 |
+| `hl7v2-fml` | ORU R01 to FHIR Patient (FML inline) (8089) | Map embarquée, modèle `OieMessage`, ConceptMap locale | Message ER7 préchargé ; Patient attendu vérifié par l'API FML et le canal |
+| `hl7v2-fml` | ORU R01 to FHIR Patient (FML IG) (8095) | `StructureMap` JSON publiée dans `/fhir-ig`, résolue par `mapUrl` | ER7 nominal et ER7 sans date de naissance refusé |
+| `xml-mapper` | SQL XML to FHIR Patient (8084) | XML de ligne SQL simulée, accents et zéros initiaux | Ligne XML et Patient attendu ; aucune base SQL requise |
+| `csv-mapper` | CSV Business Patients to Patient (8085) | Découpage batch, nettoyage puis mapping en destination | Sample XML d'une ligne déjà nettoyée ; rejeu CSV vérifiant les dix messages |
+| `csv-mapper` | CSV Business Patients to Collection (8086) | Dix ressources dans un seul Bundle | Sample XML nettoyé, portée **transformer**, collection attendue |
+| `csv-fml` | CSV to Permission R5 (FML) (8094) | CSV par défaut vers Bundle R5 (`Organization` + `Permission`) | CSV nominal et statut invalide refusé en aperçu et déployé |
+| `json-mapper` | Business JSON to Organization R5 (8090) | JSON métier et champ markdown propre à R5 | Sample avec attendu ; conversion booléenne invalide refusée |
+| `json-mapper` | Business JSON to Patient FR Core (8091) | Profil publié 2.2.0, slice PI, extension de lieu de naissance | Sample avec attendu ; usage PI `official` refusé par la validation |
+| `json-mapper` | Business JSON to Obs EU Lab (8093) | Profil publié EU Laboratory 2.0.0 (`Observation-resultslab-eu-lab`) | Sample avec attendu ; `effective[x]` manquant refusé |
+| `json-mapper` | Business JSON to Obs (External TX) (8096) | Serveur de terminologie externe (`ConceptMap/$translate`) | `GLU` traduit, `UNKNOWN` en repli `fixed`, `UNAVAILABLE` en erreur 503 |
+| `fhir-fml` | FHIR Patient to Summary (FML) (8092) | Source `fhir`, projection sans `OieMessage`, `false` conservé | JSON et attendu ; sexe non autorisé refusé |
+| `http-mock` | HTTP Terminology Mock ($translate) (8099) | Serveur mock léger répondant à `/fhir/ConceptMap/$translate` | Supporte le canal 8096 et les tests de disponibilité |
 
 Le [guide des trois nouveaux parcours](JSON-FR-Core-et-FML.md) détaille les
 requêtes, les cas d'erreur et le périmètre des dépendances FR Core.
@@ -76,21 +81,17 @@ découpage batch. Le rejeu HTTP du CSV reste donc nécessaire.
 
 Ces erreurs sont des cas du contrôle existant, pas des canaux supplémentaires.
 
-## Demandes du TODO encore à couvrir
+## Demandes du TODO couvertes et suites différées
 
 | Demande | État et suite pertinente |
 |---|---|
-| Source JSON métier et ressource FHIR entrante | Couvertes par les ports 8090/8091 et 8092 |
-| R4B/R5, fonction propre à R5 | Profile Mapper R5 démontré par `Organization.description` sur 8090 ; FML R5 (Organization et `Permission`) à prioriser ; R4B reste couvert par les tests Java seulement |
-| FR Core et HL7 Europe Laboratory | Patient FR Core 2.2.0 validé sur 8091 ; aucun canal EU Laboratory pour le moment |
-| Autre profil R4 externe | Package DevDays proposé à évaluer ; aucun canal ni package supplémentaire choisi |
-| Map publiée dans un package IG | Non couverte : les maps actuelles sont locales/inline. Choisir un package et une transformation ayant un attendu vérifiable |
-| Dépendances transitives et ordre des packages | Dépendances directes FR Core chargées pour le cas 8091 ; résolution transitive générale et conflits de versions restent ouverts |
-| Dérivation/surcharge et cascade d'imports | Un import est couvert ; dérivation et cascade attendent les fonctions du lot E |
-| IG source HL7 v2 fournie par l'utilisateur | À choisir avec l'utilisateur ; le modèle logique actuel est une fixture locale, pas une IG officielle |
-| Autres modèles logiques | Le modèle HL7 v2 typé ne dérive pas d'une ressource ; un modèle métier arbitraire reste à démontrer |
-| Terminologie externe et indisponibilité | Traductions locales couvertes ; serveur externe maîtrisé et cas d'indisponibilité à traiter dans un lot dédié |
-| Samples FML enregistrés et groupes natifs OIE | Groupes/tags natifs installés ; jeux d'essai FML enregistrés dans l'étape encore à implémenter |
+| Source JSON métier et ressource FHIR entrante | Couvertes par les ports 8090, 8091, 8092, 8093 et 8096 |
+| R4B/R5, fonction propre à R5 | Profile Mapper R5 démontré par `Organization.description` sur 8090 ; FML R5 (CSV vers `Organization` et `Permission`) démontré sur 8094 ; R4B écarté de la démo par choix utilisateur (reste couvert en tests Java) |
+| FR Core et HL7 Europe Laboratory | Patient FR Core 2.2.0 validé sur 8091 ; Observation EU Laboratory 2.0.0 (avec dépendances directes fixées) validée sur 8093 |
+| Map publiée dans un package IG (`mapUrl`) | Couverte sur 8095 (`ORU R01 to FHIR Patient (FML IG)`) avec `StructureMap-OruR01ToPatientIG.json` |
+| Terminologie externe, absence de correspondance et indisponibilité | Mock OIE `ConceptMap/$translate` sur 8099 et consommateur sur 8096 : traduction GLU -> LOINC, repli `fixed` vers `data-absent-reason#unknown` et erreur 503 sur `UNAVAILABLE` |
+| Groupes OIE `<Source> - <Transfo>` et tags ordonnés | 8 groupes natifs (`CSV - FML`, `CSV - Mapper`, `FHIR - FML`, `HL7v2 - FML`, `HL7v2 - Mapper`, `HTTP - Mock`, `JSON - Mapper`, `XML - Mapper`), tags colorés sans tags IG/profil, dans l'ordre `[Release, Source, Transfo, ...fonctionnalités]` |
+| Cas nécessitant conception ou arbitrage | Profil R4 externe (`DevDays`), IG HL7 v2 officielle, modèle logique métier arbitraire dans FML, dérivation/surcharge, imports imbriqués et samples FML enregistrés restent différés |
 
 ## Rejouer
 
@@ -102,9 +103,9 @@ python3 tools/run_tests.py --offline demo/oie-init/channels
 python3 demo/examples/check.py
 ```
 
-Le premier contrôle impose une entrée de manifeste par export, un message
-préchargé par canal et les attendus des exemples. Le second contrôle les
-structures des onze samples Profile Mapper ; le dernier exécute les canaux,
-ces onze samples, les trois aperçus FML, les trois contre-exemples et le
-contrôle des groupes/tags. Voir le [guide de rejeu](Rejeu-tests.md)
-pour cibler un export.
+Le premier contrôle impose une entrée de manifeste par export, l'ordre
+canonique des tags, un message préchargé par canal et les attendus des exemples.
+Le second contrôle les structures des quatorze samples Profile Mapper ; le
+dernier exécute les dix-sept canaux, ces quatorze samples, les cinq aperçus
+FML, les sept contre-exemples et le contrôle des huit groupes et des tags. Voir
+le [guide de rejeu](Rejeu-tests.md) pour cibler un export.

@@ -34,7 +34,7 @@ class ChannelMappingTest(unittest.TestCase):
                 self.assertEqual(root.findtext("id"), ET.fromstring(updated).findtext("id"))
 
     def test_wrong_selection_and_invalid_rules_are_rejected(self):
-        xml = (ROOT / "demo/oie-init/channels/sql-xml-vers-patient-fhir.xml").read_text()
+        xml = (ROOT / "demo/oie-init/channels/sql-xml-to-fhir-patient.xml").read_text()
         with self.assertRaises(ValueError):
             select(xml, "999", "999")
         _, entries = steps(xml)

@@ -36,7 +36,7 @@ SCRIPT=oru.js tools/load/run.sh                # ~6 min
 python3 tools/load/oru_variantes.py remove     # quand on a fini
 ```
 
-Chaque variante est une copie du canal « ORU R01 vers Bundle FHIR ». Seuls trois
+Chaque variante est une copie du canal « ORU R01 to FHIR Bundle ». Seuls trois
 réglages changent : la validation du mapper (`validateOutput` des sept étapes),
 la trace (`traceMessages` des sept étapes) et la validation du datatype FHIR en
 sortie de la source (`validateOutbound`).

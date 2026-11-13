@@ -219,17 +219,21 @@ une réécriture générale de l'éditeur.
 
 ### Lot D — Matrice de démonstration et de vérité
 
-**Statut : consolidation et trois parcours complémentaires livrés ; autres cas à prioriser.**
+**Statut : huit groupes `<Source> - <Transfo>`, dix-sept canaux et cinq parcours complémentaires livrés ; cas nécessitant conception différés.**
 
 La [matrice des exemples](demo/Matrice-exemples.md) constitue l'inventaire de
-couverture : douze exports dans trois groupes OIE natifs avec tags fonctionnels,
-neuf canaux Profile Mapper avec onze samples et attendus, trois aperçus FML
-rejouables. Les nouveaux parcours démontrent JSON métier vers Organization R5,
-Patient FR Core 2.2.0 et projection d'un Patient FHIR par FML. Chacun dispose
-d'un contre-exemple vérifié en aperçu et sur le canal déployé. Les manques
-restent explicites : R4B n'est démontré que par les tests Java, et le contexte
-EU Laboratory ne vaut pas encore démonstration sur un canal. Ce sous-lot avance
-avant B à la demande de l'utilisateur.
+couverture : dix-sept exports dans huit groupes OIE natifs `<Source> - <Transfo>`
+avec tags colorés ordonnés (sans tags IG/profil), quatorze samples Profile
+Mapper avec attendus et cinq aperçus FML rejouables. Les parcours couvrent
+désormais : JSON métier vers Organization R5, Patient FR Core 2.2.0, Observation
+EU Laboratory 2.0.0 (`8093`), CSV vers Bundle `Organization`/`Permission` R5 en
+FML (`8094`), HL7 v2 vers Patient via map publiée dans une IG (`mapUrl`, `8095`),
+terminologie externe OIE `$translate` avec repli et indisponibilité 503
+(`8096`/`8099`), et projection d'un Patient FHIR par FML (`8092`). R4B est écarté
+de la démonstration sur demande explicite de l'utilisateur (couvert en tests
+Java) ; `DevDays`, l'IG HL7 v2 officielle et les modèles logiques métier
+arbitraires restent différés au titre des sujets demandant conception. Ce lot
+avance avant B à la demande de l'utilisateur.
 
 Premier sous-lot du 13 novembre 2026 : 147 tests Java, 43 tests frontend et 14
 tests outils passaient pour les neuf canaux, leurs neuf samples Profile Mapper,
@@ -364,9 +368,9 @@ reportée ; elle ne doit plus être perdue dans plusieurs documents.
 | Réglages de fonctions expérimentales (IA, trace, complétion) | C | à justifier au cas par cas |
 | Amélioration de l'autocomplétion Monaco | C | besoin à préciser |
 | Préférence de langue explicite | C | à arbitrer ; navigateur déjà pris en charge |
-| Canaux R4/R4B/R5, IG, FR Core, sources et terminologie | D | R4/R5, FR Core et sources livrés ; R4B déployé, FML R5/Permission, autres IG et terminologie externe restent ouverts |
-| Maps publiées, surchargées et imbriquées | D puis E | proposé |
-| Samples, groupes et tags de chaque canal | D puis E | 3 groupes/tags natifs, 11 samples Mapper et 3 aperçus FML livrés ; samples FML enregistrés restants |
+| Canaux R4/R4B/R5, IG, FR Core, sources et terminologie | D | R4/R5, FR Core, EU Lab 2.0.0, FML R5 `Permission`, map `mapUrl` et terminologie externe (`8096`/`8099`) livrés ; R4B écarté par choix utilisateur ; DevDays, IG HL7 v2 officielle et modèle métier arbitraire différés |
+| Maps publiées, surchargées et imbriquées | D puis E | Map publiée `mapUrl` livrée (`8095`) ; surcharge et imports imbriqués proposés en E |
+| Samples, groupes et tags de chaque canal | D puis E | 8 groupes `<Source> - <Transfo>`, tags colorés ordonnés, 14 samples Mapper et 5 aperçus FML livrés ; samples FML enregistrés restants |
 | Édition d'une dérivation de map canonique | E | proposé |
 | Navigation et diagnostics dans les imports FML | E | proposé |
 | Trace FML par groupe/règle | E | faisabilité à étudier |

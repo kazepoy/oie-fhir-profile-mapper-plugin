@@ -3,8 +3,8 @@ map "http://example.org/fhir/oru2fhir/StructureMap/PatientSummary" = "PatientSum
 uses "http://hl7.org/fhir/StructureDefinition/Patient" alias Source as source
 uses "http://hl7.org/fhir/StructureDefinition/Patient" alias Target as target
 
-// Projection explicite : les coordonnées et les autres champs ne sont pas copiés.
-// Les valeurs false doivent être conservées, comme toutes les valeurs présentes.
+// Explicit projection: contact details and other fields are not copied.
+// False values must be preserved, just like any other present value.
 group PatientSummary(source src : Source, target tgt : Target) {
   src.id as id -> tgt.id = id "id";
   src.active as active -> tgt.active = active "active";

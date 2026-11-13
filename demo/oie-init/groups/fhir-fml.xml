@@ -1,0 +1,13 @@
+<set>
+  <channelGroup version="4.7.0">
+    <id>ce3d058f-a54e-55fd-b2d8-2221bd51da07</id>
+    <name>FHIR - FML</name>
+    <revision>1</revision>
+    <description>FHIR sources transformed with FML</description>
+    <channels>
+      <channel version="4.7.0">
+        <id>c5792091-b613-4f1a-b899-4e8670f58092</id>
+      </channel>
+    </channels>
+  </channelGroup>
+</set>

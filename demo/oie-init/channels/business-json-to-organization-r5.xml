@@ -1,8 +1,8 @@
 <channel version="4.7.0">
   <id>89c98d20-f9c1-4ae4-a7eb-4133f8708090</id>
   <nextMetaDataId>2</nextMetaDataId>
-  <name>JSON métier vers Organization R5</name>
-  <description>JSON métier vers Organization R5 avec le champ description propre à R5. POST application/json sur /organization-r5/, port 8090. Exemples nominaux et invalides dans demo/examples/. Validation active.</description>
+  <name>Business JSON to Organization R5</name>
+  <description>Business JSON to FHIR R5 Organization using the R5-specific markdown description field. POST application/json to /organization-r5/, port 8090. Nominal and invalid examples in demo/examples/. Validation enabled.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -65,7 +65,7 @@
           <terminologyCacheSeconds>300</terminologyCacheSeconds>
           <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
           <mappings>[{"id":"Organization.id","key":"Organization.id","element":"Organization.id","type":"id","expression":"msg.code","path":[["id"]]},{"id":"Organization.active","key":"Organization.active","element":"Organization.active","type":"boolean","expression":"msg.active","path":[["active"]]},{"id":"Organization.name","key":"Organization.name","element":"Organization.name","type":"string","expression":"msg.nom","path":[["name"]]},{"id":"Organization.description","key":"Organization.description","element":"Organization.description","type":"markdown","expression":"msg.description","path":[["description"]]}]</mappings>
-          <samples>[{"id":"89c98d20-f9c1-4ae4-a7eb-4133f8708090","name":"JSON métier vers Organization R5 — nominal","message":"{\n  \"code\": \"labo-r5\",\n  \"active\": true,\n  \"nom\": \"Laboratoire de démonstration\",\n  \"description\": \"Organisation **fictive** : exemple du champ description ajouté en FHIR R5.\"\n}\n","dataType":"JSON","scope":"step","expected":"{\n  \"resourceType\": \"Organization\",\n  \"meta\": {\"profile\": [\"http://hl7.org/fhir/StructureDefinition/Organization\"]},\n  \"id\": \"labo-r5\",\n  \"active\": true,\n  \"name\": \"Laboratoire de démonstration\",\n  \"description\": \"Organisation **fictive** : exemple du champ description ajouté en FHIR R5.\"\n}\n"}]</samples>
+          <samples>[{"id":"89c98d20-f9c1-4ae4-a7eb-4133f8708090","name":"Business JSON to Organization R5 - nominal","message":"{\n  \"code\": \"labo-r5\",\n  \"active\": true,\n  \"nom\": \"Laboratoire de démonstration\",\n  \"description\": \"Organisation **fictive** : exemple du champ description ajouté en FHIR R5.\"\n}\n","dataType":"JSON","scope":"step","expected":"{\n  \"resourceType\": \"Organization\",\n  \"meta\": {\"profile\": [\"http://hl7.org/fhir/StructureDefinition/Organization\"]},\n  \"id\": \"labo-r5\",\n  \"active\": true,\n  \"name\": \"Laboratoire de démonstration\",\n  \"description\": \"Organisation **fictive** : exemple du champ description ajouté en FHIR R5.\"\n}\n"}]</samples>
           <context />
           <validateOutput>true</validateOutput>
           <formatVersion>2</formatVersion>
@@ -121,7 +121,7 @@
   <destinationConnectors>
     <connector version="4.7.0">
       <metaDataId>1</metaDataId>
-      <name>Résultat FHIR</name>
+      <name>FHIR Result</name>
       <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
         <pluginProperties />
         <destinationConnectorProperties version="4.7.0">
@@ -263,54 +263,67 @@
     </metadata>
     <channelTags>
       <channelTag>
-        <id>2a6b5619-29f7-590e-b485-1020c0a51a69</id>
+        <id>65ecb94d-5995-5595-a3cd-b533ea98f89d</id>
         <name>R5</name>
         <channelIds>
           <string>89c98d20-f9c1-4ae4-a7eb-4133f8708090</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>79</red>
+          <green>70</green>
+          <blue>229</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>c9a2a013-41f1-5b3b-b3d5-9ffc4c68cc04</id>
+        <id>995050ef-de77-5f4e-827c-a4f14b07d384</id>
         <name>JSON</name>
         <channelIds>
           <string>89c98d20-f9c1-4ae4-a7eb-4133f8708090</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>2</red>
+          <green>132</green>
+          <blue>199</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>b010238d-97d9-5ed0-a65d-0a068c8bb23e</id>
-        <name>Organization-description</name>
+        <id>c2c74737-3123-52e7-886d-ee30e924db89</id>
+        <name>Mapper</name>
         <channelIds>
           <string>89c98d20-f9c1-4ae4-a7eb-4133f8708090</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>29</red>
+          <green>78</green>
+          <blue>216</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>
       <channelTag>
-        <id>4d57083a-d785-5392-8c1c-a80cadee7c35</id>
+        <id>13da2008-befc-510f-84f5-340c40b49b56</id>
+        <name>org-description</name>
+        <channelIds>
+          <string>89c98d20-f9c1-4ae4-a7eb-4133f8708090</string>
+        </channelIds>
+        <backgroundColor>
+          <red>99</red>
+          <green>102</green>
+          <blue>241</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>929033f3-6b85-505f-821c-89057b1277aa</id>
         <name>validation</name>
         <channelIds>
           <string>89c98d20-f9c1-4ae4-a7eb-4133f8708090</string>
         </channelIds>
         <backgroundColor>
-          <red>192</red>
-          <green>192</green>
-          <blue>192</blue>
+          <red>22</red>
+          <green>163</green>
+          <blue>74</blue>
           <alpha>255</alpha>
         </backgroundColor>
       </channelTag>

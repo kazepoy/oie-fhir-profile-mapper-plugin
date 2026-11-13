@@ -72,6 +72,10 @@ if [ -f "$SETTINGS_FILE" ]; then
 fi
 
 echo "=== Import des canaux ($OIE_URL) ==="
+if [ "$OIE_INIT_FORCE" = true ]; then
+  printf '<set/>\n' > /tmp/oie-empty-tags.xml
+  api PUT /server/channelTags /tmp/oie-empty-tags.xml application/xml
+fi
 count=0
 for file in "$CHANNELS_DIR"/*.xml; do
   [ -f "$file" ] || continue
@@ -99,50 +103,110 @@ for file in "$CHANNELS_DIR"/*.xml; do
 done
 
 # Les tags sont portés par exportData/channelTags dans chaque export de canal.
-# Les groupes ne sont installés qu'après les canaux ; aucun groupe n'est supprimé.
-for file in "${OIE_INIT_DIR:-/oie-init}"/groups/*.xml; do
-  [ -f "$file" ] || continue
-  id=$(xml_value id "$file")
-  name=$(xml_value name "$file")
-  [ -n "$id" ] || fail "<id> de groupe introuvable dans $file"
+# Les groupes ne sont installés qu'après les canaux. En mode forcé, les anciens
+# groupes serveur absents de groups/*.xml sont retirés pour éviter tout doublon.
+if [ "$OIE_INIT_FORCE" = true ]; then
   api GET /channelgroups
-  if [ "$OIE_INIT_FORCE" != true ] && grep -Fq "$id" "$RESPONSE_FILE"; then
-    echo "Groupe déjà présent : $name"
-    continue
-  fi
-  # _bulkUpdate remplace toute la liste, même avec override=true : conserver
-  # chaque groupe serveur autre que celui que cette définition remplace.
-  awk -v group_id="$id" '
+  awk '
     BEGIN { print "<set>" }
-    FILENAME == ARGV[1] {
-      if ($0 ~ /<channelGroup[ >]/) { inside=1; block="" }
-      if (inside) block=block $0 "\n"
-      if ($0 ~ /<\/channelGroup>/) {
-        if (index(block, "<id>" group_id "</id>") == 0) printf "%s", block
-        inside=0
-      }
-      next
+    /<channelGroup[ >]/ { in_group=1; got_id=0; next }
+    /<\/channelGroup>/ { in_group=0; got_id=0; next }
+    in_group && !got_id && /<id>[^<]+<\/id>/ {
+      id=$0
+      sub(/^.*<id>/, "", id)
+      sub(/<\/id>.*$/, "", id)
+      got_id=1
+      print "  <string>" id "</string>"
     }
-    $0 !~ /^<\/?set[^>]*>/ { print }
     END { print "</set>" }
-  ' "$RESPONSE_FILE" "$file" > /tmp/oie-groups.xml
+  ' "$RESPONSE_FILE" > /tmp/oie-removed-groups.xml
+  if grep -Fq "<string>" /tmp/oie-removed-groups.xml; then
+    printf '<set/>\n' > /tmp/oie-empty-groups.xml
+    status=$(curl --insecure --noproxy '*' --silent --show-error --max-time 300 \
+      --user "$OIE_USER:$OIE_PASSWORD" --header 'X-Requested-With: OpenAPI' \
+      --form 'channelGroups=@/tmp/oie-empty-groups.xml;type=application/xml' \
+      --form 'removedChannelGroupIds=@/tmp/oie-removed-groups.xml;type=application/xml' \
+      --output "$RESPONSE_FILE" --write-out '%{http_code}' \
+      "$OIE_URL/api/channelgroups/_bulkUpdate?override=true") || fail "Nettoyage des groupes impossible"
+    case "$status" in
+      2??) ;;
+      *) fail "HTTP $status lors du nettoyage des groupes : $(cat "$RESPONSE_FILE")" ;;
+    esac
+  fi
+  {
+    printf '<set>\n'
+    for file in "${OIE_INIT_DIR:-/oie-init}"/groups/*.xml; do
+      [ -f "$file" ] || continue
+      awk '$0 !~ /^<\/?set[^>]*>/ { print }' "$file"
+    done
+    printf '</set>\n'
+  } > /tmp/oie-groups.xml
   status=$(curl --insecure --noproxy '*' --silent --show-error --max-time 300 \
     --user "$OIE_USER:$OIE_PASSWORD" --header 'X-Requested-With: OpenAPI' \
     --form 'channelGroups=@/tmp/oie-groups.xml;type=application/xml' \
     --form "removedChannelGroupIds=@${OIE_INIT_DIR:-/oie-init}/empty-set.xml;type=application/xml" \
     --output "$RESPONSE_FILE" --write-out '%{http_code}' \
-    "$OIE_URL/api/channelgroups/_bulkUpdate?override=true") || fail "Import du groupe $name impossible"
+    "$OIE_URL/api/channelgroups/_bulkUpdate?override=true") || fail "Import des groupes impossible"
   case "$status" in
     2??) ;;
-    *) fail "HTTP $status pour le groupe $name : $(cat "$RESPONSE_FILE")" ;;
+    *) fail "HTTP $status pour les groupes : $(cat "$RESPONSE_FILE")" ;;
   esac
   if grep -qE '<boolean>false</boolean>|"boolean" *: *false|^false$' "$RESPONSE_FILE"; then
-    fail "Groupe refusé : $name"
+    fail "Groupes refusés : $(cat "$RESPONSE_FILE")"
   fi
-  api GET "/channelgroups?channelGroupId=$id"
-  grep -Fq "$id" "$RESPONSE_FILE" || fail "Groupe absent après import : $name"
-  echo "Groupe installé : $name"
-done
+  for file in "${OIE_INIT_DIR:-/oie-init}"/groups/*.xml; do
+    [ -f "$file" ] || continue
+    id=$(xml_value id "$file")
+    name=$(xml_value name "$file")
+    api GET "/channelgroups?channelGroupId=$id"
+    grep -Fq "$id" "$RESPONSE_FILE" || fail "Groupe absent après import : $name"
+    echo "Groupe installé : $name"
+  done
+else
+  for file in "${OIE_INIT_DIR:-/oie-init}"/groups/*.xml; do
+    [ -f "$file" ] || continue
+    id=$(xml_value id "$file")
+    name=$(xml_value name "$file")
+    [ -n "$id" ] || fail "<id> de groupe introuvable dans $file"
+    api GET /channelgroups
+    if grep -Fq "$id" "$RESPONSE_FILE"; then
+      echo "Groupe déjà présent : $name"
+      continue
+    fi
+    # _bulkUpdate remplace toute la liste, même avec override=true : conserver
+    # chaque groupe serveur autre que celui que cette définition remplace.
+    awk -v group_id="$id" '
+      BEGIN { print "<set>" }
+      FILENAME == ARGV[1] {
+        if ($0 ~ /<channelGroup[ >]/) { inside=1; block="" }
+        if (inside) block=block $0 "\n"
+        if ($0 ~ /<\/channelGroup>/) {
+          if (index(block, "<id>" group_id "</id>") == 0) printf "%s", block
+          inside=0
+        }
+        next
+      }
+      $0 !~ /^<\/?set[^>]*>/ { print }
+      END { print "</set>" }
+    ' "$RESPONSE_FILE" "$file" > /tmp/oie-groups.xml
+    status=$(curl --insecure --noproxy '*' --silent --show-error --max-time 300 \
+      --user "$OIE_USER:$OIE_PASSWORD" --header 'X-Requested-With: OpenAPI' \
+      --form 'channelGroups=@/tmp/oie-groups.xml;type=application/xml' \
+      --form "removedChannelGroupIds=@${OIE_INIT_DIR:-/oie-init}/empty-set.xml;type=application/xml" \
+      --output "$RESPONSE_FILE" --write-out '%{http_code}' \
+      "$OIE_URL/api/channelgroups/_bulkUpdate?override=true") || fail "Import du groupe $name impossible"
+    case "$status" in
+      2??) ;;
+      *) fail "HTTP $status pour le groupe $name : $(cat "$RESPONSE_FILE")" ;;
+    esac
+    if grep -qE '<boolean>false</boolean>|"boolean" *: *false|^false$' "$RESPONSE_FILE"; then
+      fail "Groupe refusé : $name"
+    fi
+    api GET "/channelgroups?channelGroupId=$id"
+    grep -Fq "$id" "$RESPONSE_FILE" || fail "Groupe absent après import : $name"
+    echo "Groupe installé : $name"
+  done
+fi
 
 # L'administration web (comme Swing) ouvre un assistant de première connexion, qui demande un
 # nouveau mot de passe, tant que la préférence firstlogin du compte n'est pas false.

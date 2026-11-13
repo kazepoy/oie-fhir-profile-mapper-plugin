@@ -202,4 +202,33 @@ public class FmlBridgeTest {
         JsonNode unknown = JSON.readTree(bridge.check(text.replace("StructureDefinition/OieMessage", "StructureDefinition/Missing"), options()));
         assertTrue(unknown.path("errors").get(0).path("message").asText().contains("Missing"));
     }
+
+    @Test
+    public void runsDemoPermissionR5MapAndIgPackagedStructureMap() throws Exception {
+        FhirSerializationProperties r5Props = new FhirSerializationProperties();
+        r5Props.setFhirVersion(FhirSerializationProperties.FhirVersion.R5);
+        r5Props.setProfiles(Path.of("demo/fml/PermissionR5.fml").toAbsolutePath().toString());
+        Map<String, String> r5Opts = r5Props.engineOptions();
+        String delimitedXml = "<delimited>"
+                + "<row><column1>permission_id</column1><column2>status</column2><column3>combining</column3>"
+                + "<column4>org_id</column4><column5>org_name</column5><column6>rule_type</column6><column7>action_code</column7></row>"
+                + "<row><column1>perm-r5-001</column1><column2>active</column2><column3>deny-overrides</column3>"
+                + "<column4>org-r5-demo</column4><column5>Centre Hospitalier Demo</column5><column6>permit</column6><column7>access</column7></row>"
+                + "</delimited>";
+        JsonNode r5Bundle = JSON.readTree(bridge.transform(
+                "http://example.org/fhir/r5/StructureMap/CsvToPermissionR5", delimitedXml, "xml", Map.of(), Map.of(), r5Opts));
+        JsonNode expectedBundle = JSON.readTree(Files.readString(Path.of("demo/examples/expected/permission-r5-bundle.json")));
+        assertEquals(expectedBundle, r5Bundle);
+        assertTrue(fr.kazepoy.fhir.mapper.integration.FhirDataTypeAdapter.validate(
+                r5Bundle.toString(), "", "", "R5").isValid());
+
+        FhirSerializationProperties igProps = new FhirSerializationProperties();
+        igProps.setFhirVersion(FhirSerializationProperties.FhirVersion.R4);
+        igProps.setProfiles(Path.of("demo/ig").toAbsolutePath().toString());
+        JsonNode igPatient = JSON.readTree(bridge.transform(
+                "http://example.org/fhir/oru2fhir/StructureMap/OruR01ToPatientIG",
+                oru, "xml", Map.of(), Map.of(), igProps.engineOptions()));
+        JsonNode expectedPatient = JSON.readTree(Files.readString(Path.of("demo/examples/expected/fml-inline-patient.json")));
+        assertEquals(expectedPatient, igPatient);
+    }
 }
