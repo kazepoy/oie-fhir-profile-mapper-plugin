@@ -1,4 +1,41 @@
-# Assistants de code et édition par un agent IA
+# Construire ou modifier un canal FHIR avec un agent
+
+Ce guide donne à un agent les contraintes nécessaires pour intervenir sur un
+canal OIE sans dégrader ses autres connecteurs ou transformeurs. Il complète les
+instructions courtes du [`AGENTS.md`](../../AGENTS.md).
+
+## Choisir l'étape
+
+- Préférer **FHIR FML Transform** si une map FML et des IG peuvent porter une
+  transformation portable hors d'OIE.
+- Utiliser **FHIR Profile Mapper** pour une transformation graphique fondée sur
+  la représentation des messages et le runtime d'OIE.
+- Dans un export XML, utiliser uniquement
+  `fr.kazepoy.fhir.mapper.FhirProfileMapperStep` et
+  `fr.kazepoy.fhir.fml.FhirFmlTransformStep`.
+
+Pour FML, lire aussi la [référence FML](Transformation-FML.md) et définir
+explicitement la map, ses profils, le modèle source et la validation. Pour le
+Profile Mapper, suivre le [contrat des mappings](Specification-mapping.md) : ne
+pas inventer de propriété ou de forme de règle absente du schéma.
+
+## Déroulement attendu
+
+1. Partir du canal de [`demo/oie-init/channels`](../../demo/oie-init/channels/)
+   le plus proche du besoin et identifier connecteur, transformeur et type de
+   données source.
+2. Pour un nouveau canal, attribuer un nouvel UUID, un nom non ambigu et un port
+   libre. Pour une modification, conserver l'UUID et les propriétés sans rapport
+   avec la demande.
+3. Extraire et appliquer une étape Profile Mapper avec
+   `tools/channel_mapping.py`. Pour FML, modifier uniquement le nœud de l'étape
+   et préserver le reste de l'export.
+4. Ajouter au moins un sample représentatif et, si le résultat est déterministe,
+   son résultat attendu.
+5. Valider hors ligne avec `tools/check_mapping.py` puis
+   `tools/run_tests.py --offline`. Si la démo est disponible, importer, relire,
+   déployer et rejouer le canal ; ne jamais supposer qu'un import réussi prouve
+   son exécution.
 
 ## Dans l'éditeur
 
@@ -30,7 +67,7 @@ le lien vise la propriété principale de la ressource de base ; il ne prétend
 pas documenter les contraintes propres à l'IG.
 
 Le catalogue unique est
-[`mapper-functions.json`](../src/main/resources/fr/kazepoy/fhir/mapper/mapper-functions.json),
+[`mapper-functions.json`](../../src/main/resources/fr/kazepoy/fhir/mapper/mapper-functions.json),
 publié par `GET /api/extensions/fhir-profile-mapper/functions`. Un test Java
 vérifie que chaque fonction publiée existe dans le runtime réel. Le navigateur
 utilise ce catalogue ; les implémentations des fonctions restent dans le runtime
@@ -95,5 +132,6 @@ channel déployé pour vérifier les dépendances entre étapes.
 Un agent explique un résultat à partir des règles extraites, des diagnostics
 et de la [trace](Trace.md), puis modifie la règle identifiée par `id`. Relire
 l'export et rouvrir le channel dans l'éditeur avant une nouvelle modification.
-Les tests Python couvrent le remplacement ciblé et la relecture sur les six
-exports ; les tests Node couvrent l'import JSON, les ids, les portées et le clavier.
+Les tests Python couvrent le remplacement ciblé et la relecture des exports de
+démonstration ; les tests Node couvrent l'import JSON, les ids, les portées et
+le clavier.

@@ -34,4 +34,4 @@ fixer un [résultat attendu](comparaison.md).
 L'exemple non enregistré est mémorisé dans ce navigateur, par canal et
 transformeur ; il n’est pas partagé. **Run all** respecte le périmètre enregistré
 avec chaque exemple : étape seule par défaut, ou [aperçu multi-étapes](apercu-multi-etapes.md).
-Les exemples peuvent aussi être [rejoués par outil](../../Rejeu-tests.md).
+Les exemples peuvent aussi être [rejoués par outil](../../../demo/Rejeu-tests.md).

@@ -66,7 +66,7 @@ de l'éditeur.
 ### 2.1 Modèle logique OIE
 
 `http://oie.org/fhir/StructureDefinition/OieMessage`
-([StructureDefinition](../src/main/resources/fr/kazepoy/fhir/fml/bridge/StructureDefinition-OieMessage.json),
+([StructureDefinition](../../src/main/resources/fr/kazepoy/fhir/fml/bridge/StructureDefinition-OieMessage.json),
 canonique provisoire). Un **seul modèle** pour tous les types de messages : il
 reflète l'arbre XML interne d'OIE, celui que voit E4X, ou l'arbre d'un JSON. La
 map trouve un nœud par son **nom** ou sa **position**.
@@ -143,7 +143,7 @@ l'envelopper dans `OieMessage`. `sourceModelUrl` n'est pas utilisé dans ce mode
 
 ### Exemple de map
 
-Extrait de la [map de démo](../demo/fml/OruR01ToPatient.fml) :
+Extrait de la [map de démo](../../demo/fml/OruR01ToPatient.fml) :
 
 ```fml
 map "http://example.org/fhir/oru2fhir/StructureMap/OruR01ToPatient" = "OruR01ToPatient"
@@ -247,7 +247,7 @@ plugin d'autorisation comme RBAC.
 
 ## 5. Éditeur
 
-[editor.js](../webadmin/src/fml/editor.js), trois onglets :
+[editor.js](../../webadmin/src/fml/editor.js), trois onglets :
 
 - **Map** : la map de l'étape dans l'éditeur de code de Web Admin, en langage `fml`.
   La complétion propose mots-clés, transformations, fonctions FHIRPath, aliases
@@ -270,7 +270,7 @@ Le channel **ORU R01 vers Bundle FHIR (FML typé)** (port 8087, `/bundle/`)
 active le Strict Parser et exécute `ORUR01toBundle`. La map importe
 `PIDtoPatient` et produit un Bundle transaction contenant Patient et Observation.
 Le modèle logique et les deux maps représentatives sont montés dans
-`/fhir-typed`. [check.py](../demo/examples/check.py) vérifie la sortie avec la
+`/fhir-typed`. [check.py](../../demo/examples/check.py) vérifie la sortie avec la
 validation FHIR active.
 
 Le channel **ORU R01 vers Patient FHIR (FML inline)** (port 8089) porte la même map
@@ -281,10 +281,10 @@ map écrite et vérifiée dans l'onglet **Map**.
 
 | Test | Ce qu'il vérifie |
 |---|---|
-| [FmlBridgeTest](../src/test/java/fr/kazepoy/fhir/fml/bridge/FmlBridgeTest.java) | Modèle OIE, source FHIR, modèle HL7 v2 typé, maps importées, Bundle transaction et 24 transformations génériques/typées concurrentes sans contamination |
-| [FhirFmlTransformStepTest](../src/test/java/fr/kazepoy/fhir/fml/FhirFmlTransformStepTest.java) | Script exécuté dans Rhino avec E4X, publication dans `msg` ou une variable, échec d'une map inconnue, test sur message exemple, map de démo valide contre `ExampleLabPatient`, sérialisation XML du channel |
-| [fml-transform.test.js](../webadmin/test/unit/fml-transform.test.js) | Enregistrement et valeurs par défaut de l'étape dans l'administration web |
-| [fml-completion.test.js](../webadmin/test/unit/fml-completion.test.js) | Complétion locale et squelette avec éléments cibles requis |
+| [FmlBridgeTest](../../src/test/java/fr/kazepoy/fhir/fml/bridge/FmlBridgeTest.java) | Modèle OIE, source FHIR, modèle HL7 v2 typé, maps importées, Bundle transaction et 24 transformations génériques/typées concurrentes sans contamination |
+| [FhirFmlTransformStepTest](../../src/test/java/fr/kazepoy/fhir/fml/FhirFmlTransformStepTest.java) | Script exécuté dans Rhino avec E4X, publication dans `msg` ou une variable, échec d'une map inconnue, test sur message exemple, map de démo valide contre `ExampleLabPatient`, sérialisation XML du channel |
+| [fml-transform.test.js](../../webadmin/test/unit/fml-transform.test.js) | Enregistrement et valeurs par défaut de l'étape dans l'administration web |
+| [fml-completion.test.js](../../webadmin/test/unit/fml-completion.test.js) | Complétion locale et squelette avec éléments cibles requis |
 
 Les fixtures sont dans `src/test/resources/fml/` : deux maps et un ORU sérialisé
 par OIE.
@@ -292,7 +292,7 @@ par OIE.
 ## 8. Limites et suites
 
 - **Canonique du modèle** `http://oie.org/fhir/…` : provisoire, à fixer avec la
-  migration de namespace prévue au [plan actif](plan-suite.md#lot-a--namespace-définitif).
+  migration de namespace prévue au [plan actif](../plan-suite.md#lot-a--namespace-définitif).
 - **Concurrence** : le contexte et les maps chargées sont partagés en lecture ;
   chaque appel crée ses services, son `StructureMapUtilities`, sa source et sa
   cible. Le verrou global a été supprimé et un test mélange 24 transformations

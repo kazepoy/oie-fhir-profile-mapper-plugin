@@ -18,7 +18,7 @@ Saisie graphique → état de l'éditeur → mappings JSON → compilation serve
 
 L'onglet Generated Script et les contrôles d'étape utilisent le même compilateur serveur. Ils ne sont pas un second générateur propre à l'interface.
 
-Source principale : [webadmin/src/profile-mapper/editor.js](../webadmin/src/profile-mapper/editor.js). L'étape est enregistrée par `registerProfileMapper()` ; son composant est `ProfileMapperEditor`. Le fichier `webadmin/web/plugin.js` en est le bundle généré.
+Source principale : [webadmin/src/profile-mapper/editor.js](../../webadmin/src/profile-mapper/editor.js). L'étape est enregistrée par `registerProfileMapper()` ; son composant est `ProfileMapperEditor`. Le fichier `webadmin/web/plugin.js` en est le bundle généré.
 
 Le tableau est compact : les champs et l'aide FHIR ont une hauteur bornée, sans
 modifier la densité des autres écrans de Web Admin. Les branches ouvertes sont
@@ -291,7 +291,7 @@ dans l’ordre, avec les vraies références et la finalisation des Bundles. Les
 ressources intermédiaires et les variables publiées sont consultables séparément.
 Les autres types d’étapes sont exclus. Le message initial vient du template
 entrant du transformeur ; en destination, fournir un message préparé par la source.
-Le [manuel multi-étapes](user-manual/profile-mapper/apercu-multi-etapes.md) précise
+Le [manuel multi-étapes](../user-manual/fr/profile-mapper/apercu-multi-etapes.md) précise
 le parcours et ses limites.
 
 **Generated script** montre la compilation réelle. **Validate Step** vérifie la configuration de l'étape ; un test de message vérifie aussi le comportement des expressions et, si elle est activée, la validation FHIR de leur résultat.
@@ -324,7 +324,7 @@ Les boutons d’import/export de **Properties** acceptent des tableaux CSV ou
 Markdown (`key,expression,note`) et exportent la documentation Markdown/HTML,
 avec notes, activation, conditions et traductions. L’import vérifie toutes les
 cibles avant application ; **Undo** annule l’import en une opération. Voir
-[Tableaux et documentation](user-manual/profile-mapper/tableaux-et-documentation.md).
+[Tableaux et documentation](../user-manual/fr/profile-mapper/tableaux-et-documentation.md).
 
 ## 10. Limites et vérification
 
@@ -336,11 +336,11 @@ démontrer. Il refuse explicitement les cas non matérialisables, notamment
 masqué. La traduction locale sans `dependsOn`/`product` ni traduction inverse
 n'est pas prise en charge.
 
-Les [tests de l'éditeur](../webadmin/test/unit/profile-mapper.test.js) se lancent avec :
+Les [tests de l'éditeur](../../webadmin/test/unit/profile-mapper.test.js) se lancent avec :
 
 ```bash
 (cd webadmin && npm test)        # sans navigateur
 (cd webadmin && npm run test:e2e) # parcours Playwright contre la démo lancée
 ```
 
-Le [README de la démonstration](Demo.md) décrit les six channels et leurs ports HTTP, dont les exemples SQL XML et CSV nettoyé à la source puis mappé en destination, avec résultats individuels ou collection.
+Le [guide de la démonstration](../demo/Demo.md) décrit les canaux et leurs ports HTTP, dont les exemples SQL XML et CSV nettoyé à la source puis mappé en destination, avec résultats individuels ou collection.

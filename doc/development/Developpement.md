@@ -1,7 +1,7 @@
 # Développement et installation
 
 Le format des mappings, son schéma et les exemples exécutés par
-`MappingSpecificationTest` sont dans [Specification-mapping.md](Specification-mapping.md).
+`MappingSpecificationTest` sont dans [Specification-mapping.md](../reference/Specification-mapping.md).
 
 ## Structure
 
@@ -20,14 +20,14 @@ Le format des mappings, son schéma et les exemples exécutés par
 | `assembly.xml` | Assemblage du ZIP installable |
 | `demo/` | OIE, Web Admin, FHIR Data Type, RBAC et compilation du mapper dans Docker |
 | `.github/workflows/release.yml` | Build et release GitHub sur tag |
-| `doc/` | Plan de conception et documentation technique |
+| `doc/` | Manuel multilingue, référence, architecture, développement, démo et historique ; voir son [index](../README.md) |
 
-Les appels à FHIR Data Type passent par la [façade et l'adaptateur](Integration-FHIR-Data-Type.md).
+Les appels à FHIR Data Type passent par la [façade et l'adaptateur](../architecture/Integration-FHIR-Data-Type.md).
 Le plugin n'embarque aucune bibliothèque HAPI ni copie du moteur tiers.
 
 ## Démo
 
-Le [guide de la démo](Demo.md) décrit la compilation et le lancement avec Docker,
+Le [guide de la démo](../demo/Demo.md) décrit la compilation et le lancement avec Docker,
 les paramètres et la vérification du chargement du plugin. Aucun JDK ni Maven
 n'est nécessaire sur l'hôte pour ce lancement.
 
@@ -101,10 +101,19 @@ parcours sont explicitement définis, indépendamment du poste de développement
 
 ## Rejouer les exemples
 
-Le [guide de rejeu](Rejeu-tests.md) décrit `tools/run_tests.py`, la validation
+Le [guide de rejeu](../demo/Rejeu-tests.md) décrit `tools/run_tests.py`, la validation
 hors ligne et les essais sur serveur. La CI de release contrôle les exports
 positifs hors ligne ; `demo/examples/check.py` compare les aperçus aux sorties
 déployées et rejoue les samples de la démo en ligne.
+
+## Contrôler la documentation
+
+```sh
+python3 tools/check_doc_links.py
+```
+
+Le script vérifie les liens locaux de tous les fichiers Markdown et refuse un
+document de `doc/` qui ne serait pas accessible depuis son index.
 
 ## Vérifier la reproductibilité
 
@@ -124,12 +133,12 @@ contrôle après son assemblage. Le Dockerfile de démo fournit Node/npm à Mave
 
 ## Publier une release
 
-Pousser un tag `vX.Y.Z` : la [GitHub Action](../.github/workflows/release.yml)
+Pousser un tag `vX.Y.Z` : la [GitHub Action](../../.github/workflows/release.yml)
 construit l'extension avec la version du tag, lance les tests Java et publie le
 ZIP et son `SHA256SUMS` dans une release. Un tag contenant `-` (`v0.2.0-rc1`)
 donne une pré-release. Les JAR OIE et FHIR Data Type sont extraits des archives
 officielles, vérifiées par empreinte. Un lancement manuel construit le ZIP sans
 le publier.
 
-Le projet est sous [Mozilla Public License 2.0](../LICENSE). Le texte de licence
+Le projet est sous [Mozilla Public License 2.0](../../LICENSE). Le texte de licence
 est inclus dans le ZIP d'extension et dans le JAR sous `META-INF/LICENSE`.

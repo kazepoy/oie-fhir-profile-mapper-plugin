@@ -23,4 +23,4 @@ logique HL7 v2 alimenté par le Strict Parser, ou une ressource FHIR.
 Une map FML construit sa propre ressource, éventuellement un Bundle. Elle ne
 partage pas les Bundles nommés du Profile Mapper. Il n'existe pas de trace FML
 par règle ni de prise en charge de `resolveReference` et `performSearch`.
-Pour la syntaxe et les limites détaillées : [référence FML](../../Transformation-FML.md).
+Pour la syntaxe et les limites détaillées : [référence FML](../../../reference/Transformation-FML.md).

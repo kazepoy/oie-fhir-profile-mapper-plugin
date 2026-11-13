@@ -20,7 +20,7 @@ public class FhirMapperTransformerTest {
     @BeforeClass public static void setup() { System.setProperty("fhir.engine.direct", "true"); }
 
     private static List<Map<String, Object>> laboratory() throws Exception {
-        List<Map<String, Object>> steps = (List<Map<String, Object>>) FhirJson.parse(Files.readString(Path.of("doc/examples/mapping/laboratory.steps.json")));
+        List<Map<String, Object>> steps = (List<Map<String, Object>>) FhirJson.parse(Files.readString(Path.of("doc/demo/examples/mapping/laboratory.steps.json")));
         for (int i = 0; i < steps.size(); i++) {
             steps.get(i).put("sequenceNumber", String.valueOf(i + 3));
             steps.get(i).put("name", "step-" + i);

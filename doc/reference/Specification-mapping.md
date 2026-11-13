@@ -18,10 +18,10 @@ Ressources et Bundles FHIR (validation selon validateOutput)
 ```
 
 L'éditeur n'écrit pas de JavaScript : il enregistre une description déclarative.
-[FhirProfileMapperStep.java](../src/main/java/fr/kazepoy/fhir/mapper/FhirProfileMapperStep.java)
-la contrôle et la compile ; [profile-mapper-runtime.js](../src/main/resources/fr/kazepoy/fhir/mapper/profile-mapper-runtime.js)
+[FhirProfileMapperStep.java](../../src/main/java/fr/kazepoy/fhir/mapper/FhirProfileMapperStep.java)
+la contrôle et la compile ; [profile-mapper-runtime.js](../../src/main/resources/fr/kazepoy/fhir/mapper/profile-mapper-runtime.js)
 fournit les conversions, itérations, traductions, l'assemblage des Bundles et la
-publication ; [FhirMapperLifecycle.java](../src/main/java/fr/kazepoy/fhir/mapper/FhirMapperLifecycle.java)
+publication ; [FhirMapperLifecycle.java](../../src/main/java/fr/kazepoy/fhir/mapper/FhirMapperLifecycle.java)
 repère au déploiement la dernière étape de chaque transformeur.
 
 ## 1. Unité du contrat et compatibilité
@@ -49,7 +49,7 @@ uniquement la version FHIR : `R4` par défaut, `R4B` ou `R5`. Les exemples de
 référence sont vérifiés en R4 ; cela ne constitue pas un rejeu complet en R4B/R5.
 
 La forme JSON ne dépend d'aucune classe du datatype tiers. Les services FHIR
-passent par la [façade interne](Integration-FHIR-Data-Type.md).
+passent par la [façade interne](../architecture/Integration-FHIR-Data-Type.md).
 
 ## 2. Propriétés d'une étape
 
@@ -134,7 +134,7 @@ sur les règles qu'il réécrit, sans encore permettre de les saisir.
 1 à 128 caractères (`A-Z`, `a-z`, chiffres, `_`, `.`, `:`, `-`, avec une lettre
 ou un chiffre en premier). Il est conservé pendant les modifications et renvoyé
 comme `ruleId` dans les diagnostics et traces. Les anciens exports sans id
-restent acceptés. Voir le [parcours éditeur et IA](Assistants-et-IA.md).
+restent acceptés. Voir le [guide de construction assistée d'un canal](Construire-un-channel.md).
 
 Chaque segment de `path` est `[nom]` pour une propriété simple ou
 `[nom, instance]` pour une entrée répétée. `#0`, `#1` et `ipp#0` sont des marqueurs
@@ -289,7 +289,7 @@ une réservation existante : la même identité sert dans tous les Bundles.
 
 Les fonctions `hl7…` attendent un segment du XML HL7 v2 plat d'OIE ; la limite par
 défaut est un segment du type de départ, `[]` la retire. Le catalogue complet,
-avec signatures et exemples, est servi par `GET /functions` ([assistants](Assistants-et-IA.md)).
+avec signatures et exemples, est servi par `GET /functions` ([construction assistée](Construire-un-channel.md)).
 Les méthodes Java `FhirFacade.validate`, `toJson`, `toXml`, `translate`, `lookup`
 et `validateCode` restent accessibles via `Packages.fr.kazepoy.fhir.mapper.fhir.FhirFacade`.
 
@@ -442,7 +442,7 @@ exemples restent isolés. `expected` compare le message sortant ; les variables
 finales sont consultables dans l’aperçu mais n’ont pas d’attendu dédié. Les UUID
 sont renommés de façon cohérente, afin de préserver leurs relations de référence ;
 l’ordre des propriétés JSON et `meta.lastUpdated` sont ignorés.
-Le [guide de rejeu](Rejeu-tests.md) décrit l’outil et ses codes de sortie.
+Le [guide de rejeu](../demo/Rejeu-tests.md) décrit l’outil et ses codes de sortie.
 
 `key` identifie une position d'arbre, pas une règle unique : une itération et
 une condition peuvent partager cette clé. `ruleIndex` les distingue dans cette
@@ -455,7 +455,7 @@ structurés à la demande ; son contrat et son export sont décrits dans
 [Trace.md](Trace.md). Les messages traités par un channel déployé sont tracés
 étape par étape avec `traceMessages`, dans le `connectorMap` de chaque message.
 Les API `GET /functions` (catalogue) et `POST /source` (sérialisation du message
-exemple par OIE) complètent l'assistance ; voir [Assistants-et-IA.md](Assistants-et-IA.md).
+exemple par OIE) complètent l'assistance ; voir le [guide pour les agents](Construire-un-channel.md).
 
 ## 9. Schéma et vérification reproductible
 
@@ -463,7 +463,7 @@ Le [schéma JSON](schemas/mapping-step.schema.json) décrit la forme de rédacti
 du contrat existant. Il utilise [JSON Schema 2020-12](https://json-schema.org/draft/2020-12/json-schema-validation).
 Les mots-clés `contentSchema` annotent le JSON contenu dans les chaînes ; ils
 ne suffisent pas à le valider automatiquement. Le
-[contrôleur hors ligne](../tools/check_mapping.py) décode donc explicitement ces
+[contrôleur hors ligne](../../tools/check_mapping.py) décode donc explicitement ces
 champs et valide aussi leur contenu avec `jsonschema`.
 
 Ce contrôle n'est pas branché dans le runtime ni dans l'éditeur. Il accepte
@@ -486,7 +486,7 @@ Depuis la racine du dépôt, Python 3.9 ou ultérieur :
 ```sh
 python3 -m venv /tmp/oie-mapper-schema-venv
 /tmp/oie-mapper-schema-venv/bin/pip install -r tools/requirements.txt
-/tmp/oie-mapper-schema-venv/bin/python tools/check_mapping.py doc/examples/mapping/patient.step.json doc/examples/mapping/laboratory.steps.json
+/tmp/oie-mapper-schema-venv/bin/python tools/check_mapping.py doc/demo/examples/mapping/patient.step.json doc/demo/examples/mapping/laboratory.steps.json
 /tmp/oie-mapper-schema-venv/bin/python -m unittest discover -s tools/tests -v
 mvn -Dtest=MappingSpecificationTest test
 ```
@@ -496,10 +496,10 @@ lecture et tests ; ce n'est pas un nouvel import de channel ni le corps de `/tes
 
 | Exemple | Entrée et résultat attendu |
 |---|---|
-| [Patient](examples/mapping/patient.step.json) | Avec [source.json](examples/mapping/source.json) : Patient `patient-42`, famille Durand, naissance `1985-04-12`. |
-| [Laboratoire](examples/mapping/laboratory.steps.json) | Même source : transaction de trois entrées, un Patient et deux Observations le référençant ; décimaux JSON `6.80` et `4.10`. |
-| [Chemin invalide](examples/mapping/invalid-path.step.json) | Échec du contrôle de structure et de compilation : segment à trois composants dans `Patient.active`. |
-| [Référence non résolue](examples/mapping/unresolved-reference.steps.json) | Structure acceptée ; échec à la finalisation sur `missing-patient[0]`, même sans validation FHIR. Aucune variable `result` publiée. |
+| [Patient](../demo/examples/mapping/patient.step.json) | Avec [source.json](../demo/examples/mapping/source.json) : Patient `patient-42`, famille Durand, naissance `1985-04-12`. |
+| [Laboratoire](../demo/examples/mapping/laboratory.steps.json) | Même source : transaction de trois entrées, un Patient et deux Observations le référençant ; décimaux JSON `6.80` et `4.10`. |
+| [Chemin invalide](../demo/examples/mapping/invalid-path.step.json) | Échec du contrôle de structure et de compilation : segment à trois composants dans `Patient.active`. |
+| [Référence non résolue](../demo/examples/mapping/unresolved-reference.steps.json) | Structure acceptée ; échec à la finalisation sur `missing-patient[0]`, même sans validation FHIR. Aucune variable `result` publiée. |
 
 Les tests de schéma contrôlent aussi les étapes des six exports XML de la démo.
-Le [rejeu HTTP](Demo.md#rejouer-les-exemples) complète ces contrôles dans OIE.
+Le [rejeu HTTP](../demo/Demo.md#rejouer-les-exemples) complète ces contrôles dans OIE.

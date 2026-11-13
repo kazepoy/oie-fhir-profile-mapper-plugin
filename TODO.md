@@ -6,7 +6,7 @@
 > décrit l'état de reprise et contient donc volontairement des constats périmés.
 
 État vérifié le 12 novembre 2026 sur `feat/refonte`, à partir de `4907d15`.
-Le [plan de refonte initial](doc/plan-refonte.md) reste la référence historique.
+Le [plan de refonte initial](doc/history/plan-refonte.md) reste la référence historique.
 Ce suivi découpe le travail restant en lots vérifiables ; une phase partielle
 ne doit pas être présentée comme terminée.
 
@@ -133,8 +133,8 @@ La phase 3 du plan reste partielle : elle demande aussi un agencement complet
 - Anglais/français choisis selon les préférences du navigateur, repli anglais ;
   aides, contrôles accessibles, complétion et messages du plugin traduits.
   Chemins FHIR, expressions et données conservés. Styles extraits et couleurs
-  sémantiques du thème Web Admin. [Guide i18n](doc/i18n.md) et
-  [captures françaises clair/sombre](doc/user-manual/langues-et-themes.md).
+  sémantiques du thème Web Admin. [Guide i18n](doc/development/i18n.md) et
+  [captures françaises clair/sombre](doc/user-manual/fr/langues-et-themes.md).
 - `npm run check` : syntaxe de 43 modules et cohérence des 518 messages des
   catalogues contrôlées. `npm test` : 31 tests passent, dont le choix de langue,
   les paramètres et l’invariance des règles générées.
@@ -246,9 +246,25 @@ Prochain lot : FML, S-2 sur les modèles typés et adaptateur Strict Parser (lot
 - `mvn clean package` : 147 tests Java et 43 tests Node ; 13 tests Python.
   Rejeu complet vert et 20 parcours Playwright verts sous Chromium et WebKit.
 
+## Vérification du rangement documentaire — 13 novembre 2026
+
+- `doc/README.md` devient l'entrée unique vers le manuel, la référence,
+  l'architecture, le développement, la démo et l'historique. Chaque
+  section possède son propre index et une autorité explicite.
+- Le manuel français est isolé sous `doc/user-manual/fr/`. Le schéma suit la
+  spécification dans `doc/reference/` et les fixtures sont dans `doc/demo/` ; leurs
+  consommateurs Java, Python, Docker et CI utilisent les nouveaux chemins.
+- L'ancien plan et la note `TEMP.md` sont classés dans `doc/history/` sans perte.
+  Le plan actif reste à la racine de `doc/`.
+- `tools/check_doc_links.py`, exécuté en CI, contrôle les liens locaux et refuse
+  tout document Markdown de `doc/` inaccessible depuis l'index.
+- Le `AGENTS.md` racine rend découvrable le guide
+  `doc/reference/Construire-un-channel.md` pour les agents qui produisent ou
+  modifient des canaux FHIR.
+
 La suite initialement envisagée regroupait S-3, performance, durcissement,
-namespace et préparation 1.0. Elle a été reclassée : seul le namespace reste
-immédiat ; les autres travaux sont reportés dans le [plan actif](doc/plan-suite.md).
+namespace et préparation 1.0. Le namespace et le rangement documentaire sont
+clos ; les autres travaux sont classés dans le [plan actif](doc/plan-suite.md).
 
 
 ## mes todos a reflechir /en discusion

@@ -2,7 +2,7 @@
 
 > **Document historique.** Les lots 1 à 7 de cette refonte sont terminés. La
 > feuille de route active, les reports et les nouveaux arbitrages sont dans le
-> [plan de suite](plan-suite.md). Les constats ci-dessous décrivent l'état au
+> [plan de suite](../plan-suite.md). Les constats ci-dessous décrivent l'état au
 > moment de la revue et ne doivent plus servir seuls à déterminer le travail
 > restant.
 
@@ -13,7 +13,7 @@ saisie complète** dans le mappeur graphique, et un **second transformeur FML**
 (FHIR Mapping Language) à côté du mappeur.
 
 Ce document remplace le plan initial du projet (retiré du dépôt ; voir l'historique
-git et le [CHANGELOG](../CHANGELOG.md) pour ce qui a été livré).
+git et le [CHANGELOG](../../CHANGELOG.md) pour ce qui a été livré).
 
 ## État d'avancement (branche `feat/refonte`, 13 novembre 2026)
 
@@ -27,7 +27,7 @@ git et le [CHANGELOG](../CHANGELOG.md) pour ce qui a été livré).
 | 6, 7 | À faire. |
 
 La reprise, les écarts constatés dans le code et les critères de validation par
-lot sont suivis dans [TODO.md](../TODO.md). Les numéros de version ci-dessous
+lot sont suivis dans [TODO.md](../../TODO.md). Les numéros de version ci-dessous
 restent des jalons du plan initial, pas des versions déjà publiées.
 
 ---
@@ -82,12 +82,12 @@ Identifiants `R-xx` pour les reprendre dans les phases.
 | R-06 | Arbre | Pas de recherche d'élément, pas de navigation clavier, pas de « tout déplier », pas d'annuler/rétablir, pas de duplication de branche, pas d'activation/désactivation d'une règle | `mapperPanel` | Lent sur les profils larges (Observation : 33 règles dans la démo) |
 | R-07 | Arbre | Les types sont chargés un par un à l'ouverture (une requête par StructureDefinition) et le snapshot complet est envoyé au navigateur | `fetchSd`, `childElements` | Latence à l'ouverture ; logique de slicing dupliquée côté client |
 | R-08 | Étape | `profiles`, `terminologyServer`, `terminologyAuthorization`, cache, délai sont **répétés dans chaque étape** d'un canal (10 étapes dans le canal labo) | `FhirProfileMapperStep` | Incohérences possibles ; aucune administration centrale des packages |
-| R-09 | Format | Pas de `formatVersion` ; `profileVersion` ne verrouille rien ; pas de manifeste de packages | [Plan](Specification-mapping.md#1-unité-du-contrat-et-compatibilité) | Toute évolution incompatible est bloquée |
+| R-09 | Format | Pas de `formatVersion` ; `profileVersion` ne verrouille rien ; pas de manifeste de packages | [Plan](../reference/Specification-mapping.md#1-unité-du-contrat-et-compatibilité) | Toute évolution incompatible est bloquée |
 | R-10 | Runtime | Le runtime (1 029 lignes) est inséré dans le script de chaque étape ; le canal labo compile dix copies | `compileScript` : `var __fhir = <runtime>` | Scripts générés illisibles ; mémoire et temps de compilation au déploiement |
 | R-11 | Validation | Deux validations HAPI par message quand le datatype valide aussi la sortie (+85 ms chacune) ; aucune politique de validation (toujours / jamais / échantillon) | rapport `20261110-114424-oru` | La validation est le premier poste de coût |
 | R-12 | Charge | Le canal labo s'effondre au-delà de 2 msg/s (délais 60 s) ; cause non analysée (validateur HAPI sérialisé ? GC ?) | rapport `20261110-113341-paliers` | Pas de seuil tenu en production |
 | R-13 | Test | L'aperçu exécute une étape seule ; les références entre étapes sont simulées ; pas de jeu d'essais mémorisé ni de résultat attendu | `FhirMapperTester`, `Mappeur-graphique.md §9` | Les Bundles multi-étapes ne se vérifient qu'en déployant |
-| R-14 | Fonctionnel | Non pris en charge : sous-slices, discriminants `type`/`profile`/`exists`, `contained`, extensions de primitives (`_birthDate`), rejeu R4B/R5 | [Limites](Mappeur-graphique.md#10-limites-et-vérification) | Certains IG (FR Core, EU Lab) ne se mappent pas entièrement |
+| R-14 | Fonctionnel | Non pris en charge : sous-slices, discriminants `type`/`profile`/`exists`, `contained`, extensions de primitives (`_birthDate`), rejeu R4B/R5 | [Limites](../reference/Mappeur-graphique.md#10-limites-et-vérification) | Certains IG (FR Core, EU Lab) ne se mappent pas entièrement |
 | R-15 | Intégration | Le script généré est posé dans `element.script` (propriété non énumérable) après un appel différé à `/script`, pour l'onglet *Generated Script* | `scriptFor` | Fonctionne, mais dépend d'un repli non documenté de Web Admin |
 | R-16 | Catalogue | Trois méthodes privées du datatype appelées par réflexion (FD-01) | `FhirCatalogBridge.invoke` | Chaque version du datatype peut casser l'éditeur |
 | R-17 | CI | La release GitHub lance `mvn package` seulement : ni `node --test`, ni Python | `.github/workflows/release.yml` | Une régression de l'éditeur passe la release |
@@ -125,7 +125,7 @@ Vérifié dans le WAR de l'image de démo (`core/platform.js`, `core/monaco.js`,
 | Glisser-déposer natif : type `application/x-oie-accessor` depuis *Message Trees*, déposé dans un Monaco ou un champ | Déjà exploité ; à conserver avec Monaco |
 | `@oie/web-api` : `validateScript`, `formatScript` | Contrôle syntaxique côté moteur sans eval |
 
-Limites rencontrées (à enregistrer dans [limites-plateforme.md](limites-plateforme.md), §7) :
+Limites rencontrées (à enregistrer dans [limites-plateforme.md](../architecture/limites-plateforme.md), §7) :
 pas de point d'extension pour *Generated Script* (R-15), pas d'API de complétion
 par plugin (le fournisseur Monaco du cœur lit ses propres sources ; `window.monaco`
 est global), pas de réglage de plugin **par canal**, et une zone d'édition d'étape

@@ -32,7 +32,7 @@ y ajoutent leurs ressources.
 
 - [Tests et exemples enregistrés](tests-et-exemples.md)
 - [Aperçu multi-étapes](apercu-multi-etapes.md)
-- [Rejeu par outil](../../Rejeu-tests.md)
+- [Rejeu par outil](../../../demo/Rejeu-tests.md)
 - [Résultat attendu et comparaison](comparaison.md)
 - [Diagnostics et trace d'un test](diagnostics-et-traces.md)
 - [Trace d'un message traité](trace-messages.md)

@@ -17,7 +17,7 @@ editor with completion (mapper functions, iteration variables, sample paths,
 references of other steps); sample messages and their expected results are saved
 with the step.
 
-![FHIR Profile Mapper in a transformer](doc/images/fhir-mapper.png)
+![FHIR Profile Mapper in a transformer](doc/user-manual/fr/images/fhir-mapper.png)
 
 ## FHIR FML Transform
 
@@ -38,24 +38,18 @@ python3 examples/check.py   # sends messages through the demo channels
 ```
 
 Administration: <https://localhost:8443/oie-webadmin/> (`admin` /
-`demo-oie-password`). See the [demo guide](doc/Demo.md) (in French).
+`demo-oie-password`). See the [demo guide](doc/demo/Demo.md) (in French).
 
 ## Documentation
 
 Detailed documentation is in French:
 
+- [Documentation hub](doc/README.md): user, reference, architecture, development, demo and history
 - [Illustrated user manual](doc/user-manual/README.md): Profile Mapper, FML and Settings, with feature-by-feature procedures and screenshots
-- [Development, installation and releases](doc/Developpement.md)
-- [Mapping format and execution](doc/Specification-mapping.md)
-- [Graphical mapper](doc/Mappeur-graphique.md)
-- [FML transform and OIE logical model](doc/Transformation-FML.md)
-- [Execution traces](doc/Trace.md) (step tests and processed messages)
-- [Code assistants and AI workflow](doc/Assistants-et-IA.md)
-- [FHIR Data Type integration](doc/Integration-FHIR-Data-Type.md)
-- [Platform limits](doc/limites-plateforme.md) (what the mapper works around, upstream requests)
-- [Demo](doc/Demo.md)
+- [Development, installation and releases](doc/development/Developpement.md)
+- [Mapping format and execution](doc/reference/Specification-mapping.md)
+- [Demo](doc/demo/Demo.md)
 - [Active roadmap](doc/plan-suite.md): decisions, classified backlog and next lots
-- [Initial redesign plan](doc/plan-refonte.md): historical review, target and phases
 - [Changelog](CHANGELOG.md)
 
 License: [Mozilla Public License 2.0](LICENSE).

@@ -4,7 +4,7 @@
 `3249013`, au 13 novembre 2026.
 
 Ce document est la **référence active pour les travaux à venir**. Le
-[plan de refonte initial](plan-refonte.md) explique les décisions et phases qui
+[plan de refonte initial](history/plan-refonte.md) explique les décisions et phases qui
 ont conduit à l'état actuel ; il est conservé comme historique. Le fichier
 [`TODO.md`](../TODO.md) reste une boîte d'entrée et un journal des lots livrés :
 une idée qui y est ajoutée n'entre dans la feuille de route qu'après classement
@@ -259,23 +259,24 @@ sont inspectables, testables et diagnostiquées dans la bonne source.
 
 ### Lot F — Documentation et nettoyage structurel
 
-**Statut : proposé ; peut accompagner les lots sans anticiper leur résultat.**
+**Statut : en cours ; structure et contrôles livrés, revue de fond restante.**
 
 Organisation cible :
 
 ```text
 doc/
-  user-manual/       procédures et captures utilisateur
+  user-manual/       index des langues
+    fr/              procédures et captures en français
   reference/         formats, contrats, API et compatibilité
   architecture/      composants, chargeurs, runtime et décisions
   development/       build, tests, contribution et release
-  operations/        installation, contextes, sécurité, exploitation
+  demo/              installation de démo, exemples et rejeu
   history/           ancien plan et comptes rendus clos
 ```
 
 Travail :
 
-- séparer manuel, référence, architecture, développement et exploitation ;
+- séparer manuel, référence, architecture, développement, démo et historique ;
 - regrouper les hacks, limites et prérequis OIE/HAPI avec leur preuve et leur
   demande amont ;
 - expliquer en tête de documentation le choix FML versus Profile Mapper ;
@@ -288,6 +289,13 @@ Travail :
 
 Critère de fin : chaque document a un public et une autorité identifiés ; aucune
 fonction n'est décrite contradictoirement dans deux références actives.
+
+Sous-lot structurel livré le 13 novembre 2026 : index principal et index par
+public, manuel français isolé, exemples regroupés avec la démo, ancien plan
+archivé, `TEMP.md` classé sans suppression, liens réparés et contrôle automatique
+des liens et orphelins ajouté à la CI. Le `AGENTS.md` racine rend le guide de
+construction des canaux découvrable. La revue des traductions, des captures et
+des recouvrements de fond reste à conduire avec les lots fonctionnels concernés.
 
 ## 4. Registre exhaustif des écarts et idées
 
@@ -317,10 +325,10 @@ reportée ; elle ne doit plus être perdue dans plusieurs documents.
 | Trace FML par groupe/règle | E | faisabilité à étudier |
 | Jeux d'essai FML comparables au Profile Mapper | E | proposé |
 | Rôle respectif des deux transformeurs | F | décision acquise à documenter |
-| Réorganisation de toute la documentation | F | proposé |
+| Réorganisation de toute la documentation | F | structure et index livrés ; revue de fond continue |
 | Inventaire des hacks et prérequis OIE/HAPI | F | proposé |
 | Revue des traductions | F | proposé |
-| `doc/TEMP.md` et documents orphelins | F | à classer |
+| `doc/TEMP.md` et documents orphelins | F | note classée dans l'historique ; contrôle automatique actif |
 | Revue complète de véracité et état de l'art | B, D, E, F | à faire par preuves, pas comme un lot vague |
 | Sous-slices, `contained`, primitives, R4B/R5 | socle livré | clos au lot 7 |
 | Discriminants impossibles à matérialiser | limites documentées | conserver l'erreur explicite |

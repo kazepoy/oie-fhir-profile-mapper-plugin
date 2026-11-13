@@ -6,7 +6,7 @@
 //
 // The host offers no completion hook for plugins: the provider below is
 // registered on the global Monaco the host exposes (window.monaco) and answers
-// only for the models of this plugin's editors (doc/limites-plateforme.md, WA-17).
+// only for the models of this plugin's editors (doc/architecture/doc/architecture/limites-plateforme.md, WA-17).
 import { platform } from "./platform.js";
 
 const OWNER = "fhir-mapper";

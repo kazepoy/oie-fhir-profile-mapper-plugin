@@ -10,7 +10,7 @@ import sys
 from jsonschema import Draft202012Validator
 
 
-SCHEMA = json.loads((Path(__file__).resolve().parents[1] / "doc/schemas/mapping-step.schema.json").read_text(encoding="utf-8"))
+SCHEMA = json.loads((Path(__file__).resolve().parents[1] / "doc/reference/schemas/mapping-step.schema.json").read_text(encoding="utf-8"))
 VALIDATOR = Draft202012Validator(SCHEMA)
 
 

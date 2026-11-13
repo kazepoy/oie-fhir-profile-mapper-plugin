@@ -10,7 +10,7 @@ Environnement de démonstration du plugin de mapping :
 - [OIE Flow UI](https://github.com/kazepoy/oie-flow-ui-plugin) **0.8.1**, pour suivre
   les messages dans les canaux (Flows Monitoring, Channel Flow) ;
 - FHIR Profile Mapper **0.1.0-SNAPSHOT**, compilé depuis les sources du projet, avec
-  ses deux étapes : FHIR Profile Mapper et [FHIR FML Transform](Transformation-FML.md).
+  ses deux étapes : FHIR Profile Mapper et [FHIR FML Transform](../reference/Transformation-FML.md).
 
 Web Support, FHIR Data Type, RBAC et Flow UI sont téléchargés au build, avec vérification
 de leur SHA-256. Les packages officiels
@@ -20,7 +20,7 @@ aussi épinglés et vérifiés. Le mapper est compilé avec Maven à partir de l
 cible, puis installé dans cette même image. Le compilateur, le runtime et
 l'éditeur graphique sont repris du POC. L'initialisation importe et déploie neuf
 canaux, avec leur IG de démonstration montée dans `/fhir-ig`, la map FML générique
-de [demo/fml](../demo/fml) montée dans `/fhir-fml`, et les fixtures du modèle FML
+de [demo/fml](../../demo/fml) montée dans `/fhir-fml`, et les fixtures du modèle FML
 typé montées dans `/fhir-typed`.
 
 L'initialisation crée trois contextes dans *Settings › FHIR Mapper* :
@@ -81,8 +81,8 @@ Pour éditer et tester des mappings, un rôle doit aussi avoir les permissions
 contenir `FHIR Profile Mapper started.` et `FHIR FML Transform started.`.
 L'image active le niveau `INFO` pour les loggers `fr.kazepoy.fhir.mapper` et `fr.kazepoy.fhir.fml`.
 
-Les réglages sont dans [compose.yaml](../demo/compose.yaml). Pour les personnaliser,
-copier [.env.example](../demo/.env.example) en `demo/.env` avant le premier lancement.
+Les réglages sont dans [compose.yaml](../../demo/compose.yaml). Pour les personnaliser,
+copier [.env.example](../../demo/.env.example) en `demo/.env` avant le premier lancement.
 Les ports 8443 et 8081 à 8099 doivent être libres. L'administration utilise
 `OIE_BIND_ADDRESS` ; la plage des exemples est publiée sur toutes les interfaces.
 Les conteneurs et volumes utilisent le projet
@@ -91,7 +91,7 @@ Compose `fhir-profile-mapper-demo`.
 ## Rejouer les exemples
 
 Les requêtes prêtes à exécuter sont dans
-[demo.http](../demo/examples/demo.http). Le contrôle complet nécessite Python 3 et les dépendances des outils,
+[demo.http](../../demo/examples/demo.http). Le contrôle complet nécessite Python 3 et les dépendances des outils,
 depuis la racine du projet :
 
 ```sh
@@ -153,7 +153,7 @@ Il vérifie aussi la traduction locale GLU vers LOINC et le refus de l'ORU sans
 date de naissance : réponse HTTP vide, message OIE en `ERROR` mentionnant
 `birthDate`. Ce dernier message d'erreur est donc attendu après le contrôle.
 
-Le fichier [diagnostic-error.json](../demo/examples/diagnostic-error.json) provoque
+Le fichier [diagnostic-error.json](../../demo/examples/diagnostic-error.json) provoque
 volontairement une conversion booléenne impossible dans l'API de test. Le script
 vérifie que le diagnostic désigne `Patient.active`, la règle `0`, la phase
 `conversion` et l'expression `'invalide'`, avec la validation FHIR désactivée.
@@ -161,18 +161,18 @@ Ce test d'API ne crée pas de message de channel. La même erreur peut être ess
 dans l'éditeur en saisissant `'invalide'` comme expression de `Patient.active` :
 le bouton **Go to rule** ramène au champ concerné.
 
-Le fichier [typeerror-error.json](../demo/examples/typeerror-error.json) utilise
+Le fichier [typeerror-error.json](../../demo/examples/typeerror-error.json) utilise
 `msg.optional.gender` avec une source vide. Il doit renvoyer un diagnostic
 `TypeError` de phase `value`, avec et sans validation FHIR. Le contrôle remplace
 ensuite l'expression par `msg.optional && msg.optional.gender` et vérifie les
 deux cas : donnée facultative absente (élément omis) ou présente (élément mappé).
 
-[trace-preview.json](../demo/examples/trace-preview.json) produit un aperçu
+[trace-preview.json](../../demo/examples/trace-preview.json) produit un aperçu
 avec une condition ignorée, un élément absent, une date convertie et une
 constante appliquée. Le contrôle compare les résultats avec/sans trace, vérifie
 la capture explicite des valeurs et la troncature à trois événements.
 Dans l'éditeur, activer **Trace**, exécuter le test, puis utiliser
-**Export trace JSON**. Voir le [contrat de trace](Trace.md).
+**Export trace JSON**. Voir le [contrat de trace](../reference/Trace.md).
 
 Le channel *ORU R01 vers Bundle FHIR* trace aussi ses messages traités : ses
 étapes Patient et Observation ont **Trace processed messages**. Après un envoi,
@@ -192,12 +192,12 @@ Il accepte le certificat autosigné et ignore les proxys pour cette démo locale
 Pour essayer l'éditeur : ouvrir un canal, sélectionner son transformeur,
 puis une étape FHIR Profile Mapper. Les profils et traductions passent par
 les API de notre plugin. Le fonctionnement de l'éditeur est décrit dans
-[Mappeur-graphique.md](Mappeur-graphique.md).
+[Mappeur-graphique.md](../reference/Mappeur-graphique.md).
 
 ## Ajouter ou réimporter des exemples
 
 Déposer les exports XML de canaux dans
-[demo/oie-init/channels/](../demo/oie-init/channels/), puis relancer
+[demo/oie-init/channels/](../../demo/oie-init/channels/), puis relancer
 l'initialisation depuis `demo/` :
 
 ```sh

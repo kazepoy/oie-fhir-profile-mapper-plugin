@@ -24,7 +24,7 @@ import fr.kazepoy.fhir.mapper.util.FhirJson;
 
 /** Execute the JSON examples published with the specification, without rewriting their rules. */
 public class MappingSpecificationTest {
-    private static final Path EXAMPLES = Path.of("doc", "examples", "mapping");
+    private static final Path EXAMPLES = Path.of("doc", "demo", "examples", "mapping");
 
     private String run(String filename, Map<String, Object> channelMap) throws Exception {
         Object json = FhirJson.parse(Files.readString(EXAMPLES.resolve(filename)));

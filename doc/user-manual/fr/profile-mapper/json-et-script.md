@@ -16,7 +16,7 @@ Ce panneau concerne l'étape entière. Les champs `mappings`, `bundleTargets` et
 `samples` sont des **chaînes contenant du JSON**, et non des tableaux directs.
 Ne pas transformer ces chaînes en tableaux lors d'une modification manuelle.
 L'identité OIE de l'étape dans le transformeur est conservée lors de l'application.
-Le [format technique](../../Specification-mapping.md) décrit les règles en détail.
+Le [format technique](../../../reference/Specification-mapping.md) décrit les règles en détail.
 
 ## Lire le code exécuté
 
