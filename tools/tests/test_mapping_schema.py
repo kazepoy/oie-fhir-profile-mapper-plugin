@@ -36,7 +36,7 @@ class MappingSchemaTest(unittest.TestCase):
             # OIE stocke le nom dans CHANNEL.NAME, varchar(40) : un nom plus long fait échouer l'import.
             name = ET.parse(path).getroot().findtext("name")
             self.assertLessEqual(len(name), 40, path.name)
-            for node in ET.parse(path).iter("org.oie.fhir.mapper.FhirProfileMapperStep"):
+            for node in ET.parse(path).iter("fr.kazepoy.fhir.mapper.FhirProfileMapperStep"):
                 step = {child.tag: child.text or "" for child in node}
                 with self.subTest(channel=path.name, step=step.get("name")):
                     self.assertEqual([], list(errors(step)))

@@ -59,6 +59,28 @@ Les mesures existantes et les outils `tools/load/` sont conservés. Ce report ne
 transforme pas leurs hypothèses en conclusions : la double validation et le pic
 isolé du canal laboratoire restent à réexaminer lorsque ce chantier reprendra.
 
+### 1.4 Arbitrages pour les lots suivants
+
+- Après le namespace, le prochain chantier sera la formalisation des contrats.
+- Le format `mappings` reste évolutif jusqu'à la version 1.0 ; le lot B doit
+  d'abord décrire et tester son état courant, sans annoncer une stabilité 1.0.
+- La contrainte éventuelle sur le manifeste et la version des packages sera
+  décidée pendant le lot B.
+- L'organisation du studio, les liens source-cible, la place du JSON, le mode
+  simple/avancé et l'évaluation d'expressions seront tranchés pendant leur
+  conception, pas anticipés dans le socle.
+- La langue suivra la préférence native de Web Admin si OIE en expose une ;
+  sinon le plugin proposera une préférence utilisateur, avec la langue du
+  navigateur comme valeur initiale.
+- L'aide visera l'élément exact de l'IG publié, avec repli vers le profil puis
+  vers la documentation FHIR de base.
+- Une map FML publiée ne sera jamais modifiée implicitement : sa dérivation
+  créera une nouvelle map inline ou une nouvelle canonique avec imports
+  explicites. Les imports seront présentés en arbre, avec sources et diagnostics
+  séparés.
+- La faisabilité et la granularité d'une trace FML seront décidées au moment du
+  lot E.
+
 ## 2. Socle livré à préserver
 
 Les lots 1 à 7 sont clos et constituent la base de non-régression :
@@ -90,12 +112,12 @@ sérialisation.
 
 ## 3. Feuille de route active
 
-Seul le lot A est décidé. Les lots B à F forment une proposition ordonnée à
-ajuster ensemble avant leur mise en œuvre.
+Les lots A puis B sont décidés. Les lots C à F forment une proposition ordonnée
+à ajuster ensemble avant leur mise en œuvre.
 
 ### Lot A — Namespace définitif
 
-**Statut : prochain lot décidé.**
+**Statut : terminé le 13 novembre 2026.**
 
 Travail :
 
@@ -127,9 +149,15 @@ Critères de fin :
 Hors périmètre : migration v1→v2 du contenu des étapes, changement des routes,
 renommage marketing du plugin ou modification fonctionnelle des mappings.
 
+Vérification : 147 tests Java, 43 tests frontend et 13 tests outils passent ;
+les neuf canaux réécrits sont importés et déployés dans l'image reconstruite,
+le rejeu complet passe, ainsi que les 20 parcours Playwright sous Chromium et
+WebKit. Les tests XStream relisent les deux nouveaux types et refusent les types
+retirés. Les trois JAR ne contiennent que les packages `fr/kazepoy/fhir` attendus.
+
 ### Lot B — Contrats avant nouvelles fonctions
 
-**Statut : proposé, à arbitrer après A.**
+**Statut : prochain lot décidé ; périmètre à préciser après A.**
 
 Objectif : définir la première base contractuelle stable après le renommage et
 éviter les ruptures futures non versionnées.

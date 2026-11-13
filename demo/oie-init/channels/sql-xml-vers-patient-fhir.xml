@@ -52,7 +52,7 @@
           <script>channelMap.put('__demoEtape', 'TRANSFORMATION');
 channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
         </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
-        <org.oie.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+        <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
           <name>Patient</name>
           <sequenceNumber>1</sequenceNumber>
           <enabled>true</enabled>
@@ -72,7 +72,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <terminologyCacheSeconds>300</terminologyCacheSeconds>
           <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
           <mappings>[{"key": "Patient.id", "element": "Patient.id", "type": "id", "expression": "'metier-' + msg['id_patient'].toString()", "path": [["id"]]}, {"key": "Patient.active", "element": "Patient.active", "type": "boolean", "expression": "msg['actif'].toString()", "path": [["active"]]}, {"key": "Patient.identifier:ipp.value", "element": "Patient.identifier:ipp.value", "type": "string", "expression": "msg['ipp'].toString()", "path": [["identifier", "ipp#0"], ["value"]]}, {"key": "Patient.name.use", "element": "Patient.name.use", "type": "code", "expression": "'official'", "path": [["name", "#0"], ["use"]]}, {"key": "Patient.name.family", "element": "Patient.name.family", "type": "string", "expression": "msg['nom_naissance'].toString()", "path": [["name", "#0"], ["family"]]}, {"key": "Patient.name.given", "element": "Patient.name.given", "type": "string", "expression": "msg['prenom'].toString()", "path": [["name", "#0"], ["given", "#0"]]}, {"key": "Patient.gender", "element": "Patient.gender", "type": "code", "expression": "({M: 'male', F: 'female', I: 'unknown'})[msg['sexe'].toString()]", "path": [["gender"]]}, {"key": "Patient.birthDate", "element": "Patient.birthDate", "type": "date", "expression": "msg['date_naissance'].toString()", "path": [["birthDate"]]}, {"key": "Patient.identifier:ipp.system", "element": "Patient.identifier:ipp.system", "fixed": "http://example.org/fhir/oru2fhir/sid/ipp", "when": 1, "path": [["identifier", "ipp#0"], ["system"]]}]</mappings>
-        </org.oie.fhir.mapper.FhirProfileMapperStep>
+        </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
         <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
           <name>Fin chronométrage transformation</name>
           <sequenceNumber>2</sequenceNumber>

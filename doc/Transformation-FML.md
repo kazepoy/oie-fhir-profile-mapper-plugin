@@ -25,7 +25,7 @@ profils. Elles coexistent ; la démo les montre côte à côte (§6).
 
 ## 1. L'étape
 
-Classe `org.oie.fhir.fml.FhirFmlTransformStep`, nom affiché **FHIR FML Transform**.
+Classe `fr.kazepoy.fhir.fml.FhirFmlTransformStep`, nom affiché **FHIR FML Transform**.
 
 | Propriété | Contrat |
 |---|---|
@@ -66,7 +66,7 @@ de l'éditeur.
 ### 2.1 Modèle logique OIE
 
 `http://oie.org/fhir/StructureDefinition/OieMessage`
-([StructureDefinition](../src/main/resources/org/oie/fhir/fml/bridge/StructureDefinition-OieMessage.json),
+([StructureDefinition](../src/main/resources/fr/kazepoy/fhir/fml/bridge/StructureDefinition-OieMessage.json),
 canonique provisoire). Un **seul modèle** pour tous les types de messages : il
 reflète l'arbre XML interne d'OIE, celui que voit E4X, ou l'arbre d'un JSON. La
 map trouve un nœud par son **nom** ou sa **position**.
@@ -207,12 +207,12 @@ Le code est dans un package dédié, séparé du Profile Mapper :
 
 | Package | Rôle | JAR |
 |---|---|---|
-| `org.oie.fhir.fml` | `FhirFmlTransformStep` (script de l'étape), `FmlFacade` (exécution et validation), `FmlServletInterface` | serveur |
-| `org.oie.fhir.fml.integration` | `FmlBridgeAdapter` : charge le pont avec le chargeur de FHIR Data Type et l'appelle par réflexion, avec des `String` et des `Map` | serveur |
-| `org.oie.fhir.fml.server` | `FmlServlet`, `FmlTester`, `FmlServicePlugin` (sérialisation, permissions), `FmlChannelPlugin` (relecture des maps au déploiement) | serveur |
-| `org.oie.fhir.fml.bridge` | Le moteur, côté HAPI | `lib/fhir-fml-bridge.jar` |
+| `fr.kazepoy.fhir.fml` | `FhirFmlTransformStep` (script de l'étape), `FmlFacade` (exécution et validation), `FmlServletInterface` | serveur |
+| `fr.kazepoy.fhir.fml.integration` | `FmlBridgeAdapter` : charge le pont avec le chargeur de FHIR Data Type et l'appelle par réflexion, avec des `String` et des `Map` | serveur |
+| `fr.kazepoy.fhir.fml.server` | `FmlServlet`, `FmlTester`, `FmlServicePlugin` (sérialisation, permissions), `FmlChannelPlugin` (relecture des maps au déploiement) | serveur |
+| `fr.kazepoy.fhir.fml.bridge` | Le moteur, côté HAPI | `lib/fhir-fml-bridge.jar` |
 
-Le pont (`org.oie.fhir.fml.bridge`) :
+Le pont (`fr.kazepoy.fhir.fml.bridge`) :
 
 | Classe | Rôle |
 |---|---|
@@ -281,8 +281,8 @@ map écrite et vérifiée dans l'onglet **Map**.
 
 | Test | Ce qu'il vérifie |
 |---|---|
-| [FmlBridgeTest](../src/test/java/org/oie/fhir/fml/bridge/FmlBridgeTest.java) | Modèle OIE, source FHIR, modèle HL7 v2 typé, maps importées, Bundle transaction et 24 transformations génériques/typées concurrentes sans contamination |
-| [FhirFmlTransformStepTest](../src/test/java/org/oie/fhir/fml/FhirFmlTransformStepTest.java) | Script exécuté dans Rhino avec E4X, publication dans `msg` ou une variable, échec d'une map inconnue, test sur message exemple, map de démo valide contre `ExampleLabPatient`, sérialisation XML du channel |
+| [FmlBridgeTest](../src/test/java/fr/kazepoy/fhir/fml/bridge/FmlBridgeTest.java) | Modèle OIE, source FHIR, modèle HL7 v2 typé, maps importées, Bundle transaction et 24 transformations génériques/typées concurrentes sans contamination |
+| [FhirFmlTransformStepTest](../src/test/java/fr/kazepoy/fhir/fml/FhirFmlTransformStepTest.java) | Script exécuté dans Rhino avec E4X, publication dans `msg` ou une variable, échec d'une map inconnue, test sur message exemple, map de démo valide contre `ExampleLabPatient`, sérialisation XML du channel |
 | [fml-transform.test.js](../webadmin/test/unit/fml-transform.test.js) | Enregistrement et valeurs par défaut de l'étape dans l'administration web |
 | [fml-completion.test.js](../webadmin/test/unit/fml-completion.test.js) | Complétion locale et squelette avec éléments cibles requis |
 

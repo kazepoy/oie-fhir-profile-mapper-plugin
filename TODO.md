@@ -232,6 +232,20 @@ Prochain lot : FML, S-2 sur les modèles typés et adaptateur Strict Parser (lot
 - `mvn clean package` : 147 tests Java et 43 tests Node ; 13 tests Python passent.
   L'image Docker complète se construit, packages publics inclus.
 
+## Vérification du lot A — 13 novembre 2026
+
+- Namespace Java, types XStream, appels Rhino, frontend, schémas, outils,
+  documentation active et canaux déplacés vers `fr.kazepoy.fhir`. Le `groupId`
+  Maven utilise le même namespace ; routes et nom du plugin restent inchangés.
+- Rupture volontaire : aucun alias ni adaptateur n'autorise les anciens exports.
+  Les tests de sérialisation relisent les deux nouveaux types et refusent les
+  types retirés.
+- Les trois JAR ont été inspectés, puis l'image Docker reconstruite. Les neuf
+  canaux réécrits sont importés et déployés ; Profile Mapper, FML inline et
+  FML typé passent avec leurs vrais chargeurs de classes.
+- `mvn clean package` : 147 tests Java et 43 tests Node ; 13 tests Python.
+  Rejeu complet vert et 20 parcours Playwright verts sous Chromium et WebKit.
+
 La suite initialement envisagée regroupait S-3, performance, durcissement,
 namespace et préparation 1.0. Elle a été reclassée : seul le namespace reste
 immédiat ; les autres travaux sont reportés dans le [plan actif](doc/plan-suite.md).

@@ -14,7 +14,7 @@ try:
 except ModuleNotFoundError:
     from check_mapping import errors, SCHEMA
 
-TYPE = "org.oie.fhir.mapper.FhirProfileMapperStep"
+TYPE = "fr.kazepoy.fhir.mapper.FhirProfileMapperStep"
 PATTERN = re.compile(r"<" + re.escape(TYPE) + r"(?:\s[^>]*)?>.*?</" + re.escape(TYPE) + r">", re.S)
 
 

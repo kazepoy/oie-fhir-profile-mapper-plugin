@@ -52,7 +52,7 @@
           <script>channelMap.put('__demoEtape', 'TRANSFORMATION');
 channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
         </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
-        <org.oie.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+        <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
           <name>Patient</name>
           <sequenceNumber>1</sequenceNumber>
           <enabled>true</enabled>
@@ -77,7 +77,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <formatVersion>2</formatVersion>
           <context>demo-labo</context>
           <validation>inherit</validation>
-        </org.oie.fhir.mapper.FhirProfileMapperStep>
+        </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
         <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
           <name>Fin chronométrage transformation</name>
           <sequenceNumber>2</sequenceNumber>

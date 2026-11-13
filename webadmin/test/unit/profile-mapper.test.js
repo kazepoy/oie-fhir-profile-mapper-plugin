@@ -15,7 +15,7 @@ import { mapperBundleDeclarations, mapperSample } from "../../src/host/channel-c
 import { mapperDiagnostic, traceRows as mapperTraceRows, traceExport as mapperTraceExport } from "../../src/fhir/diagnostics.js";
 import { functionCompletion as completeSymbols, completeFunction, completionContext as mapperCompletionContext } from "../../src/fhir/completion.js";
 import { profileExtensions } from "../../src/fhir/assistance.js";
-const catalog = JSON.parse(fs.readFileSync(fileURLToPath(new URL("../../../src/main/resources/org/oie/fhir/mapper/mapper-functions.json", import.meta.url)), "utf8"));
+const catalog = JSON.parse(fs.readFileSync(fileURLToPath(new URL("../../../src/main/resources/fr/kazepoy/fhir/mapper/mapper-functions.json", import.meta.url)), "utf8"));
 const functionCompletion = (...args) => completeSymbols(catalog, ...args);
 
 const el = (id, min, max, types, more = {}) => ({ id, path: id.replace(/:[^.]+/g, ""), min, max, base: { max: more.baseMax ?? max }, type: types.map((t) => (typeof t === "string" ? { code: t } : t)), ...more });
@@ -261,7 +261,7 @@ test("FHIR help uses the selected release and a core definition anchor rather th
 
 test("source suggestions use sample structure and JSON round trips preserve rules and OIE identity", () => {
   assert.deepEqual(plain(mapperSourcePaths({ dataType: "JSON", message: '{"rows":[{"ipp":"001"}]}' })), ['msg["rows"]', 'msg["rows"][0]', 'msg["rows"][0]["ipp"]']);
-  const original = { __type: "org.oie.fhir.mapper.FhirProfileMapperStep", sequenceNumber: "2", enabled: false,
+  const original = { __type: "fr.kazepoy.fhir.mapper.FhirProfileMapperStep", sequenceNumber: "2", enabled: false,
     action: "resource", resourceType: "Patient", mappings: JSON.stringify([{ id: "stable-1", key: "Patient.active", type: "boolean", expression: "true", path: [["active"]] }]), bundleTargets: "[]", customMetadata: "kept" };
   const edited = mapperJsonImport(original, JSON.stringify({ ...original, sequenceNumber: "99", enabled: true, mappings: original.mappings.replace('true', 'false') }));
   assert.equal(edited.sequenceNumber, "2"); assert.equal(edited.enabled, false); assert.equal(edited.customMetadata, "kept");
@@ -480,7 +480,7 @@ test("completing a helper preserves nested expressions, selections and existing 
 });
 
 test("Bundle choices are enabled declarations preceding this step in the same transformer", () => {
-  const type = "org.oie.fhir.mapper.FhirProfileMapperStep";
+  const type = "fr.kazepoy.fhir.mapper.FhirProfileMapperStep";
   const declaration = (sequence, name, enabled = true) => ({ __type: type, sequenceNumber: String(sequence), name, profileUrl: name,
     action: "createBundle", bundleName: name, enabled });
   const patient = { __type: type, sequenceNumber: "2", name: "Patient", profileUrl: "Patient" };
@@ -492,7 +492,7 @@ test("Bundle choices are enabled declarations preceding this step in the same tr
 
 
 test("sample messages use the current transformer's inbound template and separate channel/connector storage", () => {
-  const type = "org.oie.fhir.mapper.FhirProfileMapperStep";
+  const type = "fr.kazepoy.fhir.mapper.FhirProfileMapperStep";
   const step = { __type: type, name: "Patient", sequenceNumber: "1", profileUrl: "Patient" };
   const source = { metaDataId: "0", transformer: { inboundDataType: "XML", inboundTemplate: "<result><ipp>000123</ipp></result>", elements: [step] } };
   const destination = { metaDataId: "1", transformer: { inboundDataType: "XML", inboundTemplate: "<delimited><row><ipp>000456</ipp></row></delimited>", elements: [step] } };

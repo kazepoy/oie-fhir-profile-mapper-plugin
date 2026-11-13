@@ -30,7 +30,7 @@ le lien vise la propriété principale de la ressource de base ; il ne prétend
 pas documenter les contraintes propres à l'IG.
 
 Le catalogue unique est
-[`mapper-functions.json`](../src/main/resources/org/oie/fhir/mapper/mapper-functions.json),
+[`mapper-functions.json`](../src/main/resources/fr/kazepoy/fhir/mapper/mapper-functions.json),
 publié par `GET /api/extensions/fhir-profile-mapper/functions`. Un test Java
 vérifie que chaque fonction publiée existe dans le runtime réel. Le navigateur
 utilise ce catalogue ; les implémentations des fonctions restent dans le runtime

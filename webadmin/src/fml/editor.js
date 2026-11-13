@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 import { t as tr } from "../i18n/index.js";
 // ---------------------------------------------------------------------------------------------
-// FHIR FML Transform transformer step (org.oie.fhir.fml.FhirFmlTransformStep). The step runs an FML
+// FHIR FML Transform transformer step (fr.kazepoy.fhir.fml.FhirFmlTransformStep). The step runs an FML
 // map (StructureMap) found in its profile locations on the message, seen through the generic OIE
 // logical model (OieMessage), and publishes the FHIR resource it makes. The maps are written
 // elsewhere: this editor only chooses one and tests it on a sample message.
@@ -15,7 +15,7 @@ import { HelpButton } from "../host/help.js";
 import { FML_HELP } from "../host/help-texts.js";
 import { cachedFhirSettings, fhirContext, loadFhirSettings } from "../host/settings.js";
 
-export const FML_TYPE = "org.oie.fhir.fml.FhirFmlTransformStep";
+export const FML_TYPE = "fr.kazepoy.fhir.fml.FhirFmlTransformStep";
 const FML_API = "/extensions/fhir-fml";
 const DATA_TYPES = ["HL7V2", "XML", "JSON", "RAW", "DELIMITED"];
 

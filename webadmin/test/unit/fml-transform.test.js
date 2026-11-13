@@ -20,7 +20,7 @@ test("registers the step with the defaults of the Java step", () => {
   assert.equal(step.label, "FHIR FML Transform");
   assert.equal(p.oie.STEP_TYPES[FML_TYPE].label, "FHIR FML Transform");
   assert.deepEqual(step.create(), {
-    __type: "org.oie.fhir.fml.FhirFmlTransformStep", name: "", enabled: true, fhirVersion: "R4", profiles: "", mapUrl: "", mapSource: "",
+    __type: "fr.kazepoy.fhir.fml.FhirFmlTransformStep", name: "", enabled: true, fhirVersion: "R4", profiles: "", mapUrl: "", mapSource: "",
     sourceModel: "oie-message", sourceModelUrl: "", context: "",
     variable: "", validateOutput: true, contextVariables: ""
   });

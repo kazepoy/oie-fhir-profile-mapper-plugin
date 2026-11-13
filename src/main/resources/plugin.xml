@@ -5,14 +5,14 @@
   <mirthVersion>${oie.version}</mirthVersion>
   <description>Mapper graphique de profils FHIR, runtime et services de test. Transformation FML sur un modèle logique OIE. Requiert FHIR Data Type 1.5.1.</description>
   <serverClasses>
-    <string>org.oie.fhir.mapper.server.FhirProfileMapperPlugin</string>
-    <string>org.oie.fhir.mapper.server.FhirMapperChannelPlugin</string>
-    <string>org.oie.fhir.fml.server.FmlServicePlugin</string>
-    <string>org.oie.fhir.fml.server.FmlChannelPlugin</string>
+    <string>fr.kazepoy.fhir.mapper.server.FhirProfileMapperPlugin</string>
+    <string>fr.kazepoy.fhir.mapper.server.FhirMapperChannelPlugin</string>
+    <string>fr.kazepoy.fhir.fml.server.FmlServicePlugin</string>
+    <string>fr.kazepoy.fhir.fml.server.FmlChannelPlugin</string>
   </serverClasses>
   <library type="SHARED" path="fhir-profile-mapper-server.jar" />
-  <apiProvider type="SERVLET_INTERFACE" name="org.oie.fhir.mapper.FhirProfileServletInterface" />
-  <apiProvider type="SERVER_CLASS" name="org.oie.fhir.mapper.server.FhirProfileServlet" />
-  <apiProvider type="SERVLET_INTERFACE" name="org.oie.fhir.fml.FmlServletInterface" />
-  <apiProvider type="SERVER_CLASS" name="org.oie.fhir.fml.server.FmlServlet" />
+  <apiProvider type="SERVLET_INTERFACE" name="fr.kazepoy.fhir.mapper.FhirProfileServletInterface" />
+  <apiProvider type="SERVER_CLASS" name="fr.kazepoy.fhir.mapper.server.FhirProfileServlet" />
+  <apiProvider type="SERVLET_INTERFACE" name="fr.kazepoy.fhir.fml.FmlServletInterface" />
+  <apiProvider type="SERVER_CLASS" name="fr.kazepoy.fhir.fml.server.FmlServlet" />
 </pluginMetaData>

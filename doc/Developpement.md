@@ -8,10 +8,10 @@ Le format des mappings, son schéma et les exemples exécutés par
 | Chemin | Rôle |
 |---|---|
 | `pom.xml` | Module Maven, Java 17, API OIE 4.7.0 fournie par le moteur |
-| `src/main/java/org/oie/fhir/mapper/` | Compilateur des étapes et métadonnées de déploiement |
-| `src/main/java/org/oie/fhir/mapper/server/` | Cycle de vie, API et exécution des tests de l'éditeur |
-| `src/main/java/org/oie/fhir/mapper/integration/` | Adaptateur du datatype et pont de catalogue |
-| `src/main/java/org/oie/fhir/fml/` | Étape FHIR FML Transform, son API et son pont vers le moteur FML (`lib/fhir-fml-bridge.jar`) |
+| `src/main/java/fr/kazepoy/fhir/mapper/` | Compilateur des étapes et métadonnées de déploiement |
+| `src/main/java/fr/kazepoy/fhir/mapper/server/` | Cycle de vie, API et exécution des tests de l'éditeur |
+| `src/main/java/fr/kazepoy/fhir/mapper/integration/` | Adaptateur du datatype et pont de catalogue |
+| `src/main/java/fr/kazepoy/fhir/fml/` | Étape FHIR FML Transform, son API et son pont vers le moteur FML (`lib/fhir-fml-bridge.jar`) |
 | `webadmin/src/` | Éditeurs Web Admin : `profile-mapper/editor.js`, `fml/editor.js` et `fml/language.js`, `fhir/` (complétion, lecture de l'exemple, historique, comparaison de résultats), `trace/`, `host/` (éditeur de code, références, action de message) |
 | `webadmin/test/` | `unit/` : tests Node sans navigateur ; `e2e/` : parcours Playwright contre la démo |
 | `webadmin/web/plugin.js` | Bundle **généré** par `npm run build` (esbuild) ; ne pas l'éditer |

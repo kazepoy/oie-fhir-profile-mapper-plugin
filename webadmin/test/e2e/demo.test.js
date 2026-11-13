@@ -19,7 +19,7 @@ describe("the step editors in the demo", () => {
         action: platform.messageActions().some(a => a.id === "fhir-mapper-trace")
       };
     });
-    assert.deepEqual(state.steps, ["org.oie.fhir.mapper.FhirProfileMapperStep", "org.oie.fhir.fml.FhirFmlTransformStep"]);
+    assert.deepEqual(state.steps, ["fr.kazepoy.fhir.mapper.FhirProfileMapperStep", "fr.kazepoy.fhir.fml.FhirFmlTransformStep"]);
     assert.ok(state.references >= 8);
     assert.equal(state.action, true);
   });
@@ -155,7 +155,7 @@ describe("the step editors in the demo", () => {
       return { panel: platform.settingsPanels().some(p => p.label === "FHIR Mapper"),
         contexts: JSON.parse(await platform.api.get("/extensions/fhir-profile-mapper/settings", {}, { raw: true })).contexts.map(c => c.name) };
     });
-    assert.deepEqual(settings, { panel: true, contexts: ["demo-labo"] });
+    assert.deepEqual(settings, { panel: true, contexts: ["demo-labo", "fr-core-2.2.0", "eu-laboratory-2.0.0"] });
   });
 
   test("the samples saved with the step run and match their expected results", async () => {

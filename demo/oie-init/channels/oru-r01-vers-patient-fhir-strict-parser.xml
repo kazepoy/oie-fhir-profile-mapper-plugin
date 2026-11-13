@@ -52,7 +52,7 @@
           <script>channelMap.put('__demoEtape', 'TRANSFORMATION');
 channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
         </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
-        <org.oie.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+        <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
           <name>Patient</name>
           <sequenceNumber>1</sequenceNumber>
           <enabled>true</enabled>
@@ -73,7 +73,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <terminologyCacheSeconds>300</terminologyCacheSeconds>
           <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
           <mappings>[{"key": "Patient.identifier:ipp.value", "element": "Patient.identifier:ipp.value", "type": "string", "expression": "fhirFind(msg['ORU_R01.PATIENT_RESULT']['ORU_R01.PATIENT']['PID']['PID.3'], function (cx) { return cx['CX.5'] == 'PI'; })['CX.1'].toString()", "path": [["identifier", "ipp#0"], ["value"]]}, {"key": "Patient.name", "each": "msg['ORU_R01.PATIENT_RESULT']['ORU_R01.PATIENT']['PID']['PID.5']", "variable": "n", "path": [["name", "#0"]]}, {"key": "Patient.name.use", "element": "Patient.name.use", "type": "code", "expression": "({L: 'official', D: 'usual', M: 'maiden'})[n['XPN.7'].toString()]", "path": [["name", "#0"], ["use"]]}, {"key": "Patient.name.family", "element": "Patient.name.family", "type": "string", "expression": "n['XPN.1']['FN.1'].toString()", "path": [["name", "#0"], ["family"]]}, {"key": "Patient.name.given", "element": "Patient.name.given", "type": "string", "expression": "n['XPN.2'].toString()", "path": [["name", "#0"], ["given", "#0"]]}, {"key": "Patient.name.given[1]", "element": "Patient.name.given[1]", "type": "string", "expression": "n['XPN.3'].toString()", "path": [["name", "#0"], ["given", "#1"]]}, {"key": "Patient.gender", "element": "Patient.gender", "type": "code", "expression": "msg['ORU_R01.PATIENT_RESULT']['ORU_R01.PATIENT']['PID']['PID.8'].toString()", "path": [["gender"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0001-to-gender", "source": "http://terminology.hl7.org/CodeSystem/v2-0001", "target": "", "unmapped": "none", "keepSource": false}}, {"key": "Patient.birthDate", "element": "Patient.birthDate", "type": "date", "expression": "msg['ORU_R01.PATIENT_RESULT']['ORU_R01.PATIENT']['PID']['PID.7']['TS.1'].toString()", "path": [["birthDate"]]}, {"key": "Patient.identifier:ipp.system", "element": "Patient.identifier:ipp.system", "fixed": "http://example.org/fhir/oru2fhir/sid/ipp", "when": 1, "path": [["identifier", "ipp#0"], ["system"]]}]</mappings>
-        </org.oie.fhir.mapper.FhirProfileMapperStep>
+        </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
         <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
           <name>Fin chronométrage transformation</name>
           <sequenceNumber>2</sequenceNumber>

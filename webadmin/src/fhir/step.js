@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 import { t as tr } from "../i18n/index.js";
 import { parseMappings } from "./model.js";
-export const MAPPER_TYPE = "org.oie.fhir.mapper.FhirProfileMapperStep";
+export const MAPPER_TYPE = "fr.kazepoy.fhir.mapper.FhirProfileMapperStep";
 export function mapperSourcePaths(sample) {
   const paths = [];
   const add = (path) => { if (!paths.includes(path) && paths.length < 200) paths.push(path); };

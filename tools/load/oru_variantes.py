@@ -31,7 +31,7 @@ HTTP = urllib.request.build_opener(
     urllib.request.ProxyHandler({}),
     urllib.request.HTTPSHandler(context=ssl._create_unverified_context()),
 )
-STEP = "org.oie.fhir.mapper.FhirProfileMapperStep"
+STEP = "fr.kazepoy.fhir.mapper.FhirProfileMapperStep"
 
 # nom, port, validation du mapper, trace du mapper, validation du datatype FHIR en sortie.
 VARIANTES = [

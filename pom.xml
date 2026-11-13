@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.oie.fhir</groupId>
+  <groupId>fr.kazepoy.fhir</groupId>
   <artifactId>fhir-profile-mapper</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <name>FHIR Profile Mapper</name>
@@ -242,8 +242,8 @@
             <id>default-jar</id>
             <configuration>
               <excludes>
-                <exclude>org/oie/fhir/mapper/integration/bridge/**</exclude>
-                <exclude>org/oie/fhir/fml/bridge/**</exclude>
+                <exclude>fr/kazepoy/fhir/mapper/integration/bridge/**</exclude>
+                <exclude>fr/kazepoy/fhir/fml/bridge/**</exclude>
                 <exclude>webadmin/**</exclude>
               </excludes>
             </configuration>
@@ -255,7 +255,7 @@
             <configuration>
               <classifier>bridge</classifier>
               <includes>
-                <include>org/oie/fhir/mapper/integration/bridge/**</include>
+                <include>fr/kazepoy/fhir/mapper/integration/bridge/**</include>
                 <include>META-INF/LICENSE</include>
               </includes>
             </configuration>
@@ -268,7 +268,7 @@
             <configuration>
               <classifier>fml-bridge</classifier>
               <includes>
-                <include>org/oie/fhir/fml/bridge/**</include>
+                <include>fr/kazepoy/fhir/fml/bridge/**</include>
                 <include>META-INF/LICENSE</include>
               </includes>
             </configuration>

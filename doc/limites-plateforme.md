@@ -130,6 +130,6 @@ fait), *Contourné* (le mapper vit avec), *Signalé* (issue ouverte), *Résolu* 
   sans modificateur public, `parse` et `write` de même.
 - **Impact.** Le mapper ne peut pas le réutiliser pour lire et écrire les ressources
   sans perdre la précision des décimaux.
-- **Contournement.** Copie interne reprise du POC (`org.oie.fhir.mapper.util.FhirJson`,
+- **Contournement.** Copie interne reprise du POC (`fr.kazepoy.fhir.mapper.util.FhirJson`,
   MPL 2.0), couverte par `FhirFacadeTest`.
 - **Demande amont.** Aucune pour l'instant : la copie est petite et stable.

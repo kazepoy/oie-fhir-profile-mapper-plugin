@@ -2757,7 +2757,7 @@ function completeness(tree, saved) {
 }
 
 // src/fhir/step.js
-var MAPPER_TYPE = "org.oie.fhir.mapper.FhirProfileMapperStep";
+var MAPPER_TYPE = "fr.kazepoy.fhir.mapper.FhirProfileMapperStep";
 function mapperSourcePaths(sample) {
   const paths = [];
   const add = (path) => {
@@ -5476,7 +5476,7 @@ ${reminders}
 }
 
 // src/fml/editor.js
-var FML_TYPE = "org.oie.fhir.fml.FhirFmlTransformStep";
+var FML_TYPE = "fr.kazepoy.fhir.fml.FhirFmlTransformStep";
 var FML_API = "/extensions/fhir-fml";
 var DATA_TYPES = ["HL7V2", "XML", "JSON", "RAW", "DELIMITED"];
 var React2;

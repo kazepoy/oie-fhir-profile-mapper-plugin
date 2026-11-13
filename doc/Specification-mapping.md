@@ -18,10 +18,10 @@ Ressources et Bundles FHIR (validation selon validateOutput)
 ```
 
 L'éditeur n'écrit pas de JavaScript : il enregistre une description déclarative.
-[FhirProfileMapperStep.java](../src/main/java/org/oie/fhir/mapper/FhirProfileMapperStep.java)
-la contrôle et la compile ; [profile-mapper-runtime.js](../src/main/resources/org/oie/fhir/mapper/profile-mapper-runtime.js)
+[FhirProfileMapperStep.java](../src/main/java/fr/kazepoy/fhir/mapper/FhirProfileMapperStep.java)
+la contrôle et la compile ; [profile-mapper-runtime.js](../src/main/resources/fr/kazepoy/fhir/mapper/profile-mapper-runtime.js)
 fournit les conversions, itérations, traductions, l'assemblage des Bundles et la
-publication ; [FhirMapperLifecycle.java](../src/main/java/org/oie/fhir/mapper/FhirMapperLifecycle.java)
+publication ; [FhirMapperLifecycle.java](../src/main/java/fr/kazepoy/fhir/mapper/FhirMapperLifecycle.java)
 repère au déploiement la dernière étape de chaque transformeur.
 
 ## 1. Unité du contrat et compatibilité
@@ -32,7 +32,7 @@ un résultat commun. Le channel conserve connecteurs, types de données, templat
 scripts et réglages de transport dans son export XML OIE.
 
 Une étape est représentée par les propriétés de
-`org.oie.fhir.mapper.FhirProfileMapperStep`. Dans l'administration web, `__type`
+`fr.kazepoy.fhir.mapper.FhirProfileMapperStep`. Dans l'administration web, `__type`
 identifie cette classe. Dans l'export XML, le nom de l'élément identifie la classe.
 `mappings` et `bundleTargets` sont des **chaînes contenant du JSON**, et non des
 tableaux directement inclus dans l'objet de l'étape.
@@ -291,7 +291,7 @@ Les fonctions `hl7…` attendent un segment du XML HL7 v2 plat d'OIE ; la limite
 défaut est un segment du type de départ, `[]` la retire. Le catalogue complet,
 avec signatures et exemples, est servi par `GET /functions` ([assistants](Assistants-et-IA.md)).
 Les méthodes Java `FhirFacade.validate`, `toJson`, `toXml`, `translate`, `lookup`
-et `validateCode` restent accessibles via `Packages.org.oie.fhir.mapper.fhir.FhirFacade`.
+et `validateCode` restent accessibles via `Packages.fr.kazepoy.fhir.mapper.fhir.FhirFacade`.
 
 ## 6. Ordre d'exécution et publication
 

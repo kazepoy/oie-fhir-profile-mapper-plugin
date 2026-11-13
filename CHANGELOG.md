@@ -2,6 +2,11 @@
 
 ## Non publié (branche `feat/refonte`)
 
+- **Rupture de namespace** : les classes Java, les types sérialisés des
+  transformeurs, les ponts isolés et le `groupId` Maven utilisent désormais
+  `fr.kazepoy.fhir`. Les canaux de développement du dépôt ont été réécrits ;
+  les anciens exports contenant `org.oie.fhir.*` ne sont volontairement plus
+  lisibles et aucun adaptateur de compatibilité n'est fourni.
 - **Aperçu multi-étapes** : exécution des Profile Mapper activés du même
   transformeur, références réelles, finalisation atomique des Bundles, ressources
   intermédiaires et variables finales consultables. Périmètre mémorisé par sample.

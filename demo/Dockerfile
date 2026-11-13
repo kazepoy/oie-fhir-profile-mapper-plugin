@@ -93,5 +93,5 @@ COPY --from=plugins --chown=engine:engine /extensions/ /opt/engine/extensions/
 COPY --from=mapper --chown=engine:engine /extensions/ /opt/engine/extensions/
 COPY --from=downloads --chown=engine:engine /tmp/hl7.fhir.fr.core-2.2.0.tgz /tmp/hl7.fhir.eu.laboratory-2.0.0.tgz /fhir-packages/
 # OIE ne journalise que les erreurs par défaut pour les loggers non configurés.
-RUN printf '\nlogger.fhirProfileMapper.name = org.oie.fhir.mapper\nlogger.fhirProfileMapper.level = INFO\nlogger.fhirFml.name = org.oie.fhir.fml\nlogger.fhirFml.level = INFO\n' >> conf/log4j2.properties
+RUN printf '\nlogger.fhirProfileMapper.name = fr.kazepoy.fhir.mapper\nlogger.fhirProfileMapper.level = INFO\nlogger.fhirFml.name = fr.kazepoy.fhir.fml\nlogger.fhirFml.level = INFO\n' >> conf/log4j2.properties
 LABEL org.opencontainers.image.title="OIE 4.7.0, Web Support, FHIR Data Type, RBAC, Flow UI et FHIR Profile Mapper"
