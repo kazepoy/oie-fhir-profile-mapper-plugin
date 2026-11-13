@@ -28,10 +28,11 @@ la réflexion explicite ; aucun accès package-private externe ne dépend du
 namespace actuel. Le renommage doit donc intervenir avant la création de
 nouveaux exports et canaux.
 
-Les nouveaux canaux et exports écriront uniquement les types
-`fr.kazepoy.fhir.*`. La lecture des types historiques `org.oie.fhir.*` doit être
-préservée et testée ; le mécanisme exact (alias XStream ou petites classes de
-compatibilité) sera choisi au début du lot, sans conserver deux implémentations.
+Le projet est encore en développement : cette migration assume une rupture
+franche. Tous les canaux, exemples et fixtures du dépôt seront réécrits avec les
+types `fr.kazepoy.fhir.*`. Les exports de développement contenant
+`org.oie.fhir.*` ne seront plus lisibles. Aucun alias XStream, classe adaptatrice
+ou double enregistrement de type ne sera conservé.
 
 ### 1.2 Positionnement des deux transformeurs
 
@@ -72,8 +73,8 @@ Les lots 1 à 7 sont clos et constituent la base de non-régression :
   primitives et couverture R4/R4B/R5 ;
 - démo Docker avec profils locaux, FR Core et HL7 Europe Laboratory.
 
-Tout nouveau lot doit conserver la lecture des canaux existants, les résultats
-de la démo et les contrôles suivants :
+Après le lot A, tout nouveau lot devra conserver la lecture des canaux réécrits
+avec `fr.kazepoy.fhir.*`, les résultats de la démo et les contrôles suivants :
 
 ```sh
 mvn clean package
@@ -104,23 +105,24 @@ Travail :
    `fr.kazepoy.fhir.fml`, ponts isolés compris.
 3. Changer le `groupId`, les classes de plugin, les appels `Packages.*`, les
    constantes `__type`, les loggers et les noms chargés par réflexion.
-4. Choisir le mécanisme minimal de lecture des deux anciens types d'étape :
-   `org.oie.fhir.mapper.FhirProfileMapperStep` et
-   `org.oie.fhir.fml.FhirFmlTransformStep`.
-5. Convertir la démo et les exemples vers les nouveaux types ; ne jamais
-   réécrire silencieusement un canal utilisateur lors de sa simple lecture.
-6. Mettre à jour la spécification, le schéma et la documentation d'intégration.
+4. Réécrire tous les canaux, exemples, fixtures, schémas et outils du dépôt avec
+   les nouveaux types.
+5. Supprimer les listes blanches, constantes et branches de code devenues
+   inutiles ; ne laisser aucun chemin de compatibilité `org.oie.fhir.*`.
+6. Mettre à jour la spécification, la documentation d'intégration et le
+   CHANGELOG en signalant la rupture des exports de développement.
 
 Critères de fin :
 
-- aucun code actif, export de démo ou exemple neuf n'écrit `org.oie.fhir.*` ;
-- un export historique de chaque transformeur est importé, exécuté, exporté
-  sous le nouveau type puis relu ;
-- les listes blanches XStream restent limitées aux classes nécessaires ;
+- hors documents historiques, aucune source, ressource, configuration, fixture
+  ou documentation active ne contient `org.oie.fhir.*` ;
+- un canal réécrit de chaque transformeur est importé, exécuté, exporté puis
+  relu sous son type `fr.kazepoy.fhir.*` ;
+- les listes blanches XStream n'autorisent que les nouvelles classes ;
 - les trois JAR (serveur, catalogue, FML) fonctionnent avec leurs vrais
   chargeurs dans l'image Docker ;
 - suite complète, rejeu de démo et tests navigateur verts ;
-- la compatibilité et sa durée sont consignées dans le CHANGELOG.
+- la rupture volontaire des exports antérieurs est consignée dans le CHANGELOG.
 
 Hors périmètre : migration v1→v2 du contenu des étapes, changement des routes,
 renommage marketing du plugin ou modification fonctionnelle des mappings.
@@ -129,8 +131,8 @@ renommage marketing du plugin ou modification fonctionnelle des mappings.
 
 **Statut : proposé, à arbitrer après A.**
 
-Objectif : éviter qu'une nouvelle fonction rende incompatibles des canaux déjà
-produits.
+Objectif : définir la première base contractuelle stable après le renommage et
+éviter les ruptures futures non versionnées.
 
 Travail :
 
@@ -141,7 +143,8 @@ Travail :
 - formaliser les modèles sources : `OieMessage`, modèle logique HL7 v2 typé et
   ressource FHIR entrante ;
 - documenter ce qui est portable en FML et ce qui reste spécifique à OIE ;
-- construire des fixtures de compatibilité conservées dans le temps ;
+- construire des fixtures de régression conservées dans le temps à partir du
+  nouveau namespace ;
 - décider si le manifeste des packages et la version du profil restent
   informatifs ou deviennent des contraintes d'exécution.
 
@@ -265,7 +268,7 @@ reportée ; elle ne doit plus être perdue dans plusieurs documents.
 
 | Élément | Destination | État |
 |---|---|---|
-| Namespace `fr.kazepoy.fhir` et anciens types `org.oie.fhir` | A | décidé |
+| Namespace `fr.kazepoy.fhir`, sans lecture de `org.oie.fhir` | A | décidé ; rupture de développement assumée |
 | Contrat du tableau `mappings` | B | proposé |
 | Contrats `OieMessage`, HL7 v2 typé et source FHIR | B | proposé |
 | Manifeste de packages et verrouillage de profil | B | à décider |
@@ -315,8 +318,8 @@ reportée ; elle ne doit plus être perdue dans plusieurs documents.
 4. Une nouvelle abstraction, option ou préférence doit répondre à au moins deux
    cas réels de la matrice ; sinon elle reste locale.
 5. Les résultats de tests et limites non testées sont consignés séparément.
-6. Les anciens exports sont des fixtures de compatibilité, jamais des exemples
-   à copier pour de nouveaux canaux.
+6. La base de compatibilité commence après le lot A ; les exports
+   `org.oie.fhir.*` antérieurs ne sont ni conservés ni utilisés comme fixtures.
 7. Le plan actif ne contient pas de version fictive : une version n'est annoncée
    qu'au moment de préparer réellement sa release.
 
