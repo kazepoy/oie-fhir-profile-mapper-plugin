@@ -11,7 +11,7 @@
       <ORU_R01.OBSERVATION>
         <OBX>
           <OBX.3><CE.1>GLU</CE.1></OBX.3>
-          <OBX.5><Varies.1>5.10</Varies.1></OBX.5>
+          <OBX.5>5.10</OBX.5>
         </OBX>
       </ORU_R01.OBSERVATION>
     </ORU_R01.ORDER_OBSERVATION>

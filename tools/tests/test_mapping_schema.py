@@ -49,6 +49,30 @@ class MappingSchemaTest(unittest.TestCase):
                 with self.subTest(field=field, value=value):
                     self.assertTrue(list(errors({"action": "resource", "resourceType": "Patient", field: value})))
 
+    def test_demo_matrix_covers_exports_and_their_test_material(self):
+        examples = ROOT / "demo/examples"
+        channels = ROOT / "demo/oie-init/channels"
+        cases = json.loads((examples / "channels.json").read_text())["channels"]
+        names = [case["channel"] for case in cases]
+        self.assertEqual(len(names), len(set(names)))
+        self.assertEqual({p.name for p in channels.glob("*.xml")}, set(names))
+        for case in cases:
+            with self.subTest(channel=case["channel"]):
+                self.assertTrue(case["group"])
+                self.assertTrue(case["tags"])
+                self.assertTrue((examples / case["input"]).is_file())
+                root = ET.parse(channels / case["channel"]).getroot()
+                self.assertTrue(root.findtext("sourceConnector/transformer/inboundTemplate"))
+                mappers = list(root.iter("fr.kazepoy.fhir.mapper.FhirProfileMapperStep"))
+                if mappers:
+                    samples = [sample for step in mappers for sample in json.loads(step.findtext("samples") or "[]")]
+                    self.assertTrue(samples)
+                    self.assertTrue(all(sample.get("message") and sample.get("expected") for sample in samples))
+                else:
+                    preview = case["preview"]
+                    self.assertTrue((examples / preview["input"]).is_file())
+                    self.assertIn("resourceType", json.loads((examples / preview["expected"]).read_text()))
+
     def test_rule_forms_and_translation(self):
         step = json.loads((EXAMPLES / "patient.step.json").read_text())
         rule = {"key": "Patient.gender", "expression": "msg.gender", "path": [["gender"]],

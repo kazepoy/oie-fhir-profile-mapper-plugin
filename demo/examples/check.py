@@ -160,6 +160,29 @@ def check_transformer_preview(export_name, filename, expected, expected_document
     print(f"OK aperçu multi-étapes : {export_name}, mêmes sorties que le canal déployé")
 
 
+def check_fml_previews():
+    """Rejoue les maps exportées avec la représentation source adaptée au test."""
+    from tools.run_tests import normalize
+    manifest = json.loads((EXAMPLES / "channels.json").read_text())
+    for case in manifest["channels"]:
+        if "preview" not in case:
+            continue
+        preview = case["preview"]
+        export = EXAMPLES.parents[1] / "demo/oie-init/channels" / case["channel"]
+        node = ET.parse(export).getroot().find(
+            "sourceConnector/transformer/elements/fr.kazepoy.fhir.fml.FhirFmlTransformStep")
+        step = {child.tag: child.text or "" for child in node}
+        request = {"step": step, "dataType": preview["dataType"],
+                   "message": (EXAMPLES / preview["input"]).read_text()}
+        result = json.loads(api("/extensions/fhir-fml/test", "application/json", json.dumps(request).encode()))
+        assert not result["errors"], (case["channel"], result["errors"])
+        assert result["validationPerformed"] is True
+        assert not [i for i in result["issues"] if i.get("severity") in ("error", "fatal")], result["issues"]
+        expected = (EXAMPLES / preview["expected"]).read_text()
+        assert normalize(result["output"]) == normalize(expected), case["channel"]
+        print(f"OK aperçu FML : {case['channel']}, résultat attendu et validation")
+
+
 def main():
     for filename, count in [("oru-r01-labo.er7", 12), ("oru-r01-minimal.er7", 4)]:
         value = json.loads(post("ORU_PORT", 8081, "oru", filename, "text/plain"))
@@ -182,11 +205,13 @@ def main():
     assert [entry["resource"]["resourceType"] for entry in fml["entry"]] == ["Patient", "Observation"], fml
     assert fml["entry"][0]["resource"]["identifier"][0]["value"] == "100001", fml
     assert fml["entry"][1]["resource"]["code"]["text"] == "GLU", fml
+    assert fml["entry"][1]["resource"]["valueString"] == "5.10", fml
     print("OK ORU Strict Parser → Bundle par FML typé (PIDtoPatient importée)")
     # La même map écrite dans l'étape (mapSource), sans fichier de map sur le serveur.
     inline = json.loads(post("FML_INLINE_PORT", 8089, "patient", "oru-r01-minimal.er7", "text/plain"))
     assert inline == patient, inline
     print("OK ORU → Patient par la map FML écrite dans l'étape, identique")
+    check_fml_previews()
 
     transaction = json.loads(post("LAB_BUNDLES_PORT", 8083, "labo", "oru-r01-labo.er7", "text/plain"))
     message = messages("labo")[0]

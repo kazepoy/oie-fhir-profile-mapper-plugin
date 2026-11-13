@@ -2,6 +2,11 @@
 
 ## Non publié (branche `feat/refonte`)
 
+- **Exemples de démo** : matrice de couverture et manifeste avec groupes/tags,
+  messages entrants préchargés et neuf samples Profile Mapper avec attendu sur
+  les sept canaux. Les deux aperçus FML sont comparés à leurs attendus.
+  La map FML typée lit désormais `OBX.5.value` selon le XML réel du Strict
+  Parser : le résultat biologique `5.10` n'est plus omis dans la démo.
 - **Documentation** : `doc/` est organisé par public entre manuel multilingue,
   référence, architecture, développement, démo et historique. Un index principal
   et des index de section définissent l'autorité de chaque document ; la CI

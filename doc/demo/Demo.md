@@ -31,14 +31,19 @@ remplacer les anciens réglages de démonstration.
 
 ## Ce que montre chaque canal
 
+La [matrice des exemples](Matrice-exemples.md) classe les canaux par groupes et
+tags, précise les samples disponibles et distingue les capacités démontrées
+des cas encore à construire. Les sept canaux Profile Mapper ont des samples
+enregistrés avec attendu ; les deux aperçus FML sont rejoués par `check.py`.
+
 | Canal | Port | Fonctions montrées |
 |---|---|---|
 | ORU R01 vers Bundle FHIR | 8081 | Bundle nommé, sept étapes, itérations de ressources, références entre étapes (`fhirRef`), traductions ConceptMap, **trace des messages traités** (action *FHIR mapping trace* dans Messages), **exemples enregistrés** sur l'étape Patient |
 | ORU R01 vers Patient FHIR | 8082 | Une ressource seule, sur le **contexte FHIR `demo-labo`** (installé par l'initialisation, visible dans *Settings › FHIR Mapper*) ; slices, itération, condition, traduction ; **deux exemples avec résultat attendu** (*Run all* dans l'onglet Test) |
-| ORU R01 vers deux Bundles labo FHIR | 8083 | Deux Bundles (transaction et document) qui partagent les mêmes ressources, résultat en variable, chaînes de destinations |
-| SQL XML vers Patient FHIR | 8084 | Source XML, accents et zéros initiaux |
-| CSV patients métier vers Patient FHIR | 8085 | Nettoyage à la source, mapping en destination |
-| CSV patients métier vers collection | 8086 | Bundle `collection` |
+| ORU R01 vers deux Bundles labo FHIR | 8083 | Deux Bundles (transaction et document) qui partagent les mêmes ressources, résultat en variable, chaînes de destinations ; sample multi-étapes sur Patient |
+| SQL XML vers Patient FHIR | 8084 | Source XML, accents et zéros initiaux ; sample avec Patient attendu |
+| CSV patients métier vers Patient FHIR | 8085 | Nettoyage à la source, mapping en destination ; sample XML nettoyé |
+| CSV patients métier vers collection | 8086 | Bundle `collection` ; sample multi-étapes des dix lignes nettoyées |
 | ORU R01 vers Bundle FHIR (FML typé) | 8087 | Strict Parser, modèle logique HL7 v2 typé, map `ORUR01toBundle` important `PIDtoPatient`, Bundle transaction Patient + Observation |
 | ORU R01 vers Patient FHIR (strict) | 8088 | Strict Parser HL7 v2 : mêmes règles, autres chemins |
 | ORU R01 vers Patient FHIR (FML inline) | 8089 | **Map FML écrite dans l'étape** (onglet Map, *Check*), sans fichier de map, sur le contexte `demo-labo` |

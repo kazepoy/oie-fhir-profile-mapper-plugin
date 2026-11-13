@@ -26,7 +26,7 @@ group ORUR01toBundle(source src : ORU, target bundle : Bundle) {
               identifier.CE_1 as component then { component.value as code -> observation.code as cc, cc.text = code "code"; } "component";
             } "identifier";
             obx.OBX_5 as resultValue then {
-              resultValue.Varies_1 as component then { component.value as value -> observation.value = value "value"; } "component";
+              resultValue.value as value -> observation.value = value "value";
             } "result-value";
           } "observation";
         } "observation-entry";

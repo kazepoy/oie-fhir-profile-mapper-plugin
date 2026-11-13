@@ -209,7 +209,20 @@ une réécriture générale de l'éditeur.
 
 ### Lot D — Matrice de démonstration et de vérité
 
-**Statut : proposé.**
+**Statut : premier sous-lot livré ; extension de la matrice encore à prioriser.**
+
+La [matrice des exemples](demo/Matrice-exemples.md) constitue l'inventaire de
+couverture : neuf exports classés, sept canaux Profile Mapper avec samples et
+attendus, deux aperçus FML rejouables. Les manques y sont explicites ; les tests
+Java R4B/R5 et les contextes d'IG disponibles ne valent pas encore démonstration
+sur des canaux déployés. La demande actuelle avance ce sous-lot avant B.
+
+Vérification du 13 novembre 2026 : 147 tests Java, 43 tests frontend et 14
+tests outils passent. Les neuf canaux sont importés, relus et redéployés dans
+la démo ; le rejeu couvre leurs sorties, neuf samples Profile Mapper et deux
+aperçus FML avec validation. Les 20 parcours navigateur Chromium passent.
+La map/modèle FML de démonstration a été corrigée pour lire la valeur directe
+d'OBX.5 émise par le Strict Parser, désormais contrôlée dans le rejeu.
 
 Créer une matrice de capacités plutôt qu'une accumulation de canaux. Chaque cas
 porte des tags, un sample préchargé, un résultat attendu et, quand pertinent, un

@@ -1,0 +1,68 @@
+{
+  "channels": [
+    {
+      "channel": "oru-r01-vers-bundle-fhir.xml",
+      "group": "mapper-hl7v2",
+      "tags": ["R4", "HL7V2", "transaction", "references", "terminologie-locale", "trace"],
+      "input": "oru-r01-labo.er7"
+    },
+    {
+      "channel": "oru-r01-vers-patient-fhir.xml",
+      "group": "mapper-hl7v2",
+      "tags": ["R4", "HL7V2", "profil-local", "slices", "contextes", "samples"],
+      "input": "oru-r01-minimal.er7"
+    },
+    {
+      "channel": "oru-r01-vers-deux-bundles-labo-fhir.xml",
+      "group": "mapper-hl7v2",
+      "tags": ["R4", "HL7V2", "transaction", "document", "multi-bundles", "variables"],
+      "input": "oru-r01-labo.er7"
+    },
+    {
+      "channel": "oru-r01-vers-patient-fhir-strict-parser.xml",
+      "group": "mapper-hl7v2",
+      "tags": ["R4", "HL7V2", "strict-parser", "XML-type", "profil-local"],
+      "input": "oru-r01-minimal.er7"
+    },
+    {
+      "channel": "sql-xml-vers-patient-fhir.xml",
+      "group": "mapper-metier",
+      "tags": ["R4", "XML", "SQL-simule", "accents", "identifiants"],
+      "input": "patient-result-sql.xml"
+    },
+    {
+      "channel": "csv-patients-metier-vers-patient-fhir.xml",
+      "group": "mapper-metier",
+      "tags": ["R4", "CSV", "batch", "nettoyage", "mapping-destination"],
+      "input": "patients-metier-10.csv"
+    },
+    {
+      "channel": "csv-patients-metier-vers-bundle-collection-fhir.xml",
+      "group": "mapper-metier",
+      "tags": ["R4", "CSV", "collection", "nettoyage", "mapping-destination"],
+      "input": "patients-metier-10.csv"
+    },
+    {
+      "channel": "oru-r01-vers-bundle-fhir-fml-type.xml",
+      "group": "fml",
+      "tags": ["R4", "HL7V2", "strict-parser", "modele-logique", "imports", "transaction"],
+      "input": "oru-r01-minimal.er7",
+      "preview": {
+        "dataType": "XML",
+        "input": "oru-r01-minimal-strict.xml",
+        "expected": "expected/fml-typed-bundle.json"
+      }
+    },
+    {
+      "channel": "oru-r01-vers-patient-fhir-fml-inline.xml",
+      "group": "fml",
+      "tags": ["R4", "HL7V2", "inline", "OieMessage", "profil-local", "terminologie-locale"],
+      "input": "oru-r01-minimal.er7",
+      "preview": {
+        "dataType": "HL7V2",
+        "input": "oru-r01-minimal.er7",
+        "expected": "expected/fml-inline-patient.json"
+      }
+    }
+  ]
+}
