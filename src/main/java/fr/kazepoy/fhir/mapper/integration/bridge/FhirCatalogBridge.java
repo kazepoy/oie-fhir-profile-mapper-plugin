@@ -69,8 +69,10 @@ public final class FhirCatalogBridge {
     // Compatibility boundary for FHIR Data Type 1.5.1. No private HAPI fields are used.
     // Do not retain a catalogue: the datatype owns the lifetime of its specification.
     private Catalog catalog(Map<String, String> options) throws Exception {
+        // validator.computeIfAbsent takes its own lock before specification takes the engine monitor.
+        // Warming up under that monitor would invert the order used by concurrent validation.
+        invoke("warmUp", new Class<?>[] { Map.class }, options);
         synchronized (engine) {
-            invoke("warmUp", new Class<?>[] { Map.class }, options);
             FhirVersionEnum version = version(options.get(FHIR_VERSION));
             FhirContext ctx = (FhirContext) invoke("validationContext", new Class<?>[] { FhirVersionEnum.class }, version);
             IValidationSupport base = (IValidationSupport) invoke("specification", new Class<?>[] { FhirVersionEnum.class, FhirContext.class }, version, ctx);

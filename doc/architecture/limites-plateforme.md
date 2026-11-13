@@ -81,6 +81,9 @@ fait), *Contourné* (le mapper vit avec), *Signalé* (issue ouverte), *Résolu* 
   donne l'erreur « FHIR Data Type 1.5.1 compatibility: missing … ». Le catalogue
   n'est pas conservé entre deux requêtes. Voir
   [Intégration](Integration-FHIR-Data-Type.md#pont-de-catalogue).
+  Le pont appelle `warmUp` avant de prendre le verrou du moteur : l'ordre inverse
+  provoquait un interblocage avec une validation concurrente, confirmé par un
+  dump des threads de la démo. `FhirCatalogBridgeTest` contrôle cet ordre.
 - **Demande amont.** Petite API en lecture seule : profils chargés, snapshot par URL,
   lecture des ConceptMaps et `$translate` local. Le mainteneur y est ouvert et attend
   les signatures exactes ([#29](https://github.com/matthydehoog/fhir-datatype-Eclipse-OIE/issues/29)).
