@@ -1,38 +1,38 @@
 # Plan de suite du projet
 
-État de référence : branche `feat/refonte`, après le lot 7 et le commit
-`3249013`, au 13 novembre 2026.
+État actualisé le 13 novembre 2026 sur `feat/refonte`, après le namespace,
+le rangement documentaire et les douze canaux de démonstration (`2e3acca`).
 
 Ce document est la **référence active pour les travaux à venir**. Le
 [plan de refonte initial](history/plan-refonte.md) explique les décisions et phases qui
 ont conduit à l'état actuel ; il est conservé comme historique. Le fichier
-[`TODO.md`](../TODO.md) reste une boîte d'entrée et un journal des lots livrés :
+[`TODO.md`](../TODO.md) reste un suivi synthétique et une boîte d'entrée :
 une idée qui y est ajoutée n'entre dans la feuille de route qu'après classement
-dans le présent document.
+dans le présent document. Les diagnostics de reprise et comptes rendus clos
+sont dans le [journal historique](history/reprise-refonte.md).
 
 ## 1. Décisions acquises
 
 ### 1.1 Namespace
 
-Le namespace Java définitif sera `fr.kazepoy.fhir` :
+Le namespace Java définitif est `fr.kazepoy.fhir`, livré au lot A :
 
-- `org.oie.fhir.mapper.*` devient `fr.kazepoy.fhir.mapper.*` ;
-- `org.oie.fhir.fml.*` devient `fr.kazepoy.fhir.fml.*` ;
-- le `groupId` Maven devient `fr.kazepoy.fhir` ;
+- les packages Mapper utilisent `fr.kazepoy.fhir.mapper.*` ;
+- les packages FML utilisent `fr.kazepoy.fhir.fml.*` ;
+- le `groupId` Maven est `fr.kazepoy.fhir` ;
 - le nom de l'extension, son chemin `fhir-profile-mapper` et ses routes HTTP
   restent stables.
 
 `org.oie` ne donne aucun accès particulier aux classes OIE. Les accès au moteur
 et au datatype utilisent leurs API publiques, un chargeur de classes dédié ou
 la réflexion explicite ; aucun accès package-private externe ne dépend du
-namespace actuel. Le renommage doit donc intervenir avant la création de
-nouveaux exports et canaux.
+namespace choisi. Le renommage a précédé les nouveaux exports et canaux.
 
 Le projet est encore en développement : cette migration assume une rupture
-franche. Tous les canaux, exemples et fixtures du dépôt seront réécrits avec les
+franche. Tous les canaux, exemples et fixtures du dépôt ont été réécrits avec les
 types `fr.kazepoy.fhir.*`. Les exports de développement contenant
-`org.oie.fhir.*` ne seront plus lisibles. Aucun alias XStream, classe adaptatrice
-ou double enregistrement de type ne sera conservé.
+`org.oie.fhir.*` ne sont plus lisibles. Aucun alias XStream, classe adaptatrice
+ou double enregistrement de type n'est conservé.
 
 ### 1.2 Positionnement des deux transformeurs
 
@@ -61,7 +61,8 @@ isolé du canal laboratoire restent à réexaminer lorsque ce chantier reprendra
 
 ### 1.4 Arbitrages pour les lots suivants
 
-- Après le namespace, le prochain chantier sera la formalisation des contrats.
+- Après les sous-lots documentaires et de démo demandés, le prochain chantier
+  décidé reste la formalisation des contrats (B).
 - Le format `mappings` reste évolutif jusqu'à la version 1.0 ; le lot B doit
   d'abord décrire et tester son état courant, sans annoncer une stabilité 1.0.
 - La contrainte éventuelle sur le manifeste et la version des packages sera
@@ -112,8 +113,9 @@ sérialisation.
 
 ## 3. Feuille de route active
 
-Les lots A puis B sont décidés. Les lots C à F forment une proposition ordonnée
-à ajuster ensemble avant leur mise en œuvre.
+Le lot A est clos. B reste le prochain chantier décidé. Des sous-lots de D et F
+ont été avancés à la demande de l'utilisateur ; ils ne clôturent pas ces lots.
+C, les compléments de D et E restent à concevoir ou à prioriser ensemble.
 
 ### Lot A — Namespace définitif
 
@@ -157,7 +159,7 @@ retirés. Les trois JAR ne contiennent que les packages `fr/kazepoy/fhir` attend
 
 ### Lot B — Contrats avant nouvelles fonctions
 
-**Statut : prochain lot décidé ; périmètre à préciser après A.**
+**Statut : prochain lot décidé ; cadrage à partir du socle et des exemples livrés.**
 
 Objectif : définir la première base contractuelle stable après le renommage et
 éviter les ruptures futures non versionnées.
@@ -174,7 +176,8 @@ Travail :
 - construire des fixtures de régression conservées dans le temps à partir du
   nouveau namespace ;
 - décider si le manifeste des packages et la version du profil restent
-  informatifs ou deviennent des contraintes d'exécution.
+  informatifs ou deviennent des contraintes d'exécution ; préciser dépendances
+  transitives, conflits de versions et ordre de résolution des ressources.
 
 Critère de fin : une référence de contrat autonome, des exemples valides et
 invalides, et des tests qui échouent sur toute rupture non versionnée.
@@ -247,11 +250,11 @@ Cas à couvrir :
 
 | Famille | Cas minimaux |
 |---|---|
-| Releases | ressource simple R4 ; Organization ou autre ressource démontrant une fonction propre à R5 ; rejeu R4B |
-| Profils | profil R4 externe ; FR Core ; profil dans un package IG |
+| Releases | R4 et Organization R5 démontrés ; FML R5 avec Organization/`Permission` et rejeu déployé R4B à prioriser |
+| Profils | FR Core démontré ; autre profil R4 externe (package DevDays à évaluer) et EU Laboratory à prioriser |
 | FML | map simple ; map d'un IG ; map inline ; surcharge ; imports imbriqués |
 | Sources | HL7 v2 classique ; Strict Parser typé ; CSV ; XML ; JSON ; FHIR |
-| Modèles | ressource FHIR ; modèle logique HL7 v2 fourni pour ce chantier ; StructureDefinition logique ne dérivant pas d'une ressource |
+| Modèles | FHIR et fixture HL7 v2 typée démontrés ; IG HL7 v2 à demander à l'utilisateur et modèle métier arbitraire source/cible à choisir |
 | Terminologie | ConceptMap locale ; serveur externe léger avec données maîtrisées ; indisponibilité et absence de correspondance |
 | Diagnostics | erreur de source, de map, de profil, de référence, de validation et limite connue |
 
@@ -327,6 +330,13 @@ plugin et le manuel des agents utilisateurs d'OIE sont séparés. La revue des
 traductions, des captures et des recouvrements de fond reste à conduire avec
 les lots fonctionnels concernés.
 
+Complément de rangement : journal « Reprise de la refonte » déplacé dans
+`history/reprise-refonte.md`, TODO limité aux travaux ouverts, instructions de
+développement `AGENTS.md` en anglais. Le rôle des deux transformeurs est expliqué
+dans l'index et les manuels. Restent la revue de fond, l'inventaire exhaustif des
+contournements/fixtures et la consignation explicite du choix FHIR Data Type/HAPI
+vis-à-vis de Matchbox ; aucun changement de moteur n'est décidé par ce rangement.
+
 ## 4. Registre exhaustif des écarts et idées
 
 Cette table garantit le classement des éléments connus. Une ligne peut rester
@@ -334,29 +344,30 @@ reportée ; elle ne doit plus être perdue dans plusieurs documents.
 
 | Élément | Destination | État |
 |---|---|---|
-| Namespace `fr.kazepoy.fhir`, sans lecture de `org.oie.fhir` | A | décidé ; rupture de développement assumée |
-| Contrat du tableau `mappings` | B | proposé |
-| Contrats `OieMessage`, HL7 v2 typé et source FHIR | B | proposé |
-| Manifeste de packages et verrouillage de profil | B | à décider |
-| Liens visuels source → cible | C | proposé |
+| Namespace `fr.kazepoy.fhir`, sans lecture de `org.oie.fhir` | A | livré ; rupture de développement assumée |
+| Contrat du tableau `mappings` | B | prochain lot décidé ; format évolutif avant 1.0 |
+| Contrats `OieMessage`, HL7 v2 typé et source FHIR | B | prochain lot décidé |
+| Manifeste, verrouillage, dépendances et ordre des packages | B | à décider ; dépendances directes FR Core livrées dans la démo |
+| Liens visuels source → cible et sélection d'un élément source | C | proposé |
 | Réorganisation des onglets et trois zones | C | proposé |
 | Réutilisation de l'éditeur JSON OIE | C | à étudier |
 | Évaluation d'expression sur sample | C | à étudier |
 | Liens profonds vers les IG publiés | C | proposé |
 | Mode simple/avancé | C | à concevoir, pas de flag avant maquette |
-| Réglages de fonctions expérimentales | C | à justifier au cas par cas |
-| Amélioration de l'autocomplétion | C | besoin à préciser |
+| Réglages de fonctions expérimentales (IA, trace, complétion) | C | à justifier au cas par cas |
+| Amélioration de l'autocomplétion Monaco | C | besoin à préciser |
 | Préférence de langue explicite | C | à arbitrer ; navigateur déjà pris en charge |
-| Canaux R4/R4B/R5, IG, FR Core, sources et terminologie | D | proposé |
+| Canaux R4/R4B/R5, IG, FR Core, sources et terminologie | D | R4/R5, FR Core et sources livrés ; R4B déployé, FML R5/Permission, autres IG et terminologie externe restent ouverts |
 | Maps publiées, surchargées et imbriquées | D puis E | proposé |
-| Samples, groupes et tags de chaque canal | D | proposé |
+| Samples, groupes et tags de chaque canal | D puis E | 3 groupes/tags natifs, 11 samples Mapper et 3 aperçus FML livrés ; samples FML enregistrés restants |
 | Édition d'une dérivation de map canonique | E | proposé |
 | Navigation et diagnostics dans les imports FML | E | proposé |
 | Trace FML par groupe/règle | E | faisabilité à étudier |
 | Jeux d'essai FML comparables au Profile Mapper | E | proposé |
-| Rôle respectif des deux transformeurs | F | décision acquise à documenter |
+| Rôle respectif des deux transformeurs | F | expliqué dans l'index et les manuels ; à préserver |
 | Réorganisation de toute la documentation | F | structure et index livrés ; revue de fond continue |
-| Inventaire des hacks et prérequis OIE/HAPI | F | proposé |
+| Inventaire des hacks, fixtures et prérequis OIE/HAPI | F | registre plateforme existant ; exhaustivité et alternatives à revoir |
+| Choix FHIR Data Type/HAPI et place de Matchbox | F | moteur actuel effectif ; décision explicite à consigner |
 | Revue des traductions | F | proposé |
 | `doc/TEMP.md` et documents orphelins | F | note classée dans l'historique ; contrôle automatique actif |
 | Revue complète de véracité et état de l'art | B, D, E, F | à faire par preuves, pas comme un lot vague |
@@ -389,14 +400,12 @@ reportée ; elle ne doit plus être perdue dans plusieurs documents.
 7. Le plan actif ne contient pas de version fictive : une version n'est annoncée
    qu'au moment de préparer réellement sa release.
 
-## 6. Prochaine décision après le namespace
+## 6. Prochaine étape
 
-Après le lot A, choisir ensemble entre :
+Reprendre **B — contrats**, déjà choisi, en partant des formats courants et des
+douze exemples. Cadrer d'abord les références et fixtures manquantes, puis
+arbitrer les contraintes de packages pendant ce lot. Ne pas annoncer le format
+comme figé pour la 1.0 avant cet arbitrage.
 
-1. **B — contrats**, pour stabiliser le produit avant toute nouvelle fonction ;
-2. **C — maquette du studio**, si l'ergonomie est le risque prioritaire ;
-3. **D — matrice de vérité**, si la priorité est d'augmenter immédiatement la
-   confiance dans les deux moteurs et les IG.
-
-Le lot E ne devrait pas commencer avant ce choix : son interface et ses contrats
-dépendent directement de B, C et D.
+Les compléments de D restent à prioriser selon la matrice ; aucun nouveau canal
+n'est engagé automatiquement. La conception de C et le lot E restent à venir.

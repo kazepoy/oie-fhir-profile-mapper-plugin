@@ -26,7 +26,8 @@ plusieurs documents.
 
 La [feuille de route active](plan-suite.md) classe les travaux futurs. Les
 changements livrés sont consignés dans le [CHANGELOG](../CHANGELOG.md) et le
-[journal des lots](../TODO.md).
+[journal de reprise](history/reprise-refonte.md). Le [TODO](../TODO.md) ne
+contient que les travaux ouverts et les idées à classer.
 
 ## Contrôle
 

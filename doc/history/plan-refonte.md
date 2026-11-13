@@ -27,7 +27,7 @@ git et le [CHANGELOG](../../CHANGELOG.md) pour ce qui a été livré).
 | 6, 7 | À faire. |
 
 La reprise, les écarts constatés dans le code et les critères de validation par
-lot sont suivis dans [TODO.md](../../TODO.md). Les numéros de version ci-dessous
+lot sont conservés dans le [journal de reprise](reprise-refonte.md). Les numéros de version ci-dessous
 restent des jalons du plan initial, pas des versions déjà publiées.
 
 ---

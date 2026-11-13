@@ -20,6 +20,8 @@
   et des index de section définissent l'autorité de chaque document ; la CI
   refuse les liens locaux cassés et les pages orphelines. Les agents de
   développement et les agents utilisateurs d'OIE disposent de manuels séparés.
+  Le journal de reprise est archivé dans `doc/history/`, le TODO ne conserve
+  que les travaux ouverts et le `AGENTS.md` de développement est en anglais.
 - **Rupture de namespace** : les classes Java, les types sérialisés des
   transformeurs, les ponts isolés et le `groupId` Maven utilisent désormais
   `fr.kazepoy.fhir`. Les canaux de développement du dépôt ont été réécrits ;

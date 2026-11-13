@@ -1,21 +1,16 @@
-# Instructions pour développer le plugin
+# Plugin development instructions
 
-Ce fichier s'adresse aux agents qui modifient les sources Java, frontend,
-outils, tests ou documentation de ce dépôt. Il ne constitue pas le manuel d'un
-agent utilisateur chargé de construire des canaux OIE.
+This file is for agents modifying this repository's Java sources, frontend,
+tools, tests or documentation. Instructions for agents building OIE channels
+with the plugin are in the separate [agent manual](doc/agent-manual/README.md).
 
-## Règles du projet
+## Project rules
 
-- Lire [le guide de développement](doc/development/Developpement.md) et la
-  [feuille de route active](doc/plan-suite.md) avant un changement structurel.
-- Conserver le namespace `fr.kazepoy.fhir` et ne pas ajouter de compatibilité
-  avec les anciens types de développement.
-- Ne pas modifier directement `webadmin/web/plugin.js` : le reconstruire depuis
-  `webadmin/src`.
-- Préserver les changements utilisateur sans rapport avec la tâche, notamment
-  les fichiers non suivis.
-- Vérifier au minimum `mvn clean package`, les tests Python concernés et
-  `python3 tools/check_doc_links.py` lorsque la documentation change.
-
-Les instructions destinées aux agents utilisateurs d'OIE sont dans le
-[manuel agent](doc/agent-manual/README.md).
+- Read the [development guide](doc/development/Developpement.md) and the
+  [active roadmap](doc/plan-suite.md) before making structural changes.
+- Keep the `fr.kazepoy.fhir` namespace. Do not add compatibility with former
+  development types.
+- Do not edit `webadmin/web/plugin.js` directly; rebuild it from `webadmin/src`.
+- Preserve unrelated user changes, including untracked files.
+- Run at least `mvn clean package` and the relevant Python tests. When changing
+  documentation, also run `python3 tools/check_doc_links.py`.

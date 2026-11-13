@@ -1,328 +1,72 @@
-# Reprise de la refonte
+# Travaux ouverts
 
-> **Journal et boîte d'entrée.** Les comptes rendus des lots restent ici pour
-> l'historique. La référence active pour les prochains travaux est désormais le
-> [plan de suite](doc/plan-suite.md). La section de diagnostic initial ci-dessous
-> décrit l'état de reprise et contient donc volontairement des constats périmés.
+Le [plan actif](doc/plan-suite.md) définit les décisions, le périmètre et les
+critères de fin. Cette liste en est le suivi synthétique et la boîte d'entrée.
+Le [journal de reprise](doc/history/reprise-refonte.md) conserve les anciens
+diagnostics et comptes rendus ; les travaux livrés figurent dans le
+[CHANGELOG](CHANGELOG.md).
 
-État vérifié le 12 novembre 2026 sur `feat/refonte`, à partir de `4907d15`.
-Le [plan de refonte initial](doc/history/plan-refonte.md) reste la référence historique.
-Ce suivi découpe le travail restant en lots vérifiables ; une phase partielle
-ne doit pas être présentée comme terminée.
+## Prochain lot décidé — B : contrats
 
-## Diagnostic de reprise
+- [ ] Décrire et tester le contrat courant de `mappings`, les propriétés de
+  l'étape et le script généré, sans annoncer une stabilité 1.0.
+- [ ] Formaliser les modèles sources `OieMessage`, HL7 v2 typé et FHIR direct,
+  avec fixtures valides et invalides et limites de portabilité FML/OIE.
+- [ ] Arbitrer le manifeste des packages, le verrouillage des profils, les
+  dépendances transitives, conflits de versions et ordre de résolution.
 
-- Le dépôt était propre. Le socle frontend, les deux étapes, les contextes
-  serveur, le catalogue et la trace sont présents. CI : tests Node et Python,
-  build frontend, puis assemblage Maven.
-- Les tests frontend du mappeur chargent encore `editor.js` dans un contexte VM
-  avec React simulé. Le découpage en modules testables directement reste à faire,
-  ainsi que l'i18n. Il n'existe pas encore de script `npm run check`, pourtant
-  cité dans le plan.
-- `pom.xml` embarque le bundle frontend existant sans lancer sa construction.
-  La CI et le Dockerfile construisent ce bundle ; `mvn package` seul peut donc
-  embarquer un frontend périmé. Corriger ce point dans le lot de socle restant.
-- Le format 1 reste lu : `fromJson` ne réalise pas la migration automatique
-  annoncée dans la cible initiale. L'état d'avancement du plan indique que
-  l'outil de migration et l'index persistant sont volontairement différés.
-  Conserver cette compatibilité et distinguer ce choix d'une migration livrée.
-- `FhirMapperTester` prévisualise une étape seule. Les références et les Bundles
-  multi-étapes restent à tester ensemble avant de clore la phase 4.
-- FML : map inline, langage et contrôle sont présents. `FmlBridge` synchronise
-  encore les opérations sur le contexte. Modèles typés et pool ne sont pas
-  livrés ; le choix du moteur pour les maps typées reste à vérifier par S-2.
-- La présence d'une politique de validation ne prouve pas l'absence de double
-  validation avec le datatype. Le coût réel et la cause des délais sous charge
-  restent à établir par mesure (S-3), avant de choisir une optimisation.
+## À concevoir — C : interface
 
-## Lots de réalisation
+- [ ] Revoir les onglets, les zones source/cible/inspecteur et la place du JSON
+  (éditeur natif OIE ou vue dédiée).
+- [ ] Étudier les liens source → résultat pour retrouver les règles en erreur,
+  la sélection d'un élément source et l'évaluation d'expressions sur le sample.
+- [ ] Concevoir un mode simple/avancé ; justifier les réglages par un besoin
+  réel, y compris les fonctions expérimentales (IA, trace, complétion).
+- [ ] Revoir la complétion Monaco et les liens vers l'élément exact d'un IG.
+- [ ] Vérifier la préférence de langue Web Admin ; à défaut, prévoir une
+  préférence du plugin initialisée depuis le navigateur.
 
-| Lot | Travail | Critère de fin |
-|---|---|---|
-| 1 — fait | Notes et activation par règle dans le mappeur, y compris la racine ; historique et documentation | Test unitaire : valeur et condition sur le même élément indépendantes, IDs conservés, effacement de note, Undo/Redo. Test Playwright : note, désactivation et restauration. |
-| 2 — fait | Inspecteur de l'élément sélectionné : métadonnées FHIR, règles, aide et diagnostics ; extraire uniquement les composants nécessaires | Sélection et édition dans la vue normale et en plein écran ; accès clavier ; diagnostics vers la bonne règle ; aucune perte au rechargement. |
-| 3 — fait | Assistance restante : extensions du profil, ConceptMaps pertinentes, menu contextuel et duplication de branche | Exemples de profil avec extensions et slices ; duplication avec nouveaux IDs ; parcours clavier et sauvegarde/relecture. |
-| 4 — fait | Terminer le socle : découpage ciblé des éditeurs, anglais/français, thèmes, contrôle frontend et assemblage reproductible | Tests des modules sans VM pour le code extrait ; interface dans les deux langues ; ZIP construit depuis des sources frontend modifiées ; parcours clair/sombre et rôle restreint. |
-| 5 — fait | Aperçu multi-étapes, puis outil de rejeu des samples et import/export de tableaux/documentation | Patient + Observation avec référence réelle ; deux Bundles nommés ; erreur localisée par étape ; mêmes sorties dans l'aperçu et dans la démo ; outil en échec si résultat attendu différent. |
-| 6 — fait | FML : S-2 sur les maps typées, adaptateur Strict Parser, complétion et squelette, puis concurrence/pool selon mesure | `PIDtoPatient` et `ORUR01toBundle` rejoués avec modèles typés ; démo et documentation ; tests de transformations concurrentes sans contamination. |
-| 7 — fait | Sous-slices, discriminants complémentaires, contained, extensions des primitives, R4B/R5 | Cas de test par capacité et release ; profils FR Core/EU Lab dans la démo ; erreurs explicites pour les limites restantes. |
-| 8 | S-3 puis performance, durcissement, namespace et préparation 1.0 | Mesures avant/après versionnées ; seuils convenus tenus ; permissions et compatibilité des exports anciens vérifiées ; documentation et CHANGELOG à jour. |
+## À prioriser — D et E : exemples et FML
 
-L'ordre reprend le plan en terminant le studio avant les fonctions multi-étapes
-et FML. Les décisions de namespace et de moteur ne sont pas tranchées par cette
-reprise. Les performances du plan sont des cibles indicatives, pas des garanties.
+La [matrice](doc/demo/Matrice-exemples.md) fait autorité sur la couverture.
+Les douze canaux sont groupés et tagués dans OIE ; JSON, CSV, XML, HL7 v2,
+Strict Parser, source FHIR, Organization R5 et Patient FR Core sont démontrés.
+Organization R5 est un cas Profile Mapper : ce n'est pas une preuve FML R5.
 
-## Vérification du lot 1
+- [ ] Choisir les prochains cas utiles : canal R4B, FML R5 avec Organization et `Permission`,
+  profil R4 externe (package DevDays à évaluer), EU Laboratory, map publiée
+  dans un package IG et modèle logique métier arbitraire source/cible.
+- [ ] Demander à l'utilisateur l'IG HL7 v2 source à utiliser.
+- [ ] Démontrer une terminologie externe légère préchargée avec ConceptMaps,
+  avec absence de correspondance, indisponibilité et diagnostics.
+- [ ] Concevoir la dérivation éditable d'une map canonique et la navigation
+  dans les imports imbriqués, avec diagnostics dans la bonne source.
+- [ ] Ajouter les jeux d'essai FML enregistrés avec résultats attendus ; étudier
+  la faisabilité d'une trace par groupe/règle.
 
-- `cd webadmin && npm test` : 21 tests passent.
-- `cd webadmin && npm run build` : bundle régénéré.
-- `python3 -m unittest discover -s tools/tests` : 8 tests passent.
-- `mvn test -q` : 131 tests passent, aucun ignoré.
-- `cd webadmin && npm run test:e2e` : 9 tests passent sur la démo Docker locale
-  sous Chromium, après copie du bundle construit dans l'extension de la démo.
-  Le canal n'est pas enregistré par les tests.
+## Revue continue — F : documentation et preuves
 
-Ces contrôles ne clôturent ni les phases complètes, ni les mesures de charge,
-ni les parcours WebKit et rôle restreint, non rejoués pendant ce lot.
+- [ ] Revoir traductions, captures et cohérence des procédures avec les écrans.
+- [ ] Compléter l'inventaire des contournements, fixtures et prérequis OIE/HAPI,
+  avec preuves, alternatives et demandes amont dans le registre de plateforme.
+- [ ] Consigner explicitement le choix du moteur FHIR Data Type/HAPI et la place
+  écartée ou éventuelle de Matchbox, sans changer de moteur dans ce rangement.
+- [ ] Poursuivre la revue de véracité et les tests par capacité : contrats,
+  moteur, interface et limites documentées.
 
-## Vérification du lot 2
+L'organisation de `doc/`, la séparation des manuels d'agents et l'explication
+du rôle des deux transformeurs sont livrées. Les dépendances directes FR Core
+sont embarquées ; la résolution transitive générale reste ouverte au lot B.
 
-- Inspecteur extrait dans `webadmin/src/profile-mapper/inspector.js` ; les champs
-  de condition, itération et traduction réutilisent les contrôles de l'arbre.
-- `cd webadmin && npm test` : 23 tests passent. Métadonnées du profil, exemples,
-  valeurs fixes fausses, édition synchronisée, diagnostics vers la condition
-  ciblée et relecture de l'étape sérialisée sont couverts.
-- `cd webadmin && npm run build` : bundle régénéré, aide intégrée comprise.
-- `cd webadmin && npm run test:e2e` : 10 tests passent sous Chromium sur la démo,
-  avec sélection clavier, édition Monaco dans l'inspecteur, synchronisation avec
-  l'arbre, Undo, plein écran et disposition sur une largeur de 700 pixels.
-- Capture du plein écran inspectée visuellement. Aucun changement du serveur Java.
-  Les tests Java/Python du lot 1 n'ont pas été rejoués pour ce lot frontend.
+## Reporté par décision
 
-Le canal de la démo n'est pas enregistré par ces tests. Le bundle de l'extension
-locale est remplacé par celui construit depuis les sources. WebKit, rôle restreint
-et thème sombre restent à vérifier lors du lot de socle.
+S-3, charge, optimisations associées, double validation, runtime partagé/pools,
+durcissement/endurance/permissions finales, release 1.0, migration automatique
+format 1 → 2, index persistant et nouveaux caches. Les autres idées non
+priorisées restent classées dans le registre du plan.
 
-Après ajout de l'aide intégrée et régénération du bundle final, un dernier rejeu
-n'a pas pu ouvrir la démo : le socket Docker `/Users/admin/.docker/run/docker.sock`
-était absent et le port 8443 inaccessible. Les 10 tests avaient passé juste avant
-cette modification de texte. La copie de ce dernier bundle dans la démo n'a donc
-pas abouti ; `webadmin/web/plugin.js` contient bien l'aide finale.
+## Nouvelles idées à classer
 
-## Vérification du lot 3
-
-- Menu public de Web Admin : clic droit, Maj+F10 et bouton d'actions. Duplication
-  des occurrences mappées non itérées, dans la limite de cardinalité ; copie des
-  notes, traductions, conditions et activations ; nouveaux IDs conservés par
-  Undo/Redo, y compris après réutilisation d'une occurrence supprimée.
-- Extensions : choix des slices avec URL du profil, ou ajout d'une URL du
-  catalogue dans une occurrence générique libre. Pas d'ajout hors profil lorsque
-  le slicing est fermé. La démo ajoute une slice optionnelle `registrationMode`
-  et une extension `ExampleSourceLabel` non déclarée dans le profil Patient.
-- ConceptMaps : couples source/cible des groupes exposés par le serveur local et
-  distant ; propositions filtrées par systèmes ou binding. La table HL7 n'est pas
-  inférée d'une expression et le choix courant n'est pas modifié automatiquement.
-- Correction de deux problèmes révélés par le parcours : superposition du menu
-  en plein écran (WA-21) et parcours excessif des types récursifs lors d'une
-  recherche avec les extensions visibles. La recherche borne le parcours et
-  privilégie la branche sélectionnée, avec indication de résultats partiels.
-- `npm test` : 28 tests passent. Duplication, nouveaux IDs, Undo/Redo, export et
-  relecture JSON, génération de l'URL fixe d'une extension et filtrage par groupe
-  source/cible sont couverts.
-- `mvn test -q` : 131 tests passent ; les métadonnées des groupes ConceptMap sont
-  vérifiées via la façade. `python3 -m unittest discover -s tools/tests` : 8 tests.
-- `npm run test:e2e` : 13 tests passent sous Chromium sur la démo. Parcours clavier
-  du menu en plein écran, duplication et historique, choix d'extension du profil
-  et hors profil, résultat Patient et validation FHIR, filtrage des ConceptMaps.
-- `python3 demo/examples/check.py` : tous les exemples passent, y compris les
-  Bundles, références, FML, diagnostics et traces. Ce rejeu crée des messages de
-  démonstration. Aucun canal n'est modifié ou enregistré par les tests de l'éditeur.
-- Bundle frontend régénéré et ZIP Maven reconstruit après les tests. JAR serveur,
-  pont et bundle copiés dans la démo ; seul le service OIE a été redémarré.
-
-Le lot 4 ci-dessous termine le socle (découpage ciblé, i18n, contrôles et assemblage).
-La phase 3 du plan reste partielle : elle demande aussi un agencement complet
-à trois volets, les liaisons source/cible et une revue d'ergonomie.
-
-## Vérification du lot 4
-
-- Modèle FHIR, compilation, lecture/sérialisation d’étape, champs d’expression,
-  adaptation du catalogue et contexte du canal extraits en modules importables.
-  Les tests unitaires n’utilisent plus de VM ni de réécriture du code source.
-  Les éditeurs conservent l’orchestration ; le studio complet reste au plan.
-- Anglais/français choisis selon les préférences du navigateur, repli anglais ;
-  aides, contrôles accessibles, complétion et messages du plugin traduits.
-  Chemins FHIR, expressions et données conservés. Styles extraits et couleurs
-  sémantiques du thème Web Admin. [Guide i18n](doc/development/i18n.md) et
-  [captures françaises clair/sombre](doc/user-manual/fr/langues-et-themes.md).
-- `npm run check` : syntaxe de 43 modules et cohérence des 518 messages des
-  catalogues contrôlées. `npm test` : 31 tests passent, dont le choix de langue,
-  les paramètres et l’invariance des règles générées.
-- `mvn clean package` : reconstruction frontend avant copie des ressources,
-  131 tests Java et 31 tests Node passent. Dépendances npm verrouillées ;
-  `-DskipTests` ne désactive pas la reconstruction frontend.
-- `python3 tools/check_reproducible.py` : ZIP identique octet par octet après
-  copie dans un autre répertoire, suppression des dépendances Node et remplacement
-  du bundle par un contenu périmé. Horodatage d’archive fixé dans le POM ; le
-  contrôle est aussi exécuté en CI. Cela ne prouve pas la reproductibilité des
-  images Docker ni entre versions différentes des outils.
-- Build Docker de l’étage `mapper` réussi avec le moteur local OIE 4.7.0 : Node/npm
-  fournis à Maven, contrôle frontend, compilation et tests inclus.
-- 17 tests navigateur passent sous Chromium et WebKit : parcours existants,
-  français clair/sombre, repli anglais, aperçu, contrôle FML, réglages et 403
-  simulés. Un test RBAC supplémentaire couvre un véritable compte temporaire :
-  deux canaux autorisés, autre canal masqué, catalogue/édition disponibles,
-  HTTP 403 réels sur les deux aperçus et l’enregistrement des contextes, avec
-  explication française. Compte et rôle supprimés ensuite ; aucun canal ni
-  réglage n’est enregistré. Le bundle final est installé dans la démo locale.
-- `python3 -m unittest discover -s tools/tests` : 8 tests passent.
-
-Prochain lot : aperçu multi-étapes, rejeu des exemples et import/export (lot 5).
-
-## Vérification du lot 5 — 13 novembre 2026
-
-- `/test` conserve `step` pour l’aperçu isolé et accepte `steps` pour les
-  Profile Mapper ordonnés, avec le même contrôle de permission. Les scripts
-  reprennent l’assemblage de production, sans enregistrer de canal fictif.
-  Références réelles, sorties atomiques, ressources par étape et variables finales.
-- Périmètre explicite dans Test, enregistré dans `samples.scope` ; les anciens
-  samples restent isolés. Les autres types d’étapes ne sont pas exécutés.
-  Erreurs identifiées par étape ; les marqueurs et liens ne visent pas une règle
-  homonyme d’une autre étape. Les résultats attendus portent sur le message
-  sortant, pas sur les variables finales.
-- `tools/run_tests.py` : exports JSON et XML, groupement par connecteur et
-  transformeur, schéma hors ligne et exécution serveur. Échec sur erreur,
-  validation invalide ou différence avec l’attendu ; code non nul sans sample
-  en ligne. La CI vérifie les exports positifs hors ligne.
-- Comparaison canonique des propriétés JSON ; UUID renommés en préservant leurs
-  relations. Deux résultats dont les références diffèrent ne passent plus par
-  simple masquage de tous les UUID.
-- Import CSV/Markdown limité aux expressions de valeur et à leurs notes :
-  validation de toutes les cibles avant application, conservation des autres
-  règles et Undo en une opération. Exports de tableaux et documentation complète
-  des règles en Markdown/HTML, avec échappement du contenu HTML.
-- `mvn clean package` : 139 tests Java, 36 tests Node ; `npm run check` :
-  45 modules et 545 messages anglais/français. Python : 13 tests.
-- Le contrôle de démo compare les aperçus aux sorties des canaux déployés :
-  transaction simple, transaction et document labo, identités et références.
-  Le runner en ligne passe aussi sur le fixture à deux Bundles avec attendu.
-- Manuel enrichi avec les parcours multi-étapes et tableaux/documentation ;
-  API, schéma, guide de rejeu et limites documentés.
-
-Prochain lot : FML, S-2 sur les modèles typés et adaptateur Strict Parser (lot 6).
-
-## Vérification du lot 6 — 13 novembre 2026
-
-- Trois sources FML : modèle générique `OieMessage`, modèle logique HL7 v2 typé
-  alimenté par le Strict Parser, et ressource FHIR JSON/XML directe. Les anciens
-  exports restent en `oie-message` par défaut.
-- Adaptateur typé fondé sur le `StructureDefinition` des emplacements. Convention
-  xxx/HAPI vérifiée sur la hiérarchie réelle ORU_R01, y compris le groupe
-  répétable `OBSERVATION`, les composants CX/XPN/CE et les valeurs variables.
-- Fixtures représentatives `PIDtoPatient` et `ORUR01toBundle` ; la seconde importe
-  la première et construit un Bundle transaction Patient + Observation. Aucun IG
-  xxx canonique n'étant présent dans le dépôt, elles restent explicitement des
-  fixtures de contrat.
-- Complétion FML locale : mots-clés, transformations, fonctions FHIRPath, aliases,
-  groupes, variables et chemins de catalogue. Générateur de squelette avec `uses`,
-  groupe principal et TODO pour les éléments cibles requis.
-- Le verrou global d'exécution est supprimé : les objets mutables sont locaux à
-  la requête, le contexte et les maps ne sont partagés qu'en lecture. 24
-  transformations génériques/typées sur 8 threads passent sans contamination.
-  Aucun pool ajouté faute de mesure qui le justifie ; le chargement reste protégé.
-- `mvn clean package` : 143 tests Java et 38 tests Node. `npm run check` : 47
-  modules et 559 messages anglais/français. Le contrôle de démo passe sur tous
-  les canaux, dont Strict Parser → Bundle FML typé avec validation active.
-- Limite consignée : le contrôle statique du core 6.9.12 ne vérifie pas
-  fiablement tous les chemins de modèles logiques ; l'exécution sur exemple est
-  le contrôle sémantique final.
-
-## Vérification du lot 7 — 13 novembre 2026
-
-- Les sous-slices reprennent la déclaration de slicing la plus proche. Les
-  discriminants `value`/`pattern`, `type` sur `[x]`, `profile` sur un `contained`
-  concret et `exists` démontrable sont couverts ; un cas non matérialisable est
-  refusé explicitement au lieu de produire une ressource ambiguë.
-- Un `contained` profilé est développé par le catalogue et reçoit son
-  `resourceType`. Les extensions de primitives utilisent `_nom` et les tableaux
-  de métadonnées conservent leurs `null` d'alignement.
-- Conversion, validation et catalogue passent sur R4, R4B et R5. La démo embarque
-  FR Core 2.2.0 et HL7 Europe Laboratory 2.0.0, téléchargés depuis leurs versions
-  permanentes et vérifiés par SHA-256, dans deux contextes R4 dédiés.
-- `mvn clean package` : 147 tests Java et 43 tests Node ; 13 tests Python passent.
-  L'image Docker complète se construit, packages publics inclus.
-
-## Vérification du lot A — 13 novembre 2026
-
-- Namespace Java, types XStream, appels Rhino, frontend, schémas, outils,
-  documentation active et canaux déplacés vers `fr.kazepoy.fhir`. Le `groupId`
-  Maven utilise le même namespace ; routes et nom du plugin restent inchangés.
-- Rupture volontaire : aucun alias ni adaptateur n'autorise les anciens exports.
-  Les tests de sérialisation relisent les deux nouveaux types et refusent les
-  types retirés.
-- Les trois JAR ont été inspectés, puis l'image Docker reconstruite. Les neuf
-  canaux réécrits sont importés et déployés ; Profile Mapper, FML inline et
-  FML typé passent avec leurs vrais chargeurs de classes.
-- `mvn clean package` : 147 tests Java et 43 tests Node ; 13 tests Python.
-  Rejeu complet vert et 20 parcours Playwright verts sous Chromium et WebKit.
-
-## Vérification du rangement documentaire — 13 novembre 2026
-
-- `doc/README.md` devient l'entrée unique vers le manuel, la référence,
-  l'architecture, le développement, la démo et l'historique. Chaque
-  section possède son propre index et une autorité explicite.
-- Le manuel français est isolé sous `doc/user-manual/fr/`. Le schéma suit la
-  spécification dans `doc/reference/` et les fixtures sont dans `doc/demo/` ; leurs
-  consommateurs Java, Python, Docker et CI utilisent les nouveaux chemins.
-- L'ancien plan et la note `TEMP.md` sont classés dans `doc/history/` sans perte.
-  Le plan actif reste à la racine de `doc/`.
-- `tools/check_doc_links.py`, exécuté en CI, contrôle les liens locaux et refuse
-  tout document Markdown de `doc/` inaccessible depuis l'index.
-- Le `AGENTS.md` racine concerne le développement du plugin. Le manuel distinct
-  `doc/agent-manual/AGENTS.md`, commun et rédigé en anglais, guide les agents
-  utilisateurs qui produisent ou modifient des canaux FHIR dans OIE.
-
-La suite initialement envisagée regroupait S-3, performance, durcissement,
-namespace et préparation 1.0. Le namespace et le rangement documentaire sont
-clos ; les autres travaux sont classés dans le [plan actif](doc/plan-suite.md).
-
-
-## mes todos a reflechir /en discusion
-
-
-
-TODO : dans l'onglet test, ce serait bien de voir comment on pourrait et si il possible de visualiser ou representer les liens entre les données source et resulat ? par exemple pid.5.1 -> patient.id.  cela premettrait de remonter les erreurs de mapping plus facilemen et de visualiser les regles en cause. A etudier plus tard
-
-TODO revoir la disposition dans les onglets, cela devient confus et pas ergonomique
-
-TODO voir si editer en json peut aller dans la fenetre json deja dexistante de base dans oie ou si on fait un onglet dédié
-
-TODO voir les liens vers definition fhir officielle comment dans le cas d'ig publiées on peut aller vers le bon endroit pour avoir les details de la ressource ou du type (ex : Patient.id) et non pas juste la page de base de la spec Fhir.
-
-TODO pour les champ avec fonction (ex : fhirFind(msg['PID']['PID.3'], function (cx) { return cx['PID.3.5'] == 'PI'; })['PID.3.1'].toString()) voir si possible d'evaluer en live a partir de l'exempleTODO : dans le mapping, il serait bien de pouvoir selectionner un element du modele source et
-
-TODO pour fml si map selectionnée, pouvoir la recup dans ecran editeur pour "surcharger". si map qui imbrique d'autre maps en cascade, voir comment faire pour choisir ou voir si on surcharge l'arbre des maps interpendantes.  A voir si on peut le faire avec un simple selecteur de map...
-
-TODO avec les contained et sous slices. l'ui deveient complexe. peut etre un mode avancé en settings qui permet d'activer les features avancées. cela permettrait de ne pas surcharger l'ui. voir quels fc mettre?
-ou alors mettre mode simple/avancé dans l'ecran du step qu'il faut de toute facon revoir
-
-TODO voir settings pour activer ou non des focntions avancés (genre de flag qui change comportment) comme auto completion ou IA/trace  ou autre pas trop au point
-
-TODO voir pour autocompletion si ameliorable
-
-FIXME : gestion du i18n non prevu dans webadmin? donc a mettre en settings?
-
-TODO : channels de test FML
-       - avec map simple sur ressources R4 (Patient)
-       - avec map complexe sur ressource R5 (organization avec champ qui n'existe qu'en r5 je crois)
-       - avec map en R4 et profil exemple (devdays.r4.example.conformanceresources-1.0.0.tgz ???)
-       - avec map existante dans une ig tgz
-       - avec map surchargée (surcharge de map existante)
-       - avec map imbriquée (map qui appelle d'autres maps)
-       - avec map et  une ig hl7v2 source exemple (me demander)
-       - avec mapper sur un message hl7v2 (ex : ORU_R01)
-       - avec mapper sur un message hl7v2 strict parser
-       - avec mapper de et vers une ig avec strcture definition inventée (qui herite pas des ressources mais d'element de base)
-       - avec mapper depuis CSV
-       - avec mapper depuis XML
-       - avec mapper depuis json
-       - avec mapper et serveur de termino externe (voir pour trouver un truc leger (containerur) a ajouter dans demo et a precharger avec des CM)
-       - avec fr.core
-       - ... non exhaustif. voir les cas interessants  classiques et plus limites. les cas qui provoque des erreurs et que l'outil permet de debugguer.
-
-      il faudra les classer dans des groupes et les tagguer par focntionnalités
-
-      chaque channel devra embarquer des exemples de test pré chargés
-
-
-TODO faire une revue complete et tests complet/ analyse appronfondie du focntionnement, de la veracité , de l'etat art et de l'outil, du moteur d'execution et de l'ui
-
-TODO revoir doc et traduction
-
-TODO figer le contrat / format du fichier produit par le mappeur car une fois utilisé, il sera difficilement modifiable. idem pour la strcturedefinition d'un message OIE. ces points feront l'objet d'une doc specifique.
-
-TODO liste des hacks et bidouille vis a vis de oie et plugins pre requis pour faire PR. il faudra aussi lister les modif pour que le moteur hapi puisse focntionner (si il y en a)
-
-TODO dans la DOC genrale il faudr bien preciser le role des 2 transformeurs et que le FML et ig sont toujours preferables car independant de la plateforme. le mappeur reste specifique a OIE e a son format interne de representation
-
-TODO reorganiser le doc (user, developpeur, technique et archi)
+Aucune idée non classée à ce jour. Ajouter ici les nouvelles demandes avant
+leur intégration au plan, sans recopier les comptes rendus de livraison.

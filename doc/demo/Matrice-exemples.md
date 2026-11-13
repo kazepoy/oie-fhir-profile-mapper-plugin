@@ -81,8 +81,9 @@ Ces erreurs sont des cas du contrôle existant, pas des canaux supplémentaires.
 | Demande | État et suite pertinente |
 |---|---|
 | Source JSON métier et ressource FHIR entrante | Couvertes par les ports 8090/8091 et 8092 |
-| R4B/R5, fonction propre à R5 | R5 démontré par `Organization.description` sur 8090 ; R4B reste couvert par les tests Java seulement |
+| R4B/R5, fonction propre à R5 | Profile Mapper R5 démontré par `Organization.description` sur 8090 ; FML R5 (Organization et `Permission`) à prioriser ; R4B reste couvert par les tests Java seulement |
 | FR Core et HL7 Europe Laboratory | Patient FR Core 2.2.0 validé sur 8091 ; aucun canal EU Laboratory pour le moment |
+| Autre profil R4 externe | Package DevDays proposé à évaluer ; aucun canal ni package supplémentaire choisi |
 | Map publiée dans un package IG | Non couverte : les maps actuelles sont locales/inline. Choisir un package et une transformation ayant un attendu vérifiable |
 | Dépendances transitives et ordre des packages | Dépendances directes FR Core chargées pour le cas 8091 ; résolution transitive générale et conflits de versions restent ouverts |
 | Dérivation/surcharge et cascade d'imports | Un import est couvert ; dérivation et cascade attendent les fonctions du lot E |
