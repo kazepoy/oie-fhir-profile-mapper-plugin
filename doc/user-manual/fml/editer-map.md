@@ -13,15 +13,18 @@ map choisie dans **Properties**.
 4. Enregistrer et redéployer le canal pour appliquer la map.
 
 L'éditeur colore les mots-clés, chaînes et commentaires. **Full screen** permet
-d'éditer sur toute la page. La complétion FML avancée n'est pas encore fournie.
+d'éditer sur toute la page. `Ctrl+Espace` (ou `Alt+Espace`) propose les mots-clés,
+transformations, fonctions FHIRPath, aliases déclarés par `uses`, groupes,
+variables et chemins de profil chargés.
 
 ## Partir d'un exemple
 
 ![Modèle de départ fourni par Start from an example](images/exemple.png)
 
-Quand aucune map inline n'est renseignée, **Start from an example** insère un
-petit modèle à adapter. Ce bouton n'effectue pas le mapping complet de votre
-message et ne remplace pas les tests.
+Renseigner la canonique de la cible du squelette, puis cliquer **Generate
+skeleton**. L'éditeur crée les déclarations `uses`, le groupe principal et un
+commentaire TODO pour chaque élément cible requis. Le squelette n'effectue pas
+le mapping complet du message et ne remplace pas les tests.
 
 Le source est `OieMessage` ; les règles parcourent ses nœuds par nom, position
 ou occurrence. Les `uses` de la cible et les `imports` doivent être accessibles

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ORU_R01>
+  <ORU_R01.PATIENT_RESULT>
+    <ORU_R01.PATIENT>
+      <PID>
+        <PID.3><CX.1>100001</CX.1><CX.5>PI</CX.5></PID.3>
+        <PID.5><XPN.1><FN.1>MARTIN</FN.1></XPN.1><XPN.2>CLAIRE</XPN.2></PID.5>
+      </PID>
+    </ORU_R01.PATIENT>
+    <ORU_R01.ORDER_OBSERVATION>
+      <ORU_R01.OBSERVATION>
+        <OBX>
+          <OBX.3><CE.1>GLU</CE.1></OBX.3>
+          <OBX.5><Varies.1>5.10</Varies.1></OBX.5>
+        </OBX>
+      </ORU_R01.OBSERVATION>
+    </ORU_R01.ORDER_OBSERVATION>
+  </ORU_R01.PATIENT_RESULT>
+</ORU_R01>

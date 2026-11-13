@@ -39,8 +39,8 @@ ne doit pas être présentée comme terminée.
 | 3 — fait | Assistance restante : extensions du profil, ConceptMaps pertinentes, menu contextuel et duplication de branche | Exemples de profil avec extensions et slices ; duplication avec nouveaux IDs ; parcours clavier et sauvegarde/relecture. |
 | 4 — fait | Terminer le socle : découpage ciblé des éditeurs, anglais/français, thèmes, contrôle frontend et assemblage reproductible | Tests des modules sans VM pour le code extrait ; interface dans les deux langues ; ZIP construit depuis des sources frontend modifiées ; parcours clair/sombre et rôle restreint. |
 | 5 — fait | Aperçu multi-étapes, puis outil de rejeu des samples et import/export de tableaux/documentation | Patient + Observation avec référence réelle ; deux Bundles nommés ; erreur localisée par étape ; mêmes sorties dans l'aperçu et dans la démo ; outil en échec si résultat attendu différent. |
-| 6 — suivant | FML : S-2 sur les maps typées, adaptateur Strict Parser, complétion et squelette, puis concurrence/pool selon mesure | `PIDtoPatient` et `ORUR01toBundle` rejoués avec modèles typés ; démo et documentation ; tests de transformations concurrentes sans contamination. |
-| 7 | Sous-slices, discriminants complémentaires, contained, extensions des primitives, R4B/R5 | Cas de test par capacité et release ; profils FR Core/EU Lab dans la démo ; erreurs explicites pour les limites restantes. |
+| 6 — fait | FML : S-2 sur les maps typées, adaptateur Strict Parser, complétion et squelette, puis concurrence/pool selon mesure | `PIDtoPatient` et `ORUR01toBundle` rejoués avec modèles typés ; démo et documentation ; tests de transformations concurrentes sans contamination. |
+| 7 — suivant | Sous-slices, discriminants complémentaires, contained, extensions des primitives, R4B/R5 | Cas de test par capacité et release ; profils FR Core/EU Lab dans la démo ; erreurs explicites pour les limites restantes. |
 | 8 | S-3 puis performance, durcissement, namespace et préparation 1.0 | Mesures avant/après versionnées ; seuils convenus tenus ; permissions et compatibilité des exports anciens vérifiées ; documentation et CHANGELOG à jour. |
 
 L'ordre reprend le plan en terminant le studio avant les fonctions multi-étapes
@@ -185,3 +185,32 @@ Prochain lot : aperçu multi-étapes, rejeu des exemples et import/export (lot 5
   API, schéma, guide de rejeu et limites documentés.
 
 Prochain lot : FML, S-2 sur les modèles typés et adaptateur Strict Parser (lot 6).
+
+## Vérification du lot 6 — 13 novembre 2026
+
+- Trois sources FML : modèle générique `OieMessage`, modèle logique HL7 v2 typé
+  alimenté par le Strict Parser, et ressource FHIR JSON/XML directe. Les anciens
+  exports restent en `oie-message` par défaut.
+- Adaptateur typé fondé sur le `StructureDefinition` des emplacements. Convention
+  AP-HM/HAPI vérifiée sur la hiérarchie réelle ORU_R01, y compris le groupe
+  répétable `OBSERVATION`, les composants CX/XPN/CE et les valeurs variables.
+- Fixtures représentatives `PIDtoPatient` et `ORUR01toBundle` ; la seconde importe
+  la première et construit un Bundle transaction Patient + Observation. Aucun IG
+  AP-HM canonique n'étant présent dans le dépôt, elles restent explicitement des
+  fixtures de contrat.
+- Complétion FML locale : mots-clés, transformations, fonctions FHIRPath, aliases,
+  groupes, variables et chemins de catalogue. Générateur de squelette avec `uses`,
+  groupe principal et TODO pour les éléments cibles requis.
+- Le verrou global d'exécution est supprimé : les objets mutables sont locaux à
+  la requête, le contexte et les maps ne sont partagés qu'en lecture. 24
+  transformations génériques/typées sur 8 threads passent sans contamination.
+  Aucun pool ajouté faute de mesure qui le justifie ; le chargement reste protégé.
+- `mvn clean package` : 143 tests Java et 38 tests Node. `npm run check` : 47
+  modules et 559 messages anglais/français. Le contrôle de démo passe sur tous
+  les canaux, dont Strict Parser → Bundle FML typé avec validation active.
+- Limite consignée : le contrôle statique du core 6.9.12 ne vérifie pas
+  fiablement tous les chemins de modèles logiques ; l'exécution sur exemple est
+  le contrôle sémantique final.
+
+Prochain lot : sous-slices, discriminants, contained, extensions primitives et
+couverture R4B/R5 (lot 7).

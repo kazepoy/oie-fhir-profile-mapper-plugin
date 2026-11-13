@@ -16,7 +16,7 @@ git et le [CHANGELOG](../CHANGELOG.md) pour ce qui a été livré).
 | 1 Socle frontend | **Socle livré** : modules de modèle/compilation, adaptation hôte et saisie extraits ; tests par imports directs sans VM ; anglais/français, variables de thème et contrôle frontend. Maven reconstruit le bundle avant assemblage ; ZIP reproductible vérifié et contrôlé en CI. Les éditeurs gardent leur orchestration. Parcours Chromium/WebKit en clair/sombre et français/anglais ; compte RBAC temporaire avec canaux limités et refus serveur vérifiés. |
 | 3 Studio et saisie | **Fait en partie** : Monaco sur les expressions, complétion (fonctions, variables, chemins, snippets, références), recherche, annuler/rétablir, plein écran, erreurs marquées et soulignées, volet *Sample fields*, clavier. Codes de binding proposés dans la complétion. Notes et activation par règle accessibles avec *Rules*, y compris dans l'historique. Inspecteur de sélection avec métadonnées, édition des règles, aide et diagnostics. Pickers des extensions du profil et du contexte, ConceptMaps filtrées, menu contextuel et duplication de branche. Restent notamment : agencement complet à trois volets, liaisons source/cible et revue ergonomique. |
 | 4 Tests et traces | **Fait** : exemples enregistrés, résultat attendu, comparaison et *Run all* ; aperçu ordonné des étapes Profile Mapper avec références et Bundles réels ; action *FHIR mapping trace* ; rejeu hors ligne/en ligne par `tools/run_tests.py` ; import CSV/Markdown et export de tableaux ou de documentation Markdown/HTML. |
-| 5 FML | **Fait en partie** : étape intégrée, map écrite dans l'étape, langage `fml`, *Check*. Restent : complétion, squelette, modèles typés, pool. |
+| 5 FML | **Fait** : étape intégrée, map inline ou canonique, complétion, squelette, sources générique/typée/FHIR et concurrence vérifiée. Pas de pool ajouté faute de mesure le justifiant. |
 | 2 Serveur | **Fait** : contextes FHIR, format 2, politique de validation, catalogue des packages, arbre d'un profil en une requête, codes des ValueSets. Non fait, par choix : outil de migration (le format 1 reste lu tel quel) et cache d'index persistant (les réponses sont gardées en mémoire jusqu'au rechargement). |
 | 6, 7 | À faire. |
 
@@ -337,17 +337,17 @@ contre les StructureDefinitions → marqueurs Monaco. **Générateur de squelett
 à partir du modèle source et du profil cible, le serveur produit une map avec
 les `uses`, un groupe et une règle commentée par élément requis.
 
-**Exécution** : moteur `StructureMapUtilities` du core 6.9.12 (décision de la
-branche conservée, à confirmer par le spike S-2) ; un **pool de contextes** par
-contexte FHIR, taille réglable, pour lever la sérialisation ; relecture au
+**Exécution** : moteur `StructureMapUtilities` du core 6.9.12, confirmé par S-2.
+Le contexte et les maps sont partagés en lecture, les objets mutables sont
+locaux à chaque requête ; pas de pool sans mesure le justifiant. Relecture au
 déploiement ; journal de transformation (`ITransformerServices.log`) joint aux
 tests ; erreurs portant le nom de règle FML. Pas de trace par règle (limite
 documentée) ; une trace de phases (`input`, `transform`, `validation`,
 `publication`) est écrite dans `fhirMapperTrace` comme pour le mappeur.
 
-**Démo** : canal *ORU vers Patient (FML)* avec map inline (port 8087) ; canal
-*ORU vers Bundle (FML, modèle typé)* exécutant les maps `aphm-ig-oru` sur le
-Strict Parser (port 8089) ; `check.py` compare avec les canaux du mappeur.
+**Démo** : canal *ORU vers Bundle (FML, modèle typé)* sur le Strict Parser
+(port 8087), avec fixtures représentatives `ORUR01toBundle` et `PIDtoPatient` ;
+canal *ORU vers Patient (FML inline)* (port 8089). `check.py` rejoue les deux.
 
 ### 2.9 Performance
 
@@ -456,7 +456,8 @@ Les tailles sont indicatives pour une personne outillée.
 ### Phase 5 : transformer FML
 
 - Rebase et fusion de la branche sur le socle (contexte, format, tests).
-- `mapSource` inline, compilation au déploiement, cache par empreinte, pool.
+- `mapSource` inline, compilation au déploiement, cache par empreinte ; objets
+  d'exécution locaux par requête, sans pool tant qu'une mesure ne le justifie pas.
 - Langage `fml` Monaco, complétion, `POST /fml/check`, générateur de squelette.
 - Modèles source `oie-message`, `hl7v2-logical` (adaptateur Strict Parser),
   `fhir` ; convention de nommage paramétrée.

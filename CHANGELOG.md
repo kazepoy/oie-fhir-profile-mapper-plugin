@@ -87,6 +87,11 @@
   les outils Python avant `mvn package`.
 - **Démo** : neuf canaux ; exemples avec résultat attendu sur les étapes Patient des ports 8081
   et 8082 ; canal *FML inline* (port 8089) ; tableau « ce que montre chaque canal ».
+- **FML typé** : source HL7 v2 logique alimentée par le Strict Parser, source FHIR
+  directe, maps représentatives `PIDtoPatient` et `ORUR01toBundle`, démo Bundle
+  Patient + Observation, complétion locale et génération de squelette. Les
+  transformations concurrentes n'utilisent plus de verrou global ; aucun pool
+  n'est ajouté sans mesure démontrant sa nécessité.
 - **Ménage** : modules web jamais branchés retirés, `legacy-editor.js` renommés `editor.js`,
   plan initial `doc/Plan.md` retiré, tests e2e Playwright versionnés.
 - Plan de refonte : [doc/plan-refonte.md](doc/plan-refonte.md).

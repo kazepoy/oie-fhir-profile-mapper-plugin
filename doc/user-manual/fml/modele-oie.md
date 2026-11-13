@@ -2,14 +2,14 @@
 
 [Manuel](../README.md) · [FML](README.md)
 
-Une map ne reçoit pas directement les noms de propriétés d'un modèle logique
-HL7 v2 typé. Elle reçoit l'arbre générique **OieMessage** construit à partir du
-message interne d'OIE.
+Cette page concerne le choix **Generic OIE message**. La map reçoit l'arbre
+**OieMessage** construit à partir du message interne d'OIE. Pour les groupes et
+composants HAPI, choisir plutôt le [modèle HL7 v2 typé](modeles-sources.md).
 
 ![Arbre JSON du modèle OIE reçu par la map](images/modele-oie.png)
 
 1. Exécuter un [test](tester.md).
-2. Ouvrir **OIE model of the message (source of the map)**.
+2. Ouvrir **Source instance received by the map**.
 3. Repérer les nœuds `node`, leurs `name`, `position`, `occurrence` et `value`.
 4. Reprendre ces informations dans les règles FML.
 
@@ -28,6 +28,6 @@ chercher sa valeur uniquement sur le champ parent. Les champs vides peuvent
 exister sans `value`. Pour un JSON, les propriétés deviennent des nœuds ; un
 tableau produit des occurrences.
 
-Ce modèle reflète le parseur utilisé par le canal. Une map écrite pour le
-parseur habituel peut nécessiter des accès différents avec le Strict Parser.
-Les modèles logiques typés ne sont pas encore disponibles dans cet éditeur.
+Ce modèle reflète le message sérialisé par OIE. Une map fondée sur les noms HAPI
+du Strict Parser doit sélectionner le mode typé et sa canonique plutôt que de
+parcourir ces noms dans l'enveloppe générique.

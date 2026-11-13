@@ -71,6 +71,7 @@ services:
       - logs:/opt/engine/logs
       - ./ig:/fhir-ig:ro
       - ./fml:/fhir-fml:ro
+      - ../src/test/resources/fml/typed:/fhir-typed:ro
     depends_on:
       oie-db:
         condition: service_healthy

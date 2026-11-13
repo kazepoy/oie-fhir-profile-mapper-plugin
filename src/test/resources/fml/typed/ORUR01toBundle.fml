@@ -1,0 +1,36 @@
+map "http://example.org/typed/StructureMap/ORUR01toBundle" = "ORUR01toBundle"
+
+uses "http://example.org/hl7v2/StructureDefinition/ORU__R01" alias ORU as source
+uses "http://hl7.org/fhir/StructureDefinition/Bundle" alias Bundle as target
+uses "http://hl7.org/fhir/StructureDefinition/Patient" alias Patient as target
+uses "http://hl7.org/fhir/StructureDefinition/Observation" alias Observation as target
+
+imports "http://example.org/typed/StructureMap/PIDtoPatient"
+
+group ORUR01toBundle(source src : ORU, target bundle : Bundle) {
+  src -> bundle.type = 'transaction' "type";
+  src.ORU__R01_PATIENT__RESULT as result then {
+    result.ORU__R01_PATIENT as patientGroup then {
+      patientGroup.PID as pid -> bundle.entry as entry then {
+        pid -> entry.request as request, request.method = 'POST', request.url = 'Patient' "patient-request";
+        pid -> entry.resource = create('Patient') as patient then PIDtoPatient(pid, patient) "patient";
+      } "patient-entry";
+    } "patient-group";
+    result.ORU__R01_ORDER__OBSERVATION as order then {
+      order.ORU__R01_OBSERVATION as observationGroup then {
+        observationGroup.OBX as obx -> bundle.entry as entry then {
+          obx -> entry.request as request, request.method = 'POST', request.url = 'Observation' "observation-request";
+          obx -> entry.resource = create('Observation') as observation then {
+            obx -> observation.status = 'final' "status";
+            obx.OBX_3 as identifier then {
+              identifier.CE_1 as component then { component.value as code -> observation.code as cc, cc.text = code "code"; } "component";
+            } "identifier";
+            obx.OBX_5 as resultValue then {
+              resultValue.Varies_1 as component then { component.value as value -> observation.value = value "value"; } "component";
+            } "result-value";
+          } "observation";
+        } "observation-entry";
+      } "observation-group";
+    } "order";
+  } "patient-result";
+}

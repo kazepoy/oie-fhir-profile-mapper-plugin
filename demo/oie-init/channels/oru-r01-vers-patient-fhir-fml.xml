@@ -1,8 +1,8 @@
 <channel version="4.7.0">
   <id>5f1f6c2e-2b8e-4f0a-9d7a-0c1e8f6a7b31</id>
   <nextMetaDataId>2</nextMetaDataId>
-  <name>ORU R01 vers Patient FHIR (FML)</name>
-  <description>Démo de la transformation FML : un ORU^R01 (POST ER7 sur /patient/, port 8087) devient une ressource Patient FHIR R4 conforme au profil ExampleLabPatient de /fhir-ig. Une étape FHIR FML Transform exécute la map /fhir-fml/OruR01ToPatient.fml sur le modèle logique générique OieMessage ; même résultat que le canal « ORU R01 vers Patient FHIR » du Profile Mapper. La réponse HTTP est le Patient.</description>
+  <name>ORU R01 vers Bundle FHIR (FML typé)</name>
+  <description>Spike S-2 : un ORU^R01 lu par le Strict Parser (POST /bundle, port 8087) est adapté au modèle logique ORU__R01, puis les maps ORUR01toBundle et PIDtoPatient produisent un Bundle FHIR R4. La réponse contient un Patient et une Observation.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -39,7 +39,7 @@
       <responseHeadersVariable />
       <useResponseHeadersVariable>false</useResponseHeadersVariable>
       <charset>UTF-8</charset>
-      <contextPath>/patient</contextPath>
+      <contextPath>/bundle</contextPath>
       <timeout>30000</timeout>
       <staticResources />
     </properties>
@@ -53,12 +53,14 @@
 channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
         </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
         <org.oie.fhir.fml.FhirFmlTransformStep version="4.7.0">
-          <name>Patient (FML)</name>
+          <name>Bundle (FML typé)</name>
           <sequenceNumber>1</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig;/fhir-fml</profiles>
-          <mapUrl>http://example.org/fhir/oru2fhir/StructureMap/OruR01ToPatient</mapUrl>
+          <profiles>/fhir-typed</profiles>
+          <mapUrl>http://example.org/typed/StructureMap/ORUR01toBundle</mapUrl>
+          <sourceModel>hl7v2-logical</sourceModel>
+          <sourceModelUrl>http://example.org/hl7v2/StructureDefinition/ORU__R01</sourceModelUrl>
           <variable />
           <validateOutput>true</validateOutput>
           <contextVariables />
@@ -79,9 +81,9 @@ channelMap.put('__demoEtape', 'VALIDATION_FHIR_SORTIE');</script>
         <serializationProperties class="com.mirth.connect.plugins.datatypes.hl7v2.HL7v2SerializationProperties" version="4.7.0">
           <handleRepetitions>true</handleRepetitions>
           <handleSubcomponents>true</handleSubcomponents>
-          <useStrictParser>false</useStrictParser>
+          <useStrictParser>true</useStrictParser>
           <useStrictValidation>false</useStrictValidation>
-          <stripNamespaces>false</stripNamespaces>
+          <stripNamespaces>true</stripNamespaces>
           <segmentDelimiter>\r</segmentDelimiter>
           <convertLineBreaks>true</convertLineBreaks>
         </serializationProperties>
@@ -148,7 +150,7 @@ channelMap.put('__demoEtape', 'VALIDATION_FHIR_SORTIE');</script>
   <destinationConnectors>
     <connector version="4.7.0">
       <metaDataId>1</metaDataId>
-      <name>Serveur FHIR (Patient)</name>
+      <name>Serveur FHIR (Bundle typé)</name>
       <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
         <pluginProperties />
         <destinationConnectorProperties version="4.7.0">

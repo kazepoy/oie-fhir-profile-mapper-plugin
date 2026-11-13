@@ -176,10 +176,13 @@ def main():
     strict = json.loads(post("STRICT_PATIENT_PORT", 8088, "patient", "oru-r01-minimal.er7", "text/plain"))
     assert strict == patient, strict
     print("OK ORU → Patient par le Strict Parser, identique au parser par défaut")
-    # Le même message par la map FML : même Patient que le Profile Mapper.
-    fml = json.loads(post("FML_PATIENT_PORT", 8087, "patient", "oru-r01-minimal.er7", "text/plain"))
-    assert fml == patient, fml
-    print("OK ORU → Patient par FML, identique au Profile Mapper")
+    # Strict Parser → modèle logique typé → maps ORUR01toBundle et PIDtoPatient importée.
+    fml = json.loads(post("FML_TYPED_PORT", 8087, "bundle", "oru-r01-minimal.er7", "text/plain"))
+    assert fml["resourceType"] == "Bundle" and fml["type"] == "transaction", fml
+    assert [entry["resource"]["resourceType"] for entry in fml["entry"]] == ["Patient", "Observation"], fml
+    assert fml["entry"][0]["resource"]["identifier"][0]["value"] == "100001", fml
+    assert fml["entry"][1]["resource"]["code"]["text"] == "GLU", fml
+    print("OK ORU Strict Parser → Bundle par FML typé (PIDtoPatient importée)")
     # La même map écrite dans l'étape (mapSource), sans fichier de map sur le serveur.
     inline = json.loads(post("FML_INLINE_PORT", 8089, "patient", "oru-r01-minimal.er7", "text/plain"))
     assert inline == patient, inline

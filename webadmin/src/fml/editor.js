@@ -9,6 +9,7 @@ import { t as tr } from "../i18n/index.js";
 
 import { createExpressionEditor, registerLanguage } from "../host/code-editor.js";
 import { FML_LANGUAGE, FML_TEMPLATE } from "./language.js";
+import { fmlCompletions, fmlSkeleton } from "./completion.js";
 import { CodeBox, languageOf } from "../host/code-box.js";
 import { HelpButton } from "../host/help.js";
 import { FML_HELP } from "../host/help-texts.js";
@@ -60,13 +61,15 @@ function fmlSample(platform, element) {
 }
 
 /** The map editor: the host's code editor in the fml language; markers are the problems of the last check. */
-function FmlMapEditor({ value, onChange, problems }) {
+function FmlMapEditor({ value, onChange, problems, completionPaths }) {
   const host = React.useRef(null);
   const editor = React.useRef(null);
-  const latest = React.useRef(onChange);
-  latest.current = onChange;
+  const latest = React.useRef({ onChange, completionPaths, value });
+  latest.current = { onChange, completionPaths, value };
   React.useEffect(() => {
-    const ed = createExpressionEditor({ value, language: "fml", multiline: true, minHeight: "360px", ariaLabel: "FML map", onChange: (text) => latest.current(text) });
+    const ed = createExpressionEditor({ value, language: "fml", multiline: true, minHeight: "360px", ariaLabel: "FML map",
+      getItems: () => fmlCompletions(editor.current?.getValue() || latest.current.value, latest.current.completionPaths),
+      onChange: (text) => latest.current.onChange(text) });
     editor.current = ed;
     host.current.appendChild(ed.el);
     return () => { editor.current = null; ed.dispose(); };
@@ -87,7 +90,8 @@ function FmlTransformEditor({ element, onChange, platform }) {
     } catch {
       // no storage: the transformer's inbound template
     }
-    state.current = { tab: "settings", maps: null, mapErrors: {}, loading: false, loadError: "", sampleKey: initial.key, sample, testing: false, result: null };
+    state.current = { tab: "settings", maps: null, mapErrors: {}, loading: false, loadError: "", sampleKey: initial.key, sample, testing: false, result: null,
+      skeletonTarget: "http://hl7.org/fhir/StructureDefinition/Patient", completionPaths: [] };
   }
   const st = state.current;
 
@@ -170,16 +174,46 @@ function FmlTransformEditor({ element, onChange, platform }) {
     st.checking = false;
     rerender();
   };
+  const generateSkeleton = async () => {
+    st.generating = true;
+    st.skeletonError = "";
+    rerender();
+    try {
+      const target = st.skeletonTarget.trim();
+      if (!target) throw new Error(tr("Choose the target profile."));
+      const text = await platform.api.get("/extensions/fhir-profile-mapper/catalog/elements",
+        { url: target, fhirVersion: version, profiles: locations }, { raw: true });
+      const root = JSON.parse(text).root || {};
+      const elements = root.snapshot?.element || root.differential?.element || [];
+      st.completionPaths = elements.map(item => item.path).filter(Boolean);
+      const required = elements.filter(item => Number(item.min || 0) > 0 && item.path && item.path.includes(".")).map(item => item.path);
+      const model = element.sourceModel || "oie-message";
+      const sourceUrl = model === "oie-message" ? "http://oie.org/fhir/StructureDefinition/OieMessage"
+        : String(element.sourceModelUrl || "").trim() || "http://hl7.org/fhir/StructureDefinition/Resource";
+      st.check = null;
+      set("mapSource", fmlSkeleton({ sourceUrl, targetUrl: target, required }));
+    } catch (e) {
+      st.skeletonError = errorText(e);
+    }
+    st.generating = false;
+    rerender();
+  };
   const inline = !!String(element.mapSource || "").trim();
   const mapPanel = h("div", null,
     h("div", { className: "hint", style: { marginBottom: "8px" } }, tr("A map written here is saved with the channel and runs instead of the map chosen in Properties. It may import the maps and use the profiles and ConceptMaps of the profile locations.")),
     h("div", { className: "fml-row", style: { marginBottom: "8px" } },
       h("button", { type: "button", className: "btn btn-sm", disabled: st.checking || !inline, onClick: checkMap }, st.checking ? tr("Checking…") : tr("Check")),
       !inline ? h("button", { type: "button", className: "btn btn-sm", onClick: () => { st.check = null; set("mapSource", FML_TEMPLATE); } }, tr("Start from an example")) : null,
+      h("input", { type: "text", value: st.skeletonTarget, "aria-label": tr("Target profile for the skeleton"), placeholder: tr("Target profile for the skeleton"),
+        style: { flex: "1 1 300px" }, onChange: e => { st.skeletonTarget = e.target.value; rerender(); } }),
+      h("button", { type: "button", className: "btn btn-sm", disabled: st.generating, onClick: generateSkeleton },
+        st.generating ? tr("Generating…") : tr("Generate skeleton")),
       inline ? h("button", { type: "button", className: "btn btn-sm", title: tr("Empty the map: the step then runs the map chosen in Properties"), onClick: () => { st.check = null; set("mapSource", ""); } }, tr("Clear")) : null,
       st.check && !st.check.errors.length ? h("span", { className: "fml-ok" }, tr("No problem found{p0}{p1}.", { p0: st.check.name ? tr(" in {name}", { name: st.check.name }) : "", p1: st.check.groups?.length ? tr(" (groups: {groups})", { groups: st.check.groups.join(", ") }) : "" })) : null,
       st.check && st.check.errors.length ? h("span", { className: "fml-error" }, tr("{p0} problem(s)", { p0: st.check.errors.length })) : null),
-    h(FmlMapEditor, { value: element.mapSource || "", problems: st.check?.errors || [], onChange: (text) => { element.mapSource = text; onChange(); if (!!text.trim() !== inline) rerender(); } }),
+    st.skeletonError ? h("div", { className: "fml-error", style: { marginBottom: "6px" } }, st.skeletonError) : null,
+    h(FmlMapEditor, { value: element.mapSource || "", problems: st.check?.errors || [], completionPaths: st.completionPaths,
+      onChange: (text) => { element.mapSource = text; onChange(); if (!!text.trim() !== inline) rerender(); } }),
     (st.check?.errors || []).map((e, i) => h("div", { key: i, className: "fml-error", style: { marginTop: "4px" } }, tr("Line {p0}, column {p1}: {p2}", { p0: e.line, p1: e.column, p2: e.message }))));
   const mapOptions = st.maps || [];
   const knownMap = mapOptions.some((m) => m.url === element.mapUrl);
@@ -193,6 +227,13 @@ function FmlTransformEditor({ element, onChange, platform }) {
       shared ? tr("Locations: {p0} · validation policy of the context: {p1}.", { p0: (shared.packages || []).join("; ") || tr("none"), p1: shared.validation }) : tr("A context of Settings › FHIR Mapper gives the version and the locations to every step that names it."), true),
     field(tr("FHIR version"), h("select", { disabled: !!shared, value: version, onChange: (e) => set("fhirVersion", e.target.value) },
       ["R4", "R4B", "R5"].map((v) => h("option", { key: v, value: v }, v))), tr("Version of the resources the map produces.")),
+    field(tr("Source model"), h("select", { value: element.sourceModel || "oie-message", onChange: e => set("sourceModel", e.target.value) },
+      h("option", { value: "oie-message" }, tr("Generic OIE message")),
+      h("option", { value: "hl7v2-logical" }, tr("Typed HL7 v2 logical model")),
+      h("option", { value: "fhir" }, tr("FHIR resource"))),
+    tr("The typed HL7 v2 model reads the XML produced by OIE's Strict Parser.")),
+    (element.sourceModel || "oie-message") !== "oie-message" ? field(tr("Source model canonical URL"), text("sourceModelUrl", "http://example.org/StructureDefinition/ORU__R01"),
+      element.sourceModel === "hl7v2-logical" ? tr("Required. Dots become underscores and existing underscores are doubled.") : tr("Used by the map skeleton; the FHIR resource itself declares its type.")) : null,
     field(tr("Result destination"), h("select", {
       value: element.variable ? "variable" : "message",
       onChange: (e) => set("variable", e.target.value === "variable" ? element.variable || "fhirResource" : "")
@@ -237,7 +278,7 @@ function FmlTransformEditor({ element, onChange, platform }) {
       (result.issues || []).filter((i) => i.severity !== "information").map((i, n) =>
         h("div", { key: `i${n}`, className: i.severity === "warning" ? "fml-issue-warning" : "fml-error" }, tr("{p0} {p1}: {p2}", { p0: i.severity, p1: i.location || "", p2: i.message }))),
       result.output ? h("div", null, h("h4", null, tr("Result")), h(CodeBox, { value: pretty(result.output), language: "json", readOnly: true, height: "360px", label: tr("Result") })) : null,
-      result.model ? h("details", null, h("summary", null, tr("OIE model of the message (source of the map)")), h(CodeBox, { value: pretty(result.model), language: "json", readOnly: true, height: "360px", label: tr("OIE model") })) : null)
+      result.model ? h("details", null, h("summary", null, tr("Source instance received by the map")), h(CodeBox, { value: pretty(result.model), language: "json", readOnly: true, height: "360px", label: tr("Source instance") })) : null)
       : null
   );
 
@@ -280,6 +321,8 @@ export function register(platform) {
       profiles: "",
       mapUrl: "",
       mapSource: "",
+      sourceModel: "oie-message",
+      sourceModelUrl: "",
       context: "",
       variable: "",
       validateOutput: true,
@@ -287,6 +330,7 @@ export function register(platform) {
     }),
     validate: (el) => {
       if (!String(el.mapUrl || "").trim() && !String(el.mapSource || "").trim()) return tr("Write the map in the Map tab, or choose the map to run.");
+      if (el.sourceModel === "hl7v2-logical" && !String(el.sourceModelUrl || "").trim()) return tr("The typed HL7 v2 source model requires its canonical URL.");
       if (el.variable !== undefined && el.variable !== "" && !String(el.variable).trim()) return tr("Give the Channel Map variable a name.");
       return "";
     },

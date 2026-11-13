@@ -52,9 +52,11 @@ public final class FmlTester {
             String message = serializer.serialize(dataType, text(request.get("message")));
             String format = format(dataType, message);
             Map<String, String> context = Map.of("channelName", "test", "connectorName", "test");
-            out.put("model", FhirJson.parse(FmlFacade.source(message, format, context, variables, step.effectiveFhirVersion(), step.effectiveProfiles())));
+            out.put("model", FhirJson.parse(FmlFacade.source(message, format, context, variables, step.effectiveFhirVersion(), step.effectiveProfiles(),
+                    step.getSourceModel(), step.getSourceModelUrl())));
             phase = "transform";
-            String output = FmlFacade.transform(step.mapReference(), message, format, context, variables, step.effectiveFhirVersion(), step.effectiveProfiles());
+            String output = FmlFacade.transform(step.mapReference(), message, format, context, variables, step.effectiveFhirVersion(), step.effectiveProfiles(),
+                    step.getSourceModel(), step.getSourceModelUrl());
             out.put("output", output);
             if (step.isValidateOutput()) {
                 phase = "validation";

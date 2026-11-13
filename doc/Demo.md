@@ -16,8 +16,9 @@ Web Support, FHIR Data Type, RBAC et Flow UI sont téléchargés au build, avec 
 de leur SHA-256. Le mapper est compilé avec Maven à partir de l'API de l'image OIE
 cible, puis installé dans cette même image. Le compilateur, le runtime et
 l'éditeur graphique sont repris du POC. L'initialisation importe et déploie neuf
-canaux, avec leur IG de démonstration montée dans `/fhir-ig` et la map FML de
-[demo/fml](../demo/fml) montée dans `/fhir-fml`.
+canaux, avec leur IG de démonstration montée dans `/fhir-ig`, la map FML générique
+de [demo/fml](../demo/fml) montée dans `/fhir-fml`, et les fixtures du modèle FML
+typé montées dans `/fhir-typed`.
 
 ## Ce que montre chaque canal
 
@@ -29,7 +30,7 @@ canaux, avec leur IG de démonstration montée dans `/fhir-ig` et la map FML de
 | SQL XML vers Patient FHIR | 8084 | Source XML, accents et zéros initiaux |
 | CSV patients métier vers Patient FHIR | 8085 | Nettoyage à la source, mapping en destination |
 | CSV patients métier vers collection | 8086 | Bundle `collection` |
-| ORU R01 vers Patient FHIR (FML) | 8087 | Étape **FHIR FML Transform** sur une map fichier (`/fhir-fml/OruR01ToPatient.fml`) |
+| ORU R01 vers Bundle FHIR (FML typé) | 8087 | Strict Parser, modèle logique HL7 v2 typé, map `ORUR01toBundle` important `PIDtoPatient`, Bundle transaction Patient + Observation |
 | ORU R01 vers Patient FHIR (strict) | 8088 | Strict Parser HL7 v2 : mêmes règles, autres chemins |
 | ORU R01 vers Patient FHIR (FML inline) | 8089 | **Map FML écrite dans l'étape** (onglet Map, *Check*), sans fichier de map, sur le contexte `demo-labo` |
 
@@ -103,7 +104,7 @@ que [run_tests.py](Rejeu-tests.md).
 | 8084 | `/sql-patient/` | Ligne XML SQL vers Patient, accents et zéros initiaux conservés |
 | 8085 | `/csv-patients/` | Dix messages Patient après nettoyage du CSV ; dernier Patient en réponse HTTP |
 | 8086 | `/csv-patients-collection/` | Un Bundle collection contenant les dix Patients |
-| 8087 | `/patient/` | Patient par la map FML `OruR01ToPatient`, identique à celui du port 8082 |
+| 8087 | `/bundle/` | Bundle transaction Patient + Observation par les maps FML typées `ORUR01toBundle` et `PIDtoPatient` |
 | 8088 | `/patient/` | Patient par le Strict Parser HL7 v2, identique à celui du port 8082 |
 | 8089 | `/patient/` | Patient par la map FML écrite dans l'étape, identique à celui du port 8082 |
 
@@ -122,6 +123,12 @@ du mapping changent :
 
 Le Strict Parser rejette en revanche une version HL7 inconnue de HAPI 2.3 (au-delà
 de 2.8.1) et un type de message hors standard.
+
+Le canal du port 8087 utilise le même XML Strict Parser, mais l'adapte au
+`StructureDefinition` logique `ORU__R01`. Les noms deviennent compatibles FHIRPath
+(`ORU_R01.OBSERVATION` → `ORU__R01_OBSERVATION`, `OBX.3` → `OBX_3`) et les valeurs
+terminales sont exposées sous `.value`. Les fixtures montées sont représentatives
+du contrat de la démo, pas un IG AP-HM canonique.
 
 Les destinations portent le nom du système visé, simulé par un JavaScript Writer :
 *Serveur FHIR*, *Entrepôt FHIR*, *Entrepôt documentaire*, *Archive PCA/PRA*. Le canal

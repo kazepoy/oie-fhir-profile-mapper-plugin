@@ -53,9 +53,9 @@ Redéployer les canaux concernés après un changement de contexte.
 Le Profile Mapper propose des exemples enregistrés, une comparaison de résultats
 et une trace par règle. FML dispose d'un éditeur, de **Check** et d'un test avec
 le modèle source ; il n'offre pas encore la même gestion de jeux d'essai ni une
-trace par règle. Un aperçu Profile Mapper exécute **une seule étape** : les
-références entre étapes y sont simulées. Pour certifier des Bundles multi-étapes,
-rejouer le canal déployé.
+trace par règle. L'aperçu Profile Mapper peut exécuter l'étape seule ou toutes
+les étapes Profile Mapper actives du transformeur. Le rejeu du canal déployé
+reste le contrôle d'intégration final.
 
 Les captures ne démontrent pas l'activation de toutes les options simultanément.
 En particulier, `demo-labo` peut être configuré avec la validation désactivée :

@@ -68,9 +68,7 @@ public final class FmlBridge {
             Map<String, String> options) throws Exception {
         return withEngineClassLoader(() -> {
             FmlContext context = context(options);
-            synchronized (context) {
-                return compose(context.worker, new OieModelBuilder(context.worker).build(source, format, messageContext, variables));
-            }
+            return compose(context.worker, FmlSourceBuilder.build(context.worker, source, format, messageContext, variables, options));
         });
     }
 
@@ -80,21 +78,20 @@ public final class FmlBridge {
         return withEngineClassLoader(() -> {
             FmlContext context = context(options);
             String url = mapUrl == null ? "" : mapUrl.trim();
-            // The engine is not thread-safe: one transformation at a time per context.
-            synchronized (context) {
-                StructureMap map = url.startsWith(INLINE) ? context.inline(mapUrl.substring(mapUrl.indexOf(INLINE) + INLINE.length())) : context.map(url);
-                if (map == null) {
-                    throw new IllegalArgumentException("StructureMap " + url + " is not in the profile locations of the step"
-                            + (context.errors.isEmpty() ? "." : " (unreadable files: " + String.join(", ", context.errors.keySet()) + ")."));
-                }
-                IWorkerContext worker = context.worker;
-                Element src = new OieModelBuilder(worker).build(source, format, messageContext, variables);
-                OieTransformerServices services = new OieTransformerServices(worker);
-                StructureMapUtilities utilities = new StructureMapUtilities(worker, services);
-                Element target = Manager.build(worker, targetType(worker, map));
-                utilities.transform(null, src, map, target);
-                return compose(worker, target);
+            StructureMap map = url.startsWith(INLINE) ? context.inline(mapUrl.substring(mapUrl.indexOf(INLINE) + INLINE.length())) : context.map(url);
+            if (map == null) {
+                throw new IllegalArgumentException("StructureMap " + url + " is not in the profile locations of the step"
+                        + (context.errors.isEmpty() ? "." : " (unreadable files: " + String.join(", ", context.errors.keySet()) + ")."));
             }
+            // Utilities, services and source/target Elements are request-local. The cached worker and
+            // StructureMaps are read-only after context loading, so transformations need no global lock.
+            IWorkerContext worker = context.worker;
+            Element src = FmlSourceBuilder.build(worker, source, format, messageContext, variables, options);
+            OieTransformerServices services = new OieTransformerServices(worker);
+            StructureMapUtilities utilities = new StructureMapUtilities(worker, services);
+            Element target = Manager.build(worker, targetType(worker, map));
+            utilities.transform(null, src, map, target);
+            return compose(worker, target);
         });
     }
 

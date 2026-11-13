@@ -7,6 +7,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,9 +26,12 @@ import org.junit.Test;
 public class FmlBridgeTest {
     private static final String PATIENT_MAP = "http://example.org/fhir/StructureMap/OruPatient";
     private static final String BUNDLE_MAP = "http://example.org/fhir/StructureMap/OruBundle";
+    private static final String TYPED_MODEL = "http://example.org/hl7v2/StructureDefinition/ORU__R01";
+    private static final String TYPED_BUNDLE_MAP = "http://example.org/typed/StructureMap/ORUR01toBundle";
     private static final ObjectMapper JSON = new ObjectMapper();
     private static FmlBridge bridge;
     private static String oru;
+    private static String strictOru;
 
     private static String fixture(String name) { return Path.of("src/test/resources", name).toAbsolutePath().toString(); }
 
@@ -32,10 +41,20 @@ public class FmlBridgeTest {
         return properties.engineOptions();
     }
 
+    private static Map<String, String> typedOptions() {
+        FhirSerializationProperties properties = new FhirSerializationProperties();
+        properties.setProfiles(fixture("fml/typed"));
+        Map<String, String> options = properties.engineOptions();
+        options.put("sourceModel", "hl7v2-logical");
+        options.put("sourceModelUrl", TYPED_MODEL);
+        return options;
+    }
+
     @BeforeClass
     public static void load() throws Exception {
         bridge = new FmlBridge(FhirEngineLoader.engine());
         oru = Files.readString(Path.of(fixture("fml/messages/oru-r01-minimal.xml")));
+        strictOru = Files.readString(Path.of(fixture("fml/messages/oru-r01-strict.xml")));
     }
 
     @AfterClass
@@ -94,6 +113,67 @@ public class FmlBridgeTest {
     }
 
     @Test
+    public void adaptsStrictParserXmlToATypedLogicalModelAndRunsImportedMaps() throws Exception {
+        JsonNode maps = JSON.readTree(bridge.listMaps(typedOptions()));
+        assertEquals(maps.toPrettyString(), 2, maps.path("maps").size());
+        JsonNode model = JSON.readTree(bridge.source(strictOru, "xml", Map.of(), Map.of(), typedOptions()));
+        JsonNode result = model.path("ORU__R01_PATIENT__RESULT");
+        assertEquals("100001", result.path("ORU__R01_PATIENT").path("PID").path("PID_3").get(0).path("CX_1").path("value").asText());
+        assertEquals("PI", result.path("ORU__R01_PATIENT").path("PID").path("PID_3").get(0).path("CX_5").path("value").asText());
+
+        JsonNode bundle = JSON.readTree(bridge.transform(TYPED_BUNDLE_MAP, strictOru, "xml", Map.of(), Map.of(), typedOptions()));
+        assertEquals("transaction", bundle.path("type").asText());
+        assertEquals("POST", bundle.path("entry").get(0).path("request").path("method").asText());
+        assertEquals("Patient", bundle.path("entry").get(0).path("request").path("url").asText());
+        JsonNode patient = bundle.path("entry").get(0).path("resource");
+        assertEquals("100001", patient.path("identifier").get(0).path("value").asText());
+        assertEquals("MARTIN", patient.path("name").get(0).path("family").asText());
+        JsonNode observation = bundle.path("entry").get(1).path("resource");
+        assertEquals("Observation", observation.path("resourceType").asText());
+        assertEquals("GLU", observation.path("code").path("text").asText());
+        assertEquals("5.10", observation.path("valueString").asText());
+    }
+
+    @Test
+    public void concurrentGenericAndTypedTransformsDoNotContaminateEachOther() throws Exception {
+        ExecutorService pool = Executors.newFixedThreadPool(8);
+        try {
+            List<Callable<String>> work = new ArrayList<>();
+            for (int i = 0; i < 24; i++) {
+                final boolean typed = i % 2 == 0;
+                work.add(() -> bridge.transform(typed ? TYPED_BUNDLE_MAP : PATIENT_MAP, typed ? strictOru : oru, "xml", Map.of(), Map.of(),
+                        typed ? typedOptions() : options()));
+            }
+            List<Future<String>> results = pool.invokeAll(work);
+            for (int i = 0; i < results.size(); i++) {
+                JsonNode output = JSON.readTree(results.get(i).get());
+                if (i % 2 == 0) {
+                    assertEquals("Bundle", output.path("resourceType").asText());
+                    assertEquals("GLU", output.path("entry").get(1).path("resource").path("code").path("text").asText());
+                } else {
+                    assertEquals("Patient", output.path("resourceType").asText());
+                    assertEquals("female", output.path("gender").asText());
+                }
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+    }
+
+    @Test
+    public void mapsAnInboundFhirResourceWithoutWrappingItInOieMessage() throws Exception {
+        String map = "map \"http://example.org/CopyPatient\" = \"CopyPatient\"\n"
+                + "uses \"http://hl7.org/fhir/StructureDefinition/Patient\" alias Patient as source\n"
+                + "uses \"http://hl7.org/fhir/StructureDefinition/Patient\" alias Target as target\n"
+                + "group CopyPatient(source src : Patient, target tgt : Target) { src.active as active -> tgt.active = active \"active\"; }\n";
+        Map<String, String> fhir = options();
+        fhir.put("sourceModel", "fhir");
+        JsonNode output = JSON.readTree(bridge.transform(FmlBridge.INLINE + map,
+                "{\"resourceType\":\"Patient\",\"active\":true}", "json", Map.of(), Map.of(), fhir));
+        assertTrue(output.path("active").asBoolean());
+    }
+
+    @Test
     public void namesAnUnknownMap() throws Exception {
         try {
             bridge.transform("http://example.org/unknown", oru, "xml", Map.of(), Map.of(), options());
@@ -112,7 +192,7 @@ public class FmlBridgeTest {
 
         JsonNode ok = JSON.readTree(bridge.check(text, options()));
         assertEquals(PATIENT_MAP, ok.path("url").asText());
-        assertEquals(0, ok.path("errors").size());
+        assertEquals(ok.toPrettyString(), 0, ok.path("errors").size());
 
         JsonNode broken = JSON.readTree(bridge.check(text.replaceFirst("group ", "groupe "), options()));
         assertEquals(1, broken.path("errors").size());

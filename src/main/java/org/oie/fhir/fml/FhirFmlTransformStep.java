@@ -30,6 +30,10 @@ public class FhirFmlTransformStep extends Step {
     private String mapUrl = "";
     /** The FML text of the map, kept in the step; when not blank it runs instead of mapUrl. */
     private String mapSource = "";
+    /** How the inbound message is exposed to the map: oie-message, hl7v2-logical or fhir. */
+    private String sourceModel = "oie-message";
+    /** Canonical of the logical source model when sourceModel is hl7v2-logical. */
+    private String sourceModelUrl = "";
     private String variable = "";
     private Boolean validateOutput = true;
     private String contextVariables = "";
@@ -44,6 +48,8 @@ public class FhirFmlTransformStep extends Step {
         profiles = props.getProfiles();
         mapUrl = props.getMapUrl();
         mapSource = props.getMapSource();
+        sourceModel = props.getSourceModel();
+        sourceModelUrl = props.getSourceModelUrl();
         variable = props.getVariable();
         validateOutput = props.isValidateOutput();
         contextVariables = props.getContextVariables();
@@ -81,7 +87,9 @@ public class FhirFmlTransformStep extends Step {
                 .append(FhirJson.write(map)).append(", __source, __format, __context, __variables, ")
                 .append(FhirJson.write(effectiveFhirVersion())).append(", ")
                 .append(FhirJson.write(effectiveProfiles())).append(", ")
-                .append(isValidateOutput()).append("));\n");
+                .append(isValidateOutput()).append(", ")
+                .append(FhirJson.write(getSourceModel())).append(", ")
+                .append(FhirJson.write(getSourceModelUrl())).append("));\n");
         String target = text(variable);
         if (target.isEmpty()) {
             sb.append("if ('xml' === typeof tmp) {\n");
@@ -121,6 +129,8 @@ public class FhirFmlTransformStep extends Step {
         step.setProfiles(string(m, "profiles"));
         step.setMapUrl(string(m, "mapUrl"));
         step.setMapSource(string(m, "mapSource"));
+        step.setSourceModel(string(m, "sourceModel"));
+        step.setSourceModelUrl(string(m, "sourceModelUrl"));
         step.setVariable(string(m, "variable"));
         step.setContextVariables(string(m, "contextVariables"));
         step.setContext(string(m, "context"));
@@ -165,6 +175,23 @@ public class FhirFmlTransformStep extends Step {
     public String getMapSource() { return mapSource == null ? "" : mapSource; }
 
     public void setMapSource(String mapSource) { this.mapSource = mapSource; }
+
+    public String getSourceModel() {
+        String model = text(sourceModel);
+        return model.isEmpty() ? "oie-message" : model;
+    }
+
+    public void setSourceModel(String sourceModel) {
+        String model = text(sourceModel);
+        if (model.isEmpty()) model = "oie-message";
+        if (!List.of("oie-message", "hl7v2-logical", "fhir").contains(model))
+            throw new IllegalArgumentException("Unsupported FML source model " + model + ".");
+        this.sourceModel = model;
+    }
+
+    public String getSourceModelUrl() { return text(sourceModelUrl); }
+
+    public void setSourceModelUrl(String sourceModelUrl) { this.sourceModelUrl = sourceModelUrl; }
 
     /** What the engine runs: the step's own map text, else the canonical URL. */
     public String mapReference() { return FmlFacade.mapReference(mapSource, mapUrl); }

@@ -141,15 +141,30 @@ public class FhirFmlTransformStepTest {
         String type = FhirFmlTransformStep.class.getName();
         String xml = "<channel version=\"4.7.0\"><id>fml</id><name>FML</name><revision>1</revision>"
                 + "<sourceConnector version=\"4.7.0\"><metaDataId>0</metaDataId><transformer version=\"4.7.0\"><elements><" + type
-                + " version=\"4.7.0\"><name>Patient</name><mapUrl>" + PATIENT_MAP + "</mapUrl><validateOutput>false</validateOutput></" + type
+                + " version=\"4.7.0\"><name>Patient</name><mapUrl>" + PATIENT_MAP + "</mapUrl>"
+                + "<sourceModel>hl7v2-logical</sourceModel><sourceModelUrl>http://example.org/ORU</sourceModelUrl>"
+                + "<validateOutput>false</validateOutput></" + type
                 + "></elements></transformer></sourceConnector></channel>";
         Channel channel = serializer.deserialize(xml, Channel.class);
         assertFalse(channel instanceof InvalidChannel ? ((InvalidChannel) channel).getCause().toString() : "", channel instanceof InvalidChannel);
         Channel roundTrip = serializer.deserialize(serializer.serialize(channel), Channel.class);
         FhirFmlTransformStep step = (FhirFmlTransformStep) roundTrip.getSourceConnector().getTransformer().getElements().get(0);
         assertEquals(PATIENT_MAP, step.getMapUrl());
+        assertEquals("hl7v2-logical", step.getSourceModel());
+        assertEquals("http://example.org/ORU", step.getSourceModelUrl());
         assertFalse(step.isValidateOutput());
         Channel legacy = serializer.deserialize(xml.replace("<validateOutput>false</validateOutput>", ""), Channel.class);
         assertTrue(((FhirFmlTransformStep) legacy.getSourceConnector().getTransformer().getElements().get(0)).isValidateOutput());
+    }
+
+    @Test
+    public void legacyStepsKeepTheGenericSourceModelAndUnknownModesAreRejected() {
+        assertEquals("oie-message", new FhirFmlTransformStep().getSourceModel());
+        try {
+            new FhirFmlTransformStep().setSourceModel("unknown");
+            fail("Expected an unsupported source model error");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("unknown"));
+        }
     }
 }

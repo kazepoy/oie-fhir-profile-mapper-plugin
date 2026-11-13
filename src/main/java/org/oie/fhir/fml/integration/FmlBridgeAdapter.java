@@ -30,20 +30,27 @@ public final class FmlBridgeAdapter {
         return properties.engineOptions();
     }
 
+    private static Map<String, String> options(String version, String profiles, String sourceModel, String sourceModelUrl) {
+        Map<String, String> options = options(version, profiles);
+        options.put("sourceModel", sourceModel == null ? "" : sourceModel);
+        options.put("sourceModelUrl", sourceModelUrl == null ? "" : sourceModelUrl);
+        return options;
+    }
+
     public static String listMaps(String version, String profiles) throws Exception {
         return (String) call("listMaps", new Class<?>[] { Map.class }, options(version, profiles));
     }
 
     public static String source(String source, String format, Map<String, String> context, Map<String, String> variables,
-            String version, String profiles) throws Exception {
+            String version, String profiles, String sourceModel, String sourceModelUrl) throws Exception {
         return (String) call("source", new Class<?>[] { String.class, String.class, Map.class, Map.class, Map.class },
-                source, format, context, variables, options(version, profiles));
+                source, format, context, variables, options(version, profiles, sourceModel, sourceModelUrl));
     }
 
     public static String transform(String mapUrl, String source, String format, Map<String, String> context, Map<String, String> variables,
-            String version, String profiles) throws Exception {
+            String version, String profiles, String sourceModel, String sourceModelUrl) throws Exception {
         return (String) call("transform", new Class<?>[] { String.class, String.class, String.class, Map.class, Map.class, Map.class },
-                mapUrl, source, format, context, variables, options(version, profiles));
+                mapUrl, source, format, context, variables, options(version, profiles, sourceModel, sourceModelUrl));
     }
 
     public static String check(String mapSource, String version, String profiles) throws Exception {

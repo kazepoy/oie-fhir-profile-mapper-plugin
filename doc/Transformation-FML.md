@@ -4,18 +4,19 @@ L'étape **FHIR FML Transform** est un second transformeur, à côté du FHIR Pr
 Mapper. Elle offre une autre façon de produire des ressources conformes à des
 profils FHIR : elle exécute une map écrite en
 [FHIR Mapping Language](https://hl7.org/fhir/R4/mapping-language.html) (FML,
-ressource `StructureMap`) sur le message, présenté sous la forme d'un **modèle
-logique générique OIE**, puis valide et publie le résultat.
+ressource `StructureMap`) sur le message, présenté sous la forme d'un modèle
+générique OIE, d'un **modèle logique HL7 v2 typé**, ou d'une ressource FHIR,
+puis valide et publie le résultat.
 
-Les maps sont des fichiers écrits ailleurs, dans un IG ou un dépôt. L'étape ne
-fournit pas d'outil d'écriture de FML : elle désigne la map à exécuter et permet
-de la tester sur un message.
+La map peut provenir d'un IG ou d'un dépôt, ou être écrite dans l'étape. L'éditeur
+fournit coloration, complétion locale, contrôle de syntaxe et génération d'un
+squelette à partir des modèles source et cible.
 
 | | FHIR Profile Mapper | FHIR FML Transform |
 |---|---|---|
 | Où vit le mapping | Dans l'étape : règles JSON saisies dans l'éditeur | Hors de l'étape : fichiers FML |
 | Langage | Expressions JavaScript/E4X | FML, expressions FHIRPath |
-| Source | `msg` OIE | Modèle logique `OieMessage` |
+| Source | `msg` OIE | `OieMessage`, modèle logique HL7 v2 typé ou ressource FHIR |
 | Exécution | JavaScript généré + runtime embarqué | Moteur FML du core HL7, en Java |
 | Pour qui | Intégrateur OIE, saisie guidée sur l'arbre du profil | Équipe qui maintient ses transformations en FML |
 
@@ -33,6 +34,8 @@ Classe `org.oie.fhir.fml.FhirFmlTransformStep`, nom affiché **FHIR FML Transfor
 | `profiles` | Fichiers et répertoires du serveur, séparés par `;` : maps (`.fml`, `.map`, `StructureMap` JSON/XML), profils, ConceptMaps, packages `.tgz`. |
 | `mapSource` | Texte FML de la map, écrit dans l'onglet **Map** et enregistré avec le canal. S'il n'est pas vide, il est exécuté à la place de `mapUrl` ; il peut importer les maps des emplacements. |
 | `mapUrl` | Canonique d'une `StructureMap` des emplacements. Obligatoire si `mapSource` est vide. |
+| `sourceModel` | `oie-message` par défaut ; `hl7v2-logical` pour le XML du Strict Parser ; `fhir` pour une ressource FHIR JSON/XML. |
+| `sourceModelUrl` | Canonique du `StructureDefinition` logique source. Obligatoire avec `hl7v2-logical`. |
 | `variable` | Vide : résultat principal ; sinon nom d'une variable de Channel Map. |
 | `validateOutput` | `true` par défaut, y compris pour un export sans la propriété. |
 | `contextVariables` | Noms de variables OIE (`$`) copiées dans `context.variable` du modèle, séparés par des virgules. |
@@ -58,7 +61,9 @@ puis gardées en mémoire. Elles sont relues au déploiement d'un channel qui
 contient une étape FML, à chaque déploiement global, et par le bouton **Reload**
 de l'éditeur.
 
-## 2. Modèle logique OIE
+## 2. Modèles sources
+
+### 2.1 Modèle logique OIE
 
 `http://oie.org/fhir/StructureDefinition/OieMessage`
 ([StructureDefinition](../src/main/resources/org/oie/fhir/fml/bridge/StructureDefinition-OieMessage.json),
@@ -109,6 +114,32 @@ nœud par élément, de même nom, avec son `occurrence`.
 
 Le modèle de l'instance reçue par une map pour un message donné est visible dans
 l'onglet Test de l'éditeur et par `POST /source` (§4).
+
+### 2.2 Modèle logique HL7 v2 typé
+
+Le mode `hl7v2-logical` adapte le XML produit par le **Strict Parser** à un
+`StructureDefinition` logique chargé depuis les emplacements de profils. Il
+conserve les groupes HAPI et transforme les noms XML en noms FHIRPath valides :
+les `_` existants sont doublés et les `.` deviennent `_`.
+
+| XML Strict Parser | Élément du modèle logique |
+|---|---|
+| `ORU_R01.PATIENT_RESULT` | `ORU__R01_PATIENT__RESULT` |
+| `PID.3` / `CX.5` | `PID_3` / `CX_5` |
+| texte de `CX.1` | `CX_1.value` |
+| `ORU_R01.OBSERVATION` | `ORU__R01_OBSERVATION` |
+
+Le modèle doit décrire les chemins utilisés par la map. Le builder accepte aussi
+un XML HL7 aplati pour faciliter les tests anciens, mais la démo et les fixtures
+utilisent la hiérarchie réelle HAPI. Les fichiers typés livrés ici sont des
+fixtures représentatives du contrat ; ils ne prétendent pas remplacer un IG
+AP-HM canonique absent du dépôt.
+
+### 2.3 Ressource FHIR entrante
+
+Le mode `fhir` parse directement une ressource FHIR JSON ou XML dans la version
+du contexte. La map peut donc déclarer par exemple `Patient` comme source, sans
+l'envelopper dans `OieMessage`. `sourceModelUrl` n'est pas utilisé dans ce mode.
 
 ### Exemple de map
 
@@ -164,9 +195,11 @@ le POC `aphm-fhir-svc-transform`) a été examiné et écarté :
 - ses classes utiles sont petites et ont été réécrites (§3.2), sous licence MPL,
   d'après `TransformSupportServices` (Apache 2.0).
 
-Enseignements repris du POC : vérifier l'existence de la map avant d'exécuter
-(le moteur lève sinon une `NullPointerException`), et ne pas exécuter deux
-transformations à la fois sur le même contexte (moteur non thread-safe).
+Enseignement repris du POC : vérifier l'existence de la map avant d'exécuter
+(le moteur lève sinon une `NullPointerException`). L'hypothèse initiale d'un
+moteur entièrement non thread-safe a été affinée par S-2 : le contexte et les
+maps sont partagés en lecture, tandis que les objets d'exécution mutables sont
+créés par requête (§8).
 
 ### 3.2 Code
 
@@ -186,7 +219,9 @@ Le pont (`org.oie.fhir.fml.bridge`) :
 | `FmlBridge` | Point d'entrée : `listMaps`, `source`, `transform`, `clearCaches`. Résout la cible depuis le paramètre cible du premier groupe (le `getTargetType` du core refuse une map qui déclare plusieurs cibles). |
 | `FmlContext` | Chaîne de validation HAPI du datatype (spécification, profils) exposée en `IWorkerContext` R5 par `WorkerContextValidationSupportAdapter` ; lecture des maps (`.fml`, `.map`, `StructureMap`, packages) et des ConceptMaps. |
 | `FmlResources` | Sert au moteur les `StructureMap` (pour les `imports`), les `ConceptMap` (pour `translate()`) et le modèle `OieMessage`, que `PrePopulatedValidationSupport` ne conserve pas. |
-| `OieModelBuilder` | Construit directement l'arbre `Element` du modèle à partir du XML d'OIE ou du JSON. |
+| `FmlSourceBuilder` | Choisit le builder `oie-message`, `hl7v2-logical` ou `fhir`. |
+| `OieModelBuilder` | Construit directement l'arbre `Element` générique à partir du XML d'OIE ou du JSON. |
+| `Hl7v2LogicalModelBuilder` | Charge le modèle logique et adapte le XML du Strict Parser à ses chemins typés. |
 | `OieTransformerServices` | `ITransformerServices` : création des types et des ressources de la cible. |
 
 La sortie est sérialisée par l'`elementmodel` du core : elle suit la forme de la
@@ -201,7 +236,7 @@ OpenAPI` et des corps `text/plain` :
 | Route | Permission | Rôle |
 |---|---|---|
 | `GET /maps?fhirVersion&profiles` | Edit FHIR FML transforms | `{"maps": [{url, name, title}], "errors": {fichier: message}}` |
-| `POST /source` | Edit FHIR FML transforms | Instance `OieMessage` d'un message : `{"message", "dataType", "fhirVersion", "profiles"}` |
+| `POST /source` | Edit FHIR FML transforms | Instance source d'un message ; accepte aussi `sourceModel` et `sourceModelUrl`. |
 | `POST /check` | Edit FHIR FML transforms | Analyse une map écrite dans l'étape : `{"mapSource", "fhirVersion", "profiles"}` → `{"url", "name", "groups", "errors": [{line, column, message}]}` ; signale aussi les `uses` et `imports` absents des emplacements |
 | `POST /reload` | Edit FHIR FML transforms | Oublie les maps chargées : elles sont relues au prochain appel |
 | `POST /test` | Test FHIR FML transforms | `{"step", "message", "dataType"}` → `{"model", "output", "validationPerformed", "issues", "errors": [{phase, message}]}` |
@@ -214,12 +249,15 @@ plugin d'autorisation comme RBAC.
 
 [editor.js](../webadmin/src/fml/editor.js), trois onglets :
 
-- **Map** : la map de l'étape dans l'éditeur de code de Web Admin, en langage `fml`
-  (coloration des mots-clés, chaînes, commentaires, noms de règles). **Check** envoie
-  la map au serveur et souligne chaque erreur à sa ligne ; **Start from an example**
-  pose un squelette ; **Clear** revient à la map choisie dans Properties ;
+- **Map** : la map de l'étape dans l'éditeur de code de Web Admin, en langage `fml`.
+  La complétion propose mots-clés, transformations, fonctions FHIRPath, aliases
+  `uses`, groupes, variables et chemins de profil déjà chargés. **Check** souligne
+  les erreurs de syntaxe et les `uses`/`imports` absents. Le générateur demande une
+  cible, crée les `uses`, le groupe principal et des TODO pour ses éléments requis.
+  **Clear** revient à la map choisie dans Properties ;
 
-- **Properties** : version FHIR, destination du résultat, emplacements, map
+- **Properties** : version FHIR, modèle source et canonique logique, destination
+  du résultat, emplacements, map
   choisie parmi celles chargées (**Load maps**, **Reload**), variables de
   contexte, validation ;
 - **Test** : message exemple (modèle entrant du transformeur par défaut), type de
@@ -228,11 +266,12 @@ plugin d'autorisation comme RBAC.
 
 ## 6. Démo
 
-Le channel **ORU R01 vers Patient FHIR (FML)** (port 8087, `/patient/`) exécute
-[OruR01ToPatient.fml](../demo/fml/OruR01ToPatient.fml), montée dans `/fhir-fml`,
-avec les profils et ConceptMaps de `/fhir-ig`. Il produit le même Patient
-`ExampleLabPatient` que le channel Profile Mapper du port 8082 ;
-[check.py](../demo/examples/check.py) le vérifie.
+Le channel **ORU R01 vers Bundle FHIR (FML typé)** (port 8087, `/bundle/`)
+active le Strict Parser et exécute `ORUR01toBundle`. La map importe
+`PIDtoPatient` et produit un Bundle transaction contenant Patient et Observation.
+Le modèle logique et les deux maps représentatives sont montés dans
+`/fhir-typed`. [check.py](../demo/examples/check.py) vérifie la sortie avec la
+validation FHIR active.
 
 Le channel **ORU R01 vers Patient FHIR (FML inline)** (port 8089) porte la même map
 dans sa propriété `mapSource`, sans `/fhir-fml` dans ses emplacements : il montre la
@@ -242,9 +281,10 @@ map écrite et vérifiée dans l'onglet **Map**.
 
 | Test | Ce qu'il vérifie |
 |---|---|
-| [FmlBridgeTest](../src/test/java/org/oie/fhir/fml/bridge/FmlBridgeTest.java) | Liste des maps, modèle OIE (noms, positions, occurrences, contexte), Patient avec `translate()`, Bundle avec `imports` et type choix, map inconnue |
+| [FmlBridgeTest](../src/test/java/org/oie/fhir/fml/bridge/FmlBridgeTest.java) | Modèle OIE, source FHIR, modèle HL7 v2 typé, maps importées, Bundle transaction et 24 transformations génériques/typées concurrentes sans contamination |
 | [FhirFmlTransformStepTest](../src/test/java/org/oie/fhir/fml/FhirFmlTransformStepTest.java) | Script exécuté dans Rhino avec E4X, publication dans `msg` ou une variable, échec d'une map inconnue, test sur message exemple, map de démo valide contre `ExampleLabPatient`, sérialisation XML du channel |
-| [fml-transform.test.js](../webadmin/test/unit/fml-transform.test.js) | Enregistrement de l'étape dans l'administration web |
+| [fml-transform.test.js](../webadmin/test/unit/fml-transform.test.js) | Enregistrement et valeurs par défaut de l'étape dans l'administration web |
+| [fml-completion.test.js](../webadmin/test/unit/fml-completion.test.js) | Complétion locale et squelette avec éléments cibles requis |
 
 Les fixtures sont dans `src/test/resources/fml/` : deux maps et un ORU sérialisé
 par OIE.
@@ -253,13 +293,19 @@ par OIE.
 
 - **Canonique du modèle** `http://oie.org/fhir/…` : provisoire, à fixer avec la
   migration de namespace prévue au [plan](plan-refonte.md).
-- **Concurrence** : une transformation à la fois par contexte (mêmes version et
-  emplacements). À mesurer avec les outils de charge ; un pool de contextes est
-  possible si besoin.
+- **Concurrence** : le contexte et les maps chargées sont partagés en lecture ;
+  chaque appel crée ses services, son `StructureMapUtilities`, sa source et sa
+  cible. Le verrou global a été supprimé et un test mélange 24 transformations
+  sur 8 threads sans contamination. Aucun pool n'est ajouté faute de mesure qui
+  le justifie ; le chargement et le cache des maps restent synchronisés.
 - **Mémoire** : les contextes sont gardés jusqu'au prochain déploiement global
   ou rechargement.
 - **Pas de trace par règle** ni de diagnostic relié à une règle FML : les erreurs
   portent le message du moteur, l'étape et la map.
+- **Check n'est pas un analyseur sémantique complet** : le core 6.9.12 contrôle
+  la syntaxe, les `uses` et les `imports`, mais son analyse statique rejette à tort
+  certains aliases logiques. Les chemins sont donc vérifiés définitivement à
+  l'exécution sur un exemple.
 - **Pas de Bundles partagés** avec le Profile Mapper : une map FML produit sa
   propre ressource, Bundle compris.
 - `resolveReference` et `performSearch` ne sont pas pris en charge ; une

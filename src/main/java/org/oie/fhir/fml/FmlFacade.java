@@ -41,13 +41,23 @@ public final class FmlFacade {
     /** The OIE logical model instance a map receives for this message, as JSON. */
     public static String source(String source, String format, Map<String, String> context, Map<String, String> variables,
             String version, String profiles) throws Exception {
-        return FmlBridgeAdapter.source(source, format, context, variables, version, profiles);
+        return source(source, format, context, variables, version, profiles, "oie-message", "");
+    }
+
+    public static String source(String source, String format, Map<String, String> context, Map<String, String> variables,
+            String version, String profiles, String sourceModel, String sourceModelUrl) throws Exception {
+        return FmlBridgeAdapter.source(source, format, context, variables, version, profiles, sourceModel, sourceModelUrl);
     }
 
     /** Runs the map on the message: the target resource as JSON, before validation. */
     public static String transform(String mapUrl, String source, String format, Map<String, String> context, Map<String, String> variables,
             String version, String profiles) throws Exception {
-        return FmlBridgeAdapter.transform(mapUrl, source, format, context, variables, version, profiles);
+        return transform(mapUrl, source, format, context, variables, version, profiles, "oie-message", "");
+    }
+
+    public static String transform(String mapUrl, String source, String format, Map<String, String> context, Map<String, String> variables,
+            String version, String profiles, String sourceModel, String sourceModelUrl) throws Exception {
+        return FmlBridgeAdapter.transform(mapUrl, source, format, context, variables, version, profiles, sourceModel, sourceModelUrl);
     }
 
     /**
@@ -56,10 +66,15 @@ public final class FmlFacade {
      */
     public static String run(String stepName, String mapUrl, String source, String format, Map<String, String> context,
             Map<String, String> variables, String version, String profiles, boolean validate) throws Exception {
+        return run(stepName, mapUrl, source, format, context, variables, version, profiles, validate, "oie-message", "");
+    }
+
+    public static String run(String stepName, String mapUrl, String source, String format, Map<String, String> context,
+            Map<String, String> variables, String version, String profiles, boolean validate, String sourceModel, String sourceModelUrl) throws Exception {
         String label = "FHIR FML Transform" + (stepName == null || stepName.isBlank() ? "" : " \"" + stepName + "\"");
         String output;
         try {
-            output = transform(mapUrl, source, format, context, variables, version, profiles);
+            output = transform(mapUrl, source, format, context, variables, version, profiles, sourceModel, sourceModelUrl);
         } catch (Exception e) {
             throw new IllegalStateException(label + ", " + mapLabel(mapUrl) + ": " + message(e), e);
         }

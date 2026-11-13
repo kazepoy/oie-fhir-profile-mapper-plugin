@@ -12,13 +12,13 @@ explicitement en FML, avec groupes de règles, imports et traductions.
 - [Écrire une map dans l'étape](editer-map.md)
 - [Vérifier la map et corriger une erreur](verifier.md)
 - [Tester et lire le résultat](tester.md)
+- [Choisir le modèle source](modeles-sources.md)
 - [Explorer le modèle source OieMessage](modele-oie.md)
 - [Publier, valider et passer des variables de contexte](sortie.md)
 
 Une map écrite dans **Map** est prioritaire sur la map sélectionnée dans
-**Properties**. Les messages sont fournis selon le modèle générique `OieMessage`.
-Les modèles logiques HL7 v2 typés et les mêmes jeux d'essai persistants que le
-Profile Mapper ne sont pas disponibles actuellement.
+**Properties**. La source peut être le modèle générique `OieMessage`, un modèle
+logique HL7 v2 alimenté par le Strict Parser, ou une ressource FHIR.
 
 Une map FML construit sa propre ressource, éventuellement un Bundle. Elle ne
 partage pas les Bundles nommés du Profile Mapper. Il n'existe pas de trace FML

@@ -1,0 +1,18 @@
+map "http://example.org/typed/StructureMap/PIDtoPatient" = "PIDtoPatient"
+
+uses "http://example.org/hl7v2/StructureDefinition/ORU__R01" alias ORU as source
+uses "http://hl7.org/fhir/StructureDefinition/Patient" alias Patient as target
+
+group PIDtoPatient(source pid : ORU, target patient : Patient) {
+  pid.PID_3 as cx then {
+    cx.CX_5 as type then {
+      type.value as code where code = 'PI' -> patient.identifier as identifier then {
+        cx.CX_1 as number then { number.value as value -> identifier.value = value "identifier"; } "number";
+      } "ipp";
+    } "type";
+  } "identifiers";
+  pid.PID_5 as xpn -> patient.name as name then {
+    xpn.XPN_1 as family then { family.FN_1 as surname then { surname.value as value -> name.family = value "family-value"; } "surname"; } "family";
+    xpn.XPN_2 as given then { given.value as value -> name.given = value "given-value"; } "given";
+  } "name";
+}

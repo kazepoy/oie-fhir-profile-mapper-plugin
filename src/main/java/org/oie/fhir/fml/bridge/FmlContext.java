@@ -60,7 +60,7 @@ final class FmlContext {
     StructureMap map(String url) { return maps.get(url); }
 
     /** The map written in a step; a parse error is the caller's to report. */
-    StructureMap inline(String text) throws Exception {
+    synchronized StructureMap inline(String text) throws Exception {
         StructureMap map = inline.get(text);
         if (map == null) {
             map = new StructureMapUtilities(worker).parse(text, "step");

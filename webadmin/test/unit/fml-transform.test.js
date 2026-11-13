@@ -20,7 +20,8 @@ test("registers the step with the defaults of the Java step", () => {
   assert.equal(step.label, "FHIR FML Transform");
   assert.equal(p.oie.STEP_TYPES[FML_TYPE].label, "FHIR FML Transform");
   assert.deepEqual(step.create(), {
-    __type: "org.oie.fhir.fml.FhirFmlTransformStep", name: "", enabled: true, fhirVersion: "R4", profiles: "", mapUrl: "", mapSource: "", context: "",
+    __type: "org.oie.fhir.fml.FhirFmlTransformStep", name: "", enabled: true, fhirVersion: "R4", profiles: "", mapUrl: "", mapSource: "",
+    sourceModel: "oie-message", sourceModelUrl: "", context: "",
     variable: "", validateOutput: true, contextVariables: ""
   });
 });
@@ -32,5 +33,6 @@ test("asks for a map before saving", () => {
   assert.equal(validate(create()), "Write the map in the Map tab, or choose the map to run.");
   assert.equal(validate({ ...create(), mapSource: "map \"u\" = \"n\"" }), "");
   assert.equal(validate({ ...create(), mapUrl: "http://example.org/fhir/StructureMap/OruPatient" }), "");
+  assert.equal(validate({ ...create(), mapUrl: "http://example.org/m", sourceModel: "hl7v2-logical" }), "The typed HL7 v2 source model requires its canonical URL.");
   assert.equal(validate({ ...create(), mapUrl: "http://example.org/m", variable: "  " }), "Give the Channel Map variable a name.");
 });

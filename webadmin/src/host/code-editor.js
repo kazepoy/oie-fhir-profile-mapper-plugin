@@ -26,7 +26,7 @@ function kindOf(m, kind) {
 function registerProvider(m) {
   if (providerRegistered) return;
   providerRegistered = true;
-  m.languages.registerCompletionItemProvider("javascript", {
+  const provider = {
     triggerCharacters: ["'", "["],
     provideCompletionItems(model, position) {
       const entry = models.get(model.uri.toString());
@@ -50,7 +50,9 @@ function registerProvider(m) {
       }
       return { suggestions };
     }
-  });
+  };
+  m.languages.registerCompletionItemProvider("javascript", provider);
+  m.languages.registerCompletionItemProvider("fml", provider);
 }
 
 /** Typings of the active expression's scope, replacing the previous ones. */

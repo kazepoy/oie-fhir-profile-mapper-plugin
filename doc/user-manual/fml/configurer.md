@@ -12,9 +12,12 @@ ouvrir **Properties**.
 2. Donner des emplacements accessibles au serveur : fichiers `.fml`, `.map`,
    ressources StructureMap JSON/XML, dossiers ou packages `.tgz`. Dans les
    propriétés de l'étape, séparer les chemins par `;`.
-3. Cliquer **Load maps** pour charger la liste.
-4. Choisir la map par son titre et sa canonique dans **Map**.
-5. Régler la sortie et la validation, puis essayer un message dans **Test**.
+3. Choisir **Source model**. Pour **Typed HL7 v2 logical model**, renseigner la
+   canonique du `StructureDefinition` logique et activer **Use Strict Parser**
+   dans les propriétés HL7 v2 entrantes du connecteur source.
+4. Cliquer **Load maps** pour charger la liste.
+5. Choisir la map par son titre et sa canonique dans **Map**.
+6. Régler la sortie et la validation, puis essayer un message dans **Test**.
 
 Avec un contexte, ses packages et sa version remplacent ceux de l'étape. Le
 contexte doit contenir les profils, ConceptMaps et maps importées nécessaires.
@@ -29,3 +32,7 @@ explicitement cette purge.
 Si **Map** contient du texte dans son onglet dédié, cette map inline est utilisée
 à la place de la sélection de **Properties**. **Clear** dans l'onglet Map
 permet de revenir à la map fichier sélectionnée.
+
+Le mode typé ne devine pas le modèle depuis le message : la canonique doit être
+présente dans les emplacements. Le mode **FHIR resource** attend directement du
+JSON ou XML FHIR de la version choisie.
