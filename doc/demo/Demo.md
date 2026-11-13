@@ -18,8 +18,8 @@ de leur SHA-256. Les packages officiels
 [HL7 Europe Laboratory 2.0.0](https://hl7.eu/fhir/laboratory/2.0.0/) sont eux
 aussi épinglés et vérifiés. Le mapper est compilé avec Maven à partir de l'API de l'image OIE
 cible, puis installé dans cette même image. Le compilateur, le runtime et
-l'éditeur graphique sont repris du POC. L'initialisation importe et déploie dix-sept
-canaux (dans huit groupes `<Source> - <Transfo>`), avec leur IG de démonstration montée dans `/fhir-ig`, les maps FML
+l'éditeur graphique sont repris du POC. L'initialisation importe et déploie dix-huit
+canaux (dans neuf groupes `<Source> - <Transfo>`), avec leur IG de démonstration montée dans `/fhir-ig`, les maps FML
 de [demo/fml](../../demo/fml) montées dans `/fhir-fml`, et les fixtures du modèle FML
 typé montées dans `/fhir-typed`.
 
@@ -35,9 +35,9 @@ remplacer les anciens réglages de démonstration.
 
 La [matrice des exemples](Matrice-exemples.md) classe les canaux par groupes et
 tags, précise les samples disponibles et distingue les capacités démontrées
-des cas encore à construire. Les onze canaux Profile Mapper ont des samples
+des cas encore à construire. Les douze canaux comportant Profile Mapper ont des samples
 enregistrés avec attendu ; cinq aperçus FML sont rejoués par `check.py`, plus un mock HTTP de terminologie.
-Les dix-sept canaux sont classés dans huit groupes natifs OIE (`HL7v2 - Mapper`, `HL7v2 - FML`, `JSON - Mapper`, `CSV - Mapper`, `CSV - FML`, `XML - Mapper`, `FHIR - FML`, `HTTP - Mock`) et portent des tags
+Les dix-huit canaux sont classés dans neuf groupes natifs OIE (`HL7v2 - Mapper`, `HL7v2 - FML`, `FML versus Mapper`, `JSON - Mapper`, `CSV - Mapper`, `CSV - FML`, `XML - Mapper`, `FHIR - FML`, `HTTP - Mock`) et portent des tags
 fonctionnels colorés (sans tags IG/profil) ordonnés uniformément : version, source, transformeur, puis fonctions illustrées triées alphabétiquement.
 
 | Canal | Port | Fonctions montrées |
@@ -58,6 +58,7 @@ fonctionnels colorés (sans tags IG/profil) ordonnés uniformément : version, s
 | CSV to Permission R5 (FML) | 8094 | Source CSV par défaut, map FML R5 produisant un Bundle transaction `Organization` + `Permission` (spécifique R5) |
 | ORU R01 to FHIR Patient (FML IG) | 8095 | Map `StructureMap` JSON publiée dans `/fhir-ig`, résolue par `mapUrl` sans map inline ni fichier `.fml` |
 | Business JSON to Obs (External TX) | 8096 | Serveur de terminologie externe (`external-terminology`), traduction `GLU` → LOINC, repli sur code inconnu et erreur HTTP 503 |
+| ORU R01 Patient (FML vs Mapper) | 8097 | Double destination parallèle sur entrée HL7 v2 simple : Destination 1 en FML inline, Destination 2 en Profile Mapper, sorties identiques et temps comparés en métadonnées (`FML_MS`, `MAPPER_MS`, `DIFF_MS`, `OUTPUTS_EQUAL`) |
 | HTTP Terminology Mock ($translate) | 8099 | Mock OIE HTTP implémentant `GET /fhir/ConceptMap/$translate` pour les essais de terminologie externe et d'indisponibilité |
 
 Pour voir l'assistance à la saisie : ouvrir le canal du port 8082, son transformeur

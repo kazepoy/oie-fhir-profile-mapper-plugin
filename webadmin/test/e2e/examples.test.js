@@ -15,7 +15,7 @@ describe("the JSON, FR Core and FHIR demo channels", () => {
   test("native groups and functional tags are visible in Channels", async () => {
     const { page } = session;
     await page.locator("[data-nav-item]").filter({ hasText: /^Channels$/ }).first().click();
-    for (const name of ["HL7v2 - Mapper", "HL7v2 - FML", "JSON - Mapper", "CSV - Mapper", "CSV - FML", "XML - Mapper", "FHIR - FML", "HTTP - Mock"])
+    for (const name of ["HL7v2 - Mapper", "HL7v2 - FML", "FML versus Mapper", "JSON - Mapper", "CSV - Mapper", "CSV - FML", "XML - Mapper", "FHIR - FML", "HTTP - Mock"])
       await page.getByText(`[${name}]`, { exact: true }).waitFor();
     const row = page.locator("tr").filter({ has: page.getByText("Business JSON to Organization R5", { exact: true }) }).first();
     assert.match(await row.innerText(), /org-description/);

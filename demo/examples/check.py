@@ -230,6 +230,28 @@ def check_additional_channels():
     print("OK terminologie externe : code inconnu -> repli fixed sur data-absent-reason#unknown")
 
 
+def check_fml_vs_mapper_compare(expected_patient):
+    channel_id = "6a2b9104-4d15-4a2b-8f30-809700000001"
+    channel_xml = ET.fromstring(api(f"/channels/{channel_id}"))
+    wait_flags = [c.findtext("waitForPrevious") for c in channel_xml.findall("destinationConnectors/connector")]
+    assert wait_flags == ["false", "false"], wait_flags
+    response = json.loads(post("COMPARE_PATIENT_PORT", 8097, "patient-compare", "oru-r01-minimal.er7", "text/plain"))
+    assert response == expected_patient, response
+    latest = ET.fromstring(api(f"/channels/{channel_id}/messages?limit=1&includeContent=true")).find("message")
+    out1 = encoded(latest, 1)
+    out2 = encoded(latest, 2)
+    assert out1 == expected_patient and out2 == expected_patient and out1 == out2, (out1, out2)
+    source = next(c for c in latest.findall(".//connectorMessage") if c.findtext("metaDataId") == "0")
+    meta = {}
+    for entry in source.findall("metaDataMap/entry"):
+        children = list(entry)
+        if len(children) >= 2:
+            meta[children[0].text] = children[1].text
+    assert float(meta["FML_MS"]) > 0 and float(meta["MAPPER_MS"]) > 0, meta
+    assert meta["OUTPUTS_EQUAL"] == "true" and meta["ERROR_STEP"] == "OK", meta
+    print(f"OK ORU FML vs Mapper (8097) : sorties identiques, FML_MS={meta['FML_MS']}, MAPPER_MS={meta['MAPPER_MS']}, DIFF_MS={meta['DIFF_MS']}")
+
+
 def check_channel_organization():
     manifest = json.loads((EXAMPLES / "channels.json").read_text())
     groups = {g.findtext("id"): g for g in ET.fromstring(api("/channelgroups"))}
@@ -278,6 +300,7 @@ def main():
     inline = json.loads(post("FML_INLINE_PORT", 8089, "patient", "oru-r01-minimal.er7", "text/plain"))
     assert inline == patient, inline
     print("OK ORU → Patient par la map FML écrite dans l'étape, identique")
+    check_fml_vs_mapper_compare(patient)
     check_fml_previews()
 
     transaction = json.loads(post("LAB_BUNDLES_PORT", 8083, "labo", "oru-r01-labo.er7", "text/plain"))

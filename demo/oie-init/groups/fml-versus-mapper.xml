@@ -1,0 +1,14 @@
+<set>
+  <channelGroup version="4.7.0">
+    <id>ce3d058f-a54e-55fd-b2d8-2221bd51da09</id>
+    <name>FML versus Mapper</name>
+    <revision>1</revision>
+    <description>HL7 v2 sources comparing FML and Profile Mapper in parallel destinations</description>
+    <channels>
+      <channel version="4.7.0">
+        <id>6a2b9104-4d15-4a2b-8f30-809700000001</id>
+      </channel>
+    </channels>
+  </channelGroup>
+</set>
+

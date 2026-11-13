@@ -11,6 +11,11 @@
       "name": "HL7v2 - FML"
     },
     {
+      "key": "fml-versus-mapper",
+      "id": "ce3d058f-a54e-55fd-b2d8-2221bd51da09",
+      "name": "FML versus Mapper"
+    },
+    {
       "key": "json-mapper",
       "id": "ce3d058f-a54e-55fd-b2d8-2221bd51da02",
       "name": "JSON - Mapper"
@@ -366,6 +371,21 @@
       ],
       "input": "terminology-translate-query.txt",
       "mock": true
+    },
+    {
+      "channel": "oru-r01-patient-fml-vs-mapper.xml",
+      "group": "fml-versus-mapper",
+      "tags": [
+        "R4",
+        "HL7v2",
+        "FML",
+        "Mapper",
+        "benchmark",
+        "destination-mapping",
+        "dual-destination",
+        "inline"
+      ],
+      "input": "oru-r01-minimal.er7"
     }
   ]
 }

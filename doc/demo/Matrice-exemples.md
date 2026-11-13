@@ -1,8 +1,8 @@
 # Matrice des canaux et exemples
 
 Cette matrice classe les demandes du TODO selon les preuves disponibles. Le
-socle compte désormais dix-sept canaux répartis en huit groupes natifs `<Source> - <Transfo>` :
-**HL7v2 - Mapper**, **HL7v2 - FML**, **JSON - Mapper**, **CSV - Mapper**, **CSV - FML**,
+socle compte désormais dix-huit canaux répartis en neuf groupes natifs `<Source> - <Transfo>` :
+**HL7v2 - Mapper**, **HL7v2 - FML**, **FML versus Mapper**, **JSON - Mapper**, **CSV - Mapper**, **CSV - FML**,
 **XML - Mapper**, **FHIR - FML** et **HTTP - Mock**.
 
 Le [manifeste](../../demo/examples/channels.json) associe chaque export à un
@@ -28,6 +28,7 @@ en destination après nettoyage ; le canal CSV FML R5 transforme directement en 
 | `hl7v2-fml` | ORU R01 to FHIR Bundle (FML typed) (8087) | Modèle logique HL7 v2 et map important une autre map | XML typé et Bundle attendu, contrôlés par l'API FML et le canal ER7 |
 | `hl7v2-fml` | ORU R01 to FHIR Patient (FML inline) (8089) | Map embarquée, modèle `OieMessage`, ConceptMap locale | Message ER7 préchargé ; Patient attendu vérifié par l'API FML et le canal |
 | `hl7v2-fml` | ORU R01 to FHIR Patient (FML IG) (8095) | `StructureMap` JSON publiée dans `/fhir-ig`, résolue par `mapUrl` | ER7 nominal et ER7 sans date de naissance refusé |
+| `fml-versus-mapper` | ORU R01 Patient (FML vs Mapper) (8097) | Double destination parallèle HL7 v2 simple : FML inline vs Mapper, sorties identiques | Métadonnées `FML_MS`, `MAPPER_MS`, `DIFF_MS` et `OUTPUTS_EQUAL=true` |
 | `xml-mapper` | SQL XML to FHIR Patient (8084) | XML de ligne SQL simulée, accents et zéros initiaux | Ligne XML et Patient attendu ; aucune base SQL requise |
 | `csv-mapper` | CSV Business Patients to Patient (8085) | Découpage batch, nettoyage puis mapping en destination | Sample XML d'une ligne déjà nettoyée ; rejeu CSV vérifiant les dix messages |
 | `csv-mapper` | CSV Business Patients to Collection (8086) | Dix ressources dans un seul Bundle | Sample XML nettoyé, portée **transformer**, collection attendue |
@@ -105,7 +106,7 @@ python3 demo/examples/check.py
 
 Le premier contrôle impose une entrée de manifeste par export, l'ordre
 canonique des tags, un message préchargé par canal et les attendus des exemples.
-Le second contrôle les structures des quatorze samples Profile Mapper ; le
-dernier exécute les dix-sept canaux, ces quatorze samples, les cinq aperçus
-FML, les sept contre-exemples et le contrôle des huit groupes et des tags. Voir
+Le second contrôle les structures des quinze samples Profile Mapper ; le
+dernier exécute les dix-huit canaux, ces quinze samples, les cinq aperçus
+FML, les sept contre-exemples et le contrôle des neuf groupes et des tags. Voir
 le [guide de rejeu](Rejeu-tests.md) pour cibler un export.

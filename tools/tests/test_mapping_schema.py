@@ -30,7 +30,7 @@ class MappingSchemaTest(unittest.TestCase):
 
     def test_all_demo_channels(self):
         channels = list((ROOT / "demo/oie-init/channels").glob("*.xml"))
-        self.assertEqual(17, len(channels))  # 11 Profile Mapper, 5 FML, 1 HTTP mock
+        self.assertEqual(18, len(channels))  # 11 Profile Mapper, 5 FML, 1 FML+Mapper, 1 HTTP mock
         count = 0
         for path in channels:
             # OIE stocke le nom dans CHANNEL.NAME, varchar(40) : un nom plus long fait échouer l'import.
