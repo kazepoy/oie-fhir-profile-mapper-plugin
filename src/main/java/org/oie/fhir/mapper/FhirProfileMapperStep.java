@@ -185,15 +185,20 @@ public class FhirProfileMapperStep extends Step {
 
     @Override
     public String getScript(boolean loadFiles) throws ScriptBuilderException {
-        return compileScript(false);
+        return compileScript(false, false, false);
     }
 
     /** Builds this step's resource alone, for the editor preview and rule-level tests. */
     public String getPreviewScript() throws ScriptBuilderException {
-        return compileScript(true);
+        return compileScript(true, false, false);
     }
 
-    private String compileScript(boolean preview) throws ScriptBuilderException {
+    /** Uses deployed assembly semantics without registering a fictitious deployed channel. */
+    public String getTransformerPreviewScript(boolean last) throws ScriptBuilderException {
+        return compileScript(false, true, last);
+    }
+
+    private String compileScript(boolean preview, boolean transformerPreview, boolean last) throws ScriptBuilderException {
         if (resourceType == null || resourceType.trim().isEmpty()) {
             throw new ScriptBuilderException("FHIR Profile Mapper \"" + getName() + "\": no profile has been loaded (the resource type is empty).");
         }
@@ -377,6 +382,7 @@ public class FhirProfileMapperStep extends Step {
         } else {
             sb.append("__fhir.stageResource(__res, ").append(FhirJson.write(text(variable))).append(");\n");
         }
+        if (transformerPreview) sb.append("__fhirMapperStepResults.add(__fhir.json(__res));\n");
         sb.append("};\n");
         if (resourceIteration != null) {
             if (create) {
@@ -392,10 +398,11 @@ public class FhirProfileMapperStep extends Step {
         if (preview && resourceIteration != null) sb.append("__out = __preview;\n");
         sb.append("return __out;\n})(__fhir.source(msg));\n");
         if (!preview) {
-            sb.append("if (typeof connectorMessage !== 'undefined' && typeof channelId !== 'undefined' && ")
+            if (transformerPreview) sb.append("if (").append(last).append(") {\n__fhirMapperFinalizing = true;\n");
+            else sb.append("if (typeof connectorMessage !== 'undefined' && typeof channelId !== 'undefined' && ")
                     .append("Packages.org.oie.fhir.mapper.FhirMapperLifecycle.isLast(channelId, connectorMessage.getMetaDataId(), ")
-                    .append(FhirJson.write(text(getSequenceNumber()))).append(", typeof response !== 'undefined')) {\n")
-                    .append("var __published = __fhir.completeBundles();\nif (__published !== undefined) __out = __published;\n}\n");
+                    .append(FhirJson.write(text(getSequenceNumber()))).append(", typeof response !== 'undefined')) {\n");
+            sb.append("var __published = __fhir.completeBundles();\nif (__published !== undefined) __out = __published;\n}\n");
         }
         sb.append("if (__out === undefined || __out === null) {\nreturn;\n}\n");
         String target = preview ? text(variable) : "";
@@ -414,7 +421,7 @@ public class FhirProfileMapperStep extends Step {
         } else {
             sb.append("channelMap.put(").append(FhirJson.write(target)).append(", __fhir.json(__out));\n");
         }
-        if (!preview) traceDeployed(sb, traceAt);
+        if (!preview && !transformerPreview) traceDeployed(sb, traceAt);
         sb.append("})();\n");
         return sb.toString();
     }

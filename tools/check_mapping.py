@@ -20,7 +20,7 @@ def errors(step):
         yield f"{error.json_path}: {error.message}"
     if not isinstance(step, dict):
         return
-    for field in ("mappings", "bundleTargets"):
+    for field in ("mappings", "bundleTargets", "samples"):
         value = step.get(field, "[]")
         if not isinstance(value, str):
             continue  # Le schéma de l'étape signale déjà le mauvais type.

@@ -46,6 +46,6 @@ Le nom est distinct du FHIR `id` et du **Bundle Name**. L'expression retourne la
 référence réservée à la ressource ; ne pas construire son UUID à la main.
 La complétion propose les références nommées d'autres étapes du transformeur.
 
-Le Bundle est finalisé après les étapes de mapping. Un aperçu d'étape simule les
-références : seul un essai du **canal déployé** vérifie les identités, références
-et sorties finales de tous les Bundles.
+Le Bundle est finalisé après les étapes de mapping. L’[aperçu multi-étapes](apercu-multi-etapes.md)
+vérifie les identités, références et sorties finales des Profile Mapper ensemble.
+Un essai déployé reste nécessaire pour les autres étapes et les transports.

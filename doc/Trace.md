@@ -3,7 +3,7 @@
 La trace existe sous deux formes, désactivées par défaut et de même format
 d'événements :
 
-- la trace d'un **test**, qui observe l'aperçu d'une seule étape exécuté par
+- la trace d'un **test**, qui observe l’aperçu isolé ou multi-étapes exécuté par
   `POST /test`. Ses références restent simulées, comme pour un test sans trace ;
 - la trace des **messages traités** par un channel déployé, qui suit les étapes
   tracées d'un connecteur, les références réelles, la finalisation des Bundles
@@ -212,3 +212,12 @@ sont tracées. Les tests Node vérifient les libellés, les indices et la
 sérialisation de l'export. Le téléchargement de l'export, l'activation dans
 **Properties** et la lecture dans **Messages > Mappings** ont été vérifiés dans
 le navigateur.
+
+## Aperçu multi-étapes
+
+Avec `steps` sur `/test`, la trace a `scope:"transformer-preview"`, `steps`
+contient les identités des étapes et chaque événement porte `step` (leur
+`sequenceNumber`). Les événements de finalisation sont rattachés à la dernière
+étape exécutée. La limite d’événements et l’option de capture des valeurs restent
+communes à tout l’aperçu. L’éditeur affiche les diagnostics de toutes les étapes,
+mais **Go to rule** n’ouvre que les règles de l’étape actuellement sélectionnée.

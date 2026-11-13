@@ -284,7 +284,15 @@ Le plugin déclare trois permissions, appliquées par un plugin d'autorisation c
 
 Le test exécute le code de l'étape sur le serveur, avec l'accès à Java, à la configuration map et aux code templates, comme un channel déployé : n'accorder **Test FHIR mapper steps** qu'aux utilisateurs autorisés à déployer. Sans cette permission, l'onglet **Test** l'indique. L'exécution est limitée à dix secondes.
 
-L'onglet **Test** exécute l'étape seule. Son type et son contenu initiaux viennent du template entrant du transformeur concerné ; en destination, prévoir le message déjà nettoyé par la source. Les modifications du message de test sont mémorisées par channel, connecteur et transformeur de réponse éventuel. Il ne simule pas les autres étapes ni l'intégralité des Bundles nommés. Les références aux autres étapes utilisent des valeurs de remplacement. Une itération sur la ressource est montrée sous forme de collection de prévisualisation. Pour certifier les deux Bundles de laboratoire, envoyer un message au channel déployé et inspecter les deux résultats.
+L’onglet **Test** propose **Preview scope** : **This step only** conserve
+l’aperçu isolé et ses références de remplacement ; **Profile Mapper steps of
+this transformer** exécute les Profile Mapper activés du même transformeur,
+dans l’ordre, avec les vraies références et la finalisation des Bundles. Les
+ressources intermédiaires et les variables publiées sont consultables séparément.
+Les autres types d’étapes sont exclus. Le message initial vient du template
+entrant du transformeur ; en destination, fournir un message préparé par la source.
+Le [manuel multi-étapes](user-manual/profile-mapper/apercu-multi-etapes.md) précise
+le parcours et ses limites.
 
 **Generated script** montre la compilation réelle. **Validate Step** vérifie la configuration de l'étape ; un test de message vérifie aussi le comportement des expressions et, si elle est activée, la validation FHIR de leur résultat.
 
@@ -300,9 +308,9 @@ alors sauvegardé avec le canal, dans la propriété `samples`, au lieu du navig
 La liste des exemples permet d'en changer ; un exemple se modifie en place et se
 supprime par **Delete sample**. Après un test, **Use this result as expected** fixe le
 résultat de référence de l'exemple : les tests suivants disent s'il correspond, et
-montrent sinon les deux résultats côte à côte. Les identités `urn:uuid` et
-`meta.lastUpdated` sont ignorées dans la comparaison. **Run all** exécute tous les
-exemples et donne pour chacun *passed* ou *failed* (erreur, résultat FHIR invalide
+montrent sinon les deux résultats côte à côte. Les identités `urn:uuid` sont renommées en conservant leurs relations de référence ;
+`meta.lastUpdated` et l’ordre des propriétés JSON sont ignorés dans la comparaison. **Run all** exécute tous les
+exemples, chacun dans son périmètre enregistré, et donne pour chacun *passed* ou *failed* (erreur, résultat FHIR invalide
 ou écart avec l'attendu).
 
 Cocher **Trace** avant **Run** pour voir les phases d'exécution dans
@@ -311,6 +319,12 @@ Cocher **Trace** avant **Run** pour voir les phases d'exécution dans
 désactivée par défaut. **Export trace JSON** télécharge la trace de ce test.
 Les options, les limites et la portée de l'aperçu sont précisées dans
 [Trace.md](Trace.md).
+
+Les boutons d’import/export de **Properties** acceptent des tableaux CSV ou
+Markdown (`key,expression,note`) et exportent la documentation Markdown/HTML,
+avec notes, activation, conditions et traductions. L’import vérifie toutes les
+cibles avant application ; **Undo** annule l’import en une opération. Voir
+[Tableaux et documentation](user-manual/profile-mapper/tableaux-et-documentation.md).
 
 ## 10. Limites et vérification
 

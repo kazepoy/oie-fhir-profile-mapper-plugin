@@ -9,13 +9,13 @@ saisie complète** dans le mappeur graphique, et un **second transformeur FML**
 Ce document remplace le plan initial du projet (retiré du dépôt ; voir l'historique
 git et le [CHANGELOG](../CHANGELOG.md) pour ce qui a été livré).
 
-## État d'avancement (branche `feat/refonte`, 12 novembre 2026)
+## État d'avancement (branche `feat/refonte`, 13 novembre 2026)
 
 | Phase | État |
 |---|---|
 | 1 Socle frontend | **Socle livré** : modules de modèle/compilation, adaptation hôte et saisie extraits ; tests par imports directs sans VM ; anglais/français, variables de thème et contrôle frontend. Maven reconstruit le bundle avant assemblage ; ZIP reproductible vérifié et contrôlé en CI. Les éditeurs gardent leur orchestration. Parcours Chromium/WebKit en clair/sombre et français/anglais ; compte RBAC temporaire avec canaux limités et refus serveur vérifiés. |
 | 3 Studio et saisie | **Fait en partie** : Monaco sur les expressions, complétion (fonctions, variables, chemins, snippets, références), recherche, annuler/rétablir, plein écran, erreurs marquées et soulignées, volet *Sample fields*, clavier. Codes de binding proposés dans la complétion. Notes et activation par règle accessibles avec *Rules*, y compris dans l'historique. Inspecteur de sélection avec métadonnées, édition des règles, aide et diagnostics. Pickers des extensions du profil et du contexte, ConceptMaps filtrées, menu contextuel et duplication de branche. Restent notamment : agencement complet à trois volets, liaisons source/cible et revue ergonomique. |
-| 4 Tests et traces | **Fait en partie** : exemples enregistrés dans l'étape, résultat attendu, comparaison, *Run all*, action *FHIR mapping trace*. Restent : aperçu multi-étapes, exécution par outil, import/export de tableaux. |
+| 4 Tests et traces | **Fait** : exemples enregistrés, résultat attendu, comparaison et *Run all* ; aperçu ordonné des étapes Profile Mapper avec références et Bundles réels ; action *FHIR mapping trace* ; rejeu hors ligne/en ligne par `tools/run_tests.py` ; import CSV/Markdown et export de tableaux ou de documentation Markdown/HTML. |
 | 5 FML | **Fait en partie** : étape intégrée, map écrite dans l'étape, langage `fml`, *Check*. Restent : complétion, squelette, modèles typés, pool. |
 | 2 Serveur | **Fait** : contextes FHIR, format 2, politique de validation, catalogue des packages, arbre d'un profil en une requête, codes des ValueSets. Non fait, par choix : outil de migration (le format 1 reste lu tel quel) et cache d'index persistant (les réponses sont gardées en mémoire jusqu'au rechargement). |
 | 6, 7 | À faire. |
@@ -585,3 +585,17 @@ Le message est lu par le Strict Parser (`Use Strict Parser`, `Strip Namespaces`)
 puis `ORU_R01.PATIENT_RESULT/ORU_R01.PATIENT/PID/PID.3/CX.5` devient
 `ORU__R01_PATIENT__RESULT.ORU__R01_PATIENT.PID.PID_3.CX_5.value` dans l'instance
 du modèle logique.
+
+
+
+TODO : dans l'onglet test, ce serait bien de voir comment on pourrait et si il possible de visualiser ou representer les liens entre les données source et resulat ? par exemple pid.5.1 -> patient.id.  cela premettrait de remonter les erreurs de mapping plus facilemen et de visualiser les regles en cause. A etudier
+
+TODO revoir la disposition dans les onglets, cela devient confus et pas ergonomique
+
+TODO voir si editer en json peut aller dans la fenetre json deja presente dans oie ou si on fait un onglet dédié
+
+TODO voir les liens vers definition fhir officielle comment dans le cas d'ig publiées on peut aller vers le bon endroit pour avoir les details de la ressource ou du type (ex : Patient.id) et non pas juste la page de base de la spec Fhir.
+
+TODO pour les champ avec fonction (ex : fhirFind(msg['PID']['PID.3'], function (cx) { return cx['PID.3.5'] == 'PI'; })['PID.3.1'].toString()) voir si possible d'evaluer en live a partir de l'exempleTODO : dans le mapping, il serait bien de pouvoir selectionner un element du modele source et
+
+TODO pour fml si map selectionnée, pouvoir la recup dans ecran editeur pour "surcharger". si map qui imbrique d'autre maps en cascade, voir comment faire pour choisir ou voir si on surcharge l'arbre des maps interpendantes.  A voir si on peut le faire avec un simple selecteur de map...

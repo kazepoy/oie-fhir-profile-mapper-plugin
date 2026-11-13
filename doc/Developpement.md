@@ -99,6 +99,13 @@ playwright install chromium webkit`, lancer la démo, puis `npm run test:e2e`.
 La variable `E2E_BROWSER=webkit` sélectionne WebKit ; la langue et le thème des
 parcours sont explicitement définis, indépendamment du poste de développement.
 
+## Rejouer les exemples
+
+Le [guide de rejeu](Rejeu-tests.md) décrit `tools/run_tests.py`, la validation
+hors ligne et les essais sur serveur. La CI de release contrôle les exports
+positifs hors ligne ; `demo/examples/check.py` compare les aperçus aux sorties
+déployées et rejoue les samples de la démo en ligne.
+
 ## Vérifier la reproductibilité
 
 Après `mvn clean package`, exécuter depuis la racine :

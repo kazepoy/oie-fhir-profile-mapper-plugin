@@ -38,6 +38,10 @@ test("a temporary restricted role can edit its channel but cannot test or save s
     await mapper.getByRole("button", { name: "Exécuter", exact: true }).click();
     assert.equal((await mapperDenied).status(), 403);
     await mapper.getByText(/permission « Test FHIR mapper steps »/).waitFor();
+    await mapper.getByLabel("Périmètre de l’aperçu", { exact: true }).selectOption("transformer");
+    const transformerDenied = page.waitForResponse(response => response.url().endsWith("/fhir-profile-mapper/test"));
+    await mapper.getByRole("button", { name: "Exécuter", exact: true }).click();
+    assert.equal((await transformerDenied).status(), 403);
     await openStep(page, "ORU R01 vers Patient FHIR (FML inline)", "Patient (FML inline)");
     const fml = page.locator(".fhir-fml");
     await fml.getByRole("tab", { name: "Test", exact: true }).click();

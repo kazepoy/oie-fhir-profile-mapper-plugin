@@ -29,6 +29,7 @@ public final class FhirMapperTrace {
     private final List<Object> steps = new ArrayList<>();
     private int characters;
     private boolean truncated;
+    private Object previewSequence;
 
     private FhirMapperTrace(Map<?, ?> options, Object step) {
         Object limit = options.get("maxEvents");
@@ -105,6 +106,18 @@ public final class FhirMapperTrace {
 
     public boolean captureValues() { return captureValues; }
 
+    void transformerPreview() {
+        result.put("scope", "transformer-preview");
+        result.remove("step");
+        result.put("steps", steps);
+    }
+
+    void previewStep(String json) {
+        Map<?, ?> info = (Map<?, ?>) FhirJson.parse(json);
+        steps.add(info);
+        previewSequence = info.get("sequenceNumber");
+    }
+
     public boolean isRecording() {
         if (events.size() >= maxEvents) truncated = true;
         return !truncated;
@@ -114,7 +127,9 @@ public final class FhirMapperTrace {
     public void record(String json) {
         if (!isRecording()) return;
         if (characters + json.length() > MAX_CHARACTERS) { truncated = true; return; }
-        events.add(FhirJson.parse(json));
+        Map<String, Object> event = (Map<String, Object>) FhirJson.parse(json);
+        if (previewSequence != null) event.put("step", previewSequence);
+        events.add(event);
         characters += json.length();
     }
 

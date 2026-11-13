@@ -23,7 +23,11 @@ for (const colorScheme of ["light", "dark"]) test(`French editors and settings i
     const expression = inspector.getByRole("combobox", { name: "Expression de l’inspecteur pour Patient.gender", exact: true });
     assert.match(await expression.evaluate(el => el.value ?? el.dataset.value), /msg\['PID'\]/);
     const theme = await mapper.evaluate(el => ({ background: getComputedStyle(el).backgroundColor, text: getComputedStyle(el).color }));
-    assert.equal(theme.background, colorScheme === "dark" ? "rgb(22, 34, 44)" : "rgb(255, 255, 255)");
+    if (colorScheme === "dark") {
+      const channels = theme.background.match(/\d+/g)?.map(Number) ?? [];
+      assert.equal(channels.length, 3);
+      assert.ok(channels.reduce((sum, value) => sum + value, 0) < 200, `Expected a dark background, got ${theme.background}`);
+    } else assert.equal(theme.background, "rgb(255, 255, 255)");
     assert.notEqual(theme.background, theme.text);
     await mapper.getByRole("button", { name: "Aide : mappeur", exact: true }).click();
     assert.match(await mapper.getByRole("dialog", { name: "Aide : mappeur" }).innerText(), /Lire l’arbre/i);

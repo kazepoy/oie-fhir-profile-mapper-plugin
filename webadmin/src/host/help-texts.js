@@ -62,7 +62,7 @@ export const MAPPER_HELP = {
     label: "Help: Test",
     sections: [
       { title: "What a test runs", lines: [
-        "Run executes this step alone on the server, on the sample message, and validates what it makes. References to other steps are stand-ins: deploy the channel to check a whole Bundle.",
+        "Preview scope chooses this step alone (stand-in references) or the enabled Profile Mapper steps of this transformer (real references and finalized Bundles). Other step types are excluded.",
         "Testing runs the step's code on the server and needs the permission “Test FHIR mapper steps”."] },
       { title: "Samples", lines: [
         ["Save as sample", "Keeps the message in the step, so it is saved with the channel and shared by every user."],

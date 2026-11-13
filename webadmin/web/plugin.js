@@ -135,6 +135,7 @@ var en_default = Object.fromEntries([
   "Empty: the resource type or type/id",
   "Enable branch rules",
   "Enable {p0} rule for {p1}",
+  "Enabled",
   "Every required element below the mapped ones has a mapping or a fixed value.",
   "Every rule needs a path.",
   "Example",
@@ -144,8 +145,13 @@ var en_default = Object.fromEntries([
   "Expand the mapped elements",
   "Expected a step JSON object.",
   "Explicitly include scalar values in the trace and its JSON export (256 characters per value).",
+  "Export CSV table",
+  "Export HTML documentation",
+  "Export Markdown documentation",
+  "Export Markdown table",
   "Export trace JSON",
   "Expression",
+  "Expression / fixed value",
   "Extensions",
   "FHIR JSON in the channel map; use it from another destination.",
   "FHIR Mapper · {p0}",
@@ -187,12 +193,17 @@ var en_default = Object.fromEntries([
   "How long answers of the server are reused; 0 for not at all.",
   "How long to wait for the server.",
   "If-None-Exist",
+  "Import value table",
+  "Imported {count} value edit(s).",
   "In the inspector, Profile extension reveals a declared slice and its URL. List context extensions offers other URLs to add to an open extension collection; choose its value type in the tree afterwards.",
   "Inspect element",
   "Inspect {p0}",
   "Inspector expression for {p0}",
   "Internal name used by resource steps; separate from the FHIR id and profile URL.",
+  "Invalid CSV quoting.",
+  "Invalid or duplicate value target: {key}",
   "Invalid step property: {p0}",
+  "Invalid table row {number}.",
   "Items of a list matching a condition.",
   "Iteration",
   "JavaScript expression",
@@ -206,6 +217,7 @@ var en_default = Object.fromEntries([
   "List context extensions",
   "List profiles",
   "Load",
+  "Load a profile before importing a table.",
   "Load a target profile in Properties to map its elements.",
   "Load a target profile in Properties to test this step.",
   "Load maps",
@@ -246,6 +258,7 @@ var en_default = Object.fromEntries([
   "No saved rule for this element.",
   "Not in this profile, removed: {p0}.",
   "Not used: the step runs the map written in the Map tab.",
+  "Note",
   "Note for {p0} rule for {p1}",
   "OIE model",
   "OIE model of the message",
@@ -273,10 +286,15 @@ var en_default = Object.fromEntries([
   "Packages: {p0} · terminology: {p1} · validation: {p2}. Defined in Settings › FHIR Mapper.",
   "Parses the map on the server. Errors are underlined at their line; unknown uses and imports are reported.",
   "Pattern",
+  "Preview scope",
+  "Preview scope chooses this step alone (stand-in references) or the enabled Profile Mapper steps of this transformer (real references and finalized Bundles). Other step types are excluded.",
+  "Produced resources by step",
+  "Profile Mapper steps of this transformer",
   "Profile Packages",
   "Profile extension",
   "Profile locations",
   "Properties",
+  "Published channel variables",
   "Random identities (urn:uuid) and meta.lastUpdated are ignored when comparing",
   "Random identities (urn:uuid) and meta.lastUpdated are ignored when comparing.",
   "Read current step",
@@ -297,6 +315,7 @@ var en_default = Object.fromEntries([
   "Result destination",
   "Results of the saved samples",
   "Right-click a row, press Shift+F10 on its name, or use its ⋯ button to open the actions menu.",
+  "Rule",
   "Rule details for {p0}",
   "Rule ids must be valid and unique within a step.",
   "Rule note…",
@@ -306,10 +325,10 @@ var en_default = Object.fromEntries([
   "Run all",
   "Run all ({p0})",
   "Run every saved sample and compare with its expected result",
-  "Run executes this step alone on the server, on the sample message, and validates what it makes. References to other steps are stand-ins: deploy the channel to check a whole Bundle.",
   "Run test",
   "Run test executes the map on the sample message, on the server, and validates the result.",
   "Running…",
+  "Runs enabled Profile Mapper steps in order, with real references and Bundle finalization. Other step types are excluded.",
   "Runs every saved sample: passed, or failed on an error, an invalid result or a difference.",
   "Runs this step on the server and validates what it makes; fhirRef() of earlier steps gives stand-ins.",
   "Runtime values not captured.",
@@ -342,6 +361,8 @@ var en_default = Object.fromEntries([
   "Step {number}",
   "Steps: {steps}",
   "Suggestions: iteration variables, codes of the value set, references of other steps, mapper functions, paths of the sample.",
+  "Tables edit value expressions and notes only. Other rules remain in the step. Empty expressions remove their value mapping.",
+  "Target",
   "Target Profile",
   "Target: {p0}",
   "Terminology Server",
@@ -355,6 +376,7 @@ var en_default = Object.fromEntries([
   "The JavaScript the server compiles from the mappings.",
   "The Test tab shows the model the map receives for a message: use it to find the names and positions of the nodes.",
   "The completed Bundle is published here after the configured checks of all named Bundles.",
+  "The current transformer cannot be identified.",
   "The editors use it at once. A deployed channel keeps the context it read when it was deployed: redeploy it.",
   "The element takes its codes from a value set: they are offered while typing.",
   "The element {p0} is not in the loaded profile.",
@@ -370,14 +392,18 @@ var en_default = Object.fromEntries([
   "The profile is now version {p0}; these mappings were made with version {p1}. Check them (elements no longer in the profile are listed).",
   "The resource the map built.",
   "The step on the whole page; Esc comes back.",
+  "The table contains no value edits.",
+  "The table must have key, expression and note columns.",
   "The translation of {p0} needs a {p1} for codes without a match.",
   "The value for codes without a match: a code, or system|code",
   "The variable of the iteration on {p0} must be a JavaScript name.",
   "The whole step as text, to copy it elsewhere or paste a mapping written by hand or by an agent. It is compiled on the server before it is applied.",
   "The whole step — properties and rules — as text: copy it to another step or channel, paste a mapping written by hand or by an AI agent, or make bulk edits. Validate and apply compiles it on the server first.",
   "This Bundle must be created earlier in the transformer.",
+  "This diagnostic belongs to step {name}. Select that step to edit its rule.",
   "This is not a FHIR Profile Mapper step.",
   "This message has no FHIR mapping trace. Enable “Trace processed messages” on a FHIR Profile Mapper step, redeploy the channel, and check that its message storage keeps the maps.",
+  "This step only",
   "Timeout (seconds)",
   "Toggle condition",
   "Toggle iteration",
@@ -388,6 +414,7 @@ var en_default = Object.fromEntries([
   "Translate the value with ConceptMap/$translate",
   "Translate the value with a ConceptMap; choose what happens without a match.",
   "Translates with a ConceptMap of the locations.",
+  "Translation",
   "Type",
   "Understanding a result",
   "Undo / Redo",
@@ -657,6 +684,7 @@ var fr_default = {
   "Empty: the resource type or type/id": "Vide : type de ressource ou type/id",
   "Enable branch rules": "Activer les règles de la branche",
   "Enable {p0} rule for {p1}": "Activer la règle {p0} pour {p1}",
+  "Enabled": "Activée",
   "Every required element below the mapped ones has a mapping or a fixed value.": "Chaque élément requis sous les éléments mappés possède un mapping ou une valeur fixe.",
   "Every rule needs a path.": "Chaque règle doit avoir un chemin.",
   "Example": "Exemple",
@@ -666,8 +694,13 @@ var fr_default = {
   "Expand the mapped elements": "Déplier les éléments mappés",
   "Expected a step JSON object.": "Un objet JSON d’étape est attendu.",
   "Explicitly include scalar values in the trace and its JSON export (256 characters per value).": "Inclure explicitement les valeurs scalaires dans la trace et son export JSON (256 caractères par valeur).",
+  "Export CSV table": "Exporter un tableau CSV",
+  "Export HTML documentation": "Exporter la documentation HTML",
+  "Export Markdown documentation": "Exporter la documentation Markdown",
+  "Export Markdown table": "Exporter un tableau Markdown",
   "Export trace JSON": "Exporter la trace JSON",
   "Expression": "Expression",
+  "Expression / fixed value": "Expression / valeur fixe",
   "Extensions": "Extensions",
   "FHIR JSON in the channel map; use it from another destination.": "JSON FHIR dans la Channel Map ; à utiliser depuis une destination suivante.",
   "FHIR Mapper · {p0}": "FHIR Mapper · {p0}",
@@ -709,12 +742,17 @@ var fr_default = {
   "How long answers of the server are reused; 0 for not at all.": "Durée de réutilisation des réponses ; 0 pour ne pas les réutiliser.",
   "How long to wait for the server.": "Délai d’attente du serveur.",
   "If-None-Exist": "If-None-Exist",
+  "Import value table": "Importer un tableau de valeurs",
+  "Imported {count} value edit(s).": "{count} modification(s) de valeur importée(s).",
   "In the inspector, Profile extension reveals a declared slice and its URL. List context extensions offers other URLs to add to an open extension collection; choose its value type in the tree afterwards.": "Dans l’inspecteur, Extension du profil révèle une slice et son URL. Lister les extensions du contexte propose d’autres URL à ajouter à une collection ouverte ; choisir ensuite son type de valeur dans l’arbre.",
   "Inspect element": "Inspecter l’élément",
   "Inspect {p0}": "Inspecter {p0}",
   "Inspector expression for {p0}": "Expression de l’inspecteur pour {p0}",
   "Internal name used by resource steps; separate from the FHIR id and profile URL.": "Nom interne utilisé par les étapes ressources ; distinct de l’id FHIR et de l’URL du profil.",
+  "Invalid CSV quoting.": "Guillemets CSV invalides.",
+  "Invalid or duplicate value target: {key}": "Cible de valeur invalide ou en double : {key}",
   "Invalid step property: {p0}": "Propriété d’étape invalide : {p0}",
+  "Invalid table row {number}.": "Ligne de tableau {number} invalide.",
   "Items of a list matching a condition.": "Éléments d’une liste respectant une condition.",
   "Iteration": "Itération",
   "JavaScript expression": "Expression JavaScript",
@@ -728,6 +766,7 @@ var fr_default = {
   "List context extensions": "Lister les extensions du contexte",
   "List profiles": "Lister les profils",
   "Load": "Charger",
+  "Load a profile before importing a table.": "Charger un profil avant d’importer un tableau.",
   "Load a target profile in Properties to map its elements.": "Charger un profil cible dans Propriétés pour mapper ses éléments.",
   "Load a target profile in Properties to test this step.": "Charger un profil cible dans Propriétés pour tester cette étape.",
   "Load maps": "Charger les maps",
@@ -768,6 +807,7 @@ var fr_default = {
   "No saved rule for this element.": "Aucune règle enregistrée pour cet élément.",
   "Not in this profile, removed: {p0}.": "Absents de ce profil et retirés : {p0}.",
   "Not used: the step runs the map written in the Map tab.": "Non utilisée : l’étape exécute la map de l’onglet Map.",
+  "Note": "Note",
   "Note for {p0} rule for {p1}": "Note de la règle {p0} pour {p1}",
   "OIE model": "Modèle OIE",
   "OIE model of the message": "Modèle OIE du message",
@@ -795,10 +835,15 @@ var fr_default = {
   "Packages: {p0} · terminology: {p1} · validation: {p2}. Defined in Settings › FHIR Mapper.": "Packages : {p0} · terminologie : {p1} · validation : {p2}. Définis dans Settings › FHIR Mapper.",
   "Parses the map on the server. Errors are underlined at their line; unknown uses and imports are reported.": "Analyse la map sur le serveur. Les erreurs sont soulignées à leur ligne ; les uses et imports inconnus sont signalés.",
   "Pattern": "Motif",
+  "Preview scope": "Périmètre de l’aperçu",
+  "Preview scope chooses this step alone (stand-in references) or the enabled Profile Mapper steps of this transformer (real references and finalized Bundles). Other step types are excluded.": "Le périmètre permet de choisir cette étape seule (références de remplacement) ou les étapes Profile Mapper activées de ce transformeur (références réelles et Bundles finalisés). Les autres types d’étapes sont exclus.",
+  "Produced resources by step": "Ressources produites par étape",
+  "Profile Mapper steps of this transformer": "Étapes Profile Mapper de ce transformeur",
   "Profile Packages": "Packages de profils",
   "Profile extension": "Extension du profil",
   "Profile locations": "Emplacements des profils",
   "Properties": "Propriétés",
+  "Published channel variables": "Variables du canal publiées",
   "Random identities (urn:uuid) and meta.lastUpdated are ignored when comparing": "Les identités aléatoires (urn:uuid) et meta.lastUpdated sont ignorées pour la comparaison",
   "Random identities (urn:uuid) and meta.lastUpdated are ignored when comparing.": "Les identités aléatoires (urn:uuid) et meta.lastUpdated sont ignorées pour la comparaison.",
   "Read current step": "Lire l’étape actuelle",
@@ -819,6 +864,7 @@ var fr_default = {
   "Result destination": "Destination du résultat",
   "Results of the saved samples": "Résultats des exemples enregistrés",
   "Right-click a row, press Shift+F10 on its name, or use its ⋯ button to open the actions menu.": "Clic droit sur une ligne, Maj+F10 sur son nom ou bouton ⋯ pour ouvrir le menu d’actions.",
+  "Rule": "Règle",
   "Rule details for {p0}": "Détails des règles pour {p0}",
   "Rule ids must be valid and unique within a step.": "Les identifiants de règles doivent être valides et uniques dans une étape.",
   "Rule note…": "Note de la règle…",
@@ -828,10 +874,10 @@ var fr_default = {
   "Run all": "Tout exécuter",
   "Run all ({p0})": "Tout exécuter ({p0})",
   "Run every saved sample and compare with its expected result": "Exécuter chaque exemple enregistré et comparer son résultat attendu",
-  "Run executes this step alone on the server, on the sample message, and validates what it makes. References to other steps are stand-ins: deploy the channel to check a whole Bundle.": "Exécuter lance cette étape seule sur le serveur et valide sa sortie. Les références des autres étapes sont simulées : déployer le canal pour vérifier un Bundle complet.",
   "Run test": "Exécuter le test",
   "Run test executes the map on the sample message, on the server, and validates the result.": "Exécuter le test lance la map sur le message exemple, sur le serveur, et valide le résultat.",
   "Running…": "Exécution…",
+  "Runs enabled Profile Mapper steps in order, with real references and Bundle finalization. Other step types are excluded.": "Exécute les étapes Profile Mapper activées dans l’ordre, avec les références réelles et la finalisation des Bundles. Les autres types d’étapes sont exclus.",
   "Runs every saved sample: passed, or failed on an error, an invalid result or a difference.": "Exécute tous les exemples enregistrés : réussite, ou échec en cas d’erreur, de résultat invalide ou d’écart.",
   "Runs this step on the server and validates what it makes; fhirRef() of earlier steps gives stand-ins.": "Exécute cette étape sur le serveur et valide sa sortie ; fhirRef() simule les références des étapes précédentes.",
   "Runtime values not captured.": "Valeurs d’exécution non capturées.",
@@ -864,6 +910,8 @@ var fr_default = {
   "Step {number}": "Étape {number}",
   "Steps: {steps}": "Étapes : {steps}",
   "Suggestions: iteration variables, codes of the value set, references of other steps, mapper functions, paths of the sample.": "Suggestions : variables d’itération, codes du jeu de valeurs, références d’autres étapes, fonctions du mappeur et chemins de l’exemple.",
+  "Tables edit value expressions and notes only. Other rules remain in the step. Empty expressions remove their value mapping.": "Les tableaux modifient uniquement les expressions de valeur et leurs notes. Les autres règles restent dans l’étape. Une expression vide supprime son mapping de valeur.",
+  "Target": "Cible",
   "Target Profile": "Profil cible",
   "Target: {p0}": "Cible : {p0}",
   "Terminology Server": "Serveur terminologique",
@@ -877,6 +925,7 @@ var fr_default = {
   "The JavaScript the server compiles from the mappings.": "Le JavaScript compilé par le serveur à partir des mappings.",
   "The Test tab shows the model the map receives for a message: use it to find the names and positions of the nodes.": "L’onglet Test montre le modèle reçu par la map : y repérer les noms et positions des nœuds.",
   "The completed Bundle is published here after the configured checks of all named Bundles.": "Le Bundle finalisé est publié ici après les contrôles configurés sur tous les Bundles nommés.",
+  "The current transformer cannot be identified.": "Le transformeur courant ne peut pas être identifié.",
   "The editors use it at once. A deployed channel keeps the context it read when it was deployed: redeploy it.": "Les éditeurs utilisent le changement aussitôt. Un canal déployé conserve le contexte lu à son déploiement : le redéployer.",
   "The element takes its codes from a value set: they are offered while typing.": "L’élément prend ses codes dans un jeu de valeurs : ils sont proposés pendant la saisie.",
   "The element {p0} is not in the loaded profile.": "L’élément {p0} n’est pas dans le profil chargé.",
@@ -892,14 +941,18 @@ var fr_default = {
   "The profile is now version {p0}; these mappings were made with version {p1}. Check them (elements no longer in the profile are listed).": "Le profil est maintenant en version {p0} ; ces mappings ont été créés avec la version {p1}. Les vérifier : les éléments absents sont listés.",
   "The resource the map built.": "La ressource construite par la map.",
   "The step on the whole page; Esc comes back.": "L’étape sur toute la page ; Échap pour revenir.",
+  "The table contains no value edits.": "Le tableau ne contient aucune modification de valeur.",
+  "The table must have key, expression and note columns.": "Le tableau doit contenir les colonnes key, expression et note.",
   "The translation of {p0} needs a {p1} for codes without a match.": "La traduction de {p0} nécessite {p1} pour les codes sans correspondance.",
   "The value for codes without a match: a code, or system|code": "Valeur des codes sans correspondance : un code, ou system|code",
   "The variable of the iteration on {p0} must be a JavaScript name.": "La variable d’itération de {p0} doit être un nom JavaScript.",
   "The whole step as text, to copy it elsewhere or paste a mapping written by hand or by an agent. It is compiled on the server before it is applied.": "L’étape entière en texte, à copier ou à modifier manuellement ou avec un agent. Le serveur compile avant l’application.",
   "The whole step — properties and rules — as text: copy it to another step or channel, paste a mapping written by hand or by an AI agent, or make bulk edits. Validate and apply compiles it on the server first.": "L’étape entière (propriétés et règles) en texte : copier vers une autre étape ou un autre canal, coller un mapping manuel ou généré par IA, ou modifier en masse. Valider et appliquer compile d’abord sur le serveur.",
   "This Bundle must be created earlier in the transformer.": "Ce Bundle doit être créé plus haut dans le transformeur.",
+  "This diagnostic belongs to step {name}. Select that step to edit its rule.": "Ce diagnostic concerne l’étape {name}. Sélectionner cette étape pour modifier sa règle.",
   "This is not a FHIR Profile Mapper step.": "Ce n’est pas une étape FHIR Profile Mapper.",
   "This message has no FHIR mapping trace. Enable “Trace processed messages” on a FHIR Profile Mapper step, redeploy the channel, and check that its message storage keeps the maps.": "Ce message n’a pas de trace FHIR. Activer « Tracer les messages traités » sur une étape Profile Mapper, redéployer le canal et vérifier la conservation des maps des messages.",
+  "This step only": "Cette étape uniquement",
   "Timeout (seconds)": "Délai (secondes)",
   "Toggle condition": "Ajouter/retirer la condition",
   "Toggle iteration": "Ajouter/retirer l’itération",
@@ -910,6 +963,7 @@ var fr_default = {
   "Translate the value with ConceptMap/$translate": "Traduire la valeur avec ConceptMap/$translate",
   "Translate the value with a ConceptMap; choose what happens without a match.": "Traduire avec une ConceptMap ; choisir le comportement sans correspondance.",
   "Translates with a ConceptMap of the locations.": "Traduit avec une ConceptMap des emplacements.",
+  "Translation": "Traduction",
   "Type": "Type",
   "Understanding a result": "Comprendre un résultat",
   "Undo / Redo": "Annuler / Rétablir",
@@ -1362,7 +1416,7 @@ var MAPPER_HELP = {
     label: "Help: Test",
     sections: [
       { title: "What a test runs", lines: [
-        "Run executes this step alone on the server, on the sample message, and validates what it makes. References to other steps are stand-ins: deploy the channel to check a whole Bundle.",
+        "Preview scope chooses this step alone (stand-in references) or the enabled Profile Mapper steps of this transformer (real references and finalized Bundles). Other step types are excluded.",
         "Testing runs the step's code on the server and needs the permission “Test FHIR mapper steps”."
       ] },
       { title: "Samples", lines: [
@@ -1607,6 +1661,90 @@ var profile_mapper_default = "/* SPDX-License-Identifier: MPL-2.0 */\n\n.fhir-pr
 
 // src/styles/fml.css
 var fml_default = "/* SPDX-License-Identifier: MPL-2.0 */\n\n.fhir-fml { container-type: inline-size; min-width: 0; }\n.fhir-fml .fml-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; align-items: start; }\n.fhir-fml .fml-settings > *, .fhir-fml .field { min-width: 0; }\n.fhir-fml .fml-wide { grid-column: 1 / -1; }\n.fhir-fml .fml-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }\n.fhir-fml .fml-row > select, .fhir-fml .fml-row > input[type=text] { flex: 1 1 240px; min-width: 0; width: auto; }\n.fhir-fml .fml-row > button { flex: none; white-space: nowrap; }\n.fhir-fml .fml-tabs { display: flex; gap: 2px; margin-bottom: 12px; border-bottom: 1px solid color-mix(in srgb, var(--text-faint, #64748b) 35%, transparent); }\n.fhir-fml .fml-tabs [role=tab] { padding: 6px 14px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--text-faint, #64748b); font: inherit; font-weight: 600; cursor: pointer; }\n.fhir-fml .fml-tabs [role=tab]:hover { color: var(--text, #1e293b); }\n.fhir-fml .fml-tabs [role=tab][aria-selected=true] { color: var(--text, #1e293b); border-bottom-color: var(--accent, #2563eb); }\n.fhir-fml pre.fml-json { max-height: 420px; overflow: auto; padding: 8px; border: 1px solid var(--border, #cbd5e1); border-radius: 4px; font-size: 12px; white-space: pre; }\n.fhir-fml .fml-error { color: var(--err, #b91c1c); overflow-wrap: anywhere; }\n.fhir-fml .fml-issue-warning { color: var(--warn, #b45309); }\n.fhir-fml .fml-ok { color: var(--ok, #15803d); }\n@container (max-width: 640px) { .fhir-fml .fml-settings { grid-template-columns: minmax(0, 1fr); } }\n";
+
+// src/fhir/mapping-table.js
+var escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+var markdown = (value) => escapeHtml(value).replace(/\\/g, "\\\\").replace(/\|/g, "\\|").replace(/\r?\n/g, "<br>");
+var unmarkdown = (value) => value.replace(/<br>/g, "\n").replace(/&(amp|lt|gt|quot|#39);/g, (_, entity) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" })[entity]);
+function csvRows(text) {
+  const rows = [];
+  let row = [], cell = "", quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === '"') {
+      if (quoted && text[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else if (quoted || cell === "") {
+        if (quoted && i + 1 < text.length && ![",", "\r", "\n"].includes(text[i + 1])) throw new Error(t("Invalid CSV quoting."));
+        quoted = !quoted;
+      } else throw new Error(t("Invalid CSV quoting."));
+    } else if (!quoted && (char === "," || char === "\n")) {
+      row.push(cell.replace(/\r$/, ""));
+      cell = "";
+      if (char === "\n") {
+        rows.push(row);
+        row = [];
+      }
+    } else cell += char;
+  }
+  if (quoted) throw new Error(t("Invalid CSV quoting."));
+  if (cell || row.length) rows.push([...row, cell.replace(/\r$/, "")]);
+  return rows;
+}
+function markdownRows(text) {
+  return text.split(/\r?\n/).filter((line) => line.trim().startsWith("|")).map((line) => {
+    const cells = [];
+    let cell = "";
+    const content = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+    for (let i = 0; i < content.length; i++) {
+      if (content[i] === "\\" && ["\\", "|"].includes(content[i + 1])) cell += content[++i];
+      else if (content[i] === "|") {
+        cells.push(unmarkdown(cell.trim()));
+        cell = "";
+      } else cell += content[i];
+    }
+    return [...cells, unmarkdown(cell.trim())];
+  }).filter((row) => !row.every((cell) => /^:?-{3,}:?$/.test(cell)));
+}
+function importMappingTable(text, format, tree, element) {
+  const rows = format === "csv" ? csvRows(text.replace(/^\uFEFF/, "")) : markdownRows(text);
+  const header = rows.shift()?.map((cell) => cell.trim());
+  if (!header || !["key", "expression", "note"].every((key) => header.includes(key)) || new Set(header).size !== header.length)
+    throw new Error(t("The table must have key, expression and note columns."));
+  const seen = /* @__PURE__ */ new Set();
+  const edits = rows.filter((row) => row.some((cell) => cell.trim())).map((row, index) => {
+    if (row.length !== header.length) throw new Error(t("Invalid table row {number}.", { number: index + 2 }));
+    const data = Object.fromEntries(header.map((key2, i) => [key2, row[i]]));
+    const key = data.key.trim();
+    const chain = tree.chain(key);
+    const node = chain?.at(-1);
+    if (!node || node.choice || node.resourceRoot || element.action === "createBundle" && key === "Bundle.type" || seen.has(key) || data.kind && data.kind !== "value") throw new Error(t("Invalid or duplicate value target: {key}", { key }));
+    seen.add(key);
+    return { key, expression: data.expression, note: data.note };
+  });
+  if (!edits.length) throw new Error(t("The table contains no value edits."));
+  return edits;
+}
+function mappingTable(rules, format = "csv") {
+  const rows = [["key", "expression", "note"], ...rules.filter((rule) => "expression" in rule).map((rule) => [rule.key || rule.element, rule.expression, rule.note || ""])];
+  return format === "csv" ? rows.map((row) => row.map((value) => '"' + String(value).replace(/"/g, '""') + '"').join(",")).join("\n") + "\n" : rows.map((row, i) => "| " + row.map(markdown).join(" | ") + " |" + (i === 0 ? "\n| --- | --- | --- |" : "")).join("\n") + "\n";
+}
+function mappingDocumentation(element, rules, format = "markdown") {
+  const headings = [t("Target"), t("Rule"), t("Expression / fixed value"), t("Note"), t("Enabled"), t("Translation")];
+  const rows = rules.map((rule) => [
+    rule.key || rule.element,
+    "each" in rule ? "each" : "condition" in rule ? "condition" : "fixed" in rule ? "fixed" : "value",
+    "each" in rule ? `${rule.each} → ${rule.variable || "item"}` : rule.condition ?? rule.expression ?? JSON.stringify(rule.fixed),
+    rule.note || "",
+    rule.disabled ? t("No") : t("Yes"),
+    rule.translate ? JSON.stringify(rule.translate) : ""
+  ]);
+  const title = element.name || element.resourceType;
+  const metadata = [element.profileUrl || element.resourceType, element.context || "", element.fhirVersion || "R4"].filter(Boolean).join(" · ");
+  if (format === "html") return '<!doctype html><html><head><meta charset="utf-8"><title>' + escapeHtml(title) + "</title><style>body{font:14px system-ui,sans-serif;margin:24px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #aaa;padding:8px;text-align:left;vertical-align:top}pre{white-space:pre-wrap;overflow-wrap:anywhere;max-width:42ch;margin:0;font:12px monospace}</style></head><body><h1>" + escapeHtml(title) + "</h1><p>" + escapeHtml(metadata) + '</p><table border="1"><thead><tr>' + headings.map((value) => "<th>" + escapeHtml(value) + "</th>").join("") + "</tr></thead><tbody>" + rows.map((row) => "<tr>" + row.map((value) => "<td><pre>" + escapeHtml(value) + "</pre></td>").join("") + "</tr>").join("") + "</tbody></table></body></html>\n";
+  return "# " + markdown(title) + "\n\n" + markdown(metadata) + "\n\n| " + headings.map(markdown).join(" | ") + " |\n| " + headings.map(() => "---").join(" | ") + " |\n" + rows.map((row) => "| " + row.map(markdown).join(" | ") + " |").join("\n") + "\n";
+}
 
 // src/host/react.js
 var React = null;
@@ -2723,6 +2861,11 @@ function mapperSample(platform2, element) {
   const key = ctx ? `fhir-profile-mapper-sample:${ctx.channel.id}:${ctx.connector.metaDataId}:${ctx.response ? "response" : "transformer"}` : "fhir-profile-mapper-sample:unknown";
   return { key, sample: { message, dataType } };
 }
+function mapperPreviewSteps(platform2, element) {
+  const ctx = mapperContext(platform2, element);
+  if (!ctx) return null;
+  return ctx.steps.map((step, index) => index === ctx.index ? element : step).filter((step) => step.__type === MAPPER_TYPE && asBool(step.enabled, true)).map((step) => ({ ...step, samples: "[]" }));
+}
 
 // src/fhir/diagnostics.js
 function mapperDiagnostic(error) {
@@ -2741,7 +2884,7 @@ function mapperDiagnostic(error) {
 function traceRows(trace) {
   return trace.events.map((event) => ({
     event,
-    label: mapperDiagnostic({ ...event, step: trace.step }).label,
+    label: mapperDiagnostic({ ...event, step: trace.steps?.find((step) => String(step.sequenceNumber) === String(event.step)) || trace.step }).label,
     duration: `${(Number(event.durationNanos) / 1e6).toFixed(3)} ms`,
     iterations: (event.iterations || []).map((item) => t("rule {rule}, item {index}", { rule: item.ruleIndex, index: item.index })).join(" / ")
   }));
@@ -2751,11 +2894,16 @@ function normalizeResult(text) {
   if (text == null) return "";
   let json;
   try {
-    json = JSON.stringify(JSON.parse(text), null, 2);
+    json = JSON.stringify(JSON.parse(text), (_, value) => value && typeof value === "object" && !Array.isArray(value) ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) : value, 2);
   } catch {
     json = String(text);
   }
-  return json.replace(/urn:uuid:[0-9a-f-]{36}/gi, "urn:uuid:<uuid>").replace(/"lastUpdated"\s*:\s*"[^"]*"/g, '"lastUpdated": "<time>"');
+  const identities = /* @__PURE__ */ new Map();
+  return json.replace(/urn:uuid:[0-9a-f-]{36}/gi, (value) => {
+    const key = value.toLowerCase();
+    if (!identities.has(key)) identities.set(key, `urn:uuid:<uuid-${identities.size}>`);
+    return identities.get(key);
+  }).replace(/"lastUpdated"\s*:\s*"[^"]*"/g, '"lastUpdated": "<time>"');
 }
 
 // src/fhir/history.js
@@ -3046,6 +3194,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       sample,
       activeSample: savedSamples.length ? savedSamples[0].id : null,
       sampleKey: initial.key,
+      previewScope: savedSamples[0]?.scope || "step",
       testResult: null,
       scriptResult: null,
       testing: false,
@@ -3149,7 +3298,9 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
   };
   const ctx = { version, profiles, instances: st.instances, showAll: st.showAll };
   const tree = st.rootIndex ? makeTree(st.rootIndex, ctx) : null;
+  const diagnosticHere = (error) => !error.step || String(error.step.sequenceNumber) === String(element.sequenceNumber);
   const revealDiagnostic = (error) => {
+    if (!diagnosticHere(error)) return;
     const chain = st.rootIndex && makeTree(st.rootIndex, { ...ctx, showAll: true }).chain(error.key);
     if (!chain) {
       st.notice = t("The element {p0} is not in the loaded profile.", { p0: error.key });
@@ -3177,8 +3328,9 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       "div",
       { key: id, style: { color: "var(--err, #b91c1c)", fontSize: "12px", marginBottom: "6px" } },
       h("strong", null, display.label),
-      error.key && tree ? h("button", { type: "button", className: "btn btn-sm", style: { marginLeft: "6px" }, onClick: () => revealDiagnostic(error) }, t("Go to rule")) : null,
+      error.key && tree && diagnosticHere(error) ? h("button", { type: "button", className: "btn btn-sm", style: { marginLeft: "6px" }, onClick: () => revealDiagnostic(error) }, t("Go to rule")) : null,
       h("div", null, error.message),
+      !diagnosticHere(error) ? h("div", null, t("This diagnostic belongs to step {name}. Select that step to edit its rule.", { name: error.step.name || error.step.sequenceNumber })) : null,
       display.target ? h("div", { style: { fontFamily: "monospace" } }, t("Target: {p0}", { p0: display.target })) : null,
       error.expression ? h("pre", { style: { whiteSpace: "pre-wrap", margin: "4px 0" } }, error.expression) : null
     );
@@ -3214,6 +3366,46 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     }
     st.current = snap;
     onChange();
+  };
+  const importTable = async () => {
+    try {
+      if (!tree) throw new Error(t("Load a profile before importing a table."));
+      const file = await platform2.ui.pickFile(".csv,.md");
+      if (!file) return;
+      const edits = importMappingTable(
+        file.content,
+        file.name.toLowerCase().endsWith(".csv") ? "csv" : "markdown",
+        makeTree(st.rootIndex, { ...ctx, showAll: true }),
+        element
+      );
+      for (const edit of edits) {
+        st.values.set(edit.key, edit.expression);
+        if (edit.note) st.notes.set(`value:${edit.key}`, edit.note);
+        else st.notes.delete(`value:${edit.key}`);
+      }
+      st.lastPush = 0;
+      save();
+      st.lastPush = 0;
+      st.notice = t("Imported {count} value edit(s).", { count: edits.length });
+      rerender();
+    } catch (error) {
+      st.notice = errorText2(error);
+      rerender();
+    }
+  };
+  const exportTable = async (format, documentation = false) => {
+    try {
+      const rules = parseMappings(element.mappings);
+      const extension = format === "markdown" ? "md" : format;
+      await platform2.ui.saveFile(
+        `fhir-mapping.${extension}`,
+        format === "html" ? "text/html" : format === "csv" ? "text/csv" : "text/markdown",
+        async () => documentation ? mappingDocumentation(element, rules, format) : mappingTable(rules, format)
+      );
+    } catch (error) {
+      st.notice = errorText2(error);
+      rerender();
+    }
   };
   const travel = (from, to) => {
     if (!from.length || !tree) return;
@@ -3442,9 +3634,15 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     } catch {
     }
   };
-  const testOn = async (sample, trace) => {
+  const previewSelection = (scope) => {
+    if (scope !== "transformer") return { step: { ...element, samples: "[]" } };
+    const steps = mapperPreviewSteps(platform2, element);
+    if (!steps) throw new Error(t("The current transformer cannot be identified."));
+    return { steps };
+  };
+  const testOn = async (sample, trace, scope = sample.scope || st.previewScope) => {
     try {
-      const text2 = await platform2.api.post(`${MAPPER_API3}/test`, JSON.stringify({ step: { ...element, samples: "[]" }, message: sample.message, dataType: sample.dataType || "HL7V2", trace }), {
+      const text2 = await platform2.api.post(`${MAPPER_API3}/test`, JSON.stringify({ ...previewSelection(scope), message: sample.message, dataType: sample.dataType || "HL7V2", trace }), {
         contentType: "text/plain",
         raw: true,
         timeoutMs: 6e4
@@ -3460,7 +3658,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     st.testResult = null;
     st.suite = null;
     rerender();
-    st.testResult = await testOn(st.sample, st.traceOptions);
+    st.testResult = await testOn(st.sample, st.traceOptions, st.previewScope);
     st.testing = false;
     rerender();
   };
@@ -3477,7 +3675,10 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
   const selectSample = (id) => {
     st.activeSample = id || null;
     const chosen = samples.find((s) => s.id === id);
-    if (chosen) st.sample = { message: chosen.message, dataType: chosen.dataType || "HL7V2" };
+    if (chosen) {
+      st.sample = { message: chosen.message, dataType: chosen.dataType || "HL7V2" };
+      st.previewScope = chosen.scope || "step";
+    }
     st.testResult = null;
     rerender();
   };
@@ -3487,7 +3688,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     if (!name || !String(name).trim()) return;
     const id = crypto.randomUUID();
     st.activeSample = id;
-    writeSamples([...samples, { id, name: String(name).trim(), dataType: st.sample.dataType, message: st.sample.message, expected: null }]);
+    writeSamples([...samples, { id, name: String(name).trim(), dataType: st.sample.dataType, message: st.sample.message, scope: st.previewScope, expected: null }]);
   };
   const runAllSamples = async () => {
     st.testing = true;
@@ -3495,7 +3696,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
     st.testResult = null;
     rerender();
     for (const sample of samples) {
-      const result = await testOn(sample, { enabled: false });
+      const result = await testOn(sample, { enabled: false }, sample.scope || "step");
       const verdict = sampleVerdict(sample, result);
       const invalid = result.issues.some((i) => i.severity === "error" || i.severity === "fatal");
       st.suite.push({
@@ -3617,7 +3818,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
   });
   const errorsByKey = /* @__PURE__ */ new Map();
   for (const error of [...st.testResult?.errors || [], ...st.scriptResult?.errors || []]) {
-    if (error.key) errorsByKey.set(error.key, [...errorsByKey.get(error.key) || [], error.message]);
+    if (error.key && diagnosticHere(error)) errorsByKey.set(error.key, [...errorsByKey.get(error.key) || [], error.message]);
   }
   const field = (label, control, hint) => h("div", { className: "field" }, h("label", null, label), control, hint ? h("div", { className: "hint" }, hint) : null);
   const number = (prop, fallback) => h("input", {
@@ -4453,6 +4654,20 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       )
     ),
     h(
+      "div",
+      { className: "mapper-wide" },
+      h(
+        "div",
+        { className: "mapper-actions" },
+        h("button", { type: "button", className: "btn btn-sm", disabled: !tree, onClick: importTable }, t("Import value table")),
+        h("button", { type: "button", className: "btn btn-sm", onClick: () => exportTable("csv") }, t("Export CSV table")),
+        h("button", { type: "button", className: "btn btn-sm", onClick: () => exportTable("markdown") }, t("Export Markdown table")),
+        h("button", { type: "button", className: "btn btn-sm", onClick: () => exportTable("markdown", true) }, t("Export Markdown documentation")),
+        h("button", { type: "button", className: "btn btn-sm", onClick: () => exportTable("html", true) }, t("Export HTML documentation"))
+      ),
+      h("p", { className: "hint" }, t("Tables edit value expressions and notes only. Other rules remain in the step. Empty expressions remove their value mapping."))
+    ),
+    h(
       "details",
       { style: { marginTop: "10px" } },
       h("summary", { style: { cursor: "pointer" } }, t("Edit as JSON")),
@@ -4757,6 +4972,23 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
         h("option", { value: "" }, t("(unsaved sample, this browser)")),
         samples.map((s) => h("option", { key: s.id, value: s.id }, s.name + (s.expected ? " ✓" : "")))
       ),
+      h(
+        "select",
+        {
+          value: st.previewScope,
+          "aria-label": t("Preview scope"),
+          style: { width: "auto", flex: "none" },
+          disabled: st.testing,
+          onChange: (e) => {
+            st.previewScope = e.target.value;
+            st.testResult = null;
+            if (activeSample) updateActive({ scope: st.previewScope });
+            rerender();
+          }
+        },
+        h("option", { value: "step" }, t("This step only")),
+        h("option", { value: "transformer", disabled: !mapperContext(platform2, element) }, t("Profile Mapper steps of this transformer"))
+      ),
       h("button", { type: "button", className: "btn btn-sm", disabled: st.testing || !st.sample.message.trim(), onClick: runTest }, st.testing ? t("Running…") : t("Run")),
       !activeSample ? h("button", { type: "button", className: "btn btn-sm", disabled: !st.sample.message.trim(), title: t("Keep this message in the step, so it is saved with the channel"), onClick: saveAsSample }, t("Save as sample")) : null,
       activeSample ? h("button", { type: "button", className: "btn btn-sm", title: t("Remove this sample from the step"), onClick: () => {
@@ -4765,7 +4997,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       } }, t("Delete sample")) : null,
       samples.length ? h("button", { type: "button", className: "btn btn-sm", disabled: st.testing, title: t("Run every saved sample and compare with its expected result"), onClick: runAllSamples }, t("Run all ({p0})", { p0: samples.length })) : null,
       h("button", { type: "button", className: "btn btn-sm", onClick: showScript }, st.scriptResult ? t("Hide the script") : t("Generated script")),
-      h("span", { className: "text-text-faint", style: { fontSize: "11px" } }, t("Runs this step on the server and validates what it makes; fhirRef() of earlier steps gives stand-ins."))
+      h("span", { className: "text-text-faint", style: { fontSize: "11px" } }, st.previewScope === "transformer" ? t("Runs enabled Profile Mapper steps in order, with real references and Bundle finalization. Other step types are excluded.") : t("Runs this step on the server and validates what it makes; fhirRef() of earlier steps gives stand-ins."))
     ),
     h(
       "div",
@@ -4834,6 +5066,28 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
       "div",
       { style: { marginTop: "6px" } },
       testResult.errors.map((e, i) => diagnosticView(e, `e${i}`)),
+      testResult.steps ? h(
+        "details",
+        { open: true },
+        h("summary", null, t("Produced resources by step")),
+        testResult.steps.map((result, i) => h(
+          "details",
+          { key: i },
+          h("summary", null, `${result.step.sequenceNumber} · ${result.step.name || result.step.resourceType} (${result.resources.length})`),
+          result.resources.map((resource, j) => h("pre", { key: j, style: { maxHeight: "300px", overflow: "auto", whiteSpace: "pre-wrap" } }, prettyJson(resource)))
+        ))
+      ) : null,
+      Object.keys(testResult.variables || {}).length ? h(
+        "details",
+        { open: true },
+        h("summary", null, t("Published channel variables")),
+        Object.entries(testResult.variables).map(([name, value]) => h(
+          "details",
+          { key: name },
+          h("summary", null, name),
+          h("pre", { style: { maxHeight: "360px", overflow: "auto", whiteSpace: "pre-wrap" } }, prettyJson(value))
+        ))
+      ) : null,
       testResult.trace ? h(
         "details",
         { style: { marginTop: "8px" } },
@@ -4852,7 +5106,7 @@ function ProfileMapperEditor({ element, onChange, platform: platform2 }) {
             { key: index, style: { margin: "6px 0" } },
             h("strong", null, t("{p0} · {p1}", { p0: label, p1: event.status })),
             h("span", { style: { marginLeft: "6px" } }, duration),
-            event.key && tree ? h("button", { type: "button", className: "btn btn-sm", onClick: () => revealDiagnostic(event) }, t("Go to rule")) : null,
+            event.key && tree && diagnosticHere({ step: testResult.trace.steps?.find((step) => String(step.sequenceNumber) === String(event.step)) || testResult.trace.step }) ? h("button", { type: "button", className: "btn btn-sm", onClick: () => revealDiagnostic({ ...event, step: testResult.trace.steps?.find((step) => String(step.sequenceNumber) === String(event.step)) || testResult.trace.step }) }, t("Go to rule")) : null,
             iterations ? h("div", null, iterations) : null,
             event.reason ? h("div", null, event.reason) : null,
             event.count !== void 0 ? h("div", null, t("{p0} item(s)", { p0: event.count })) : null,

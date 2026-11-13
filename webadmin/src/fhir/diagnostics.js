@@ -15,7 +15,7 @@ export function mapperDiagnostic(error) {
 export function traceRows(trace) {
   return trace.events.map(event => ({
     event,
-    label: mapperDiagnostic({ ...event, step: trace.step }).label,
+    label: mapperDiagnostic({ ...event, step: trace.steps?.find(step => String(step.sequenceNumber) === String(event.step)) || trace.step }).label,
     duration: `${(Number(event.durationNanos) / 1000000).toFixed(3)} ms`,
     iterations: (event.iterations || []).map(item => tr("rule {rule}, item {index}", { rule: item.ruleIndex, index: item.index })).join(" / ")
   }));
@@ -54,6 +54,12 @@ export function errorsByRule(errors = []) {
 export function normalizeResult(text) {
   if (text == null) return "";
   let json;
-  try { json = JSON.stringify(JSON.parse(text), null, 2); } catch { json = String(text); }
-  return json.replace(/urn:uuid:[0-9a-f-]{36}/gi, "urn:uuid:<uuid>").replace(/"lastUpdated"\s*:\s*"[^"]*"/g, '"lastUpdated": "<time>"');
+  try { json = JSON.stringify(JSON.parse(text), (_, value) => value && typeof value === "object" && !Array.isArray(value)
+    ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) : value, 2); } catch { json = String(text); }
+  const identities = new Map();
+  return json.replace(/urn:uuid:[0-9a-f-]{36}/gi, value => {
+    const key = value.toLowerCase();
+    if (!identities.has(key)) identities.set(key, `urn:uuid:<uuid-${identities.size}>`);
+    return identities.get(key);
+  }).replace(/"lastUpdated"\s*:\s*"[^"]*"/g, '"lastUpdated": "<time>"');
 }

@@ -32,6 +32,6 @@ résultat attendu**. La colonne de détail le précise. Pour contrôler le conte
 fixer un [résultat attendu](comparaison.md).
 
 L'exemple non enregistré est mémorisé dans ce navigateur, par canal et
-transformeur ; il n'est pas partagé. **Run all** exécute chaque exemple sur cette
-étape seule, pas toutes les étapes du canal. Les références des étapes voisines
-sont des valeurs de remplacement.
+transformeur ; il n’est pas partagé. **Run all** respecte le périmètre enregistré
+avec chaque exemple : étape seule par défaut, ou [aperçu multi-étapes](apercu-multi-etapes.md).
+Les exemples peuvent aussi être [rejoués par outil](../../Rejeu-tests.md).

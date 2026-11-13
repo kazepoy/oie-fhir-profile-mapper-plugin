@@ -2,6 +2,18 @@
 
 ## Non publié (branche `feat/refonte`)
 
+- **Aperçu multi-étapes** : exécution des Profile Mapper activés du même
+  transformeur, références réelles, finalisation atomique des Bundles, ressources
+  intermédiaires et variables finales consultables. Périmètre mémorisé par sample.
+- **Rejeu** : `tools/run_tests.py` valide les exports hors ligne ou rejoue leurs
+  samples sur serveur ; échec en cas d’écart avec l’attendu. Contrôle hors ligne
+  en CI et comparaison des aperçus aux sorties déployées dans la démo.
+- **Tableaux et documentation** : import CSV/Markdown des expressions de valeur
+  et notes, validation atomique et Undo ; export de tableaux et de documentation
+  Markdown/HTML. Comparaison des résultats avec renommage cohérent des UUID,
+  conservant les relations de référence.
+
+
 - **Socle frontend** : modèle/compilation FHIR, adaptation du catalogue et du
   canal, champs d’expression et styles extraits des éditeurs ; tests sans VM.
 - **Langues et thèmes** : interface du plugin et aides en anglais/français,

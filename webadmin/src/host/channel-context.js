@@ -34,3 +34,12 @@ export function mapperSample(platform, element) {
   const key = ctx ? `fhir-profile-mapper-sample:${ctx.channel.id}:${ctx.connector.metaDataId}:${ctx.response ? "response" : "transformer"}` : "fhir-profile-mapper-sample:unknown";
   return { key, sample: { message, dataType } };
 }
+
+/** Snapshot only enabled Profile Mapper steps; the open editor's draft wins. */
+export function mapperPreviewSteps(platform, element) {
+  const ctx = mapperContext(platform, element);
+  if (!ctx) return null;
+  return ctx.steps.map((step, index) => index === ctx.index ? element : step)
+    .filter(step => step.__type === MAPPER_TYPE && asBool(step.enabled, true))
+    .map(step => ({ ...step, samples: "[]" }));
+}

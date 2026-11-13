@@ -69,7 +69,7 @@ passent par la [façade interne](Integration-FHIR-Data-Type.md).
 | `formatVersion` | Absent : format 1. `2` : `context`, `validation`, `note` et `disabled` sont interprétés. |
 | `context` | Vide par défaut. Nom d'un contexte FHIR du serveur (*Settings › FHIR Mapper*, `GET /settings`) : sa version FHIR, ses packages, son serveur de terminologie (autorisation, cache, délai) **remplacent** `fhirVersion`, `profiles` et `terminology*` de l'étape. Un nom inconnu fait échouer la compilation et le déploiement. Le contexte est lu à la compilation : un canal déployé prend un changement à son redéploiement. |
 | `validation` | Vide (format 1 : `validateOutput` décide), `inherit` (la politique du contexte, `always` sans contexte), `always` ou `off`. |
-| `samples` | Chaîne `"[]"` par défaut ; tableau d'exemples `{id, name, dataType, message, expected}` de l'éditeur et des outils. Sans effet sur le script généré. |
+| `samples` | Chaîne `"[]"` par défaut ; tableau d'exemples `{id, name, dataType, message, scope, expected}` de l'éditeur et des outils. `scope` : `step` (défaut) ou `transformer`. Sans effet sur le script généré. |
 | `variable` | Vide : résultat principal ; sinon nom littéral d'une variable de Channel Map contenant le JSON résultat. Concerne une ressource seule ou une création de Bundle. |
 | `bundleName` | Nom littéral, non vide et unique pour une création de Bundle ; vide sur une ressource. |
 | `bundleType` | `transaction` par défaut ; également `batch`, `collection`, `document`, `message`. Défini par la création. |
@@ -400,13 +400,49 @@ Une issue de validation contient `severity`, `location` et `message`.
 Un résultat sans issue ne signifie pas qu'une validation a été effectuée :
 consulter `validationPerformed`.
 
-L'aperçu exécute **une seule étape**, sans assembler les étapes voisines ni
-publier leurs sorties. Les références sont simulées et les maps de travail sont
-initialement vides ; les fonctions et la configuration serveur sont chargées
-par l'environnement de test. Une itération de ressource donne une collection
-de prévisualisation. La limite d'exécution JavaScript est de dix secondes ; elle
-ne constitue pas une limite globale des appels FHIR/Java. Tester un channel
-déployé reste nécessaire pour vérifier références, transports et contexte réel.
+Deux requêtes sont possibles sur `POST /test`, avec la même permission :
+
+```json
+{"step": {"action":"resource", "resourceType":"Patient"}, "message":"{}", "dataType":"JSON"}
+```
+
+```json
+{"steps": [{"action":"resource", "resourceType":"Patient"}], "message":"{}", "dataType":"JSON"}
+```
+
+`step` conserve l’aperçu isolé : références simulées, itération racine montrée
+comme une collection. `steps` accepte une liste ordonnée d’étapes Profile Mapper
+et ignore les étapes désactivées. Les deux champs sont mutuellement exclusifs ;
+une liste vide ou contenant un autre type d’étape est refusée.
+
+Le mode `steps` utilise les scripts d’assemblage du canal : même message source,
+vraies références, finalisation des Bundles après la dernière étape et publication
+atomique. Il conserve `output`, `errors`, `issues`, `validationPerformed` et ajoute :
+
+- `steps`: `[{step:{name,sequenceNumber,resourceType,action},resources:["JSON FHIR",…]}]`.
+  Ce sont les ressources produites par étape **avant finalisation** ; le Bundle
+  nouvellement créé y est encore vide. Les sorties finales sont séparées.
+- `variables`: `{nom:"JSON FHIR final"}` pour les sorties publiées en Channel Map.
+  Un transformeur ne publiant que des variables renvoie `output:null`.
+- Les erreurs conservent leur étape et leur règle ; `finalization` désigne un
+  échec de référence, validation ou publication finale. Aucune sortie finale
+  n’est renvoyée si une étape ou la finalisation échoue.
+
+Les maps de travail sont initialement vides ; les fonctions et la configuration
+serveur sont chargées par l’environnement de test. La limite JavaScript de dix
+secondes est partagée par toutes les étapes ; elle ne borne pas globalement les
+appels FHIR/Java. L’éditeur envoie uniquement les Profile Mapper activés du
+transformeur courant, avec son brouillon actuel. Les étapes JavaScript, FML,
+Iterators, transports et pré/postprocesseurs ne sont pas exécutés. En destination,
+fournir le message déjà préparé par la source. Un essai déployé reste nécessaire
+pour vérifier toute la chaîne réelle.
+
+Les `samples` mémorisent le périmètre dans `scope`. Sans ce champ, les anciens
+exemples restent isolés. `expected` compare le message sortant ; les variables
+finales sont consultables dans l’aperçu mais n’ont pas d’attendu dédié. Les UUID
+sont renommés de façon cohérente, afin de préserver leurs relations de référence ;
+l’ordre des propriétés JSON et `meta.lastUpdated` sont ignorés.
+Le [guide de rejeu](Rejeu-tests.md) décrit l’outil et ses codes de sortie.
 
 `key` identifie une position d'arbre, pas une règle unique : une itération et
 une condition peuvent partager cette clé. `ruleIndex` les distingue dans cette

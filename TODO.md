@@ -38,8 +38,8 @@ ne doit pas être présentée comme terminée.
 | 2 — fait | Inspecteur de l'élément sélectionné : métadonnées FHIR, règles, aide et diagnostics ; extraire uniquement les composants nécessaires | Sélection et édition dans la vue normale et en plein écran ; accès clavier ; diagnostics vers la bonne règle ; aucune perte au rechargement. |
 | 3 — fait | Assistance restante : extensions du profil, ConceptMaps pertinentes, menu contextuel et duplication de branche | Exemples de profil avec extensions et slices ; duplication avec nouveaux IDs ; parcours clavier et sauvegarde/relecture. |
 | 4 — fait | Terminer le socle : découpage ciblé des éditeurs, anglais/français, thèmes, contrôle frontend et assemblage reproductible | Tests des modules sans VM pour le code extrait ; interface dans les deux langues ; ZIP construit depuis des sources frontend modifiées ; parcours clair/sombre et rôle restreint. |
-| 5 — suivant | Aperçu multi-étapes, puis outil de rejeu des samples et import/export de tableaux/documentation | Patient + Observation avec référence réelle ; deux Bundles nommés ; erreur localisée par étape ; mêmes sorties dans l'aperçu et dans la démo ; outil en échec si résultat attendu différent. |
-| 6 | FML : S-2 sur les maps typées, adaptateur Strict Parser, complétion et squelette, puis concurrence/pool selon mesure | `PIDtoPatient` et `ORUR01toBundle` rejoués avec modèles typés ; démo et documentation ; tests de transformations concurrentes sans contamination. |
+| 5 — fait | Aperçu multi-étapes, puis outil de rejeu des samples et import/export de tableaux/documentation | Patient + Observation avec référence réelle ; deux Bundles nommés ; erreur localisée par étape ; mêmes sorties dans l'aperçu et dans la démo ; outil en échec si résultat attendu différent. |
+| 6 — suivant | FML : S-2 sur les maps typées, adaptateur Strict Parser, complétion et squelette, puis concurrence/pool selon mesure | `PIDtoPatient` et `ORUR01toBundle` rejoués avec modèles typés ; démo et documentation ; tests de transformations concurrentes sans contamination. |
 | 7 | Sous-slices, discriminants complémentaires, contained, extensions des primitives, R4B/R5 | Cas de test par capacité et release ; profils FR Core/EU Lab dans la démo ; erreurs explicites pour les limites restantes. |
 | 8 | S-3 puis performance, durcissement, namespace et préparation 1.0 | Mesures avant/après versionnées ; seuils convenus tenus ; permissions et compatibilité des exports anciens vérifiées ; documentation et CHANGELOG à jour. |
 
@@ -153,3 +153,35 @@ La phase 3 du plan reste partielle : elle demande aussi un agencement complet
 - `python3 -m unittest discover -s tools/tests` : 8 tests passent.
 
 Prochain lot : aperçu multi-étapes, rejeu des exemples et import/export (lot 5).
+
+## Vérification du lot 5 — 13 novembre 2026
+
+- `/test` conserve `step` pour l’aperçu isolé et accepte `steps` pour les
+  Profile Mapper ordonnés, avec le même contrôle de permission. Les scripts
+  reprennent l’assemblage de production, sans enregistrer de canal fictif.
+  Références réelles, sorties atomiques, ressources par étape et variables finales.
+- Périmètre explicite dans Test, enregistré dans `samples.scope` ; les anciens
+  samples restent isolés. Les autres types d’étapes ne sont pas exécutés.
+  Erreurs identifiées par étape ; les marqueurs et liens ne visent pas une règle
+  homonyme d’une autre étape. Les résultats attendus portent sur le message
+  sortant, pas sur les variables finales.
+- `tools/run_tests.py` : exports JSON et XML, groupement par connecteur et
+  transformeur, schéma hors ligne et exécution serveur. Échec sur erreur,
+  validation invalide ou différence avec l’attendu ; code non nul sans sample
+  en ligne. La CI vérifie les exports positifs hors ligne.
+- Comparaison canonique des propriétés JSON ; UUID renommés en préservant leurs
+  relations. Deux résultats dont les références diffèrent ne passent plus par
+  simple masquage de tous les UUID.
+- Import CSV/Markdown limité aux expressions de valeur et à leurs notes :
+  validation de toutes les cibles avant application, conservation des autres
+  règles et Undo en une opération. Exports de tableaux et documentation complète
+  des règles en Markdown/HTML, avec échappement du contenu HTML.
+- `mvn clean package` : 139 tests Java, 36 tests Node ; `npm run check` :
+  45 modules et 545 messages anglais/français. Python : 13 tests.
+- Le contrôle de démo compare les aperçus aux sorties des canaux déployés :
+  transaction simple, transaction et document labo, identités et références.
+  Le runner en ligne passe aussi sur le fixture à deux Bundles avec attendu.
+- Manuel enrichi avec les parcours multi-étapes et tableaux/documentation ;
+  API, schéma, guide de rejeu et limites documentés.
+
+Prochain lot : FML, S-2 sur les modèles typés et adaptateur Strict Parser (lot 6).

@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import ssl
+import sys
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -144,11 +145,27 @@ def check_message_trace():
           f"{len(references)} références réelles, finalisation et publication")
 
 
+def check_transformer_preview(export_name, filename, expected, expected_document=None):
+    # Use the same exported mapper steps as the deployed source transformer.
+    sys.path.insert(0, str(EXAMPLES.parents[1]))
+    from tools.run_tests import groups, normalize
+    path = EXAMPLES.parents[1] / "demo/oie-init/channels" / export_name
+    steps = groups(path)["0/transformer"]
+    request = {"steps": steps, "dataType": "HL7V2", "message": (EXAMPLES / filename).read_text()}
+    result = json.loads(api("/extensions/fhir-profile-mapper/test", "application/json", json.dumps(request).encode()))
+    assert not result["errors"], result["errors"]
+    assert normalize(result["output"]) == normalize(json.dumps(expected)), "Preview and deployed output differ"
+    if expected_document is not None:
+        assert any(normalize(value) == normalize(json.dumps(expected_document)) for value in result["variables"].values())
+    print(f"OK aperçu multi-étapes : {export_name}, mêmes sorties que le canal déployé")
+
+
 def main():
     for filename, count in [("oru-r01-labo.er7", 12), ("oru-r01-minimal.er7", 4)]:
         value = json.loads(post("ORU_PORT", 8081, "oru", filename, "text/plain"))
         bundle(value, "transaction", count)
     print("OK ORU → transactions de 12 et 4 ressources, références résolues")
+    check_transformer_preview("oru-r01-vers-bundle-fhir.xml", "oru-r01-minimal.er7", value)
     check_message_trace()
 
     patient = json.loads(post("PATIENT_PORT", 8082, "patient", "oru-r01-minimal.er7", "text/plain"))
@@ -182,6 +199,7 @@ def main():
     assert encoded(message, 3) == document
     assert "archive-pca/labo-document-" in archive.findtext("response/content")
     print("OK deux Bundles : transaction 12, document 14, mêmes ressources et identités ; document archivé")
+    check_transformer_preview("oru-r01-vers-deux-bundles-labo-fhir.xml", "oru-r01-labo.er7", transaction, document)
 
     patient = json.loads(post("SQL_PATIENT_PORT", 8084, "sql-patient", "patient-result-sql.xml", "application/xml"))
     assert patient["id"] == "metier-1042" and patient["identifier"][0]["value"] == "000123456"
@@ -278,6 +296,11 @@ def main():
     assert len(bounded["trace"]["events"]) == 3 and bounded["trace"]["truncated"] is True
     assert bounded["output"] == result["output"]
     print(f"OK trace : {len(trace['events'])} événements, valeurs sur demande, limite vérifiée, même résultat")
+    from tools.run_tests import replay
+    total = sum(replay(path, lambda request: json.loads(api("/extensions/fhir-profile-mapper/test", "application/json", json.dumps(request).encode())))
+                for path in sorted((EXAMPLES.parents[1] / "demo/oie-init/channels").glob("*.xml")))
+    assert total > 0
+    print(f"OK outil de rejeu : {total} samples des exports de démonstration")
 
 
 if __name__ == "__main__":

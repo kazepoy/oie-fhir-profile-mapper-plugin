@@ -94,6 +94,7 @@ public final class FhirMapperTester {
                 throw new IllegalArgumentException("The test request is not a JSON object.");
             }
             Map<?, ?> request = (Map<?, ?>) parsed;
+            if (request.containsKey("steps")) return testTransformer(request, environment);
             trace = FhirMapperTrace.from(request.get("trace"), request.get("step"));
             step = FhirProfileMapperStep.fromJson(FhirJson.write(request.get("step")));
             // Preview this step's resource without assembling the other steps or publishing results.
@@ -121,7 +122,7 @@ public final class FhirMapperTester {
                 scope.put("configurationMap", scope, Context.javaToJS(new HashMap<>(environment.configuration()), scope));
                 scope.put("logger", scope, Context.javaToJS(logger, scope));
                 try {
-                    cx.evaluateString(scope, SANDBOX, "sandbox", 1, null);
+                    cx.evaluateString(scope, SANDBOX + ISOLATED_REFERENCES, "sandbox", 1, null);
                 } catch (RuntimeException e) {
                     throw new IllegalArgumentException("The sample message cannot be read as " + dataType + ": " + e.getMessage(), e);
                 }
@@ -188,6 +189,118 @@ public final class FhirMapperTester {
         return FhirJson.write(out);
     }
 
+    /** Ordered Profile Mapper steps, using their deployed assembly and atomic publication. */
+    private static String testTransformer(Map<?, ?> request, Environment environment) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        List<Object> errors = new ArrayList<>();
+        List<Object> results = new ArrayList<>();
+        Map<String, Object> variables = new LinkedHashMap<>();
+        out.put("output", FhirJson.NULL);
+        out.put("validationPerformed", false);
+        out.put("issues", List.of());
+        out.put("steps", results);
+        out.put("variables", variables);
+        out.put("errors", errors);
+        FhirProfileMapperStep current = null;
+        FhirMapperTrace trace = null;
+        String script = null;
+        String phase = "configuration";
+        try {
+            if (request.containsKey("step")) throw new IllegalArgumentException("Choose step or steps, not both.");
+            if (!(request.get("steps") instanceof List) || ((List<?>) request.get("steps")).isEmpty())
+                throw new IllegalArgumentException("steps must be a nonempty ordered array of Profile Mapper steps.");
+            trace = FhirMapperTrace.from(request.get("trace"), request.get("steps"));
+            if (trace != null) trace.transformerPreview();
+            List<FhirProfileMapperStep> steps = new ArrayList<>();
+            for (Object raw : (List<?>) request.get("steps")) {
+                current = null;
+                script = null;
+                if (!(raw instanceof Map)) throw new IllegalArgumentException("Each step must be an object.");
+                Map<?, ?> fields = (Map<?, ?>) raw;
+                if (fields.containsKey("__type") && !"org.oie.fhir.mapper.FhirProfileMapperStep".equals(text(fields.get("__type"))))
+                    throw new IllegalArgumentException("Only Profile Mapper steps are accepted in steps.");
+                if ("false".equals(text(fields.get("enabled")))) continue;
+                current = FhirProfileMapperStep.fromJson(FhirJson.write(fields));
+                if (text(current.getSequenceNumber()).isEmpty()) current.setSequenceNumber(String.valueOf(steps.size()));
+                steps.add(current);
+            }
+            if (steps.isEmpty()) throw new IllegalArgumentException("No enabled Profile Mapper step to test.");
+            String dataType = text(request.get("dataType")).isEmpty() ? "HL7V2" : text(request.get("dataType")).toUpperCase();
+            Map<String, Object> channelMap = new HashMap<>();
+            Context cx = new LimitedFactory().enterContext();
+            try {
+                Scriptable scope = cx.initStandardObjects();
+                if (trace != null) scope.put("__fhirMapperTrace", scope, Context.javaToJS(trace, scope));
+                phase = "input";
+                scope.put("__message", scope, environment.serialize(dataType, text(request.get("message"))));
+                scope.put("__dataType", scope, dataType);
+                scope.put("channelMap", scope, Context.javaToJS(channelMap, scope));
+                for (String map : List.of("sourceMap", "connectorMap", "responseMap", "globalMap", "globalChannelMap"))
+                    scope.put(map, scope, Context.javaToJS(new HashMap<>(), scope));
+                scope.put("configurationMap", scope, Context.javaToJS(new HashMap<>(environment.configuration()), scope));
+                scope.put("logger", scope, Context.javaToJS(logger, scope));
+                cx.evaluateString(scope, SANDBOX, "sandbox", 1, null);
+                for (String function : environment.functions()) {
+                    try { cx.evaluateString(scope, function, "code template", 1, null); }
+                    catch (RhinoException ignored) { /* Same code-template tolerance as isolated previews. */ }
+                }
+                for (int i = 0; i < steps.size(); i++) {
+                    current = steps.get(i);
+                    phase = "configuration";
+                    script = current.getTransformerPreviewScript(i == steps.size() - 1);
+                    List<String> resources = new ArrayList<>();
+                    scope.put("__fhirMapperStepResults", scope, Context.javaToJS(resources, scope));
+                    scope.put("__fhirMapperFinalizing", scope, false);
+                    Map<String, Object> info = Map.of("name", text(current.getName()), "sequenceNumber", text(current.getSequenceNumber()),
+                            "resourceType", text(current.getResourceType()), "action", text(current.getAction()));
+                    if (trace != null) trace.previewStep(FhirJson.write(info));
+                    Map<String, Object> result = new LinkedHashMap<>();
+                    result.put("step", info);
+                    result.put("resources", resources);
+                    results.add(result);
+                    phase = "execution";
+                    try {
+                        cx.evaluateString(scope, script, "step", 1, null);
+                    } catch (RhinoException e) {
+                        boolean finalizing = Boolean.TRUE.equals(scope.get("__fhirMapperFinalizing", scope));
+                        errors.add(error(current, script, e.lineNumber(), e.details(), e instanceof EvaluatorException ? "syntax" : finalizing ? "finalization" : "execution", e));
+                        break;
+                    } catch (TimeLimit e) {
+                        errors.add(error(current, null, 0, e.getMessage(), "timeout", null));
+                        break;
+                    }
+                }
+                if (errors.isEmpty()) {
+                    Object value = cx.evaluateString(scope, RESULT, "result", 1, null);
+                    // Variable-only transforms do not publish an outbound FHIR message.
+                    boolean outbound = false;
+                    boolean validated = false;
+                    for (int i = 0; i < steps.size(); i++) {
+                        FhirProfileMapperStep step = steps.get(i);
+                        boolean produced = !((List<?>) ((Map<?, ?>) results.get(i)).get("resources")).isEmpty();
+                        boolean publishes = "createBundle".equals(step.getAction()) || step.getTargets().isEmpty();
+                        if (produced && publishes) {
+                            outbound |= text(step.getVariable()).trim().isEmpty();
+                            validated |= step.isValidateOutput();
+                        }
+                    }
+                    if (outbound) out.put("output", Context.toString(value));
+                    for (FhirProfileMapperStep step : steps) {
+                        String target = text(step.getVariable()).trim();
+                        if (!target.isEmpty() && channelMap.containsKey(target)) variables.put(target, channelMap.get(target).toString());
+                    }
+                    out.put("validationPerformed", validated);
+                }
+            } finally { Context.exit(); }
+        } catch (TimeLimit e) {
+            errors.add(error(current, null, 0, e.getMessage(), "timeout", null));
+        } catch (Exception e) {
+            errors.add(error(current, script, 0, e.getMessage(), phase, null));
+        }
+        if (trace != null) out.put("trace", trace.result());
+        return FhirJson.write(out);
+    }
+
     private static Map<String, Object> error(FhirProfileMapperStep step, String script, int line, String message, String phase, RhinoException cause) {
         Map<String, Object> e = new LinkedHashMap<>();
         Map<?, ?> diagnostic = null;
@@ -232,7 +345,9 @@ public final class FhirMapperTester {
             "function $gc(k, v) { if (arguments.length > 1) { globalChannelMap.put(k, v); return v; } return globalChannelMap.get(k); }",
             "function $cfg(k) { return configurationMap.get(k); }",
             "function $(k) { var maps = [responseMap, connectorMap, channelMap, sourceMap, globalChannelMap, globalMap, configurationMap];",
-            "  for (var i = 0; i < maps.length; i++) { if (maps[i].containsKey(k)) { return maps[i].get(k); } } return ''; }",
+            "  for (var i = 0; i < maps.length; i++) { if (maps[i].containsKey(k)) { return maps[i].get(k); } } return ''; }");
+
+    private static final String ISOLATED_REFERENCES = String.join("\n",
             "function fhirRef(name, index) {",
             "  return 'urn:uuid:' + java.util.UUID.nameUUIDFromBytes(new java.lang.String('fhir-profile-mapper-test:' + name + ':' + (index || 0)).getBytes('UTF-8')); }",
             "function fhirRefs(name) { return [fhirRef(name)]; }");

@@ -26,15 +26,18 @@ y ajoutent leurs ressources.
 - [Bundles, requêtes et références entre ressources](bundles-et-references.md)
 - [Destination du résultat et validation](sortie-et-validation.md)
 - [Éditer en JSON et lire le script généré](json-et-script.md)
+- [Importer des tableaux et exporter la documentation](tableaux-et-documentation.md)
 
 ## Vérifier et diagnostiquer
 
 - [Tests et exemples enregistrés](tests-et-exemples.md)
+- [Aperçu multi-étapes](apercu-multi-etapes.md)
+- [Rejeu par outil](../../Rejeu-tests.md)
 - [Résultat attendu et comparaison](comparaison.md)
 - [Diagnostics et trace d'un test](diagnostics-et-traces.md)
 - [Trace d'un message traité](trace-messages.md)
 
-L'aperçu exécute une étape isolée. La validation d'un Bundle complet et de ses
-références demande un essai sur le canal déployé. Les extensions de primitives,
-`contained`, sous-slices et certains discriminants de slicing restent hors du
+L’aperçu peut tester une étape isolée ou les Profile Mapper du même transformeur.
+Les autres étapes et les transports demandent un essai déployé. Les extensions
+de primitives, `contained`, sous-slices et certains discriminants restent hors du
 périmètre actuel ; voir les [limites techniques](../../Mappeur-graphique.md).

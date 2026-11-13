@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { importMappingTable, mappingTable, mappingDocumentation } from "../fhir/mapping-table.js";
 import { t as tr } from "../i18n/index.js";
 import { React, h, bindReact } from "../host/react.js";
 import { ExpressionField, activeExpressionEditor, setExpressionFunctions, COMPLETION_HINT } from "./expression.js";
@@ -7,7 +8,7 @@ import { sdKey, sdLoaded, shortType, makeTree, instancesOf, parseMappings, compi
 import { mapperSourcePaths, mapperHelpUrl, mapperJsonImport, mapperRuleKey, mapperRuleIds, MAPPER_TYPE } from "../fhir/step.js";
 import { inserted, asBool, fixedText, TRANSLATABLE, isLocalServer, substitute } from "../fhir/expressions.js";
 import { fetchSd, fetchElements } from "../host/catalog.js";
-import { mapperContext, mapperBundleDeclarations, mapperSample } from "../host/channel-context.js";
+import { mapperContext, mapperBundleDeclarations, mapperSample, mapperPreviewSteps } from "../host/channel-context.js";
 import { mapperDiagnostic, traceRows as mapperTraceRows, traceExport as mapperTraceExport } from "../fhir/diagnostics.js";
 import { snapshot, restore } from "../fhir/history.js";
 import { CodeBox, languageOf } from "../host/code-box.js";
@@ -121,6 +122,7 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
       sample,
       activeSample: savedSamples.length ? savedSamples[0].id : null,
       sampleKey: initial.key,
+      previewScope: savedSamples[0]?.scope || "step",
       testResult: null,
       scriptResult: null,
       testing: false,
@@ -196,7 +198,9 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
   };
   const ctx = { version, profiles, instances: st.instances, showAll: st.showAll };
   const tree = st.rootIndex ? makeTree(st.rootIndex, ctx) : null;
+  const diagnosticHere = error => !error.step || String(error.step.sequenceNumber) === String(element.sequenceNumber);
   const revealDiagnostic = (error) => {
+    if (!diagnosticHere(error)) return;
     const chain = st.rootIndex && makeTree(st.rootIndex, { ...ctx, showAll: true }).chain(error.key);
     if (!chain) {
       st.notice = tr("The element {p0} is not in the loaded profile.", { p0: error.key });
@@ -222,8 +226,9 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
     const display = mapperDiagnostic(error);
     return h("div", { key: id, style: { color: "var(--err, #b91c1c)", fontSize: "12px", marginBottom: "6px" } },
       h("strong", null, display.label),
-      error.key && tree ? h("button", { type: "button", className: "btn btn-sm", style: { marginLeft: "6px" }, onClick: () => revealDiagnostic(error) }, tr("Go to rule")) : null,
+      error.key && tree && diagnosticHere(error) ? h("button", { type: "button", className: "btn btn-sm", style: { marginLeft: "6px" }, onClick: () => revealDiagnostic(error) }, tr("Go to rule")) : null,
       h("div", null, error.message),
+      !diagnosticHere(error) ? h("div", null, tr("This diagnostic belongs to step {name}. Select that step to edit its rule.", { name: error.step.name || error.step.sequenceNumber })) : null,
       display.target ? h("div", { style: { fontFamily: "monospace" } }, tr("Target: {p0}", { p0: display.target })) : null,
       error.expression ? h("pre", { style: { whiteSpace: "pre-wrap", margin: "4px 0" } }, error.expression) : null);
   };
@@ -260,6 +265,32 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
     }
     st.current = snap;
     onChange();
+  };
+  const importTable = async () => {
+    try {
+      if (!tree) throw new Error(tr("Load a profile before importing a table."));
+      const file = await platform.ui.pickFile(".csv,.md");
+      if (!file) return;
+      const edits = importMappingTable(file.content, file.name.toLowerCase().endsWith(".csv") ? "csv" : "markdown",
+        makeTree(st.rootIndex, { ...ctx, showAll: true }), element);
+      for (const edit of edits) {
+        st.values.set(edit.key, edit.expression);
+        if (edit.note) st.notes.set(`value:${edit.key}`, edit.note); else st.notes.delete(`value:${edit.key}`);
+      }
+      st.lastPush = 0;
+      save();
+      st.lastPush = 0;
+      st.notice = tr("Imported {count} value edit(s).", { count: edits.length });
+      rerender();
+    } catch (error) { st.notice = errorText(error); rerender(); }
+  };
+  const exportTable = async (format, documentation = false) => {
+    try {
+      const rules = parseMappings(element.mappings);
+      const extension = format === "markdown" ? "md" : format;
+      await platform.ui.saveFile(`fhir-mapping.${extension}`, format === "html" ? "text/html" : format === "csv" ? "text/csv" : "text/markdown",
+        async () => documentation ? mappingDocumentation(element, rules, format) : mappingTable(rules, format));
+    } catch (error) { st.notice = errorText(error); rerender(); }
   };
   const travel = (from, to) => {
     if (!from.length || !tree) return;
@@ -507,10 +538,16 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
       // no storage: the sample is kept while the editor is open
     }
   };
-  // The step is sent without its samples: the server does not need them to run one.
-  const testOn = async (sample, trace) => {
+  const previewSelection = scope => {
+    if (scope !== "transformer") return { step: { ...element, samples: "[]" } };
+    const steps = mapperPreviewSteps(platform, element);
+    if (!steps) throw new Error(tr("The current transformer cannot be identified."));
+    return { steps };
+  };
+  // Samples stay in the channel; the test API receives only code and one input message.
+  const testOn = async (sample, trace, scope = sample.scope || st.previewScope) => {
     try {
-      const text = await platform.api.post(`${MAPPER_API}/test`, JSON.stringify({ step: { ...element, samples: "[]" }, message: sample.message, dataType: sample.dataType || "HL7V2", trace }), {
+      const text = await platform.api.post(`${MAPPER_API}/test`, JSON.stringify({ ...previewSelection(scope), message: sample.message, dataType: sample.dataType || "HL7V2", trace }), {
         contentType: "text/plain",
         raw: true,
         timeoutMs: 60000
@@ -528,7 +565,7 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
     st.testResult = null;
     st.suite = null;
     rerender();
-    st.testResult = await testOn(st.sample, st.traceOptions);
+    st.testResult = await testOn(st.sample, st.traceOptions, st.previewScope);
     st.testing = false;
     rerender();
   };
@@ -540,7 +577,7 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
   const selectSample = (id) => {
     st.activeSample = id || null;
     const chosen = samples.find((s) => s.id === id);
-    if (chosen) st.sample = { message: chosen.message, dataType: chosen.dataType || "HL7V2" };
+    if (chosen) { st.sample = { message: chosen.message, dataType: chosen.dataType || "HL7V2" }; st.previewScope = chosen.scope || "step"; }
     st.testResult = null;
     rerender();
   };
@@ -550,7 +587,7 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
     if (!name || !String(name).trim()) return;
     const id = crypto.randomUUID();
     st.activeSample = id;
-    writeSamples([...samples, { id, name: String(name).trim(), dataType: st.sample.dataType, message: st.sample.message, expected: null }]);
+    writeSamples([...samples, { id, name: String(name).trim(), dataType: st.sample.dataType, message: st.sample.message, scope: st.previewScope, expected: null }]);
   };
   const runAllSamples = async () => {
     st.testing = true;
@@ -558,7 +595,7 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
     st.testResult = null;
     rerender();
     for (const sample of samples) {
-      const result = await testOn(sample, { enabled: false });
+      const result = await testOn(sample, { enabled: false }, sample.scope || "step");
       const verdict = sampleVerdict(sample, result);
       const invalid = result.issues.some((i) => i.severity === "error" || i.severity === "fatal");
       st.suite.push({ id: sample.id, name: sample.name, ok: !result.errors.length && !invalid && verdict !== false,
@@ -679,7 +716,7 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
   // Elements the last test or compilation reported: marked in the tree.
   const errorsByKey = new Map();
   for (const error of [...(st.testResult?.errors || []), ...(st.scriptResult?.errors || [])]) {
-    if (error.key) errorsByKey.set(error.key, [...(errorsByKey.get(error.key) || []), error.message]);
+    if (error.key && diagnosticHere(error)) errorsByKey.set(error.key, [...(errorsByKey.get(error.key) || []), error.message]);
   }
 
   const field = (label, control, hint) => h("div", { className: "field" }, h("label", null, label), control, hint ? h("div", { className: "hint" }, hint) : null);
@@ -1322,6 +1359,14 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
         )
       )
     ),
+    h("div", { className: "mapper-wide" },
+      h("div", { className: "mapper-actions" },
+        h("button", { type: "button", className: "btn btn-sm", disabled: !tree, onClick: importTable }, tr("Import value table")),
+        h("button", { type: "button", className: "btn btn-sm", onClick: () => exportTable("csv") }, tr("Export CSV table")),
+        h("button", { type: "button", className: "btn btn-sm", onClick: () => exportTable("markdown") }, tr("Export Markdown table")),
+        h("button", { type: "button", className: "btn btn-sm", onClick: () => exportTable("markdown", true) }, tr("Export Markdown documentation")),
+        h("button", { type: "button", className: "btn btn-sm", onClick: () => exportTable("html", true) }, tr("Export HTML documentation"))),
+      h("p", { className: "hint" }, tr("Tables edit value expressions and notes only. Other rules remain in the step. Empty expressions remove their value mapping."))),
     h("details", { style: { marginTop: "10px" } },
       h("summary", { style: { cursor: "pointer" } }, tr("Edit as JSON")),
       h("div", { className: "hint", style: { margin: "6px 0" } }, tr("The whole step — properties and rules — as text: copy it to another step or channel, paste a mapping written by hand or by an AI agent, or make bulk edits. Validate and apply compiles it on the server first.")),
@@ -1532,12 +1577,16 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
                 onChange: (e) => selectSample(e.target.value) },
                 h("option", { value: "" }, tr("(unsaved sample, this browser)")),
                 samples.map((s) => h("option", { key: s.id, value: s.id }, s.name + (s.expected ? " ✓" : "")))),
+              h("select", { value: st.previewScope, "aria-label": tr("Preview scope"), style: { width: "auto", flex: "none" }, disabled: st.testing,
+                onChange: e => { st.previewScope = e.target.value; st.testResult = null; if (activeSample) updateActive({ scope: st.previewScope }); rerender(); } },
+                h("option", { value: "step" }, tr("This step only")),
+                h("option", { value: "transformer", disabled: !mapperContext(platform, element) }, tr("Profile Mapper steps of this transformer"))),
               h("button", { type: "button", className: "btn btn-sm", disabled: st.testing || !st.sample.message.trim(), onClick: runTest }, st.testing ? tr("Running…") : tr("Run")),
               !activeSample ? h("button", { type: "button", className: "btn btn-sm", disabled: !st.sample.message.trim(), title: tr("Keep this message in the step, so it is saved with the channel"), onClick: saveAsSample }, tr("Save as sample")) : null,
               activeSample ? h("button", { type: "button", className: "btn btn-sm", title: tr("Remove this sample from the step"), onClick: () => { st.activeSample = null; writeSamples(samples.filter((s) => s.id !== activeSample.id)); } }, tr("Delete sample")) : null,
               samples.length ? h("button", { type: "button", className: "btn btn-sm", disabled: st.testing, title: tr("Run every saved sample and compare with its expected result"), onClick: runAllSamples }, tr("Run all ({p0})", { p0: samples.length })) : null,
               h("button", { type: "button", className: "btn btn-sm", onClick: showScript }, st.scriptResult ? tr("Hide the script") : tr("Generated script")),
-              h("span", { className: "text-text-faint", style: { fontSize: "11px" } }, tr("Runs this step on the server and validates what it makes; fhirRef() of earlier steps gives stand-ins."))
+              h("span", { className: "text-text-faint", style: { fontSize: "11px" } }, st.previewScope === "transformer" ? tr("Runs enabled Profile Mapper steps in order, with real references and Bundle finalization. Other step types are excluded.") : tr("Runs this step on the server and validates what it makes; fhirRef() of earlier steps gives stand-ins."))
             ),
             h("div", { style: { display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", marginBottom: "6px" } },
               h("label", null, h("input", { type: "checkbox", checked: st.traceOptions.enabled,
@@ -1567,6 +1616,15 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
                   "div",
                   { style: { marginTop: "6px" } },
                   testResult.errors.map((e, i) => diagnosticView(e, `e${i}`)),
+                  testResult.steps ? h("details", { open: true },
+                    h("summary", null, tr("Produced resources by step")),
+                    testResult.steps.map((result, i) => h("details", { key: i },
+                      h("summary", null, `${result.step.sequenceNumber} · ${result.step.name || result.step.resourceType} (${result.resources.length})`),
+                      result.resources.map((resource, j) => h("pre", { key: j, style: { maxHeight: "300px", overflow: "auto", whiteSpace: "pre-wrap" } }, prettyJson(resource)))))) : null,
+                  Object.keys(testResult.variables || {}).length ? h("details", { open: true },
+                    h("summary", null, tr("Published channel variables")),
+                    Object.entries(testResult.variables).map(([name, value]) => h("details", { key: name }, h("summary", null, name),
+                      h("pre", { style: { maxHeight: "360px", overflow: "auto", whiteSpace: "pre-wrap" } }, prettyJson(value))))) : null,
                   testResult.trace ? h("details", { style: { marginTop: "8px" } },
                     h("summary", { style: { cursor: "pointer" } },
                       tr("Execution trace: {p0} event(s){p1}", { p0: testResult.trace.events.length, p1: testResult.trace.truncated ? " — truncated" : "" })),
@@ -1577,7 +1635,7 @@ export function ProfileMapperEditor({ element, onChange, platform }) {
                         h("li", { key: index, style: { margin: "6px 0" } },
                           h("strong", null, tr("{p0} · {p1}", { p0: label, p1: event.status })),
                           h("span", { style: { marginLeft: "6px" } }, duration),
-                          event.key && tree ? h("button", { type: "button", className: "btn btn-sm", onClick: () => revealDiagnostic(event) }, tr("Go to rule")) : null,
+                          event.key && tree && diagnosticHere({ step: testResult.trace.steps?.find(step => String(step.sequenceNumber) === String(event.step)) || testResult.trace.step }) ? h("button", { type: "button", className: "btn btn-sm", onClick: () => revealDiagnostic({ ...event, step: testResult.trace.steps?.find(step => String(step.sequenceNumber) === String(event.step)) || testResult.trace.step }) }, tr("Go to rule")) : null,
                           iterations ? h("div", null, iterations) : null,
                           event.reason ? h("div", null, event.reason) : null,
                           event.count !== undefined ? h("div", null, tr("{p0} item(s)", { p0: event.count })) : null,

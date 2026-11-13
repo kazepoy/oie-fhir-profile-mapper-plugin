@@ -34,5 +34,5 @@ trace et son export. Le désactiver avant de partager une trace sans ces valeurs
 est atteinte. Ces options appartiennent au test et ne sont pas enregistrées
 comme activation de la trace des messages déployés.
 
-Une trace de test observe une étape isolée ; pour les références et Bundles
-réels, utiliser la [trace d'un message traité](trace-messages.md).
+Une trace de test suit le périmètre sélectionné, isolé ou [multi-étapes](apercu-multi-etapes.md).
+La [trace d’un message traité](trace-messages.md) observe la chaîne déployée.

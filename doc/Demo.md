@@ -81,15 +81,19 @@ Compose `fhir-profile-mapper-demo`.
 ## Rejouer les exemples
 
 Les requêtes prêtes à exécuter sont dans
-[demo.http](../demo/examples/demo.http). Le contrôle complet nécessite seulement
-Python 3, depuis la racine du projet :
+[demo.http](../demo/examples/demo.http). Le contrôle complet nécessite Python 3 et les dépendances des outils,
+depuis la racine du projet :
 
 ```sh
+python3 -m pip install -r tools/requirements.txt
 python3 demo/examples/check.py
 ```
 
 Ce script crée des messages dans les canaux de démo. Il vérifie les réponses
-HTTP et lit les messages via l'API OIE, sans modifier les canaux.
+HTTP et lit les messages via l’API OIE, sans modifier les canaux. Il compare
+aussi les aperçus multi-étapes aux sorties des canaux déployés, pour un Bundle
+et les deux Bundles labo, puis rejoue les samples des exports avec le même outil
+que [run_tests.py](Rejeu-tests.md).
 
 | Port | Route | Résultat vérifié |
 |---|---|---|

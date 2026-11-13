@@ -18,7 +18,8 @@ Un exemple enregistré peut posséder un résultat de référence.
 attendu et du résultat actuel. Lire l'écart avant de remplacer la référence :
 un écart peut révéler une régression ou une modification volontaire.
 
-Les URN UUID aléatoires et `meta.lastUpdated` sont neutralisés pour la comparaison.
+Les URN UUID aléatoires sont renommés en préservant les relations de référence.
+L’ordre des propriétés JSON et `meta.lastUpdated` sont neutralisés pour la comparaison.
 Les autres différences de contenu restent significatives. **Clear the expected
 result** retire la référence, sans supprimer l'exemple.
 

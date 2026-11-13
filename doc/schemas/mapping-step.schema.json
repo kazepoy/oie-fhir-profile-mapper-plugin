@@ -46,6 +46,7 @@
         "properties": {
           "id": {"$ref": "#/$defs/nonblank"}, "name": {"$ref": "#/$defs/nonblank"},
           "dataType": {"enum": ["HL7V2", "XML", "JSON", "RAW"], "default": "HL7V2"},
+          "scope": {"enum": ["step", "transformer"], "default": "step"},
           "message": {"type": "string"}, "expected": {"type": ["string", "null"]}
         }
       }}
