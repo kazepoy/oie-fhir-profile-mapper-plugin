@@ -108,6 +108,6 @@ Les cinq canaux suivants complètent la matrice sans modification du contrat plu
 La suite [demo-channels.test.js](../../webadmin/test/e2e/demo-channels.test.js)
 (`npm --prefix webadmin run test:e2e`) compare les réponses HTTP aux attendus,
 rejoue les aperçus et vérifie que chaque contre-exemple produit un nouveau message
-OIE en erreur avec le diagnostic attendu. Les quatorze samples positifs Profile
+OIE en erreur avec le diagnostic attendu. Les vingt samples positifs Profile
 Mapper restent rejouables avec `tools/run_tests.mjs` ; les cinq aperçus FML sont
 contrôlés depuis le manifeste de démonstration.

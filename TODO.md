@@ -30,12 +30,12 @@ diagnostics et comptes rendus ; les travaux livrés figurent dans le
 ## À prioriser — D et E : exemples et FML
 
 La [matrice](doc/demo/Matrice-exemples.md) fait autorité sur la couverture.
-Les dix-sept canaux de démo sont rangés dans huit groupes `<Source> - <Transfo>`
-avec tags colorés ordonnés (`[Release, Source, Transfo, ...fonctionnalités]`,
+Les vingt-trois canaux de démo sont rangés dans neuf groupes (`<Source> - <Transfo>`
+et `FML versus Mapper`) avec tags colorés ordonnés (`[Release, Source, Transfo, ...fonctionnalités]`,
 sans tags IG/profil) : JSON, CSV, XML, HL7 v2, Strict Parser, source FHIR,
 Organization R5, FR Core, EU Laboratory 2.0.0, FML R5 `Permission`, map `mapUrl`
-d'IG et terminologie externe (`$translate` + repli + 503) sont démontrés. R4B
-est écarté de la démo par choix utilisateur.
+d'IG, terminologie externe (`$translate` + repli + 503) et six comparaisons
+parallèles FML vs Mapper sont démontrés. R4B est écarté de la démo par choix utilisateur.
 
 - [ ] Choisir les cas nécessitant conception : profil R4 externe (`DevDays`),
   modèle logique métier arbitraire source/cible dans FML et IG HL7 v2 source à

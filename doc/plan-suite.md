@@ -1,7 +1,9 @@
 # Plan de suite du projet
 
-État actualisé le 13 novembre 2026 sur `feat/refonte`, après le namespace,
-le rangement documentaire et les douze canaux de démonstration (`2e3acca`).
+État actualisé le 14 novembre 2026 sur `feat/refonte`, après le namespace,
+le rangement documentaire, les vingt-trois canaux de démonstration (neuf groupes),
+la restauration OIE native, la suite E2E Node/Playwright et la migration de
+`tools/` vers Node.js (`41795d6`).
 
 Ce document est la **référence active pour les travaux à venir**. Le
 [plan de refonte initial](history/plan-refonte.md) explique les décisions et phases qui
@@ -94,7 +96,13 @@ Les lots 1 à 7 sont clos et constituent la base de non-régression :
   squelette et exécutions concurrentes ;
 - sous-slices, discriminants matérialisables, `contained` profilé, extensions de
   primitives et couverture R4/R4B/R5 ;
-- démo Docker avec profils locaux, FR Core et HL7 Europe Laboratory.
+- intégration de *Settings › FHIR Mapper* au flux natif Web Admin (*FHIR Mapper Tasks*,
+  indicateur de modification) et à la sauvegarde/restauration de configuration OIE
+  (`PluginMetaData.serverSettings`) ;
+- outillage CLI et suites de tests unifiés sous Node.js (`.mjs`, zéro dépendance Python,
+  tests `tools/tests/` intégrés à `mvn test`) et suite E2E Node/Playwright ;
+- démo Docker avec restauration OIE native (`demo/oie-init/data/`), vingt-trois canaux
+  dans neuf groupes, profils locaux, FR Core 2.2.0 et HL7 Europe Laboratory 2.0.0.
 
 Après le lot A, tout nouveau lot devra conserver la lecture des canaux réécrits
 avec `fr.kazepoy.fhir.*`, les résultats de la démo et les contrôles suivants :
@@ -218,39 +226,42 @@ une réécriture générale de l'éditeur.
 
 ### Lot D — Matrice de démonstration et de vérité
 
-**Statut : huit groupes `<Source> - <Transfo>`, dix-sept canaux et cinq parcours complémentaires livrés ; cas nécessitant conception différés.**
+**Statut : neuf groupes (`<Source> - <Transfo>` et `FML versus Mapper`), vingt-trois canaux et vingt samples Profile Mapper livrés ; cas nécessitant conception différés.**
 
 La [matrice des exemples](demo/Matrice-exemples.md) constitue l'inventaire de
-couverture : dix-sept exports dans huit groupes OIE natifs `<Source> - <Transfo>`
-avec tags colorés ordonnés (sans tags IG/profil), quatorze samples Profile
-Mapper avec attendus et cinq aperçus FML rejouables. Les parcours couvrent
-désormais : JSON métier vers Organization R5, Patient FR Core 2.2.0, Observation
-EU Laboratory 2.0.0 (`10813`), CSV vers Bundle `Organization`/`Permission` R5 en
-FML (`10814`), HL7 v2 vers Patient via map publiée dans une IG (`mapUrl`, `10815`),
-terminologie externe OIE `$translate` avec repli et indisponibilité 503
-(`10816`/`10819`), et projection d'un Patient FHIR par FML (`10812`). R4B est écarté
+couverture : vingt-trois exports dans neuf groupes OIE natifs (`<Source> - <Transfo>`
+et `FML versus Mapper`) avec tags colorés ordonnés (sans tags IG/profil), vingt
+samples Profile Mapper avec attendus et cinq aperçus FML rejouables. Les parcours
+couvrent désormais : JSON métier vers Organization R5 (`10810`), Patient FR Core 2.2.0
+(`10811`), projection d'un Patient FHIR par FML (`10812`), Observation EU Laboratory
+2.0.0 (`10813`), CSV vers Bundle `Organization`/`Permission` R5 en FML (`10814`),
+HL7 v2 vers Patient via map publiée dans une IG (`mapUrl`, `10815`), terminologie
+externe OIE `$translate` avec repli et indisponibilité 503 (`10816`/`10819`), et
+six canaux `FML versus Mapper` comparant en parallèle FML inline et Profile Mapper
+sur HL7 v2 standard (`10817`), HL7 v2 Strict Parser (`10818`), CSV (`10820`), XML SQL
+(`10821`), JSON FR Core (`10822`) et ressource FHIR (`10823`). R4B est écarté
 de la démonstration sur demande explicite de l'utilisateur (couvert en tests
 Java) ; `DevDays`, l'IG HL7 v2 officielle et les modèles logiques métier
 arbitraires restent différés au titre des sujets demandant conception. Ce lot
 avance avant B à la demande de l'utilisateur.
 
 Premier sous-lot du 13 novembre 2026 : 147 tests Java, 43 tests frontend et 14
-tests outils passaient pour les neuf canaux, leurs neuf samples Profile Mapper,
+tests outils passaient pour les neuf canaux initiaux, leurs neuf samples Profile Mapper,
 deux aperçus FML avec validation et 20 parcours navigateur Chromium.
 La map/modèle FML de démonstration a été corrigée pour lire la valeur directe
 d'OBX.5 émise par le Strict Parser, désormais contrôlée dans le rejeu.
 
-Complément : 149 tests Java, 43 tests frontend et 15 tests outils passent.
-Les 24 parcours Chromium passent. Le rejeu complet sur l'image reconstruite
-vérifie les douze canaux, onze samples Profile Mapper, trois aperçus FML,
-les trois contre-exemples et les groupes/tags natifs. Le rejeu et les parcours
-navigateur passent simultanément après redémarrage à froid ; une nouvelle
-initialisation sans forçage conserve les douze canaux et les trois groupes.
-L'image embarque les dépendances directes non-core de FR Core, avec versions et
-SHA-256 fixés ; cela ne constitue pas un résolveur général des dépendances
-transitives. L'initialisation fusionne les groupes natifs avec ceux déjà présents.
-Le pont de catalogue préchauffe le validateur avant le verrou du moteur pour
-éviter l'interblocage détecté pendant les essais concurrents à froid.
+Compléments des 13 et 14 novembre 2026 : 155 tests Java, 43 tests frontend et 23
+tests outils passent dans `mvn clean package`. La suite Node/Playwright (`npm --prefix webadmin run test:e2e`)
+vérifie les vingt-trois canaux, les vingt samples Profile Mapper, les cinq aperçus FML,
+les sept contre-exemples et les neuf groupes/tags natifs, ainsi que les parcours
+navigateur Chromium/WebKit. L'initialisation restaure la configuration serveur OIE
+native (`demo/oie-init/data/configuration.xml`) puis importe les vingt-trois canaux
+et neuf groupes. L'image embarque les dépendances directes non-core de FR Core et
+EU Laboratory, avec versions et SHA-256 fixés ; cela ne constitue pas un résolveur
+général des dépendances transitives. Le pont de catalogue préchauffe le validateur
+avant le verrou du moteur pour éviter l'interblocage détecté pendant les essais
+concurrents à froid.
 
 Créer une matrice de capacités plutôt qu'une accumulation de canaux. Chaque cas
 porte des tags, un sample préchargé, un résultat attendu et, quand pertinent, un
@@ -369,7 +380,7 @@ reportée ; elle ne doit plus être perdue dans plusieurs documents.
 | Préférence de langue explicite | C | à arbitrer ; navigateur déjà pris en charge |
 | Canaux R4/R4B/R5, IG, FR Core, sources et terminologie | D | R4/R5, FR Core, EU Lab 2.0.0, FML R5 `Permission`, map `mapUrl` et terminologie externe (`10816`/`10819`) livrés ; R4B écarté par choix utilisateur ; DevDays, IG HL7 v2 officielle et modèle métier arbitraire différés |
 | Maps publiées, surchargées et imbriquées | D puis E | Map publiée `mapUrl` livrée (`10815`) ; surcharge et imports imbriqués proposés en E |
-| Samples, groupes et tags de chaque canal | D puis E | 8 groupes `<Source> - <Transfo>`, tags colorés ordonnés, 14 samples Mapper et 5 aperçus FML livrés ; samples FML enregistrés restants |
+| Samples, groupes et tags de chaque canal | D puis E | 9 groupes (`<Source> - <Transfo>` et `FML versus Mapper`), tags colorés ordonnés, 23 canaux, 20 samples Mapper et 5 aperçus FML livrés ; samples FML enregistrés restants |
 | Édition d'une dérivation de map canonique | E | proposé |
 | Navigation et diagnostics dans les imports FML | E | proposé |
 | Trace FML par groupe/règle | E | faisabilité à étudier |
@@ -413,7 +424,7 @@ reportée ; elle ne doit plus être perdue dans plusieurs documents.
 ## 6. Prochaine étape
 
 Reprendre **B — contrats**, déjà choisi, en partant des formats courants et des
-douze exemples. Cadrer d'abord les références et fixtures manquantes, puis
+vingt-trois exemples. Cadrer d'abord les références et fixtures manquantes, puis
 arbitrer les contraintes de packages pendant ce lot. Ne pas annoncer le format
 comme figé pour la 1.0 avant cet arbitrage.
 

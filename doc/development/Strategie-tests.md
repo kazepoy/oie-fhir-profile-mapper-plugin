@@ -6,11 +6,11 @@ Le projet sépare les tests hors ligne (rapides, exécutés à chaque build) des
 
 | Niveau | Outils | Emplacement | Commande | Prérequis |
 |---|---|---|---|---|
-| **Unitaire Java** | JUnit 5 | `src/test/java/fr/kazepoy/fhir/` | `mvn test` | Aucun (hors ligne) |
+| **Unitaire Java** | JUnit 4 | `src/test/java/fr/kazepoy/fhir/` | `mvn test` | Aucun (hors ligne) |
 | **Unitaire Frontend** | Node `node:test` | `webadmin/test/unit/` | `npm --prefix webadmin test` *(inclus dans `mvn package`)* | Node ≥ 22 |
 | **Intégration canaux & API** | Node `node:test` + `playwright` (`request`) | `webadmin/test/e2e/demo-*.test.js` | `npm --prefix webadmin run test:e2e` | Démo Docker démarrée |
 | **UI Web Admin (E2E)** | Node `node:test` + `playwright` (Chromium / WebKit) | `webadmin/test/e2e/*.test.js` | `npm --prefix webadmin run test:e2e` | Démo Docker + navigateurs Playwright |
-| **Outillage & Doc** | Node `node:test` / scripts `.mjs` | `tools/tests/`, `tools/check_doc_links.mjs`, `tools/run_tests.mjs` | `node --test tools/tests/*.test.mjs` | Node ≥ 22 |
+| **Outillage & Doc** | Node `node:test` / scripts `.mjs` | `tools/tests/`, `tools/check_doc_links.mjs`, `tools/run_tests.mjs` | `node --test tools/tests/*.test.mjs` *(inclus dans `mvn package`)* | Node ≥ 22 |
 
 ## Rôle de chaque couche
 

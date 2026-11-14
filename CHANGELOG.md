@@ -4,9 +4,12 @@
 
 - **Outils CLI (`tools/`)** : migration des scripts et suites de tests vers Node.js
   natif (`.mjs`, zéro dépendance npm externe, suppression de Python et `pip`),
-  support de `FhirFmlTransformStep` dans `tools/channel_mapping.mjs`, détails
-  des entrées ZIP dans `tools/check_reproducible.mjs` et découpage des tests
-  dans `tools/tests/*.test.mjs`.
+  support et validation de `FhirFmlTransformStep` dans `tools/channel_mapping.mjs`
+  et `tools/check_mapping.mjs`, détails des entrées ZIP dans `tools/check_reproducible.mjs`,
+  et exécution automatique de `tools/tests/*.test.mjs` lors de `mvn test`.
+- **Settings et sauvegarde OIE** : intégration de *Settings › FHIR Mapper* à la barre
+  de tâches Web Admin (*FHIR Mapper Tasks*, indicateur de modification) et à la
+  sauvegarde/restauration native de configuration OIE (`PluginMetaData.serverSettings`).
 - **Tests FML et Profile Mapper** : instance source FML et message préparé du
   Profile Mapper affichés à côté de l'exemple, ou dessous en zone étroite.
   Résultats dimensionnés dans l'espace disponible pour éviter le double
@@ -14,15 +17,15 @@
   après préparation de l'entrée, y compris si le mapping échoue ensuite.
 - **Catalogue** : préchauffage du validateur avant le verrou du moteur, pour
   éviter un interblocage avec une validation concurrente.
-- **Canaux complémentaires** : JSON métier vers Organization R5 (8090), Patient
-  FR Core 2.2.0 (8091), et Patient FHIR vers une projection FML (8092), avec
-  attendus et contre-exemples rejoués en aperçu et sur les canaux déployés.
-  L'image fournit les dépendances directes FR Core non-core à versions et SHA-256
-  fixés. L'initialisation installe trois groupes OIE et les tags natifs des
-  douze exports ; leur cohérence est contrôlée hors ligne et dans la démo.
-- **Exemples de démo** : matrice de couverture et manifeste avec groupes/tags,
-  messages entrants préchargés et neuf samples Profile Mapper avec attendu sur
-  les sept canaux. Les deux aperçus FML sont comparés à leurs attendus.
+- **Démo et matrice d'exemples** : vingt-trois canaux dans neuf groupes OIE natifs
+  (`<Source> - <Transfo>` et `FML versus Mapper`), tags colorés ordonnés, restauration
+  native depuis `demo/oie-init/data/` (`configuration.xml`, `channels/`, `groups/`),
+  OIE Flow UI `0.8.4`, mot de passe de démo `admin` (`_MP_PASSWORD_MINLENGTH=0`),
+  vingt samples Profile Mapper et cinq aperçus FML rejoués par la suite unifiée
+  Node/Playwright (`npm --prefix webadmin run test:e2e`). Couverture R4/R5,
+  FR Core 2.2.0, HL7 Europe Laboratory 2.0.0, `Permission` R5 en FML, `StructureMap`
+  d'IG (`mapUrl`), terminologie externe `$translate` (avec mock HTTP `10819`) et
+  six comparaisons parallèles FML vs Mapper (`10817`, `10818`, `10820`–`10823`).
   La map FML typée lit désormais `OBX.5.value` selon le XML réel du Strict
   Parser : le résultat biologique `5.10` n'est plus omis dans la démo.
 - **Documentation** : `doc/` est organisé par public entre manuel multilingue,

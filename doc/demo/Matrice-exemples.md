@@ -96,7 +96,7 @@ Ces erreurs sont des cas du contrôle existant, pas des canaux supplémentaires.
 | FR Core et HL7 Europe Laboratory | Patient FR Core 2.2.0 validé sur 10811 ; Observation EU Laboratory 2.0.0 (avec dépendances directes fixées) validée sur 10813 |
 | Map publiée dans un package IG (`mapUrl`) | Couverte sur 10815 (`ORU R01 to FHIR Patient (FML IG)`) avec `StructureMap-OruR01ToPatientIG.json` |
 | Terminologie externe, absence de correspondance et indisponibilité | Mock OIE `ConceptMap/$translate` sur 10819 et consommateur sur 10816 : traduction GLU -> LOINC, repli `fixed` vers `data-absent-reason#unknown` et erreur 503 sur `UNAVAILABLE` |
-| Groupes OIE `<Source> - <Transfo>` et tags ordonnés | 8 groupes natifs (`CSV - FML`, `CSV - Mapper`, `FHIR - FML`, `HL7v2 - FML`, `HL7v2 - Mapper`, `HTTP - Mock`, `JSON - Mapper`, `XML - Mapper`), tags colorés sans tags IG/profil, dans l'ordre `[Release, Source, Transfo, ...fonctionnalités]` |
+| Groupes OIE `<Source> - <Transfo>` et tags ordonnés | 9 groupes natifs (`CSV - FML`, `CSV - Mapper`, `FHIR - FML`, `FML versus Mapper`, `HL7v2 - FML`, `HL7v2 - Mapper`, `HTTP - Mock`, `JSON - Mapper`, `XML - Mapper`), tags colorés sans tags IG/profil, dans l'ordre `[Release, Source, Transfo, ...fonctionnalités]` |
 | Cas nécessitant conception ou arbitrage | Profil R4 externe (`DevDays`), IG HL7 v2 officielle, modèle logique métier arbitraire dans FML, dérivation/surcharge, imports imbriqués et samples FML enregistrés restent différés |
 
 ## Rejouer

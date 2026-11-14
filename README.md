@@ -6,9 +6,9 @@ messages.
 It requires the [**FHIR Data Type**](https://github.com/matthydehoog/fhir-datatype-Eclipse-OIE)
 plugin, version 1.5.1 ([release](https://github.com/matthydehoog/fhir-datatype-Eclipse-OIE/releases/tag/v1.5.1)).
 FHIR Profile Mapper is a separate project, not part of FHIR Data Type: please report
-its issues [here](https://github.com/kazepoy/oie-fhir-profile-mapper-plugin/issues).
-
-TODO ajouter aussi discussions de github
+bugs in [GitHub Issues](https://github.com/kazepoy/oie-fhir-profile-mapper-plugin/issues)
+and use [GitHub Discussions](https://github.com/kazepoy/oie-fhir-profile-mapper-plugin/discussions)
+for questions, feedback and ideas.
 
 ## FHIR Profile Mapper
 
