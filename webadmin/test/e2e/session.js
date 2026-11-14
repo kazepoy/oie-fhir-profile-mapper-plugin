@@ -4,7 +4,7 @@
 import { chromium, webkit } from "playwright";
 
 export const DEMO_URL = process.env.DEMO_URL || "https://localhost:8443/oie-webadmin/";
-export const PASSWORD = process.env.OIE_DEMO_PASSWORD || "demo-oie-password";
+export const PASSWORD = process.env.OIE_DEMO_PASSWORD || "admin";
 
 export async function signIn({ user = "admin", password = PASSWORD, locale = "en-US", colorScheme = "light" } = {}) {
   // E2E_BROWSER=webkit runs the same checks in Safari's engine.

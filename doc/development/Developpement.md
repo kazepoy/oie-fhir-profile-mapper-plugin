@@ -61,7 +61,8 @@ node --test tools/tests/*.test.mjs
 ```
 
 `mvn clean package` exécute `npm ci`, `npm run check`, la construction frontend
-avant la copie des ressources, les tests Java et les tests unitaires Node.
+avant la copie des ressources, les tests Java et les tests unitaires Node
+(`webadmin/` et `tools/tests/`).
 `-DskipTests` ignore les tests Java/Node, mais reconstruit toujours le frontend.
 Le bundle embarqué porte la version Maven via `MAPPER_VERSION`. Un lancement
 direct de `npm run build` utilise la version de `webadmin/package.json`.

@@ -7,27 +7,11 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { errors, SCHEMA } from "./check_mapping.mjs";
+import { errors, FML_PROPERTIES, fmlErrors, SCHEMA } from "./check_mapping.mjs";
 
 export const TYPE = "fr.kazepoy.fhir.mapper.FhirProfileMapperStep";
 export const FML_TYPE = "fr.kazepoy.fhir.fml.FhirFmlTransformStep";
 export const PATTERN = new RegExp(`<${TYPE.replaceAll(".", "\\.")}(?:\\s[^>]*)?>[\\s\\S]*?<\\/${TYPE.replaceAll(".", "\\.")}>`, "g");
-
-const FML_PROPERTIES = new Set([
-  "name",
-  "sequenceNumber",
-  "enabled",
-  "fhirVersion",
-  "profiles",
-  "context",
-  "mapUrl",
-  "mapSource",
-  "sourceModel",
-  "sourceModelUrl",
-  "variable",
-  "validateOutput",
-  "contextVariables",
-]);
 
 export function decodeXml(text = "") {
   return text.replace(/&(#x[0-9a-fA-F]+|#\d+|lt|gt|amp|quot|apos);/g, (_, entity) => {
@@ -213,10 +197,10 @@ export function apply(xml, connector, sequence, patch, response = false) {
     throw new Error("Type d'étape incompatible.");
   }
 
+  const { __type: _ignore, ...cleanPatch } = patch;
   const merged = {
     ...current,
-    ...patch,
-    __type: expectedType,
+    ...cleanPatch,
     sequenceNumber: current.sequenceNumber,
     enabled: current.enabled ?? "true",
   };
@@ -239,8 +223,9 @@ export function apply(xml, connector, sequence, patch, response = false) {
         throw new Error(`Propriété FML inconnue : ${key}`);
       }
     }
-    if (!String(merged.mapSource || "").trim() && !String(merged.mapUrl || "").trim()) {
-      throw new Error("Une étape FML exige mapSource ou mapUrl.");
+    const problems = [...fmlErrors(merged)];
+    if (problems.length > 0) {
+      throw new Error(problems.join("\n"));
     }
   }
 

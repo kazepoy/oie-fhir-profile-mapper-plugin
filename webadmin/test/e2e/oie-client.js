@@ -8,7 +8,7 @@ import { normalizeResult } from "../../src/fhir/diagnostics.js";
 
 export const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 export const OIE_URL = process.env.OIE_URL || new URL(process.env.DEMO_URL || "https://localhost:8443/oie-webadmin/").origin;
-export const PASSWORD = process.env.OIE_DEMO_PASSWORD || "demo-oie-password";
+export const PASSWORD = process.env.OIE_DEMO_PASSWORD || "admin";
 export const DEMO_HOST = process.env.OIE_DEMO_HOST || "127.0.0.1";
 
 const API_HEADERS = { "X-Requested-With": "OpenAPI", Accept: "application/json" };

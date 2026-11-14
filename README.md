@@ -40,7 +40,7 @@ cd ../webadmin && npm run test:e2e   # runs API, channel and Web Admin Playwrigh
 ```
 
 Administration: <https://localhost:8443/oie-webadmin/> (`admin` /
-`demo-oie-password`). See the [demo guide](doc/demo/Demo.md) (in French).
+`admin`). See the [demo guide](doc/demo/Demo.md) (in French).
 
 ## Documentation
 

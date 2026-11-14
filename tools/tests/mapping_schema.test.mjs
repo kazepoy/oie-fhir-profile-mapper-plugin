@@ -6,8 +6,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { steps } from "../channel_mapping.mjs";
-import { checkSchema, errors, main, SCHEMA } from "../check_mapping.mjs";
+import { FML_TYPE, steps } from "../channel_mapping.mjs";
+import { checkSchema, errors, fmlErrors, main, SCHEMA } from "../check_mapping.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const EXAMPLES = join(ROOT, "doc/demo/examples/mapping");
@@ -36,26 +36,51 @@ test("documented examples", () => {
 test("all demo channels conform to step schema and OIE name limit", () => {
   const channels = readdirSync(CHANNELS_DIR).filter((f) => f.endsWith(".xml")).sort();
   assert.equal(channels.length, 23);
-  let count = 0;
+  let mapperCount = 0;
+  let fmlCount = 0;
   for (const file of channels) {
     const xml = readFileSync(join(CHANNELS_DIR, file), "utf8");
-    const [root, entries] = steps(xml);
+    const [root, entries] = steps(xml, { includeFml: true });
     const name = root.findtext("name");
     assert.ok(name && name.length <= 40, `Channel name exceeds 40 chars in ${file}: ${name}`);
     for (const [, , , step] of entries) {
-      assert.deepEqual([...errors(step)], [], `${file} / ${step.name}`);
-      count += 1;
+      if (step.__type === FML_TYPE) {
+        assert.deepEqual([...fmlErrors(step)], [], `${file} / ${step.name}`);
+        fmlCount += 1;
+      } else {
+        assert.deepEqual([...errors(step)], [], `${file} / ${step.name}`);
+        mapperCount += 1;
+      }
     }
   }
-  assert.ok(count > 6);
+  assert.ok(mapperCount > 6);
+  assert.equal(fmlCount, 11);
 });
 
-test("cli main validates both JSON and XML files", async () => {
+test("cli main validates both JSON and XML files (Mapper and FML)", async () => {
   const code = await main([
     join(EXAMPLES, "patient.step.json"),
     join(CHANNELS_DIR, "sql-xml-to-fhir-patient.xml"),
+    join(CHANNELS_DIR, "fhir-patient-summary-fml-vs-mapper.xml"),
   ]);
   assert.equal(code, 0);
+});
+
+test("FML step validation rejects invalid properties and values", () => {
+  assert.deepEqual(
+    [...fmlErrors({ fhirVersion: "R4", mapUrl: "http://example.org/map", sourceModel: "fhir", validateOutput: "true" })],
+    []
+  );
+  for (const badFml of [
+    { fhirVersion: "R4" },
+    { mapUrl: "http://example.org/map" },
+    { fhirVersion: "STU3", mapUrl: "http://example.org/map" },
+    { fhirVersion: "R4", mapUrl: "http://example.org/map", sourceModel: "invalid" },
+    { fhirVersion: "R4", mapUrl: "http://example.org/map", contextVariables: "ok, 123bad" },
+    { fhirVersion: "R4", mapUrl: "http://example.org/map", unknownProp: "x" },
+  ]) {
+    assert.ok([...fmlErrors(badFml)].length > 0, `Expected FML error for ${JSON.stringify(badFml)}`);
+  }
 });
 
 test("embedded json is checked explicitly", () => {

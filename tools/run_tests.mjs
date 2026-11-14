@@ -82,49 +82,81 @@ export async function replay(path, post = null) {
   return count;
 }
 
-export function client(url, user, password, insecure) {
-  const endpoint = new URL(url.replace(/\/+$/, "") + "/extensions/fhir-profile-mapper/test");
+export function oieRequest(
+  baseUrl,
+  {
+    user = "admin",
+    password = "",
+    insecure = false,
+    method = "GET",
+    path = "",
+    body = null,
+    contentType = "text/plain; charset=UTF-8",
+    accept = null,
+    timeout = 120_000,
+  } = {}
+) {
+  const endpoint = new URL(baseUrl.replace(/\/+$/, "") + path);
   const auth = "Basic " + Buffer.from(`${user}:${password}`, "utf8").toString("base64");
   const transport = endpoint.protocol === "https:" ? https : http;
+  const payload = body !== null ? Buffer.from(body, "utf8") : null;
 
-  return function post(body) {
-    const payload = Buffer.from(JSON.stringify(body), "utf8");
-    return new Promise((resolvePromise, rejectPromise) => {
-      const req = transport.request(
-        endpoint,
-        {
-          method: "POST",
-          rejectUnauthorized: !insecure,
-          timeout: 120_000,
-          headers: {
-            Authorization: auth,
-            "X-Requested-With": "OpenAPI",
-            "Content-Type": "text/plain; charset=UTF-8",
-            Accept: "application/json",
-            "Content-Length": payload.length,
-          },
-        },
-        (res) => {
-          const chunks = [];
-          res.on("data", (chunk) => chunks.push(chunk));
-          res.on("end", () => {
-            const text = Buffer.concat(chunks).toString("utf8");
-            if (res.statusCode < 200 || res.statusCode >= 300) {
-              rejectPromise(new Error(`HTTP ${res.statusCode} lors de l’aperçu : ${text.slice(0, 300)}`));
-              return;
-            }
-            try {
-              resolvePromise(JSON.parse(text));
-            } catch (err) {
-              rejectPromise(new Error(`Réponse JSON invalide : ${err.message}`));
-            }
-          });
-        }
-      );
-      req.on("error", rejectPromise);
-      req.on("timeout", () => req.destroy(new Error("Délai dépassé lors de l’aperçu")));
-      req.end(payload);
+  return new Promise((resolvePromise, rejectPromise) => {
+    const headers = {
+      Authorization: auth,
+      "X-Requested-With": "OpenAPI",
+    };
+    if (accept) headers.Accept = accept;
+    if (payload !== null) {
+      headers["Content-Type"] = contentType;
+      headers["Content-Length"] = payload.length;
+    }
+    const req = transport.request(
+      endpoint,
+      {
+        method,
+        rejectUnauthorized: !insecure,
+        timeout,
+        headers,
+      },
+      (res) => {
+        const chunks = [];
+        res.on("data", (chunk) => chunks.push(chunk));
+        res.on("end", () => {
+          const text = Buffer.concat(chunks).toString("utf8");
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            rejectPromise(new Error(`HTTP ${res.statusCode} sur ${method} ${path} : ${text.slice(0, 400)}`));
+            return;
+          }
+          resolvePromise(text);
+        });
+      }
+    );
+    req.on("error", rejectPromise);
+    req.on("timeout", () => req.destroy(new Error(`Délai dépassé sur ${method} ${path}`)));
+    if (payload !== null) req.write(payload);
+    req.end();
+  });
+}
+
+export function client(url, user, password, insecure) {
+  return async function post(body) {
+    const text = await oieRequest(url, {
+      user,
+      password,
+      insecure,
+      method: "POST",
+      path: "/extensions/fhir-profile-mapper/test",
+      body: JSON.stringify(body),
+      contentType: "text/plain; charset=UTF-8",
+      accept: "application/json",
+      timeout: 120_000,
     });
+    try {
+      return JSON.parse(text);
+    } catch (err) {
+      throw new Error(`Réponse JSON invalide : ${err.message}`);
+    }
   };
 }
 

@@ -207,6 +207,18 @@
             <id>frontend-test</id><phase>test</phase><goals><goal>exec</goal></goals>
             <configuration><skip>${skipTests}</skip><arguments><argument>test</argument></arguments></configuration>
           </execution>
+          <execution>
+            <id>tools-test</id><phase>test</phase><goals><goal>exec</goal></goals>
+            <configuration>
+              <skip>${skipTests}</skip>
+              <workingDirectory>${project.basedir}</workingDirectory>
+              <executable>node</executable>
+              <arguments>
+                <argument>--test</argument>
+                <argument>tools/tests/*.test.mjs</argument>
+              </arguments>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
       <plugin>

@@ -9,19 +9,16 @@
 
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import http from "node:http";
-import https from "node:https";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { encodeXml } from "../channel_mapping.mjs";
+import { oieRequest } from "../run_tests.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 export const SOURCE = resolve(ROOT, "demo/oie-init/data/channels/oru-r01-to-fhir-bundle.xml");
 const API = process.env.OIE_API || "https://localhost:8443/api";
-const AUTH = Buffer.from(
-  `${process.env.OIE_USER || "admin"}:${process.env.OIE_PASSWORD || "demo-oie-password"}`,
-  "utf8"
-).toString("base64");
+const USER = process.env.OIE_USER || "admin";
+const PASSWORD = process.env.OIE_PASSWORD || "admin";
 const STEP = "fr.kazepoy.fhir.mapper.FhirProfileMapperStep";
 
 // nom, port, validation du mapper, trace du mapper, validation du datatype FHIR en sortie.
@@ -107,43 +104,15 @@ export function variante(nom, port, validation, trace, datatype) {
 }
 
 function api(method, path, data = null) {
-  const endpoint = new URL(API.replace(/\/+$/, "") + path);
-  const transport = endpoint.protocol === "https:" ? https : http;
-  const payload = data !== null ? Buffer.from(data, "utf8") : null;
-
-  return new Promise((resolvePromise, rejectPromise) => {
-    const headers = {
-      Authorization: `Basic ${AUTH}`,
-      "X-Requested-With": "OpenAPI",
-    };
-    if (payload !== null) {
-      headers["Content-Type"] = "application/xml";
-      headers["Content-Length"] = payload.length;
-    }
-    const req = transport.request(
-      endpoint,
-      {
-        method,
-        rejectUnauthorized: false,
-        timeout: 300_000,
-        headers,
-      },
-      (res) => {
-        const chunks = [];
-        res.on("data", (c) => chunks.push(c));
-        res.on("end", () => {
-          const text = Buffer.concat(chunks).toString("utf8");
-          if (res.statusCode < 200 || res.statusCode >= 300) {
-            rejectPromise(new Error(`HTTP ${res.statusCode} sur ${method} ${path} : ${text.slice(0, 500)}`));
-            return;
-          }
-          resolvePromise(text);
-        });
-      }
-    );
-    req.on("error", rejectPromise);
-    if (payload !== null) req.write(payload);
-    req.end();
+  return oieRequest(API, {
+    user: USER,
+    password: PASSWORD,
+    insecure: true,
+    method,
+    path,
+    body: data,
+    contentType: "application/xml",
+    timeout: 300_000,
   });
 }
 

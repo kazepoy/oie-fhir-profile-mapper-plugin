@@ -16,7 +16,7 @@
 @frCorePatient = http://localhost:10811/patient-fr-core/
 @fhirSummary = http://localhost:10812/patient-summary/
 @oie = https://localhost:8443/api
-@auth = Basic admin:demo-oie-password
+@auth = Basic admin:admin
 @channel = 5d0f6c2a-8b3e-4f1a-9c7d-2e6b1a0f3c48
 @ig = /fhir-volume/ig
 @base = http://example.org/fhir/oru2fhir

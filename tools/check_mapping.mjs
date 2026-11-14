@@ -187,6 +187,68 @@ export function* errors(step) {
   }
 }
 
+export const FML_PROPERTIES = new Set([
+  "name",
+  "sequenceNumber",
+  "enabled",
+  "fhirVersion",
+  "profiles",
+  "context",
+  "mapUrl",
+  "mapSource",
+  "sourceModel",
+  "sourceModelUrl",
+  "variable",
+  "validateOutput",
+  "contextVariables",
+]);
+
+const FML_VERSIONS = new Set(["R4", "R4B", "R5"]);
+const FML_SOURCE_MODELS = new Set(["oie-message", "hl7v2-logical", "fhir"]);
+const FML_VAR_NAME = /^[A-Za-z_$][A-Za-z0-9_$.\-]*$/;
+
+export function* fmlErrors(step) {
+  if (!step || typeof step !== "object" || Array.isArray(step)) {
+    yield "$: attendu type object";
+    return;
+  }
+  for (const key of Object.keys(step)) {
+    if (key === "__type") continue;
+    if (!FML_PROPERTIES.has(key)) {
+      yield `$: propriété non autorisée '${key}'`;
+    }
+  }
+  const version = String(step.fhirVersion ?? "").trim();
+  const context = String(step.context ?? "").trim();
+  if (!version && !context) {
+    yield "$.fhirVersion: fhirVersion ou context est requis";
+  } else if (version && !FML_VERSIONS.has(version)) {
+    yield `$.fhirVersion: valeur '${version}' hors de ["R4","R4B","R5"]`;
+  }
+  if (!String(step.mapSource ?? "").trim() && !String(step.mapUrl ?? "").trim()) {
+    yield "$.mapSource: mapSource ou mapUrl est requis";
+  }
+  const sourceModel = String(step.sourceModel ?? "").trim();
+  if (sourceModel && !FML_SOURCE_MODELS.has(sourceModel)) {
+    yield `$.sourceModel: valeur '${sourceModel}' hors de ["oie-message","hl7v2-logical","fhir"]`;
+  }
+  if (step.validateOutput !== undefined && !["true", "false", true, false].includes(step.validateOutput)) {
+    yield `$.validateOutput: valeur '${step.validateOutput}' hors de ["true","false",true,false]`;
+  }
+  const variable = String(step.variable ?? "").trim();
+  if (variable && !FML_VAR_NAME.test(variable)) {
+    yield `$.variable: nom de variable invalide '${variable}'`;
+  }
+  const contextVars = String(step.contextVariables ?? "").trim();
+  if (contextVars) {
+    for (const token of contextVars.split(/[,;\s]+/).filter(Boolean)) {
+      if (!FML_VAR_NAME.test(token)) {
+        yield `$.contextVariables: nom de variable invalide '${token}'`;
+      }
+    }
+  }
+}
+
 export async function main(argv = process.argv.slice(2)) {
   if (argv.length === 0 || argv.includes("-h") || argv.includes("--help")) {
     console.error("Usage: node tools/check_mapping.mjs <fichier.json|fichier.xml> [...]");
@@ -200,14 +262,18 @@ export async function main(argv = process.argv.slice(2)) {
     try {
       const raw = readFileSync(file, "utf8");
       if (file.toLowerCase().endsWith(".xml")) {
-        const { steps } = await import("./channel_mapping.mjs");
-        const [, entries] = steps(raw);
+        const { FML_TYPE, steps } = await import("./channel_mapping.mjs");
+        const [, entries] = steps(raw, { includeFml: true });
         stepList = entries.map(([, , , step]) => step);
+        problems = stepList.flatMap((step, i) => {
+          const check = step.__type === FML_TYPE ? fmlErrors(step) : errors(step);
+          return [...check].map((err) => `${file}, étape ${i}: ${err}`);
+        });
       } else {
         const value = JSON.parse(raw);
         stepList = Array.isArray(value) ? value : [value];
+        problems = stepList.flatMap((step, i) => [...errors(step)].map((err) => `${file}, étape ${i}: ${err}`));
       }
-      problems = stepList.flatMap((step, i) => [...errors(step)].map((err) => `${file}, étape ${i}: ${err}`));
     } catch (err) {
       problems = [`${file}: ${err.message}`];
     }

@@ -165,3 +165,42 @@ test("load variant generator produces valid 7-step ORU channel variants", () => 
     }
   }
 });
+
+test("load scripts reference existing example messages, ports, routes and variants", () => {
+  const runSh = readFileSync(join(ROOT, "tools/load/run.sh"), "utf8");
+  assert.ok(runSh.includes('"$ROOT/examples:/examples:ro"'));
+  assert.ok(existsSync(join(ROOT, "tools/load/charge.js")));
+  assert.ok(existsSync(join(ROOT, "tools/load/oru.js")));
+
+  const routesByPort = new Map();
+  for (const file of readdirSync(CHANNELS_DIR).filter((f) => f.endsWith(".xml"))) {
+    const xml = readFileSync(join(CHANNELS_DIR, file), "utf8");
+    const port = Number(findPathText(xml, "sourceConnector/properties/listenerConnectorProperties/port"));
+    const route = (findPathText(xml, "sourceConnector/properties/contextPath") || "").replace(/^\/+/, "");
+    routesByPort.set(port, route);
+  }
+
+  const chargeSrc = readFileSync(join(ROOT, "tools/load/charge.js"), "utf8");
+  const chargeEntries = [
+    ...chargeSrc.matchAll(/\{\s*nom:\s*'([^']+)',\s*port:\s*(\d+),\s*route:\s*'([^']+)',\s*fichier:\s*'([^']+)'/g),
+  ];
+  assert.equal(chargeEntries.length, 5);
+  for (const [, nom, portStr, route, fichier] of chargeEntries) {
+    const port = Number(portStr);
+    assert.ok(existsSync(join(EXAMPLES_DIR, fichier)), `charge.js (${nom}): missing example ${fichier}`);
+    assert.equal(routesByPort.get(port), route, `charge.js (${nom}): route mismatch on port ${port}`);
+  }
+
+  const oruSrc = readFileSync(join(ROOT, "tools/load/oru.js"), "utf8");
+  const oruExampleMatch = oruSrc.match(/open\('\/examples\/([^']+)'\)/);
+  assert.ok(oruExampleMatch, "oru.js must open an /examples/... file");
+  assert.ok(existsSync(join(EXAMPLES_DIR, oruExampleMatch[1])), `oru.js: missing example ${oruExampleMatch[1]}`);
+
+  const oruVariants = [
+    ...oruSrc.matchAll(/\{\s*nom:\s*'([^']+)',\s*port:\s*(\d+)/g),
+  ].map(([, nom, port]) => [nom, Number(port)]);
+  assert.deepEqual(
+    oruVariants,
+    VARIANTES.map(([nom, port]) => [nom, port])
+  );
+});
