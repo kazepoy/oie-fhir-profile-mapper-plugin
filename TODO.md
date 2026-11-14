@@ -67,6 +67,10 @@ format 1 → 2, index persistant et nouveaux caches. Les autres idées non
 priorisées restent classées dans le registre du plan.
 
 ## Nouvelles idées à classer
+ 
 
-Aucune idée non classée à ce jour. Ajouter ici les nouvelles demandes avant
-leur intégration au plan, sans recopier les comptes rendus de livraison.
+il faut revoir les settings du plugin pour faire le bouton save a la facon classique oie
+
+voir si les setttings peuvent etre intégrées dans le backup et retore config natif de oie (sans bidouille) sinon faire la mecanique.
+
+revoir le dossier tools
