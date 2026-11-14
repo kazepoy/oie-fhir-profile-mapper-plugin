@@ -109,5 +109,5 @@ La suite [demo-channels.test.js](../../webadmin/test/e2e/demo-channels.test.js)
 (`npm --prefix webadmin run test:e2e`) compare les réponses HTTP aux attendus,
 rejoue les aperçus et vérifie que chaque contre-exemple produit un nouveau message
 OIE en erreur avec le diagnostic attendu. Les quatorze samples positifs Profile
-Mapper restent rejouables avec `tools/run_tests.py` ; les cinq aperçus FML sont
+Mapper restent rejouables avec `tools/run_tests.mjs` ; les cinq aperçus FML sont
 contrôlés depuis le manifeste de démonstration.

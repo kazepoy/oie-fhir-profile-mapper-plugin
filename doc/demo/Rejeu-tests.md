@@ -1,6 +1,6 @@
 # Rejeu des exemples de mapping
 
-`tools/run_tests.py` parcourt des exports d’étapes JSON (objet ou liste ordonnée)
+`tools/run_tests.mjs` parcourt des exports d’étapes JSON (objet ou liste ordonnée)
 ou des exports XML d’un canal OIE. Chaque connecteur et transformeur de réponse
 est isolé. Dans un dossier, il recherche récursivement `*.step.json`,
 `*.steps.json` et `*.xml`. Les autres fichiers JSON ne sont pas considérés comme
@@ -11,8 +11,7 @@ volontairement invalides comme `invalid-path.step.json`.
 ## Validation hors ligne
 
 ```sh
-python3 -m pip install -r tools/requirements.txt
-python3 tools/run_tests.py --offline demo/oie-init/data/channels \
+node tools/run_tests.mjs --offline demo/oie-init/data/channels \
   doc/demo/examples/mapping/patient-samples.step.json \
   doc/demo/examples/mapping/laboratory-samples.steps.json
 ```
@@ -27,7 +26,7 @@ La démo doit être démarrée avec le plugin à jour. Définir `OIE_PASSWORD` d
 l’environnement, puis :
 
 ```sh
-python3 tools/run_tests.py --url https://localhost:8443/api --user admin \
+node tools/run_tests.mjs --url https://localhost:8443/api --user admin \
   --insecure demo/oie-init/data/channels \
   doc/demo/examples/mapping/laboratory-samples.steps.json
 ```

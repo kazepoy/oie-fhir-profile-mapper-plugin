@@ -29,13 +29,12 @@ pas inventer de propriété ou de forme de règle absente du schéma.
 2. Pour un nouveau canal, attribuer un nouvel UUID, un nom non ambigu et un port
    libre. Pour une modification, conserver l'UUID et les propriétés sans rapport
    avec la demande.
-3. Extraire et appliquer une étape Profile Mapper avec
-   `tools/channel_mapping.py`. Pour FML, modifier uniquement le nœud de l'étape
-   et préserver le reste de l'export.
+3. Extraire et appliquer une étape Profile Mapper ou FML avec
+   `tools/channel_mapping.mjs` et préserver le reste de l'export.
 4. Ajouter au moins un sample représentatif et, si le résultat est déterministe,
    son résultat attendu.
-5. Valider hors ligne avec `tools/check_mapping.py` puis
-   `tools/run_tests.py --offline`. Si la démo est disponible, importer, relire,
+5. Valider hors ligne avec `tools/check_mapping.mjs` puis
+   `tools/run_tests.mjs --offline`. Si la démo est disponible, importer, relire,
    déployer et rejouer le canal ; ne jamais supposer qu'un import réussi prouve
    son exécution.
 
@@ -100,15 +99,14 @@ silencieuse lors de la réouverture.
 
 ## Modifier un export de channel sans toucher aux autres étapes
 
-Prérequis : Python et les dépendances de `tools/requirements.txt`. Depuis la
-racine du dépôt, créer `target/`, puis :
+Prérequis : Node.js ≥ 22. Depuis la racine du dépôt, créer `target/`, puis :
 
 ```sh
-python3 tools/channel_mapping.py list demo/oie-init/data/channels/sql-xml-to-fhir-patient.xml
-python3 tools/channel_mapping.py extract demo/oie-init/data/channels/sql-xml-to-fhir-patient.xml --connector 0 --sequence 1 --assign-ids --output target/patient.json
-python3 tools/check_mapping.py target/patient.json
-python3 tools/channel_mapping.py apply demo/oie-init/data/channels/sql-xml-to-fhir-patient.xml --connector 0 --sequence 1 --step target/patient.json --output target/channel-modifie.xml
-python3 tools/channel_mapping.py explain target/channel-modifie.xml --connector 0 --sequence 1
+node tools/channel_mapping.mjs list --include-fml demo/oie-init/data/channels/sql-xml-to-fhir-patient.xml
+node tools/channel_mapping.mjs extract demo/oie-init/data/channels/sql-xml-to-fhir-patient.xml --connector 0 --sequence 1 --assign-ids --output target/patient.json
+node tools/check_mapping.mjs target/patient.json
+node tools/channel_mapping.mjs apply demo/oie-init/data/channels/sql-xml-to-fhir-patient.xml --connector 0 --sequence 1 --step target/patient.json --output target/channel-modifie.xml
+node tools/channel_mapping.mjs explain target/channel-modifie.xml --connector 0 --sequence 1
 ```
 
 Modifier `target/patient.json` avant `apply`. La sélection explicite désigne le
@@ -134,6 +132,6 @@ channel déployé pour vérifier les dépendances entre étapes.
 Un agent explique un résultat à partir des règles extraites, des diagnostics
 et de la [trace](Trace.md), puis modifie la règle identifiée par `id`. Relire
 l'export et rouvrir le channel dans l'éditeur avant une nouvelle modification.
-Les tests Python couvrent le remplacement ciblé et la relecture des exports de
-démonstration ; les tests Node couvrent l'import JSON, les ids, les portées et
-le clavier.
+Les tests Node (`tools/tests/` et `webadmin/test/`) couvrent le remplacement
+ciblé, la relecture des exports de démonstration, l'import JSON, les ids, les
+portées et le clavier.

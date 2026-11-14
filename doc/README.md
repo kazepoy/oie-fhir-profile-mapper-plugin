@@ -34,7 +34,7 @@ contient que les travaux ouverts et les idées à classer.
 Depuis la racine du dépôt :
 
 ```sh
-python3 tools/check_doc_links.py
+node tools/check_doc_links.mjs
 ```
 
 Le contrôle refuse les liens locaux cassés et les documents Markdown de `doc/`

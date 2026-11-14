@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 // Coût de la validation et de la trace sur le canal ORU → Bundle.
-// Les variantes (tools/load/oru_variantes.py deploy) sont mesurées l'une après
+// Les variantes (node tools/load/oru_variantes.mjs deploy) sont mesurées l'une après
 // l'autre, avec un seul client : le canal traite un message à la fois
 // (processingThreads=1), donc la latence est le temps de service et son inverse
 // le débit maximal. Lancer avec SCRIPT=oru.js tools/load/run.sh.

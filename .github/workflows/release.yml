@@ -86,16 +86,15 @@ jobs:
 
       - name: Test the tools
         run: |
-          pip install -q -r tools/requirements.txt
-          python3 -m unittest discover -s tools/tests
-          python3 tools/check_doc_links.py
-          python3 tools/run_tests.py --offline demo/oie-init/data/channels doc/demo/examples/mapping/patient-samples.step.json doc/demo/examples/mapping/laboratory-samples.steps.json
+          node --test tools/tests/*.test.mjs
+          node tools/check_doc_links.mjs
+          node tools/run_tests.mjs --offline demo/oie-init/data/channels doc/demo/examples/mapping/patient-samples.step.json doc/demo/examples/mapping/laboratory-samples.steps.json
 
       - name: Build
         run: mvn -B -ntp package
 
       - name: Verify reproducible archive
-        run: python3 tools/check_reproducible.py
+        run: node tools/check_reproducible.mjs
 
       - uses: actions/upload-artifact@v4
         with:

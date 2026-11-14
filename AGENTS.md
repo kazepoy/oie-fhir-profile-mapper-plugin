@@ -12,5 +12,5 @@ with the plugin are in the separate [agent manual](doc/agent-manual/README.md).
   development types.
 - Do not edit `webadmin/web/plugin.js` directly; rebuild it from `webadmin/src`.
 - Preserve unrelated user changes, including untracked files.
-- Run at least `mvn clean package` and the relevant Python tests. When changing
-  documentation, also run `python3 tools/check_doc_links.py`.
+- Run at least `mvn clean package` and `node --test tools/tests/*.test.mjs`. When changing
+  documentation, also run `node tools/check_doc_links.mjs`.

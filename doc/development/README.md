@@ -9,4 +9,4 @@ La construction de canaux par un agent est documentée dans la
 [référence](../reference/Construire-un-channel.md).
 
 Le contrôle de la documentation se lance avec
-`python3 tools/check_doc_links.py` depuis la racine.
+`node tools/check_doc_links.mjs` depuis la racine.

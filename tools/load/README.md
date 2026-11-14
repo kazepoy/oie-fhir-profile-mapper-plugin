@@ -31,9 +31,9 @@ variables d'environnement : `P95_MS` (1000 ms par défaut) et `ERREURS_MAX` (0.0
 ## ORU vers Bundle : coût de la validation et de la trace
 
 ```sh
-python3 tools/load/oru_variantes.py deploy     # cinq copies du canal, ports 10891 à 10895
+node tools/load/oru_variantes.mjs deploy       # cinq copies du canal, ports 10891 à 10895
 SCRIPT=oru.js tools/load/run.sh                # ~6 min
-python3 tools/load/oru_variantes.py remove     # quand on a fini
+node tools/load/oru_variantes.mjs remove       # quand on a fini
 ```
 
 Chaque variante est une copie du canal « ORU R01 to FHIR Bundle ». Seuls trois

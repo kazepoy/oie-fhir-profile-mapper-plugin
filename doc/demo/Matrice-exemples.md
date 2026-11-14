@@ -104,8 +104,8 @@ Ces erreurs sont des cas du contrôle existant, pas des canaux supplémentaires.
 Depuis la racine, démo à jour et démarrée :
 
 ```sh
-python3 -m unittest discover -s tools/tests
-python3 tools/run_tests.py --offline demo/oie-init/data/channels
+node --test tools/tests/*.test.mjs
+node tools/run_tests.mjs --offline demo/oie-init/data/channels
 npm --prefix webadmin run test:e2e
 ```
 

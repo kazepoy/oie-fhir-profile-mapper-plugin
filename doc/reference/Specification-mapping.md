@@ -468,8 +468,8 @@ Le [schéma JSON](schemas/mapping-step.schema.json) décrit la forme de rédacti
 du contrat existant. Il utilise [JSON Schema 2020-12](https://json-schema.org/draft/2020-12/json-schema-validation).
 Les mots-clés `contentSchema` annotent le JSON contenu dans les chaînes ; ils
 ne suffisent pas à le valider automatiquement. Le
-[contrôleur hors ligne](../../tools/check_mapping.py) décode donc explicitement ces
-champs et valide aussi leur contenu avec `jsonschema`.
+[contrôleur hors ligne](../../tools/check_mapping.mjs) décode donc explicitement ces
+champs et valide aussi leur contenu.
 
 Ce contrôle n'est pas branché dans le runtime ni dans l'éditeur. Il accepte
 les métadonnées OIE supplémentaires au niveau de l'étape, mais refuse les
@@ -486,13 +486,11 @@ la compilation, le déploiement et l'exécution en couvrent une partie, sans êt
 exhaustifs (par exemple pour les bornes de `when`). Un contrôle de structure
 réussi ne suffit donc pas à certifier un mapping exécutable ou un résultat FHIR valide.
 
-Depuis la racine du dépôt, Python 3.9 ou ultérieur :
+Depuis la racine du dépôt, Node.js 22 ou ultérieur :
 
 ```sh
-python3 -m venv /tmp/oie-mapper-schema-venv
-/tmp/oie-mapper-schema-venv/bin/pip install -r tools/requirements.txt
-/tmp/oie-mapper-schema-venv/bin/python tools/check_mapping.py doc/demo/examples/mapping/patient.step.json doc/demo/examples/mapping/laboratory.steps.json
-/tmp/oie-mapper-schema-venv/bin/python -m unittest discover -s tools/tests -v
+node tools/check_mapping.mjs doc/demo/examples/mapping/patient.step.json doc/demo/examples/mapping/laboratory.steps.json
+node --test tools/tests/*.test.mjs
 mvn -Dtest=MappingSpecificationTest test
 ```
 

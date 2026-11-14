@@ -15,7 +15,7 @@ Le format des mappings, son schéma et les exemples exécutés par
 | `webadmin/src/` | Éditeurs Web Admin : `profile-mapper/editor.js`, `fml/editor.js` et `fml/language.js`, `fhir/` (complétion, lecture de l'exemple, historique, comparaison de résultats), `trace/`, `host/` (éditeur de code, références, action de message) |
 | `webadmin/test/` | `unit/` : tests Node sans navigateur ; `e2e/` : parcours Playwright contre la démo |
 | `webadmin/web/plugin.js` | Bundle **généré** par `npm run build` (esbuild) ; ne pas l'éditer |
-| `tools/` | Outils Python : contrôle du schéma, édition d'une étape dans un export de channel |
+| `tools/` | Outils Node.js (`.mjs`) : contrôle du schéma, édition d'étape dans un export XML, rejeu hors ligne/en ligne, contrôle des liens et reproductibilité (`tools/tests/`) |
 | `src/main/resources/plugin.xml` | Descripteur de l'extension, versionné depuis le POM |
 | `assembly.xml` | Assemblage du ZIP installable |
 | `demo/` | OIE, Web Admin, FHIR Data Type, RBAC et compilation du mapper dans Docker |
@@ -57,7 +57,7 @@ mvn install:install-file \
   -DgroupId=com.matthy.oie -DartifactId=datatype-fhir-engine -Dversion=1.5.1 -Dpackaging=jar
 mvn clean package
 (cd webadmin && npm run test:e2e)                      # contre la démo lancée (Playwright)
-python3 -m unittest discover -s tools/tests
+node --test tools/tests/*.test.mjs
 ```
 
 `mvn clean package` exécute `npm ci`, `npm run check`, la construction frontend
@@ -103,7 +103,7 @@ parcours sont explicitement définis, indépendamment du poste de développement
 
 La [stratégie de tests](Strategie-tests.md) présente les trois niveaux de
 contrôle (unitaires Java/JS, API/canaux et navigateur). Le
-[guide de rejeu](../demo/Rejeu-tests.md) décrit `tools/run_tests.py`, la
+[guide de rejeu](../demo/Rejeu-tests.md) décrit `tools/run_tests.mjs`, la
 validation hors ligne et les essais sur serveur utilisés par la CI de release ;
 `npm --prefix webadmin run test:e2e` exécute l'ensemble des vérifications en
 ligne (canaux, aperçus, *samples* et interface web).
@@ -111,7 +111,7 @@ ligne (canaux, aperçus, *samples* et interface web).
 ## Contrôler la documentation
 
 ```sh
-python3 tools/check_doc_links.py
+node tools/check_doc_links.mjs
 ```
 
 Le script vérifie les liens locaux de tous les fichiers Markdown et refuse un
@@ -122,7 +122,7 @@ document de `doc/` qui ne serait pas accessible depuis son index.
 Après `mvn clean package`, exécuter depuis la racine :
 
 ```sh
-python3 tools/check_reproducible.py
+node tools/check_reproducible.mjs
 ```
 
 Le script copie les sources dans un autre répertoire, sans dépendances Node ni

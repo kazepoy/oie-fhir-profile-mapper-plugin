@@ -10,7 +10,7 @@ Le projet sépare les tests hors ligne (rapides, exécutés à chaque build) des
 | **Unitaire Frontend** | Node `node:test` | `webadmin/test/unit/` | `npm --prefix webadmin test` *(inclus dans `mvn package`)* | Node ≥ 22 |
 | **Intégration canaux & API** | Node `node:test` + `playwright` (`request`) | `webadmin/test/e2e/demo-*.test.js` | `npm --prefix webadmin run test:e2e` | Démo Docker démarrée |
 | **UI Web Admin (E2E)** | Node `node:test` + `playwright` (Chromium / WebKit) | `webadmin/test/e2e/*.test.js` | `npm --prefix webadmin run test:e2e` | Démo Docker + navigateurs Playwright |
-| **Outillage & Doc** | Python `unittest` / scripts | `tools/tests/`, `tools/check_doc_links.py`, `tools/run_tests.py` | `python3 -m unittest discover -s tools/tests` | Python 3 |
+| **Outillage & Doc** | Node `node:test` / scripts `.mjs` | `tools/tests/`, `tools/check_doc_links.mjs`, `tools/run_tests.mjs` | `node --test tools/tests/*.test.mjs` | Node ≥ 22 |
 
 ## Rôle de chaque couche
 
@@ -34,8 +34,8 @@ npm --prefix webadmin run test:e2e:api
 ```
 
 ### 3. Garde-fous statiques et CI de release
-- `tools/check_doc_links.py` : vérifie les liens locaux Markdown et le rattachement aux index de `doc/`.
-- `tools/tests/` et `tools/run_tests.py --offline` : contrôlent la cohérence du manifeste [channels.json](../../examples/channels.json), des exports et des *samples* Profile Mapper hors ligne.
+- `tools/check_doc_links.mjs` : vérifie les liens locaux Markdown et le rattachement aux index de `doc/`.
+- `tools/tests/` et `tools/run_tests.mjs --offline` : contrôlent la cohérence du manifeste [channels.json](../../examples/channels.json), des exports et des *samples* Profile Mapper hors ligne.
 
 ## Où placer un nouveau test ?
 

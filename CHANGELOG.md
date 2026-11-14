@@ -2,6 +2,11 @@
 
 ## Non publié (branche `feat/refonte`)
 
+- **Outils CLI (`tools/`)** : migration des scripts et suites de tests vers Node.js
+  natif (`.mjs`, zéro dépendance npm externe, suppression de Python et `pip`),
+  support de `FhirFmlTransformStep` dans `tools/channel_mapping.mjs`, détails
+  des entrées ZIP dans `tools/check_reproducible.mjs` et découpage des tests
+  dans `tools/tests/*.test.mjs`.
 - **Tests FML et Profile Mapper** : instance source FML et message préparé du
   Profile Mapper affichés à côté de l'exemple, ou dessous en zone étroite.
   Résultats dimensionnés dans l'espace disponible pour éviter le double
@@ -35,7 +40,7 @@
 - **Aperçu multi-étapes** : exécution des Profile Mapper activés du même
   transformeur, références réelles, finalisation atomique des Bundles, ressources
   intermédiaires et variables finales consultables. Périmètre mémorisé par sample.
-- **Rejeu** : `tools/run_tests.py` valide les exports hors ligne ou rejoue leurs
+- **Rejeu** : `tools/run_tests.mjs` valide les exports hors ligne ou rejoue leurs
   samples sur serveur ; échec en cas d’écart avec l’attendu. Contrôle hors ligne
   en CI et comparaison des aperçus aux sorties déployées dans la démo.
 - **Tableaux et documentation** : import CSV/Markdown des expressions de valeur
@@ -52,7 +57,7 @@
 - **Assemblage** : Maven installe les dépendances Node verrouillées, contrôle,
   construit et teste le frontend avant de produire le ZIP. Vérification de
   reproductibilité depuis une copie isolée contenant un bundle périmé, en CI
-  et avec `tools/check_reproducible.py`. Node/npm inclus dans le build Docker.
+  et avec `tools/check_reproducible.mjs`. Node/npm inclus dans le build Docker.
 
 
 - **Documentation utilisateur** : [manuel illustré](doc/user-manual/README.md),

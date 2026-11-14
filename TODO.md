@@ -69,5 +69,4 @@ priorisées restent classées dans le registre du plan.
 ## Nouvelles idées à classer
   
 
-revoir le dossier tools
 
