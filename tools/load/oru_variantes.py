@@ -35,11 +35,11 @@ STEP = "fr.kazepoy.fhir.mapper.FhirProfileMapperStep"
 
 # nom, port, validation du mapper, trace du mapper, validation du datatype FHIR en sortie.
 VARIANTES = [
-    ("validation+trace", 8091, True, True, True),
-    ("validation", 8092, True, False, True),
-    ("trace", 8093, False, True, True),
-    ("sans", 8094, False, False, True),
-    ("sans-datatype", 8095, False, False, False),
+    ("validation+trace", 10891, True, True, True),
+    ("validation", 10892, True, False, True),
+    ("trace", 10893, False, True, True),
+    ("sans", 10894, False, False, True),
+    ("sans-datatype", 10895, False, False, False),
 ]
 
 

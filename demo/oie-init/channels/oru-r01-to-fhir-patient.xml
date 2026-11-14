@@ -2,7 +2,7 @@
   <id>007924d5-6deb-40d3-ac19-c4c8715a4091</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>ORU R01 to FHIR Patient</name>
-  <description>Demo oru2fhir: an ORU^R01 (POST ER7 to /patient/, port 8082) becomes a single FHIR R4 Patient resource conforming to ExampleLabPatient in /fhir-volume/ig. One FHIR Profile Mapper step; the HTTP response is the Patient.</description>
+  <description>Demo oru2fhir: an ORU^R01 (POST ER7 to /patient/, port 10802) becomes a single FHIR R4 Patient resource conforming to ExampleLabPatient in /fhir-volume/ig. One FHIR Profile Mapper step; the HTTP response is the Patient.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8082</port>
+        <port>10802</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

@@ -2,7 +2,7 @@
   <id>6a2b9104-4d15-4a2b-8f30-810000000001</id>
   <nextMetaDataId>3</nextMetaDataId>
   <name>CSV Patient (FML vs Mapper)</name>
-  <description>Benchmark channel comparing inline FML and Profile Mapper on a semicolon-delimited CSV business patient row (POST text/csv to /csv-compare/, port 8100). Destination 1 runs inline FML and Destination 2 runs Profile Mapper in parallel; both produce the same ExampleLabPatient and record FML_MS, MAPPER_MS, DIFF_MS, OUTPUTS_EQUAL, and ERROR_STEP in metadata.</description>
+  <description>Benchmark channel comparing inline FML and Profile Mapper on a semicolon-delimited CSV business patient row (POST text/csv to /csv-compare/, port 10820). Destination 1 runs inline FML and Destination 2 runs Profile Mapper in parallel; both produce the same ExampleLabPatient and record FML_MS, MAPPER_MS, DIFF_MS, OUTPUTS_EQUAL, and ERROR_STEP in metadata.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8100</port>
+        <port>10820</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

@@ -156,7 +156,7 @@
       },
       "deployed": {
         "portEnv": "IG_FML_PATIENT_PORT",
-        "port": 8095,
+        "port": 10815,
         "route": "patient-fml-ig",
         "expected": "hl7v2/oru-r01-minimal-expected.json",
         "contentType": "text/plain",
@@ -228,7 +228,7 @@
       },
       "deployed": {
         "portEnv": "PERMISSION_R5_PORT",
-        "port": 8094,
+        "port": 10814,
         "route": "permission-r5",
         "expected": "csv/permissions-r5-expected.json",
         "contentType": "text/csv",
@@ -254,7 +254,7 @@
       "input": "json/organisation-metier.json",
       "deployed": {
         "portEnv": "ORGANIZATION_R5_PORT",
-        "port": 8090,
+        "port": 10810,
         "route": "organization-r5",
         "expected": "json/organisation-metier-expected.json"
       },
@@ -277,7 +277,7 @@
       "input": "json/patient-metier-fr-core.json",
       "deployed": {
         "portEnv": "FR_CORE_PATIENT_PORT",
-        "port": 8091,
+        "port": 10811,
         "route": "patient-fr-core",
         "expected": "json/patient-metier-fr-core-expected.json"
       },
@@ -299,7 +299,7 @@
       "input": "json/observation-eu-lab.json",
       "deployed": {
         "portEnv": "EU_LAB_OBS_PORT",
-        "port": 8093,
+        "port": 10813,
         "route": "eu-lab-observation",
         "expected": "json/observation-eu-lab-expected.json"
       },
@@ -322,7 +322,7 @@
       "input": "json/observation-tx-glu.json",
       "deployed": {
         "portEnv": "EXTERNAL_TX_OBS_PORT",
-        "port": 8096,
+        "port": 10816,
         "route": "obs-external-tx",
         "expected": "json/observation-tx-glu-expected.json"
       },
@@ -350,7 +350,7 @@
       },
       "deployed": {
         "portEnv": "FHIR_SUMMARY_PORT",
-        "port": 8092,
+        "port": 10812,
         "route": "patient-summary",
         "expected": "json/patient-fhir-source-expected.json"
       },

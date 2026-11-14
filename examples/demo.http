@@ -3,18 +3,18 @@
 ### L'API d'OIE est en HTTPS avec un certificat autosigné : dans VS Code, régler
 ### "http.proxyStrictSSL": false (ou accepter le certificat) pour les requêtes sur @oie.
 
-@oru = http://localhost:8081/oru/
-@patient = http://localhost:8082/patient/
-@strictPatient = http://localhost:8088/patient/
-@fmlTypedBundle = http://localhost:8087/bundle/
-@fmlInlinePatient = http://localhost:8089/patient/
-@labo = http://localhost:8083/labo/
-@sqlPatient = http://localhost:8084/sql-patient/
-@csvPatients = http://localhost:8085/csv-patients/
-@csvCollection = http://localhost:8086/csv-patients-collection/
-@organizationR5 = http://localhost:8090/organization-r5/
-@frCorePatient = http://localhost:8091/patient-fr-core/
-@fhirSummary = http://localhost:8092/patient-summary/
+@oru = http://localhost:10801/oru/
+@patient = http://localhost:10802/patient/
+@strictPatient = http://localhost:10808/patient/
+@fmlTypedBundle = http://localhost:10807/bundle/
+@fmlInlinePatient = http://localhost:10809/patient/
+@labo = http://localhost:10803/labo/
+@sqlPatient = http://localhost:10804/sql-patient/
+@csvPatients = http://localhost:10805/csv-patients/
+@csvCollection = http://localhost:10806/csv-patients-collection/
+@organizationR5 = http://localhost:10810/organization-r5/
+@frCorePatient = http://localhost:10811/patient-fr-core/
+@fhirSummary = http://localhost:10812/patient-summary/
 @oie = https://localhost:8443/api
 @auth = Basic admin:demo-oie-password
 @channel = 5d0f6c2a-8b3e-4f1a-9c7d-2e6b1a0f3c48

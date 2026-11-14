@@ -226,10 +226,10 @@ couverture : dix-sept exports dans huit groupes OIE natifs `<Source> - <Transfo>
 avec tags colorés ordonnés (sans tags IG/profil), quatorze samples Profile
 Mapper avec attendus et cinq aperçus FML rejouables. Les parcours couvrent
 désormais : JSON métier vers Organization R5, Patient FR Core 2.2.0, Observation
-EU Laboratory 2.0.0 (`8093`), CSV vers Bundle `Organization`/`Permission` R5 en
-FML (`8094`), HL7 v2 vers Patient via map publiée dans une IG (`mapUrl`, `8095`),
+EU Laboratory 2.0.0 (`10813`), CSV vers Bundle `Organization`/`Permission` R5 en
+FML (`10814`), HL7 v2 vers Patient via map publiée dans une IG (`mapUrl`, `10815`),
 terminologie externe OIE `$translate` avec repli et indisponibilité 503
-(`8096`/`8099`), et projection d'un Patient FHIR par FML (`8092`). R4B est écarté
+(`10816`/`10819`), et projection d'un Patient FHIR par FML (`10812`). R4B est écarté
 de la démonstration sur demande explicite de l'utilisateur (couvert en tests
 Java) ; `DevDays`, l'IG HL7 v2 officielle et les modèles logiques métier
 arbitraires restent différés au titre des sujets demandant conception. Ce lot
@@ -368,8 +368,8 @@ reportée ; elle ne doit plus être perdue dans plusieurs documents.
 | Réglages de fonctions expérimentales (IA, trace, complétion) | C | à justifier au cas par cas |
 | Amélioration de l'autocomplétion Monaco | C | besoin à préciser |
 | Préférence de langue explicite | C | à arbitrer ; navigateur déjà pris en charge |
-| Canaux R4/R4B/R5, IG, FR Core, sources et terminologie | D | R4/R5, FR Core, EU Lab 2.0.0, FML R5 `Permission`, map `mapUrl` et terminologie externe (`8096`/`8099`) livrés ; R4B écarté par choix utilisateur ; DevDays, IG HL7 v2 officielle et modèle métier arbitraire différés |
-| Maps publiées, surchargées et imbriquées | D puis E | Map publiée `mapUrl` livrée (`8095`) ; surcharge et imports imbriqués proposés en E |
+| Canaux R4/R4B/R5, IG, FR Core, sources et terminologie | D | R4/R5, FR Core, EU Lab 2.0.0, FML R5 `Permission`, map `mapUrl` et terminologie externe (`10816`/`10819`) livrés ; R4B écarté par choix utilisateur ; DevDays, IG HL7 v2 officielle et modèle métier arbitraire différés |
+| Maps publiées, surchargées et imbriquées | D puis E | Map publiée `mapUrl` livrée (`10815`) ; surcharge et imports imbriqués proposés en E |
 | Samples, groupes et tags de chaque canal | D puis E | 8 groupes `<Source> - <Transfo>`, tags colorés ordonnés, 14 samples Mapper et 5 aperçus FML livrés ; samples FML enregistrés restants |
 | Édition d'une dérivation de map canonique | E | proposé |
 | Navigation et diagnostics dans les imports FML | E | proposé |

@@ -2,7 +2,7 @@
   <id>33517dba-5b87-465d-988a-e291f5e88470</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>CSV Business Patients to Collection</name>
-  <description>The full 10-patient CSV is processed as a single message: column and date cleanup in source, then explicit creation in destination of a collection Bundle containing all 10 ExampleLabPatient resources. POST /csv-patients-collection/, port 8086. File must include its header; no batch splitting.</description>
+  <description>The full 10-patient CSV is processed as a single message: column and date cleanup in source, then explicit creation in destination of a collection Bundle containing all 10 ExampleLabPatient resources. POST /csv-patients-collection/, port 10806. File must include its header; no batch splitting.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8086</port>
+        <port>10806</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

@@ -65,7 +65,7 @@ services:
         target: /opt/engine/conf/custom.vmoptions
     ports:
       - "${OIE_BIND_ADDRESS:-127.0.0.1}:${OIE_HTTPS_PORT:-8443}:8443"
-      - "8081-8105:8081-8105"
+      - "10800-10900:10800-10900"
     volumes:
       - appdata:/opt/engine/appdata
       - logs:/opt/engine/logs

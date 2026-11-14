@@ -14,36 +14,36 @@ Le contrôle de démo vérifie leurs affectations réelles via l'API.
 ## Parcours disponibles
 
 Tous les transformeurs source ont un message entrant préchargé. Dans chaque
-canal Profile Mapper, ouvrir l'étape **Patient** (ou **Organization** sur 8090,
-**Observation** sur 8093 et 8096), puis **Test** : elle contient
+canal Profile Mapper, ouvrir l'étape **Patient** (ou **Organization** sur 10810,
+**Observation** sur 10813 et 10816), puis **Test** : elle contient
 au moins un sample avec résultat attendu. Les deux canaux CSV Mapper transforment
 en destination après nettoyage ; le canal CSV FML R5 transforme directement en source.
 
 | Groupe | Canal (port) | Preuve distinctive | Exemple testable |
 |---|---|---|---|
-| `hl7v2-mapper` | ORU R01 to FHIR Bundle (8081) | Transaction, références, terminologie locale, traces | Deux samples Patient ; rejeu du canal : 12 puis 4 ressources |
-| `hl7v2-mapper` | ORU R01 to FHIR Patient (8082) | Contexte partagé, profil local, slices et traduction | Deux samples Patient avec attendu |
-| `hl7v2-mapper` | ORU R01 to Two Lab Bundles (8083) | Transaction et document partageant les ressources | Sample de portée **transformer** : transaction attendue ; rejeu vérifiant aussi le document et l'archive |
-| `hl7v2-mapper` | ORU R01 to FHIR Patient (strict) (8088) | Chemins HAPI plutôt que chemins du parseur standard | Sample XML typé avec Patient attendu ; canal recevant l'ER7 |
-| `hl7v2-fml` | ORU R01 to FHIR Bundle (FML typed) (8087) | Modèle logique HL7 v2 et map important une autre map | XML typé et Bundle attendu, contrôlés par l'API FML et le canal ER7 |
-| `hl7v2-fml` | ORU R01 to FHIR Patient (FML inline) (8089) | Map embarquée, modèle `OieMessage`, ConceptMap locale | Message ER7 préchargé ; Patient attendu vérifié par l'API FML et le canal |
-| `hl7v2-fml` | ORU R01 to FHIR Patient (FML IG) (8095) | `StructureMap` JSON publiée dans `/fhir-volume/ig`, résolue par `mapUrl` | ER7 nominal et ER7 sans date de naissance refusé |
-| `fml-versus-mapper` | ORU R01 Patient (FML vs Mapper) (8097) | Double destination parallèle HL7 v2 simple : FML inline vs Mapper, sorties identiques | Métadonnées `FML_MS`, `MAPPER_MS`, `DIFF_MS` et `OUTPUTS_EQUAL=true` |
-| `fml-versus-mapper` | ORU R01 Patient Strict (FML vs Mapper) (8098) | Double destination parallèle HL7 v2 Strict Parser : FML inline vs Mapper, sorties identiques | Métadonnées `FML_MS`, `MAPPER_MS`, `DIFF_MS` et `OUTPUTS_EQUAL=true` |
-| `fml-versus-mapper` | CSV Patient (FML vs Mapper) (8100) | Double destination parallèle CSV (`DELIMITED`) : FML inline vs Mapper, sorties identiques | Métadonnées `FML_MS`, `MAPPER_MS`, `DIFF_MS` et `OUTPUTS_EQUAL=true` |
-| `fml-versus-mapper` | SQL XML Patient (FML vs Mapper) (8101) | Double destination parallèle XML SQL métier : FML inline vs Mapper, sorties identiques | Métadonnées `FML_MS`, `MAPPER_MS`, `DIFF_MS` et `OUTPUTS_EQUAL=true` |
-| `fml-versus-mapper` | Business JSON Patient (FML vs Mapper) (8102) | Double destination parallèle JSON métier (FR Core 2.2.0) : FML inline vs Mapper, sorties identiques | Métadonnées `FML_MS`, `MAPPER_MS`, `DIFF_MS` et `OUTPUTS_EQUAL=true` |
-| `fml-versus-mapper` | FHIR Patient Summary (FML vs Mapper) (8103) | Double destination parallèle source FHIR (`sourceModel=fhir`) : FML inline vs Mapper, sorties identiques | Métadonnées `FML_MS`, `MAPPER_MS`, `DIFF_MS` et `OUTPUTS_EQUAL=true` |
-| `xml-mapper` | SQL XML to FHIR Patient (8084) | XML de ligne SQL simulée, accents et zéros initiaux | Ligne XML et Patient attendu ; aucune base SQL requise |
-| `csv-mapper` | CSV Business Patients to Patient (8085) | Découpage batch, nettoyage puis mapping en destination | Sample XML d'une ligne déjà nettoyée ; rejeu CSV vérifiant les dix messages |
-| `csv-mapper` | CSV Business Patients to Collection (8086) | Dix ressources dans un seul Bundle | Sample XML nettoyé, portée **transformer**, collection attendue |
-| `csv-fml` | CSV to Permission R5 (FML) (8094) | CSV par défaut vers Bundle R5 (`Organization` + `Permission`) | CSV nominal et statut invalide refusé en aperçu et déployé |
-| `json-mapper` | Business JSON to Organization R5 (8090) | JSON métier et champ markdown propre à R5 | Sample avec attendu ; conversion booléenne invalide refusée |
-| `json-mapper` | Business JSON to Patient FR Core (8091) | Profil publié 2.2.0, slice PI, extension de lieu de naissance | Sample avec attendu ; usage PI `official` refusé par la validation |
-| `json-mapper` | Business JSON to Obs EU Lab (8093) | Profil publié EU Laboratory 2.0.0 (`Observation-resultslab-eu-lab`) | Sample avec attendu ; `effective[x]` manquant refusé |
-| `json-mapper` | Business JSON to Obs (External TX) (8096) | Serveur de terminologie externe (`ConceptMap/$translate`) | `GLU` traduit, `UNKNOWN` en repli `fixed`, `UNAVAILABLE` en erreur 503 |
-| `fhir-fml` | FHIR Patient to Summary (FML) (8092) | Source `fhir`, projection sans `OieMessage`, `false` conservé | JSON et attendu ; sexe non autorisé refusé |
-| `http-mock` | HTTP Terminology Mock ($translate) (8099) | Serveur mock léger répondant à `/fhir/ConceptMap/$translate` | Supporte le canal 8096 et les tests de disponibilité |
+| `hl7v2-mapper` | ORU R01 to FHIR Bundle (10801) | Transaction, références, terminologie locale, traces | Deux samples Patient ; rejeu du canal : 12 puis 4 ressources |
+| `hl7v2-mapper` | ORU R01 to FHIR Patient (10802) | Contexte partagé, profil local, slices et traduction | Deux samples Patient avec attendu |
+| `hl7v2-mapper` | ORU R01 to Two Lab Bundles (10803) | Transaction et document partageant les ressources | Sample de portée **transformer** : transaction attendue ; rejeu vérifiant aussi le document et l'archive |
+| `hl7v2-mapper` | ORU R01 to FHIR Patient (strict) (10808) | Chemins HAPI plutôt que chemins du parseur standard | Sample XML typé avec Patient attendu ; canal recevant l'ER7 |
+| `hl7v2-fml` | ORU R01 to FHIR Bundle (FML typed) (10807) | Modèle logique HL7 v2 et map important une autre map | XML typé et Bundle attendu, contrôlés par l'API FML et le canal ER7 |
+| `hl7v2-fml` | ORU R01 to FHIR Patient (FML inline) (10809) | Map embarquée, modèle `OieMessage`, ConceptMap locale | Message ER7 préchargé ; Patient attendu vérifié par l'API FML et le canal |
+| `hl7v2-fml` | ORU R01 to FHIR Patient (FML IG) (10815) | `StructureMap` JSON publiée dans `/fhir-volume/ig`, résolue par `mapUrl` | ER7 nominal et ER7 sans date de naissance refusé |
+| `fml-versus-mapper` | ORU R01 Patient (FML vs Mapper) (10817) | Double destination parallèle HL7 v2 simple : FML inline vs Mapper, sorties identiques | Métadonnées `FML_MS`, `MAPPER_MS`, `DIFF_MS` et `OUTPUTS_EQUAL=true` |
+| `fml-versus-mapper` | ORU R01 Patient Strict (FML vs Mapper) (10818) | Double destination parallèle HL7 v2 Strict Parser : FML inline vs Mapper, sorties identiques | Métadonnées `FML_MS`, `MAPPER_MS`, `DIFF_MS` et `OUTPUTS_EQUAL=true` |
+| `fml-versus-mapper` | CSV Patient (FML vs Mapper) (10820) | Double destination parallèle CSV (`DELIMITED`) : FML inline vs Mapper, sorties identiques | Métadonnées `FML_MS`, `MAPPER_MS`, `DIFF_MS` et `OUTPUTS_EQUAL=true` |
+| `fml-versus-mapper` | SQL XML Patient (FML vs Mapper) (10821) | Double destination parallèle XML SQL métier : FML inline vs Mapper, sorties identiques | Métadonnées `FML_MS`, `MAPPER_MS`, `DIFF_MS` et `OUTPUTS_EQUAL=true` |
+| `fml-versus-mapper` | Business JSON Patient (FML vs Mapper) (10822) | Double destination parallèle JSON métier (FR Core 2.2.0) : FML inline vs Mapper, sorties identiques | Métadonnées `FML_MS`, `MAPPER_MS`, `DIFF_MS` et `OUTPUTS_EQUAL=true` |
+| `fml-versus-mapper` | FHIR Patient Summary (FML vs Mapper) (10823) | Double destination parallèle source FHIR (`sourceModel=fhir`) : FML inline vs Mapper, sorties identiques | Métadonnées `FML_MS`, `MAPPER_MS`, `DIFF_MS` et `OUTPUTS_EQUAL=true` |
+| `xml-mapper` | SQL XML to FHIR Patient (10804) | XML de ligne SQL simulée, accents et zéros initiaux | Ligne XML et Patient attendu ; aucune base SQL requise |
+| `csv-mapper` | CSV Business Patients to Patient (10805) | Découpage batch, nettoyage puis mapping en destination | Sample XML d'une ligne déjà nettoyée ; rejeu CSV vérifiant les dix messages |
+| `csv-mapper` | CSV Business Patients to Collection (10806) | Dix ressources dans un seul Bundle | Sample XML nettoyé, portée **transformer**, collection attendue |
+| `csv-fml` | CSV to Permission R5 (FML) (10814) | CSV par défaut vers Bundle R5 (`Organization` + `Permission`) | CSV nominal et statut invalide refusé en aperçu et déployé |
+| `json-mapper` | Business JSON to Organization R5 (10810) | JSON métier et champ markdown propre à R5 | Sample avec attendu ; conversion booléenne invalide refusée |
+| `json-mapper` | Business JSON to Patient FR Core (10811) | Profil publié 2.2.0, slice PI, extension de lieu de naissance | Sample avec attendu ; usage PI `official` refusé par la validation |
+| `json-mapper` | Business JSON to Obs EU Lab (10813) | Profil publié EU Laboratory 2.0.0 (`Observation-resultslab-eu-lab`) | Sample avec attendu ; `effective[x]` manquant refusé |
+| `json-mapper` | Business JSON to Obs (External TX) (10816) | Serveur de terminologie externe (`ConceptMap/$translate`) | `GLU` traduit, `UNKNOWN` en repli `fixed`, `UNAVAILABLE` en erreur 503 |
+| `fhir-fml` | FHIR Patient to Summary (FML) (10812) | Source `fhir`, projection sans `OieMessage`, `false` conservé | JSON et attendu ; sexe non autorisé refusé |
+| `http-mock` | HTTP Terminology Mock ($translate) (10819) | Serveur mock léger répondant à `/fhir/ConceptMap/$translate` | Supporte le canal 10816 et les tests de disponibilité |
 
 Le [guide des trois nouveaux parcours](JSON-FR-Core-et-FML.md) détaille les
 requêtes, les cas d'erreur et le périmètre des dépendances FR Core.
@@ -91,11 +91,11 @@ Ces erreurs sont des cas du contrôle existant, pas des canaux supplémentaires.
 
 | Demande | État et suite pertinente |
 |---|---|
-| Source JSON métier et ressource FHIR entrante | Couvertes par les ports 8090, 8091, 8092, 8093 et 8096 |
-| R4B/R5, fonction propre à R5 | Profile Mapper R5 démontré par `Organization.description` sur 8090 ; FML R5 (CSV vers `Organization` et `Permission`) démontré sur 8094 ; R4B écarté de la démo par choix utilisateur (reste couvert en tests Java) |
-| FR Core et HL7 Europe Laboratory | Patient FR Core 2.2.0 validé sur 8091 ; Observation EU Laboratory 2.0.0 (avec dépendances directes fixées) validée sur 8093 |
-| Map publiée dans un package IG (`mapUrl`) | Couverte sur 8095 (`ORU R01 to FHIR Patient (FML IG)`) avec `StructureMap-OruR01ToPatientIG.json` |
-| Terminologie externe, absence de correspondance et indisponibilité | Mock OIE `ConceptMap/$translate` sur 8099 et consommateur sur 8096 : traduction GLU -> LOINC, repli `fixed` vers `data-absent-reason#unknown` et erreur 503 sur `UNAVAILABLE` |
+| Source JSON métier et ressource FHIR entrante | Couvertes par les ports 10810, 10811, 10812, 10813 et 10816 |
+| R4B/R5, fonction propre à R5 | Profile Mapper R5 démontré par `Organization.description` sur 10810 ; FML R5 (CSV vers `Organization` et `Permission`) démontré sur 10814 ; R4B écarté de la démo par choix utilisateur (reste couvert en tests Java) |
+| FR Core et HL7 Europe Laboratory | Patient FR Core 2.2.0 validé sur 10811 ; Observation EU Laboratory 2.0.0 (avec dépendances directes fixées) validée sur 10813 |
+| Map publiée dans un package IG (`mapUrl`) | Couverte sur 10815 (`ORU R01 to FHIR Patient (FML IG)`) avec `StructureMap-OruR01ToPatientIG.json` |
+| Terminologie externe, absence de correspondance et indisponibilité | Mock OIE `ConceptMap/$translate` sur 10819 et consommateur sur 10816 : traduction GLU -> LOINC, repli `fixed` vers `data-absent-reason#unknown` et erreur 503 sur `UNAVAILABLE` |
 | Groupes OIE `<Source> - <Transfo>` et tags ordonnés | 8 groupes natifs (`CSV - FML`, `CSV - Mapper`, `FHIR - FML`, `HL7v2 - FML`, `HL7v2 - Mapper`, `HTTP - Mock`, `JSON - Mapper`, `XML - Mapper`), tags colorés sans tags IG/profil, dans l'ordre `[Release, Source, Transfo, ...fonctionnalités]` |
 | Cas nécessitant conception ou arbitrage | Profil R4 externe (`DevDays`), IG HL7 v2 officielle, modèle logique métier arbitraire dans FML, dérivation/surcharge, imports imbriqués et samples FML enregistrés restent différés |
 

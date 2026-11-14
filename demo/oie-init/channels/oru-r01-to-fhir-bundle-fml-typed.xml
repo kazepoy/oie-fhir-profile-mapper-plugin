@@ -2,7 +2,7 @@
   <id>5f1f6c2e-2b8e-4f0a-9d7a-0c1e8f6a7b31</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>ORU R01 to FHIR Bundle (FML typed)</name>
-  <description>An ORU^R01 read by the Strict Parser (POST /bundle, port 8087) is adapted to the ORU__R01 logical model, then ORUR01toBundle and PIDtoPatient maps produce a FHIR R4 Bundle. The response contains a Patient and an Observation.</description>
+  <description>An ORU^R01 read by the Strict Parser (POST /bundle, port 10807) is adapted to the ORU__R01 logical model, then ORUR01toBundle and PIDtoPatient maps produce a FHIR R4 Bundle. The response contains a Patient and an Observation.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8087</port>
+        <port>10807</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

@@ -46,7 +46,7 @@
       "name": "external-terminology",
       "fhirVersion": "R4",
       "packages": ["/fhir-volume/ig"],
-      "terminologyServer": "http://127.0.0.1:8099/fhir",
+      "terminologyServer": "http://127.0.0.1:10819/fhir",
       "terminologyAuthorization": "",
       "cacheSeconds": 0,
       "timeoutSeconds": 3,

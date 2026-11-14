@@ -2,7 +2,7 @@
   <id>6a2b9104-4d15-4a2b-8f30-809400000001</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>CSV to Permission R5 (FML)</name>
-  <description>Demo of FHIR R5 in FML: CSV rows parsed via OIE default DELIMITED columns are transformed into an R5 transaction Bundle with Organization and Permission (R5-only resource). POST text/csv to /permission-r5/, port 8094.</description>
+  <description>Demo of FHIR R5 in FML: CSV rows parsed via OIE default DELIMITED columns are transformed into an R5 transaction Bundle with Organization and Permission (R5-only resource). POST text/csv to /permission-r5/, port 10814.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8094</port>
+        <port>10814</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

@@ -2,7 +2,7 @@
   <id>aa431dca-b805-4ac6-8dbd-e272b6fc4c18</id>
   <nextMetaDataId>3</nextMetaDataId>
   <name>ORU R01 to Two Lab Bundles</name>
-  <description>An ORU^R01 builds laboratory resources once and adds them to two Bundles: labo-transaction (FHIR Server, HTTP response on /labo/, 8083) and labo-document (bundleDocument variable). Two parallel branches: the FHIR server, and the document repository followed by PCA/PRA archiving, which archives only accepted documents (files in appdata/archive-pca). Shared identities and references; requests only in the transaction.</description>
+  <description>An ORU^R01 builds laboratory resources once and adds them to two Bundles: labo-transaction (FHIR Server, HTTP response on /labo/, 10803) and labo-document (bundleDocument variable). Two parallel branches: the FHIR server, and the document repository followed by PCA/PRA archiving, which archives only accepted documents (files in appdata/archive-pca). Shared identities and references; requests only in the transaction.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8083</port>
+        <port>10803</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

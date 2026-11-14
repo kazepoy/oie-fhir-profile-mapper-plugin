@@ -2,7 +2,7 @@
   <id>6a2b9104-4d15-4a2b-8f30-809600000001</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>Business JSON to Obs (External TX)</name>
-  <description>Observation code translation against an external FHIR terminology server (ConceptMap/$translate on http://127.0.0.1:8099/fhir, context external-terminology). POST application/json to /obs-external-tx/, port 8096. Covers match, unmatched fallback, and 503 unavailability.</description>
+  <description>Observation code translation against an external FHIR terminology server (ConceptMap/$translate on http://127.0.0.1:10819/fhir, context external-terminology). POST application/json to /obs-external-tx/, port 10816. Covers match, unmatched fallback, and 503 unavailability.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8096</port>
+        <port>10816</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>
@@ -60,7 +60,7 @@
           <action>resource</action>
           <bundleTargets>[]</bundleTargets>
           <refName />
-          <terminologyServer>http://127.0.0.1:8099/fhir</terminologyServer>
+          <terminologyServer>http://127.0.0.1:10819/fhir</terminologyServer>
           <terminologyAuthorization />
           <terminologyCacheSeconds>0</terminologyCacheSeconds>
           <terminologyTimeoutSeconds>3</terminologyTimeoutSeconds>

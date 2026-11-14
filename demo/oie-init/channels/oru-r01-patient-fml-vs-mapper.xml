@@ -2,7 +2,7 @@
   <id>6a2b9104-4d15-4a2b-8f30-809700000001</id>
   <nextMetaDataId>3</nextMetaDataId>
   <name>ORU R01 Patient (FML vs Mapper)</name>
-  <description>Benchmark channel comparing inline FML and Profile Mapper on a simple HL7 v2 ORU^R01 (POST ER7 to /patient-compare/, port 8097). Destination 1 runs inline FML and Destination 2 runs Profile Mapper on the same input; both produce the same ExampleLabPatient and record FML_MS, MAPPER_MS, DIFF_MS, and OUTPUTS_EQUAL in channel metadata.</description>
+  <description>Benchmark channel comparing inline FML and Profile Mapper on a simple HL7 v2 ORU^R01 (POST ER7 to /patient-compare/, port 10817). Destination 1 runs inline FML and Destination 2 runs Profile Mapper on the same input; both produce the same ExampleLabPatient and record FML_MS, MAPPER_MS, DIFF_MS, and OUTPUTS_EQUAL in channel metadata.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8097</port>
+        <port>10817</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

@@ -2,7 +2,7 @@
   <id>6a2b9104-4d15-4a2b-8f30-809500000001</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>ORU R01 to FHIR Patient (FML IG)</name>
-  <description>Demo of a StructureMap JSON packaged in an IG folder (/fhir-volume/ig): POST HL7 v2 ER7 to /patient-fml-ig/, port 8095. The step selects mapUrl without mapSource or .fml files.</description>
+  <description>Demo of a StructureMap JSON packaged in an IG folder (/fhir-volume/ig): POST HL7 v2 ER7 to /patient-fml-ig/, port 10815. The step selects mapUrl without mapSource or .fml files.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8095</port>
+        <port>10815</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

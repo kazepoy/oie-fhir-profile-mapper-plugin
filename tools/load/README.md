@@ -31,7 +31,7 @@ variables d'environnement : `P95_MS` (1000 ms par défaut) et `ERREURS_MAX` (0.0
 ## ORU vers Bundle : coût de la validation et de la trace
 
 ```sh
-python3 tools/load/oru_variantes.py deploy     # cinq copies du canal, ports 8091 à 8095
+python3 tools/load/oru_variantes.py deploy     # cinq copies du canal, ports 10891 à 10895
 SCRIPT=oru.js tools/load/run.sh                # ~6 min
 python3 tools/load/oru_variantes.py remove     # quand on a fini
 ```
@@ -43,11 +43,11 @@ sortie de la source (`validateOutbound`).
 
 | Variante | Port | Validation mapper | Trace | Validation datatype |
 |---|---|:-:|:-:|:-:|
-| validation+trace | 8091 | oui | oui | oui |
-| validation | 8092 | oui | non | oui |
-| trace | 8093 | non | oui | oui |
-| sans | 8094 | non | non | oui |
-| sans-datatype | 8095 | non | non | non |
+| validation+trace | 10891 | oui | oui | oui |
+| validation | 10892 | oui | non | oui |
+| trace | 10893 | non | oui | oui |
+| sans | 10894 | non | non | oui |
+| sans-datatype | 10895 | non | non | non |
 
 Les variantes passent l'une après l'autre, avec un client chacune : le canal
 traite un message à la fois. La latence mesurée est donc le temps de service,

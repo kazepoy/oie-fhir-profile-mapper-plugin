@@ -18,11 +18,11 @@ const CLIENTS = Number(__ENV.CLIENTS || 1);
 const MESSAGE = open('/examples/hl7v2/oru-r01-labo.er7');
 
 const VARIANTES = [
-  { nom: 'validation+trace', port: 8091, validation: 'oui', trace: 'oui', datatype: 'oui' },
-  { nom: 'validation', port: 8092, validation: 'oui', trace: 'non', datatype: 'oui' },
-  { nom: 'trace', port: 8093, validation: 'non', trace: 'oui', datatype: 'oui' },
-  { nom: 'sans', port: 8094, validation: 'non', trace: 'non', datatype: 'oui' },
-  { nom: 'sans-datatype', port: 8095, validation: 'non', trace: 'non', datatype: 'non' },
+  { nom: 'validation+trace', port: 10891, validation: 'oui', trace: 'oui', datatype: 'oui' },
+  { nom: 'validation', port: 10892, validation: 'oui', trace: 'non', datatype: 'oui' },
+  { nom: 'trace', port: 10893, validation: 'non', trace: 'oui', datatype: 'oui' },
+  { nom: 'sans', port: 10894, validation: 'non', trace: 'non', datatype: 'oui' },
+  { nom: 'sans-datatype', port: 10895, validation: 'non', trace: 'non', datatype: 'non' },
 ];
 const cle = (v) => v.nom.replace(/[^a-z]/g, '_');
 

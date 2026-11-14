@@ -2,7 +2,7 @@
   <id>6a2b9104-4d15-4a2b-8f30-809300000001</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>Business JSON to Obs EU Lab</name>
-  <description>Business JSON to the HL7 Europe Laboratory 2.0.0 Observation profile (Observation-resultslab-eu-lab). POST application/json to /eu-lab-observation/, port 8093. Nominal and invalid examples in examples/json/.</description>
+  <description>Business JSON to the HL7 Europe Laboratory 2.0.0 Observation profile (Observation-resultslab-eu-lab). POST application/json to /eu-lab-observation/, port 10813. Nominal and invalid examples in examples/json/.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8093</port>
+        <port>10813</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

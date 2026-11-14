@@ -2,7 +2,7 @@
   <id>278e4fcc-6599-4275-aece-ad0d79bf0cc5</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>ORU R01 to FHIR Patient (strict)</name>
-  <description>Demo oru2fhir: variant of ORU R01 to FHIR Patient (port 8082) using HL7 v2 Strict Parser (HAPI) and Strip Namespaces. An ORU^R01 (POST ER7 to /patient/, port 8088) produces the same FHIR R4 Patient conforming to ExampleLabPatient; the mapping reads HAPI XML: ORU_R01.PATIENT_RESULT / ORU_R01.PATIENT groups and typed components (CX.1, XPN.1/FN.1, TS.1).</description>
+  <description>Demo oru2fhir: variant of ORU R01 to FHIR Patient (port 10802) using HL7 v2 Strict Parser (HAPI) and Strip Namespaces. An ORU^R01 (POST ER7 to /patient/, port 10808) produces the same FHIR R4 Patient conforming to ExampleLabPatient; the mapping reads HAPI XML: ORU_R01.PATIENT_RESULT / ORU_R01.PATIENT groups and typed components (CX.1, XPN.1/FN.1, TS.1).</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8088</port>
+        <port>10808</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

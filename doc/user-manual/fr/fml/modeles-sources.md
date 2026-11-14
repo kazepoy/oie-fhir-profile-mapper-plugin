@@ -30,5 +30,5 @@ Le bouton **Check** contrôle la syntaxe et la disponibilité des `uses` et
 `imports`. Le core FHIR utilisé par OIE ne valide pas fiablement tous les chemins
 logiques à ce stade : toujours terminer par un test sur un message représentatif.
 
-La démo du port 8087 montre `ORUR01toBundle`, qui importe `PIDtoPatient` et produit
+La démo du port 10807 montre `ORUR01toBundle`, qui importe `PIDtoPatient` et produit
 un Bundle transaction Patient + Observation avec validation active.

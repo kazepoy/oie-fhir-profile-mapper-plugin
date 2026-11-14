@@ -2,7 +2,7 @@
   <id>6a2b9104-4d15-4a2b-8f30-810200000001</id>
   <nextMetaDataId>3</nextMetaDataId>
   <name>Business JSON Patient (FML vs Mapper)</name>
-  <description>Benchmark channel comparing inline FML and Profile Mapper on business JSON targeting FR Core Patient 2.2.0 (POST application/json to /json-compare/, port 8102). Destination 1 runs inline FML and Destination 2 runs Profile Mapper in parallel; both produce the same FR Core Patient and record FML_MS, MAPPER_MS, DIFF_MS, OUTPUTS_EQUAL, and ERROR_STEP in metadata.</description>
+  <description>Benchmark channel comparing inline FML and Profile Mapper on business JSON targeting FR Core Patient 2.2.0 (POST application/json to /json-compare/, port 10822). Destination 1 runs inline FML and Destination 2 runs Profile Mapper in parallel; both produce the same FR Core Patient and record FML_MS, MAPPER_MS, DIFF_MS, OUTPUTS_EQUAL, and ERROR_STEP in metadata.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8102</port>
+        <port>10822</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

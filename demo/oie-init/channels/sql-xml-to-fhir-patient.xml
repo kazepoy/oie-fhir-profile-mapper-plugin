@@ -2,7 +2,7 @@
   <id>8b031c27-0c2e-40e1-b7f3-69ce531e7a24</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>SQL XML to FHIR Patient</name>
-  <description>An XML simulating a SQL row from the business patient table (OIE Database Reader format: result, one element per column) becomes an ExampleLabPatient. POST application/xml to /sql-patient/, port 8084; no database connection required. One FHIR Profile Mapper step, FHIR R4 JSON Patient response.</description>
+  <description>An XML simulating a SQL row from the business patient table (OIE Database Reader format: result, one element per column) becomes an ExampleLabPatient. POST application/xml to /sql-patient/, port 10804; no database connection required. One FHIR Profile Mapper step, FHIR R4 JSON Patient response.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8084</port>
+        <port>10804</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

@@ -2,7 +2,7 @@
   <id>7c2d9a41-3e5f-4b6a-8d1c-2f4e6a8b0c53</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>ORU R01 to FHIR Patient (FML inline)</name>
-  <description>Demo of an inline FML map kept in the step: an ORU^R01 (POST ER7 to /patient/, port 8089) becomes a FHIR R4 Patient conforming to ExampleLabPatient. The FHIR FML Transform step holds the map text (mapSource property, Map tab): it is saved with the channel and runs without a map file on the server. Same Patient as port 8082; port 8087 produces a typed Bundle.</description>
+  <description>Demo of an inline FML map kept in the step: an ORU^R01 (POST ER7 to /patient/, port 10809) becomes a FHIR R4 Patient conforming to ExampleLabPatient. The FHIR FML Transform step holds the map text (mapSource property, Map tab): it is saved with the channel and runs without a map file on the server. Same Patient as port 10802; port 10807 produces a typed Bundle.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8089</port>
+        <port>10809</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

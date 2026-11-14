@@ -2,7 +2,7 @@
   <id>bfd48a62-4376-4c9a-91b3-ff294b5e2570</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>CSV Business Patients to Patient</name>
-  <description>UTF-8 CSV of 10 business patients, semicolon delimiter and header: POST /csv-patients/, port 8085. Native OIE batch: one row per message. Source: trim columns, uppercase sex, YYYYMMDD to YYYY-MM-DD date. Destination: FHIR Profile Mapper to ExampleLabPatient. Ten results in the dashboard; HTTP response = last Patient.</description>
+  <description>UTF-8 CSV of 10 business patients, semicolon delimiter and header: POST /csv-patients/, port 10805. Native OIE batch: one row per message. Source: trim columns, uppercase sex, YYYYMMDD to YYYY-MM-DD date. Destination: FHIR Profile Mapper to ExampleLabPatient. Ten results in the dashboard; HTTP response = last Patient.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8085</port>
+        <port>10805</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

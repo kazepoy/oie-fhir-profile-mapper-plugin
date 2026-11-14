@@ -19,11 +19,11 @@ function exemple(nom) {
 
 // Un canal = un écouteur HTTP de la démo, un message d'exemple et la réponse attendue.
 const CANAUX = [
-  { nom: 'oru', port: 8081, route: 'oru', fichier: 'hl7v2/oru-r01-labo.er7', type: 'text/plain', ressource: 'Bundle', entrees: 12 },
-  { nom: 'patient', port: 8082, route: 'patient', fichier: 'hl7v2/oru-r01-minimal.er7', type: 'text/plain', ressource: 'Patient' },
-  { nom: 'labo', port: 8083, route: 'labo', fichier: 'hl7v2/oru-r01-labo.er7', type: 'text/plain', ressource: 'Bundle', entrees: 12 },
-  { nom: 'sql-patient', port: 8084, route: 'sql-patient', fichier: 'xml/patient-result-sql.xml', type: 'application/xml', ressource: 'Patient' },
-  { nom: 'csv-collection', port: 8086, route: 'csv-patients-collection', fichier: 'csv/patients-metier-10.csv', type: 'text/csv', ressource: 'Bundle', entrees: 10 },
+  { nom: 'oru', port: 10801, route: 'oru', fichier: 'hl7v2/oru-r01-labo.er7', type: 'text/plain', ressource: 'Bundle', entrees: 12 },
+  { nom: 'patient', port: 10802, route: 'patient', fichier: 'hl7v2/oru-r01-minimal.er7', type: 'text/plain', ressource: 'Patient' },
+  { nom: 'labo', port: 10803, route: 'labo', fichier: 'hl7v2/oru-r01-labo.er7', type: 'text/plain', ressource: 'Bundle', entrees: 12 },
+  { nom: 'sql-patient', port: 10804, route: 'sql-patient', fichier: 'xml/patient-result-sql.xml', type: 'application/xml', ressource: 'Patient' },
+  { nom: 'csv-collection', port: 10806, route: 'csv-patients-collection', fichier: 'csv/patients-metier-10.csv', type: 'text/csv', ressource: 'Bundle', entrees: 10 },
 ].map((c) => ({ ...c, corps: exemple(c.fichier) }));
 
 // Débits en messages par seconde, tous canaux confondus (répartis à tour de rôle).

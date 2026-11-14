@@ -2,7 +2,7 @@
   <id>5d0f6c2a-8b3e-4f1a-9c7d-2e6b1a0f3c48</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>ORU R01 to FHIR Bundle</name>
-  <description>Demo oru2fhir: an ORU^R01 (POST ER7 to /oru/, port 8081) becomes a FHIR R4 transaction Bundle conforming to the example profiles in /fhir-volume/ig. Seven FHIR Profile Mapper steps, with no FML or mapping script. The HTTP response is the Bundle.</description>
+  <description>Demo oru2fhir: an ORU^R01 (POST ER7 to /oru/, port 10801) becomes a FHIR R4 transaction Bundle conforming to the example profiles in /fhir-volume/ig. Seven FHIR Profile Mapper steps, with no FML or mapping script. The HTTP response is the Bundle.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8081</port>
+        <port>10801</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

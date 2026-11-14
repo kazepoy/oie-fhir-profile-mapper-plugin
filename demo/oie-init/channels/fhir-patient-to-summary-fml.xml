@@ -2,7 +2,7 @@
   <id>c5792091-b613-4f1a-b899-4e8670f58092</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>FHIR Patient to Summary (FML)</name>
-  <description>Explicit FML projection from FHIR R4 Patient to Patient: identity and demographics preserved, telecom omitted. POST application/json to /patient-summary/, port 8092. Nominal and invalid examples in examples/json/. Validation enabled.</description>
+  <description>Explicit FML projection from FHIR R4 Patient to Patient: identity and demographics preserved, telecom omitted. POST application/json to /patient-summary/, port 10812. Nominal and invalid examples in examples/json/. Validation enabled.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8092</port>
+        <port>10812</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>

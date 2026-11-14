@@ -2,7 +2,7 @@
   <id>6a2b9104-4d15-4a2b-8f30-809900000001</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>HTTP Terminology Mock ($translate)</name>
-  <description>Lightweight OIE mock FHIR Terminology Server implementing GET /fhir/ConceptMap/$translate on port 8099. Returns a LOINC match for GLU, result=false for unknown codes, and HTTP 503 for UNAVAILABLE.</description>
+  <description>Lightweight OIE mock FHIR Terminology Server implementing GET /fhir/ConceptMap/$translate on port 10819. Returns a LOINC match for GLU, result=false for unknown codes, and HTTP 503 for UNAVAILABLE.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -11,7 +11,7 @@
       <pluginProperties />
       <listenerConnectorProperties version="4.7.0">
         <host>0.0.0.0</host>
-        <port>8099</port>
+        <port>10819</port>
       </listenerConnectorProperties>
       <sourceConnectorProperties version="4.7.0">
         <responseVariable>d1</responseVariable>
