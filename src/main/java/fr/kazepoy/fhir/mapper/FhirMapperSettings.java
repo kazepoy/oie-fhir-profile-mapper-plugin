@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Supplier;
 
 import fr.kazepoy.fhir.mapper.util.FhirJson;
 
@@ -62,8 +64,17 @@ public final class FhirMapperSettings {
     }
 
     private static volatile Map<String, Context> contexts = Map.of();
+    private static volatile String loadedRaw = "";
+    private static volatile Supplier<String> externalSource;
+    private static volatile Runnable onReload;
 
     private FhirMapperSettings() {}
+
+    /** Registers the live OIE extension-property reader and a callback invoked when external updates are detected. */
+    public static synchronized void configureSource(Supplier<String> source, Runnable reloadListener) {
+        externalSource = source;
+        onReload = reloadListener;
+    }
 
     /** Reads and checks settings without installing them; throws IllegalArgumentException on an invalid form. */
     public static Map<String, Context> parse(String json) {
@@ -95,13 +106,42 @@ public final class FhirMapperSettings {
     }
 
     /** Installs the settings of the extension properties; invalid settings leave the current ones. */
-    public static void load(String json) {
+    public static synchronized void load(String json) {
         contexts = parse(json);
+        loadedRaw = json == null ? "" : json;
+    }
+
+    /** Refreshes contexts from the configured OIE extension source if another mechanism (e.g. configuration restore) updated it. */
+    private static Map<String, Context> current() {
+        Supplier<String> source = externalSource;
+        if (source != null) {
+            try {
+                String raw = source.get();
+                String normalized = raw == null ? "" : raw;
+                if (!Objects.equals(normalized, loadedRaw)) {
+                    Runnable listener = null;
+                    synchronized (FhirMapperSettings.class) {
+                        if (!Objects.equals(normalized, loadedRaw)) {
+                            try {
+                                contexts = parse(raw);
+                                listener = onReload;
+                            } finally {
+                                loadedRaw = normalized;
+                            }
+                        }
+                    }
+                    if (listener != null) listener.run();
+                }
+            } catch (RuntimeException ignored) {
+                // Keep the currently loaded contexts if the external source cannot be queried or parsed.
+            }
+        }
+        return contexts;
     }
 
     /** The settings as JSON, canonical. */
     public static String toJson() {
-        return toJson(contexts);
+        return toJson(current());
     }
 
     public static String toJson(Map<String, Context> all) {
@@ -116,7 +156,7 @@ public final class FhirMapperSettings {
     public static Context context(String name) {
         String key = name == null ? "" : name.trim();
         if (key.isEmpty()) return null;
-        Context context = contexts.get(key);
+        Context context = current().get(key);
         if (context == null) throw new IllegalArgumentException("FHIR context \"" + key + "\" is not defined on this server (Settings › FHIR Mapper).");
         return context;
     }

@@ -20,7 +20,7 @@ par le Profile Mapper ; voir [les réglages FML](../fml/sortie.md).
 
 ## Quand le changement prend-il effet ?
 
-1. **Save contexts** enregistre les réglages sur le serveur.
+1. **Save** (dans *FHIR Mapper Tasks*) enregistre les réglages sur le serveur.
 2. Rouvrir ou actualiser les étapes pour vérifier leur configuration affichée.
 3. Enregistrer les canaux si leurs propriétés ont été changées.
 4. **Redéployer** les canaux pour qu'ils utilisent les réglages au traitement.

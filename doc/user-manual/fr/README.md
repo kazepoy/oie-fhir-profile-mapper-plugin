@@ -45,7 +45,8 @@ cours. Revenir au canal, l'**enregistrer**, puis le **redéployer** pour modifie
 le traitement des nouveaux messages. Un test utilise les modifications en cours
 sans les déployer. Il ne constitue pas un enregistrement du canal.
 
-Les boutons **Save contexts** enregistrent les réglages du serveur séparément.
+Le bouton **Save** de *FHIR Mapper Tasks* enregistre les réglages du serveur
+séparément (ils sont également inclus dans le Backup/Restore Config natif OIE).
 Redéployer les canaux concernés après un changement de contexte.
 
 ## Périmètre du manuel

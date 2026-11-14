@@ -30,4 +30,4 @@ ne modifie pas les règles enregistrées.
 Ces captures proviennent de la démo locale ; le message et le profil sont des
 données de démonstration. Les autres pages du manuel conservent leurs captures
 en anglais : par exemple *Properties* correspond à *Propriétés*, *Mapper* à
-*Mappeur*, *Run* à *Exécuter* et *Save contexts* à *Enregistrer les contextes*.
+*Mappeur*, *Run* à *Exécuter* et *Save* à *Enregistrer*.

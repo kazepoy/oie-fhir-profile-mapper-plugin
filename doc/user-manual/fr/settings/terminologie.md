@@ -14,7 +14,7 @@ qui le sélectionne.
 | **Cache (seconds)** | Durée de réutilisation des réponses ; `0` désactive cette réutilisation. |
 | **Timeout (seconds)** | Délai d'attente du serveur, en secondes. |
 
-Enregistrer avec **Save contexts**, puis redéployer les canaux pour modifier les
+Enregistrer avec **Save** (panneau *FHIR Mapper Tasks*), puis redéployer les canaux pour modifier les
 traitements futurs. Tester une traduction dans l'éditeur avant de déployer :
 le code, son système et la ConceptMap doivent être cohérents.
 

@@ -12,9 +12,10 @@ répéter les emplacements et les réglages dans chaque étape.
 - [Régler la terminologie](terminologie.md)
 - [Choisir la validation et appliquer les changements](validation.md)
 
-Ouvrir **Settings**, puis l'onglet **FHIR Mapper**. **Save contexts** enregistre
-les contextes du plugin ; le bouton Save général de Settings n'est pas le bouton
-de cette procédure. Le droit `Manage FHIR mapper settings` est nécessaire pour
+Ouvrir **Settings**, puis l'onglet **FHIR Mapper**. L'action **Save** du panneau
+de tâches (*FHIR Mapper Tasks*) enregistre les contextes du plugin ; une pastille
+`●` signale les modifications non enregistrées et OIE propose de les sauver en
+quittant l'onglet. Le droit `Manage FHIR mapper settings` est nécessaire pour
 les modifier. **?** ouvre l'aide du panneau.
 
 Les étapes choisissent un contexte par son nom. Sans contexte, leurs propriétés

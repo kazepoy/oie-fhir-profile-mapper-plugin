@@ -170,6 +170,7 @@ var en_default = Object.fromEntries([
   "Extensions",
   "FHIR JSON in the channel map; use it from another destination.",
   "FHIR Mapper · {p0}",
+  "FHIR Mapper Tasks",
   "FHIR Mapper: the platform is not bound yet",
   "FHIR Version",
   "FHIR context",
@@ -319,6 +320,7 @@ var en_default = Object.fromEntries([
   "Records each rule: value, conversion, translation, condition, iteration. Include scalar values only when patient data may be shown.",
   "Redo",
   "Reference Name",
+  "Refresh",
   "Reload",
   "Remove these mappings",
   "Remove this entry and its mappings",
@@ -355,11 +357,10 @@ var en_default = Object.fromEntries([
   "Sample {count}",
   "Samples",
   "Samples saved with the step",
+  "Save",
   "Save as sample",
-  "Save contexts",
   "Save the sample with the step",
   "Saving needs the permission “Manage FHIR mapper settings”.",
-  "Saving…",
   "Scalar values included.",
   "Search",
   "Search elements",
@@ -734,6 +735,7 @@ var fr_default = {
   "Extensions": "Extensions",
   "FHIR JSON in the channel map; use it from another destination.": "JSON FHIR dans la Channel Map ; à utiliser depuis une destination suivante.",
   "FHIR Mapper · {p0}": "FHIR Mapper · {p0}",
+  "FHIR Mapper Tasks": "Tâches FHIR Mapper",
   "FHIR Mapper: the platform is not bound yet": "FHIR Mapper : la plateforme n’est pas encore liée",
   "FHIR Version": "Version FHIR",
   "FHIR context": "Contexte FHIR",
@@ -883,6 +885,7 @@ var fr_default = {
   "Records each rule: value, conversion, translation, condition, iteration. Include scalar values only when patient data may be shown.": "Observe chaque règle : valeur, conversion, traduction, condition, itération. Inclure les valeurs seulement si les données patient peuvent être affichées.",
   "Redo": "Rétablir",
   "Reference Name": "Nom de référence",
+  "Refresh": "Actualiser",
   "Reload": "Recharger",
   "Remove these mappings": "Retirer ces mappings",
   "Remove this entry and its mappings": "Retirer cette occurrence et ses mappings",
@@ -919,11 +922,10 @@ var fr_default = {
   "Sample {count}": "Exemple {count}",
   "Samples": "Exemples",
   "Samples saved with the step": "Exemples enregistrés avec l’étape",
+  "Save": "Enregistrer",
   "Save as sample": "Enregistrer comme exemple",
-  "Save contexts": "Enregistrer les contextes",
   "Save the sample with the step": "Enregistrer l’exemple avec l’étape",
   "Saving needs the permission “Manage FHIR mapper settings”.": "L’enregistrement nécessite la permission « Manage FHIR mapper settings ».",
-  "Saving…": "Enregistrement…",
   "Scalar values included.": "Valeurs scalaires incluses.",
   "Search": "Rechercher",
   "Search elements": "Rechercher des éléments",
@@ -1533,36 +1535,107 @@ var SETTINGS_HELP = {
 
 // src/settings/panel.js
 var emptyContext = () => ({ name: "", fhirVersion: "R4", packages: [], terminologyServer: "", terminologyAuthorization: "", cacheSeconds: 300, timeoutSeconds: 10, validation: "always" });
+var normalizeContexts = (list) => (list || []).map((c) => ({ ...emptyContext(), ...c }));
+var serializeContexts = (list) => JSON.stringify(list || []);
 function errorText(e) {
   const m = /<detailMessage>([\s\S]*?)<\/detailMessage>/.exec(e && e.body || "");
   return m ? m[1].replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&") : e && e.message || String(e);
 }
-function FhirSettingsPanel() {
-  const React3 = platform().React;
+function FhirSettingsPanel({ platform: host, setTasks, setSave, markDirty, markClean } = {}) {
+  const p = host || platform();
+  const React3 = p.React;
   const h3 = React3.createElement;
   const [contexts, setContexts] = React3.useState(null);
   const [error, setError] = React3.useState("");
+  const [loading, setLoading] = React3.useState(true);
   const [saving, setSaving] = React3.useState(false);
-  React3.useEffect(() => {
-    loadFhirSettings(true).then((s) => setContexts((s.contexts || []).map((c) => ({ ...emptyContext(), ...c }))), (e) => {
-      setContexts([]);
-      setError(errorText(e));
-    });
-  }, []);
-  if (!contexts) return h3("div", { className: "hint" }, t("Loading…"));
-  const update = (index, patch) => setContexts(contexts.map((c, i) => i === index ? { ...c, ...patch } : c));
-  const save = async () => {
-    setSaving(true);
+  const contextsRef = React3.useRef(null);
+  contextsRef.current = contexts;
+  const cleanRef = React3.useRef(null);
+  const busyRef = React3.useRef(false);
+  const mountedRef = React3.useRef(true);
+  const load = async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setLoading(true);
     setError("");
     try {
-      const saved = await saveFhirSettings({ contexts });
-      setContexts(saved.contexts.map((c) => ({ ...emptyContext(), ...c })));
-      toast(t("FHIR contexts saved. Redeploy the channels that use a changed context."), "info");
+      const s = await loadFhirSettings(true);
+      if (!mountedRef.current) return;
+      const next = normalizeContexts(s.contexts);
+      cleanRef.current = serializeContexts(next);
+      contextsRef.current = next;
+      setContexts(next);
+      markClean?.();
     } catch (e) {
-      setError(/Manage FHIR mapper settings|403/.test(errorText(e)) || e?.status === 403 ? t("Changing the FHIR contexts requires the permission “Manage FHIR mapper settings”.") : errorText(e));
+      if (!mountedRef.current) return;
+      if (!contextsRef.current) {
+        cleanRef.current = serializeContexts([]);
+        setContexts([]);
+      }
+      setError(errorText(e));
+    } finally {
+      busyRef.current = false;
+      if (mountedRef.current) setLoading(false);
     }
-    setSaving(false);
   };
+  const save = async () => {
+    if (!contextsRef.current || busyRef.current) return false;
+    busyRef.current = true;
+    setSaving(true);
+    setError("");
+    const submitted = serializeContexts(contextsRef.current);
+    try {
+      const saved = await saveFhirSettings({ contexts: contextsRef.current });
+      if (!mountedRef.current) return false;
+      const canonical2 = normalizeContexts(saved.contexts);
+      cleanRef.current = serializeContexts(canonical2);
+      toast(t("FHIR contexts saved. Redeploy the channels that use a changed context."), "info");
+      if (serializeContexts(contextsRef.current) !== submitted) {
+        markDirty?.();
+        return false;
+      }
+      contextsRef.current = canonical2;
+      setContexts(canonical2);
+      markClean?.();
+      return true;
+    } catch (e) {
+      if (!mountedRef.current) return false;
+      setError(/Manage FHIR mapper settings|403/.test(errorText(e)) || e?.status === 403 ? t("Changing the FHIR contexts requires the permission “Manage FHIR mapper settings”.") : errorText(e));
+      return false;
+    } finally {
+      busyRef.current = false;
+      if (mountedRef.current) setSaving(false);
+    }
+  };
+  const loadRef = React3.useRef(load);
+  loadRef.current = load;
+  const saveRef = React3.useRef(save);
+  saveRef.current = save;
+  React3.useEffect(() => {
+    mountedRef.current = true;
+    loadRef.current();
+    setSave?.(() => saveRef.current());
+    return () => {
+      mountedRef.current = false;
+      setSave?.(null);
+    };
+  }, []);
+  const ready = contexts !== null;
+  React3.useEffect(() => {
+    if (!setTasks || !p.ui?.taskButton) return;
+    setTasks(t("FHIR Mapper Tasks"), [
+      p.ui.taskButton(t("Refresh"), "refresh", () => loadRef.current(), { disabled: loading || saving }),
+      p.ui.taskButton(t("Save"), "save", () => saveRef.current(), { primary: true, disabled: loading || saving || !ready })
+    ]);
+  }, [loading, saving, ready]);
+  React3.useEffect(() => {
+    if (!contexts || cleanRef.current == null) return;
+    if (serializeContexts(contexts) === cleanRef.current) markClean?.();
+    else markDirty?.();
+  }, [contexts]);
+  if (!contexts) return h3("div", { className: "hint" }, t("Loading…"));
+  const update = (index, patch) => setContexts(contexts.map((c, i) => i === index ? { ...c, ...patch } : c));
   const field = (label, control, hint) => h3("div", { className: "field" }, h3("label", null, label), control, hint ? h3("div", { className: "hint" }, hint) : null);
   return h3(
     "div",
@@ -1620,8 +1693,7 @@ function FhirSettingsPanel() {
     h3(
       "div",
       { style: { display: "flex", gap: "8px" } },
-      h3("button", { type: "button", className: "btn", onClick: () => setContexts([...contexts, emptyContext()]) }, t("New context")),
-      h3("button", { type: "button", className: "btn btn-primary", disabled: saving, onClick: save }, saving ? t("Saving…") : t("Save contexts"))
+      h3("button", { type: "button", className: "btn", onClick: () => setContexts([...contexts, emptyContext()]) }, t("New context"))
     )
   );
 }

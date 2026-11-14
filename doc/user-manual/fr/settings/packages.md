@@ -31,7 +31,7 @@ processus OIE : un chemin valide sur votre ordinateur peut être absent du
 conteneur ou du serveur.
 
 1. Mettre les fichiers à disposition du serveur, avec ses droits de lecture.
-2. Ajouter leurs chemins dans le contexte et **Save contexts**.
+2. Ajouter leurs chemins dans le contexte et cliquer **Save** (*FHIR Mapper Tasks*).
 3. Revenir dans les étapes et charger les profils ou maps nécessaires.
 4. Tester, enregistrer et redéployer les canaux concernés.
 

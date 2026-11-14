@@ -3,17 +3,23 @@ package fr.kazepoy.fhir.mapper;
 
 import static org.junit.Assert.*;
 
+import java.util.Properties;
+
 import org.junit.After;
 import org.junit.Test;
 
 import com.mirth.connect.util.ScriptBuilderException;
+import fr.kazepoy.fhir.mapper.server.FhirProfileMapperPlugin;
 
 public class FhirMapperSettingsTest {
     private static final String SETTINGS = "{\"contexts\":[{\"name\":\"labo\",\"fhirVersion\":\"R4\",\"packages\":[\"/fhir-ig\",\"/pkg/a.tgz\"],"
             + "\"terminologyServer\":\"http://tx/fhir\",\"cacheSeconds\":60,\"validation\":\"off\"}]}";
 
     @After
-    public void reset() { FhirMapperSettings.load(null); }
+    public void reset() {
+        FhirMapperSettings.configureSource(null, null);
+        FhirMapperSettings.load(null);
+    }
 
     private static FhirProfileMapperStep step(String more) {
         return FhirProfileMapperStep.fromJson("{\"action\":\"resource\",\"resourceType\":\"Patient\",\"profiles\":\"/own\",\"terminologyServer\":\"\","
@@ -68,5 +74,32 @@ public class FhirMapperSettingsTest {
                 "{\"contexts\":[{\"name\":\"a\",\"fhirVersion\":\"R3\"}]}", "{\"contexts\":[{\"name\":\"a\",\"validation\":\"maybe\"}]}" }) {
             try { FhirMapperSettings.parse(bad); fail(bad); } catch (IllegalArgumentException expected) { /* refused */ }
         }
+    }
+
+    @Test
+    public void pluginUpdateReloadsExtensionPropertiesFromBackupRestore() {
+        Properties props = new Properties();
+        props.setProperty(FhirMapperSettings.PROPERTY, SETTINGS);
+        new FhirProfileMapperPlugin().update(props);
+        FhirMapperSettings.Context restored = FhirMapperSettings.context("labo");
+        assertNotNull(restored);
+        assertEquals("/fhir-ig;/pkg/a.tgz", restored.packages);
+        assertEquals("http://tx/fhir", restored.terminologyServer);
+        assertEquals("off", restored.validation);
+    }
+
+    @Test
+    public void externalSourceReloadsContextsWhenStoreChangesWithoutUpdate() {
+        String[] store = new String[] { "{\"contexts\":[]}" };
+        int[] clears = new int[] { 0 };
+        FhirMapperSettings.load(store[0]);
+        FhirMapperSettings.configureSource(() -> store[0], () -> clears[0]++);
+        assertEquals(0, clears[0]);
+        store[0] = SETTINGS;
+        assertEquals("/fhir-ig;/pkg/a.tgz", FhirMapperSettings.context("labo").packages);
+        assertEquals(1, clears[0]);
+        // Identical reads do not trigger unnecessary reloads or cache clears.
+        assertNotNull(FhirMapperSettings.context("labo"));
+        assertEquals(1, clears[0]);
     }
 }

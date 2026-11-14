@@ -145,4 +145,29 @@ describe("Profile Mapper API, diagnostics, trace bounds and saved samples", () =
 
     assert.ok(totalSamples >= 20, `Expected at least 20 saved samples across demo channels, checked ${totalSamples}`);
   });
+
+  test("OIE native server configuration backup and restore include live FHIR Profile Mapper settings", async () => {
+    const backup = await client.getText("/api/server/configuration");
+    assert.match(backup, /<string>FHIR Profile Mapper<\/string>\s*<properties>\s*<property name="settings">/);
+    assert.match(backup, /demo-labo/);
+    const before = await client.getJson("/api/extensions/fhir-profile-mapper/settings");
+    const modifiedJson = JSON.stringify({
+      contexts: [...before.contexts, { name: "restore-probe", fhirVersion: "R4", packages: [], terminologyServer: "", terminologyAuthorization: "", cacheSeconds: 300, timeoutSeconds: 10, validation: "always" }]
+    });
+    const escaped = modifiedJson.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const updatedXml = backup.replace(
+      /(<string>FHIR Profile Mapper<\/string>\s*<properties>\s*<property name="settings">)[\s\S]*?(<\/property>)/,
+      `$1${escaped}$2`
+    );
+    assert.notEqual(updatedXml, backup);
+    try {
+      await client.putXml("/api/server/configuration?deploy=false&overwriteConfigMap=true", updatedXml);
+      const afterRestore = await client.getJson("/api/extensions/fhir-profile-mapper/settings");
+      assert.ok(afterRestore.contexts.some(c => c.name === "restore-probe"), "restored context must be active immediately without restart");
+    } finally {
+      await client.putXml("/api/server/configuration?deploy=false&overwriteConfigMap=true", backup);
+      const reverted = await client.getJson("/api/extensions/fhir-profile-mapper/settings");
+      assert.ok(!reverted.contexts.some(c => c.name === "restore-probe"));
+    }
+  });
 });

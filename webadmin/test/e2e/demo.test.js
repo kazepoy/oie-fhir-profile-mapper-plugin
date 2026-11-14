@@ -3,7 +3,7 @@
 //   npm run test:e2e          (DEMO_URL and OIE_DEMO_PASSWORD override the defaults)
 import { after, before, describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { openStep, signIn } from "./session.js";
+import { DEMO_URL, openStep, signIn } from "./session.js";
 
 describe("the step editors in the demo", () => {
   let session;
@@ -270,6 +270,27 @@ describe("the step editors in the demo", () => {
     assert.deepEqual(urls, ["http://example.org/fhir/oru2fhir/ConceptMap/v2-0001-to-gender"]);
     await inspector.getByLabel(/All ConceptMaps/).check();
     assert.ok(await inspector.locator("datalist option").count() > 1);
+  });
+
+  test("Settings FHIR Mapper uses Web Admin Tasks Save/Refresh and dirty-change prompts", async () => {
+    const { page } = session;
+    page.once("dialog", dialog => dialog.accept().catch(() => {}));
+    await page.goto(DEMO_URL);
+    await page.locator("[data-nav-item]").filter({ hasText: /^Settings$/ }).first().click();
+    await page.getByRole("tab", { name: "FHIR Mapper", exact: true }).click();
+    const saveBtn = page.getByRole("button", { name: "Save", exact: true });
+    const refreshBtn = page.getByRole("button", { name: "Refresh", exact: true });
+    await saveBtn.waitFor();
+    await refreshBtn.waitFor();
+    assert.equal(await page.locator(".fhir-mapper-settings button", { hasText: "Save" }).count(), 0);
+    await page.locator(".fhir-mapper-settings").getByRole("button", { name: "New context", exact: true }).click();
+    await page.getByRole("tab", { name: /FHIR Mapper ●/ }).waitFor();
+    await page.getByRole("tab", { name: "Server", exact: true }).click();
+    const modal = page.getByRole("dialog", { name: "Unsaved Changes", exact: true });
+    await modal.waitFor();
+    await modal.getByRole("button", { name: "Cancel", exact: true }).click();
+    await refreshBtn.click();
+    await page.getByRole("tab", { name: "FHIR Mapper", exact: true }).waitFor();
   });
 
   test("no plugin error was logged", () => {

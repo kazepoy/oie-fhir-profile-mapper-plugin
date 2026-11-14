@@ -15,6 +15,8 @@ import org.apache.logging.log4j.Logger;
 import com.mirth.connect.model.ExtensionPermission;
 import com.mirth.connect.plugins.ServicePlugin;
 import com.mirth.connect.model.converters.ObjectXMLSerializer;
+import com.mirth.connect.server.controllers.ControllerFactory;
+import fr.kazepoy.fhir.fml.FmlFacade;
 import fr.kazepoy.fhir.mapper.FhirMapperSettings;
 import fr.kazepoy.fhir.mapper.FhirProfileMapperStep;
 import fr.kazepoy.fhir.mapper.FhirProfileServletInterface;
@@ -33,11 +35,35 @@ public final class FhirProfileMapperPlugin implements ServicePlugin {
     public void init(Properties properties) {
         // Allow only our serialized step, without opening an entire package namespace.
         ObjectXMLSerializer.getInstance().allowTypes(List.of(FhirProfileMapperStep.class.getName()), List.of(), List.of());
+        FhirMapperSettings.configureSource(FhirProfileMapperPlugin::readStoredSettings, FhirProfileMapperPlugin::clearAllCaches);
         loadSettings(properties);
     }
 
     @Override
-    public void update(Properties properties) { loadSettings(properties); }
+    public void update(Properties properties) {
+        loadSettings(properties);
+        clearAllCaches();
+    }
+
+    /** Reads the latest plugin settings from OIE's extension store (updated e.g. by server configuration restore). */
+    private static String readStoredSettings() {
+        try {
+            Properties stored = ControllerFactory.getFactory().createExtensionController()
+                    .getPluginProperties(FhirProfileServletInterface.PLUGIN_NAME);
+            return stored == null ? null : stored.getProperty(FhirMapperSettings.PROPERTY);
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not read FHIR Profile Mapper extension properties", e);
+        }
+    }
+
+    private static void clearAllCaches() {
+        try {
+            FhirFacade.clearCaches();
+            FmlFacade.clearCaches();
+        } catch (Exception e) {
+            logger.warn("FHIR Profile Mapper: could not clear caches after settings update", e);
+        }
+    }
 
     /** The FHIR contexts of the extension properties; invalid ones are logged and the current ones kept. */
     private static void loadSettings(Properties properties) {
@@ -88,6 +114,7 @@ public final class FhirProfileMapperPlugin implements ServicePlugin {
 
     @Override
     public void stop() {
+        FhirMapperSettings.configureSource(null, null);
         FhirFacade.stopValidatorRelease();
         logger.info("FHIR Profile Mapper stopped.");
     }

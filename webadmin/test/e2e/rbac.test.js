@@ -57,7 +57,7 @@ test("a temporary restricted role can edit its channel but cannot test or save s
     await page.getByText("FHIR Mapper", { exact: true }).click();
     const settings = page.locator(".fhir-mapper-settings");
     const settingsDenied = page.waitForResponse(response => response.url().endsWith("/fhir-profile-mapper/settings") && response.request().method() === "POST");
-    await settings.getByRole("button", { name: "Enregistrer les contextes", exact: true }).click();
+    await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
     assert.equal((await settingsDenied).status(), 403);
     await settings.getByRole("alert").waitFor();
     assert.match(await settings.getByRole("alert").innerText(), /permission « Manage FHIR mapper settings »/);

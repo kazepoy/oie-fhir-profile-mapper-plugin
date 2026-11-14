@@ -6,7 +6,7 @@
 2. Cliquer **New context**.
 3. Donner un **Name** stable, par exemple `labo-exemple`.
 4. Choisir la **FHIR version** et renseigner ses packages et options.
-5. Cliquer **Save contexts**.
+5. Cliquer **Save** dans *FHIR Mapper Tasks*.
 6. Choisir ce nom dans **FHIR context** sur les étapes concernées, puis enregistrer
    et redéployer leurs canaux.
 
@@ -18,7 +18,7 @@ serveur. Les étapes référencent ce nom : renommer un contexte demande de mett
 silencieusement une autre configuration.
 
 **Delete** retire le contexte de la liste d'édition. La suppression devient
-persistante avec **Save contexts**. Vérifier les étapes qui l'utilisent avant de
+persistante avec **Save** (*FHIR Mapper Tasks*). Vérifier les étapes qui l'utilisent avant de
 l'enregistrer ; leurs canaux devront être adaptés et redéployés.
 
 Le contexte de la capture est un exemple de saisie non enregistré. Les contextes

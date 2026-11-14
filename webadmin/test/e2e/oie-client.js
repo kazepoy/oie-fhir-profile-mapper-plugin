@@ -98,6 +98,22 @@ export async function createOieClient() {
     return response.json();
   };
 
+  const getText = async (path, accept = "application/xml") => {
+    const response = await admin.get(path, { headers: { ...API_HEADERS, Accept: accept } });
+    assert.equal(response.status(), 200, `GET ${path} -> ${response.status()}: ${await response.text()}`);
+    return response.text();
+  };
+
+  const putXml = async (path, xml) => {
+    const response = await admin.put(path, {
+      headers: { ...API_HEADERS, "Content-Type": "application/xml", Accept: "application/xml" },
+      data: xml,
+      timeout: 60000
+    });
+    assert.ok(response.status() >= 200 && response.status() < 300, `PUT ${path} -> ${response.status()}: ${await response.text()}`);
+    return response.status();
+  };
+
   const postTest = async (endpoint, payload) => {
     const response = await admin.post(endpoint, {
       headers: { ...API_HEADERS, "Content-Type": "text/plain; charset=utf-8" },
@@ -145,6 +161,8 @@ export async function createOieClient() {
 
   return {
     getJson,
+    getText,
+    putXml,
     postTest,
     postChannel,
     latestMessageId,

@@ -2,43 +2,124 @@
 import { t as tr } from "../i18n/index.js";
 // Settings › FHIR Mapper: the FHIR contexts of the server. A context names a set of
 // profile packages, a terminology server and a validation policy; the FHIR steps
-// that name it share them. Laid out with Web Admin's own panel classes.
+// that name it share them. Participates in Web Admin's Settings task pane and dirty tracking.
 import { platform, toast } from "../host/platform.js";
 import { loadFhirSettings, saveFhirSettings } from "../host/settings.js";
 import { HelpButton } from "../host/help.js";
 import { SETTINGS_HELP } from "../host/help-texts.js";
 
 const emptyContext = () => ({ name: "", fhirVersion: "R4", packages: [], terminologyServer: "", terminologyAuthorization: "", cacheSeconds: 300, timeoutSeconds: 10, validation: "always" });
+const normalizeContexts = list => (list || []).map(c => ({ ...emptyContext(), ...c }));
+const serializeContexts = list => JSON.stringify(list || []);
 
 function errorText(e) {
   const m = /<detailMessage>([\s\S]*?)<\/detailMessage>/.exec((e && e.body) || "");
   return m ? m[1].replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&") : (e && e.message) || String(e);
 }
 
-export function FhirSettingsPanel() {
-  const React = platform().React;
+export function FhirSettingsPanel({ platform: host, setTasks, setSave, markDirty, markClean } = {}) {
+  const p = host || platform();
+  const React = p.React;
   const h = React.createElement;
   const [contexts, setContexts] = React.useState(null);
   const [error, setError] = React.useState("");
+  const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
-  React.useEffect(() => {
-    loadFhirSettings(true).then(s => setContexts((s.contexts || []).map(c => ({ ...emptyContext(), ...c }))), e => { setContexts([]); setError(errorText(e)); });
-  }, []);
-  if (!contexts) return h("div", { className: "hint" }, tr("Loading…"));
-  const update = (index, patch) => setContexts(contexts.map((c, i) => (i === index ? { ...c, ...patch } : c)));
-  const save = async () => {
-    setSaving(true);
+  const contextsRef = React.useRef(null);
+  contextsRef.current = contexts;
+  const cleanRef = React.useRef(null);
+  const busyRef = React.useRef(false);
+  const mountedRef = React.useRef(true);
+
+  const load = async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setLoading(true);
     setError("");
     try {
-      const saved = await saveFhirSettings({ contexts });
-      setContexts(saved.contexts.map(c => ({ ...emptyContext(), ...c })));
-      toast(tr("FHIR contexts saved. Redeploy the channels that use a changed context."), "info");
+      const s = await loadFhirSettings(true);
+      if (!mountedRef.current) return;
+      const next = normalizeContexts(s.contexts);
+      cleanRef.current = serializeContexts(next);
+      contextsRef.current = next;
+      setContexts(next);
+      markClean?.();
     } catch (e) {
+      if (!mountedRef.current) return;
+      if (!contextsRef.current) {
+        cleanRef.current = serializeContexts([]);
+        setContexts([]);
+      }
+      setError(errorText(e));
+    } finally {
+      busyRef.current = false;
+      if (mountedRef.current) setLoading(false);
+    }
+  };
+
+  const save = async () => {
+    if (!contextsRef.current || busyRef.current) return false;
+    busyRef.current = true;
+    setSaving(true);
+    setError("");
+    const submitted = serializeContexts(contextsRef.current);
+    try {
+      const saved = await saveFhirSettings({ contexts: contextsRef.current });
+      if (!mountedRef.current) return false;
+      const canonical = normalizeContexts(saved.contexts);
+      cleanRef.current = serializeContexts(canonical);
+      toast(tr("FHIR contexts saved. Redeploy the channels that use a changed context."), "info");
+      if (serializeContexts(contextsRef.current) !== submitted) {
+        markDirty?.();
+        return false;
+      }
+      contextsRef.current = canonical;
+      setContexts(canonical);
+      markClean?.();
+      return true;
+    } catch (e) {
+      if (!mountedRef.current) return false;
       setError(/Manage FHIR mapper settings|403/.test(errorText(e)) || e?.status === 403
         ? tr("Changing the FHIR contexts requires the permission “Manage FHIR mapper settings”.") : errorText(e));
+      return false;
+    } finally {
+      busyRef.current = false;
+      if (mountedRef.current) setSaving(false);
     }
-    setSaving(false);
   };
+
+  const loadRef = React.useRef(load);
+  loadRef.current = load;
+  const saveRef = React.useRef(save);
+  saveRef.current = save;
+
+  React.useEffect(() => {
+    mountedRef.current = true;
+    loadRef.current();
+    setSave?.(() => saveRef.current());
+    return () => {
+      mountedRef.current = false;
+      setSave?.(null);
+    };
+  }, []);
+
+  const ready = contexts !== null;
+  React.useEffect(() => {
+    if (!setTasks || !p.ui?.taskButton) return;
+    setTasks(tr("FHIR Mapper Tasks"), [
+      p.ui.taskButton(tr("Refresh"), "refresh", () => loadRef.current(), { disabled: loading || saving }),
+      p.ui.taskButton(tr("Save"), "save", () => saveRef.current(), { primary: true, disabled: loading || saving || !ready })
+    ]);
+  }, [loading, saving, ready]);
+
+  React.useEffect(() => {
+    if (!contexts || cleanRef.current == null) return;
+    if (serializeContexts(contexts) === cleanRef.current) markClean?.();
+    else markDirty?.();
+  }, [contexts]);
+
+  if (!contexts) return h("div", { className: "hint" }, tr("Loading…"));
+  const update = (index, patch) => setContexts(contexts.map((c, i) => (i === index ? { ...c, ...patch } : c)));
   const field = (label, control, hint) => h("div", { className: "field" }, h("label", null, label), control, hint ? h("div", { className: "hint" }, hint) : null);
   return h("div", { className: "fhir-mapper-settings" },
     h("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: "6px" } }, h(HelpButton, SETTINGS_HELP)),
@@ -63,6 +144,5 @@ export function FhirSettingsPanel() {
           h("option", { value: "always" }, tr("always")), h("option", { value: "off" }, tr("off"))), tr("For the steps whose validation is “as the context says”."))))),
     error ? h("div", { className: "hint", role: "alert", style: { color: "var(--err, #b91c1c)", marginBottom: "8px" } }, error) : null,
     h("div", { style: { display: "flex", gap: "8px" } },
-      h("button", { type: "button", className: "btn", onClick: () => setContexts([...contexts, emptyContext()]) }, tr("New context")),
-      h("button", { type: "button", className: "btn btn-primary", disabled: saving, onClick: save }, saving ? tr("Saving…") : tr("Save contexts"))));
+      h("button", { type: "button", className: "btn", onClick: () => setContexts([...contexts, emptyContext()]) }, tr("New context"))));
 }

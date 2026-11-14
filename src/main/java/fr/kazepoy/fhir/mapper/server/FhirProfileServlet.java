@@ -16,6 +16,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 
 import com.mirth.connect.client.core.ClientException;
+import fr.kazepoy.fhir.fml.FmlFacade;
 import fr.kazepoy.fhir.mapper.FhirProfileServletInterface;
 import fr.kazepoy.fhir.mapper.FhirMapperSettings;
 import fr.kazepoy.fhir.mapper.FhirProfileMapperStep;
@@ -55,6 +56,7 @@ public class FhirProfileServlet extends MirthServlet implements FhirProfileServl
             ControllerFactory.getFactory().createExtensionController().setPluginProperties(PLUGIN_NAME, properties);
             FhirMapperSettings.load(canonical);
             FhirFacade.clearCaches();
+            FmlFacade.clearCaches();
             return canonical;
         } catch (Exception e) {
             throw new ClientException(e.getMessage(), e);

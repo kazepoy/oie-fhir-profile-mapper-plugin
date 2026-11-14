@@ -47,7 +47,7 @@ for (const colorScheme of ["light", "dark"]) test(`French editors and settings i
     await page.goto(DEMO_URL);
     await page.locator("[data-nav-item]").filter({ hasText: /^Settings$/ }).first().click();
     await page.getByText("FHIR Mapper", { exact: true }).click();
-    await page.locator(".fhir-mapper-settings").getByRole("button", { name: "Enregistrer les contextes", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Enregistrer", exact: true }).waitFor();
     assert.equal(await page.getByLabel("Nom du contexte", { exact: true }).first().inputValue(), "demo-labo");
     assert.deepEqual(session.pluginErrors(), []);
   } finally { await session.close(); }
@@ -77,7 +77,7 @@ test("simulated permission denials are explicit in preview and settings", async 
     await page.goto(DEMO_URL);
     await page.locator("[data-nav-item]").filter({ hasText: /^Settings$/ }).first().click();
     await page.getByText("FHIR Mapper", { exact: true }).click();
-    await page.locator(".fhir-mapper-settings").getByRole("button", { name: "Enregistrer les contextes", exact: true }).click();
+    await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
     await page.locator(".fhir-mapper-settings").getByRole("alert").waitFor();
     assert.match(await page.locator(".fhir-mapper-settings").getByRole("alert").innerText(), /permission « Manage FHIR mapper settings »/);
   } finally { await session.close(); }
