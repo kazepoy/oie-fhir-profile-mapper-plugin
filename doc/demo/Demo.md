@@ -7,7 +7,7 @@ Environnement de démonstration du plugin de mapping :
 - FHIR Data Type **1.5.1**, dans sa version officielle ;
 - [Role Based Access Control](https://github.com/diridium-com/role-based-access-control) **1.3.0**
   (diridium-com), qui remplace l'autorisation « tout permis » d'OIE par des rôles ;
-- [OIE Flow UI](https://github.com/kazepoy/oie-flow-ui-plugin) **0.8.1**, pour suivre
+- [OIE Flow UI](https://github.com/kazepoy/oie-flow-ui-plugin) **0.8.4**, pour suivre
   les messages dans les canaux (Flows Monitoring, Channel Flow) ;
 - FHIR Profile Mapper **0.1.0-SNAPSHOT**, compilé depuis les sources du projet, avec
   ses deux étapes : FHIR Profile Mapper et [FHIR FML Transform](../reference/Transformation-FML.md).

@@ -30,11 +30,11 @@ RUN curl --fail --silent --show-error --location --max-time 300 \
       --output /tmp/rbac.zip \
     && echo 'f540cc77ebfadda88147f07fce412caff41abf30ad302ddca61f0b3f422d0cfd  /tmp/rbac.zip' | sha256sum -c -
 
-# OIE Flow UI 0.8.1 (kazepoy) : Flows Monitoring et Channel Flow dans l'administration web.
+# OIE Flow UI 0.8.4 (kazepoy) : Flows Monitoring et Channel Flow dans l'administration web.
 RUN curl --fail --silent --show-error --location --max-time 300 \
-      https://github.com/kazepoy/oie-flow-ui-plugin/releases/download/v0.8.1/flow-ui-0.8.1.zip \
+      https://github.com/kazepoy/oie-flow-ui-plugin/releases/download/v0.8.4/flow-ui-0.8.4.zip \
       --output /tmp/flow-ui.zip \
-    && echo 'c51b410e25405cefbcf5937256c8236e40af99b25174e647e2f9e1ad7f43b198  /tmp/flow-ui.zip' | sha256sum -c -
+    && echo '91512cca81619c631182cfc3515bce773a5ded34c9c3df21fb53d9763f8e1d89  /tmp/flow-ui.zip' | sha256sum -c -
 
 # Profils publics de la démo, versions permanentes publiées par HL7 France et HL7 Europe.
 RUN curl --fail --silent --show-error --location --max-time 300 \
