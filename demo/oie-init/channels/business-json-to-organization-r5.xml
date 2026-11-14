@@ -2,7 +2,7 @@
   <id>89c98d20-f9c1-4ae4-a7eb-4133f8708090</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>Business JSON to Organization R5</name>
-  <description>Business JSON to FHIR R5 Organization using the R5-specific markdown description field. POST application/json to /organization-r5/, port 8090. Nominal and invalid examples in demo/examples/. Validation enabled.</description>
+  <description>Business JSON to FHIR R5 Organization using the R5-specific markdown description field. POST application/json to /organization-r5/, port 8090. Nominal and invalid examples in examples/json/. Validation enabled.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>

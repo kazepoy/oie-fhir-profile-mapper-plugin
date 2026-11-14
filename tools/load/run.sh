@@ -39,7 +39,7 @@ trap 'kill $STATS 2>/dev/null || true' EXIT INT TERM
 echo "Tableau de bord en direct : http://localhost:5665"
 status=0
 docker run --rm --network "$NETWORK" -p 127.0.0.1:5665:5665 \
-  -v "$LOAD:/load:ro" -v "$ROOT/demo/examples:/examples:ro" -v "$OUT:/reports" \
+  -v "$LOAD:/load:ro" -v "$ROOT/examples:/examples:ro" -v "$OUT:/reports" \
   -e PROFIL="$PROFIL" -e COMMIT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo inconnu)" \
   -e OIE_HOST -e CHAUFFAGE_S -e MESURE_S -e CLIENTS -e P95_MS -e ERREURS_MAX -e DEBIT -e DUREE \
   -e K6_WEB_DASHBOARD=true -e K6_WEB_DASHBOARD_EXPORT=/reports/rapport.html \

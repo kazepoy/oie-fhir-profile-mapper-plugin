@@ -217,7 +217,7 @@ public class FmlBridgeTest {
                 + "</delimited>";
         JsonNode r5Bundle = JSON.readTree(bridge.transform(
                 "http://example.org/fhir/r5/StructureMap/CsvToPermissionR5", delimitedXml, "xml", Map.of(), Map.of(), r5Opts));
-        JsonNode expectedBundle = JSON.readTree(Files.readString(Path.of("demo/examples/expected/permission-r5-bundle.json")));
+        JsonNode expectedBundle = JSON.readTree(Files.readString(Path.of("examples/csv/permissions-r5-expected.json")));
         assertEquals(expectedBundle, r5Bundle);
         assertTrue(fr.kazepoy.fhir.mapper.integration.FhirDataTypeAdapter.validate(
                 r5Bundle.toString(), "", "", "R5").isValid());
@@ -228,7 +228,7 @@ public class FmlBridgeTest {
         JsonNode igPatient = JSON.readTree(bridge.transform(
                 "http://example.org/fhir/oru2fhir/StructureMap/OruR01ToPatientIG",
                 oru, "xml", Map.of(), Map.of(), igProps.engineOptions()));
-        JsonNode expectedPatient = JSON.readTree(Files.readString(Path.of("demo/examples/expected/fml-inline-patient.json")));
+        JsonNode expectedPatient = JSON.readTree(Files.readString(Path.of("examples/hl7v2/oru-r01-minimal-expected.json")));
         assertEquals(expectedPatient, igPatient);
     }
 }

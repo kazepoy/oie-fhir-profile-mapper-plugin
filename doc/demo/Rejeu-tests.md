@@ -58,6 +58,6 @@ Code de sortie : **0** si tous les contrôles réussissent, **1** en cas d’éc
 La sortie récapitule les fichiers réussis ; un fichier en échec peut avoir
 exécuté des samples avant son premier échec.
 
-`python3 demo/examples/check.py` utilise ce rejeu sur les exports de démonstration
+`python3 examples/check.py` utilise ce rejeu sur les exports de démonstration
 et vérifie aussi les sorties des canaux déployés (ce dernier script crée des
 messages de démonstration). Voir [Demo.md](Demo.md).

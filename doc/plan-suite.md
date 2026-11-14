@@ -102,7 +102,7 @@ avec `fr.kazepoy.fhir.*`, les résultats de la démo et les contrôles suivants 
 ```sh
 mvn clean package
 python3 -m unittest discover -s tools/tests
-python3 demo/examples/check.py
+python3 examples/check.py
 cd webadmin && npm run test:e2e
 ```
 

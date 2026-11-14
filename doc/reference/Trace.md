@@ -29,8 +29,8 @@ Sur `/api/extensions/fhir-profile-mapper/test`, ajouter au corps JSON existant :
 ```
 
 Le corps reste envoyé en `text/plain` avec l'authentification OIE. Voir la
-[requête complète](../../demo/examples/trace-preview.json) et
-[demo.http](../../demo/examples/demo.http). Les options doivent être des booléens
+[requête complète](../../examples/api/trace-preview.json) et
+[demo.http](../../examples/demo.http). Les options doivent être des booléens
 et un entier JSON ; une configuration invalide est signalée dans `errors`.
 Un `trace` absent, null ou avec `enabled: false` ne produit pas de champ `trace`
 dans la réponse.
@@ -149,7 +149,7 @@ jusqu'à l'échec. Aucun stockage propre au plugin n'est ajouté.
   variable `fhirMapperTrace` de portée *Connector*.
 - API OIE : `GET /api/channels/{channelId}/messages/{messageId}`, puis
   `connectorMessages/…/connectorMapContent`. Voir `connector_trace()` dans
-  [check.py](../../demo/examples/check.py).
+  [check.py](../../examples/check.py).
 
 Le mode de stockage des messages du channel doit conserver les maps : c'est le
 cas du mode *Development* utilisé par la démo ; vérifier ce point pour un autre
@@ -205,7 +205,7 @@ résultat identique avec et sans trace, corrélation (channel, révision, messag
 finalisation et publication, étapes non tracées, consentement aux valeurs par
 étape, trace partielle sur erreur et troncature.
 
-Le [script de rejeu](../../demo/examples/check.py) vérifie ces propriétés sur l'API
+Le [script de rejeu](../../examples/check.py) vérifie ces propriétés sur l'API
 OIE, avec l'exemple complet et la troncature à trois événements, puis la trace
 du dernier message ORU du channel de démo, dont les étapes Patient et Observation
 sont tracées. Les tests Node vérifient les libellés, les indices et la

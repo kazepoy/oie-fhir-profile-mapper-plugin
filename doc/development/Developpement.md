@@ -103,7 +103,7 @@ parcours sont explicitement définis, indépendamment du poste de développement
 
 Le [guide de rejeu](../demo/Rejeu-tests.md) décrit `tools/run_tests.py`, la validation
 hors ligne et les essais sur serveur. La CI de release contrôle les exports
-positifs hors ligne ; `demo/examples/check.py` compare les aperçus aux sorties
+positifs hors ligne ; `examples/check.py` compare les aperçus aux sorties
 déployées et rejoue les samples de la démo en ligne.
 
 ## Contrôler la documentation

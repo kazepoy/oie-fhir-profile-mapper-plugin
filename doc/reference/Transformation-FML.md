@@ -270,7 +270,7 @@ Le channel **ORU R01 to FHIR Bundle (FML typed)** (port 8087, `/bundle/`)
 active le Strict Parser et exécute `ORUR01toBundle`. La map importe
 `PIDtoPatient` et produit un Bundle transaction contenant Patient et Observation.
 Le modèle logique et les deux maps représentatives sont montés dans
-`/fhir-volume/fml-typed`. [check.py](../../demo/examples/check.py) vérifie la sortie avec la
+`/fhir-volume/fml-typed`. [check.py](../../examples/check.py) vérifie la sortie avec la
 validation FHIR active.
 
 Le channel **ORU R01 to FHIR Patient (FML inline)** (port 8089) porte la même map

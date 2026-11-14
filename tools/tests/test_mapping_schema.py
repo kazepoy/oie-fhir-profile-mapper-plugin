@@ -50,7 +50,7 @@ class MappingSchemaTest(unittest.TestCase):
                     self.assertTrue(list(errors({"action": "resource", "resourceType": "Patient", field: value})))
 
     def test_demo_matrix_covers_exports_and_their_test_material(self):
-        examples = ROOT / "demo/examples"
+        examples = ROOT / "examples"
         channels = ROOT / "demo/oie-init/channels"
         cases = json.loads((examples / "channels.json").read_text())["channels"]
         names = [case["channel"] for case in cases]
@@ -99,7 +99,7 @@ class MappingSchemaTest(unittest.TestCase):
         self.assertEqual([], list(errors(step)))
 
     def test_native_groups_and_tags_match_the_demo_manifest(self):
-        manifest = json.loads((ROOT / "demo/examples/channels.json").read_text())
+        manifest = json.loads((ROOT / "examples/channels.json").read_text())
         exports = {case["channel"]: ET.parse(ROOT / "demo/oie-init/channels" / case["channel"]).getroot()
                    for case in manifest["channels"]}
         ports = [root.findtext("sourceConnector/properties/listenerConnectorProperties/port") for root in exports.values()]

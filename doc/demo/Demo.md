@@ -108,12 +108,12 @@ Compose `fhir-profile-mapper-demo`.
 ## Rejouer les exemples
 
 Les requêtes prêtes à exécuter sont dans
-[demo.http](../../demo/examples/demo.http). Le contrôle complet nécessite Python 3 et les dépendances des outils,
+[demo.http](../../examples/demo.http). Le contrôle complet nécessite Python 3 et les dépendances des outils,
 depuis la racine du projet :
 
 ```sh
 python3 -m pip install -r tools/requirements.txt
-python3 demo/examples/check.py
+python3 examples/check.py
 ```
 
 Ce script crée des messages dans les canaux de démo. Il vérifie les réponses
@@ -170,7 +170,7 @@ Il vérifie aussi la traduction locale GLU vers LOINC et le refus de l'ORU sans
 date de naissance : réponse HTTP vide, message OIE en `ERROR` mentionnant
 `birthDate`. Ce dernier message d'erreur est donc attendu après le contrôle.
 
-Le fichier [diagnostic-error.json](../../demo/examples/diagnostic-error.json) provoque
+Le fichier [diagnostic-error.json](../../examples/api/diagnostic-error.json) provoque
 volontairement une conversion booléenne impossible dans l'API de test. Le script
 vérifie que le diagnostic désigne `Patient.active`, la règle `0`, la phase
 `conversion` et l'expression `'invalide'`, avec la validation FHIR désactivée.
@@ -178,13 +178,13 @@ Ce test d'API ne crée pas de message de channel. La même erreur peut être ess
 dans l'éditeur en saisissant `'invalide'` comme expression de `Patient.active` :
 le bouton **Go to rule** ramène au champ concerné.
 
-Le fichier [typeerror-error.json](../../demo/examples/typeerror-error.json) utilise
+Le fichier [typeerror-error.json](../../examples/api/typeerror-error.json) utilise
 `msg.optional.gender` avec une source vide. Il doit renvoyer un diagnostic
 `TypeError` de phase `value`, avec et sans validation FHIR. Le contrôle remplace
 ensuite l'expression par `msg.optional && msg.optional.gender` et vérifie les
 deux cas : donnée facultative absente (élément omis) ou présente (élément mappé).
 
-[trace-preview.json](../../demo/examples/trace-preview.json) produit un aperçu
+[trace-preview.json](../../examples/api/trace-preview.json) produit un aperçu
 avec une condition ignorée, un élément absent, une date convertie et une
 constante appliquée. Le contrôle compare les résultats avec/sans trace, vérifie
 la capture explicite des valeurs et la troncature à trois événements.

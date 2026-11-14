@@ -147,9 +147,9 @@ def check_message_trace():
 
 def check_transformer_preview(export_name, filename, expected, expected_document=None):
     # Use the same exported mapper steps as the deployed source transformer.
-    sys.path.insert(0, str(EXAMPLES.parents[1]))
+    sys.path.insert(0, str(EXAMPLES.parent))
     from tools.run_tests import groups, normalize
-    path = EXAMPLES.parents[1] / "demo/oie-init/channels" / export_name
+    path = EXAMPLES.parent / "demo/oie-init/channels" / export_name
     steps = groups(path)["0/transformer"]
     request = {"steps": steps, "dataType": "HL7V2", "message": (EXAMPLES / filename).read_text()}
     result = json.loads(api("/extensions/fhir-profile-mapper/test", "application/json", json.dumps(request).encode()))
@@ -168,7 +168,7 @@ def check_fml_previews():
         if "preview" not in case:
             continue
         preview = case["preview"]
-        export = EXAMPLES.parents[1] / "demo/oie-init/channels" / case["channel"]
+        export = EXAMPLES.parent / "demo/oie-init/channels" / case["channel"]
         node = ET.parse(export).getroot().find(
             "sourceConnector/transformer/elements/fr.kazepoy.fhir.fml.FhirFmlTransformStep")
         step = {child.tag: child.text or "" for child in node}
@@ -195,7 +195,7 @@ def check_additional_channels():
         output = post(deployed["portEnv"], deployed["port"], deployed["route"], case["input"], content_type)
         expected = (EXAMPLES / deployed["expected"]).read_text()
         assert normalize(output.decode()) == normalize(expected), case["channel"]
-        export = ET.parse(EXAMPLES.parents[1] / "demo/oie-init/channels" / case["channel"]).getroot()
+        export = ET.parse(EXAMPLES.parent / "demo/oie-init/channels" / case["channel"]).getroot()
         channel_id = export.findtext("id")
         history = f"/channels/{channel_id}/messages?limit=1&includeContent=true"
         nominal = ET.fromstring(api(history)).find("message")
@@ -224,20 +224,20 @@ def check_additional_channels():
         print(f"OK {case['channel']} : sortie attendue, exemple invalide refusé en aperçu et sur le canal")
 
     # Terminologie externe : cas non mappé sur le mock HTTP 8099 (repli fixed)
-    unmatched = json.loads(post("EXTERNAL_TX_OBS_PORT", 8096, "obs-external-tx", "observation-tx-unmatched.json", "application/json"))
-    expected_unmatched = json.loads((EXAMPLES / "expected/observation-tx-unmatched.json").read_text())
+    unmatched = json.loads(post("EXTERNAL_TX_OBS_PORT", 8096, "obs-external-tx", "json/observation-tx-unmatched.json", "application/json"))
+    expected_unmatched = json.loads((EXAMPLES / "json/observation-tx-unmatched-expected.json").read_text())
     assert unmatched == expected_unmatched, unmatched
     print("OK terminologie externe : code inconnu -> repli fixed sur data-absent-reason#unknown")
 
 
 def check_fml_vs_mapper_compare(expected_patient):
     cases = [
-        ("6a2b9104-4d15-4a2b-8f30-809700000001", "COMPARE_PATIENT_PORT", 8097, "patient-compare", "oru-r01-minimal.er7", "text/plain", expected_patient, "ORU"),
-        ("6a2b9104-4d15-4a2b-8f30-809800000001", "COMPARE_STRICT_PORT", 8098, "patient-strict-compare", "oru-r01-minimal.er7", "text/plain", expected_patient, "ORU Strict"),
-        ("6a2b9104-4d15-4a2b-8f30-810000000001", "COMPARE_CSV_PORT", 8100, "csv-compare", "patient-metier.csv", "text/csv", json.loads((EXAMPLES / "expected/patient-csv.json").read_text()), "CSV"),
-        ("6a2b9104-4d15-4a2b-8f30-810100000001", "COMPARE_XML_PORT", 8101, "xml-compare", "patient-result-sql.xml", "application/xml", json.loads((EXAMPLES / "expected/patient-sql-xml.json").read_text()), "XML"),
-        ("6a2b9104-4d15-4a2b-8f30-810200000001", "COMPARE_JSON_PORT", 8102, "json-compare", "patient-metier-fr-core.json", "application/json", json.loads((EXAMPLES / "expected/patient-fr-core.json").read_text()), "JSON"),
-        ("6a2b9104-4d15-4a2b-8f30-810300000001", "COMPARE_FHIR_PORT", 8103, "fhir-compare", "patient-fhir-source.json", "application/json", json.loads((EXAMPLES / "expected/patient-fhir-summary.json").read_text()), "FHIR"),
+        ("6a2b9104-4d15-4a2b-8f30-809700000001", "COMPARE_PATIENT_PORT", 8097, "patient-compare", "hl7v2/oru-r01-minimal.er7", "text/plain", expected_patient, "ORU"),
+        ("6a2b9104-4d15-4a2b-8f30-809800000001", "COMPARE_STRICT_PORT", 8098, "patient-strict-compare", "hl7v2/oru-r01-minimal.er7", "text/plain", expected_patient, "ORU Strict"),
+        ("6a2b9104-4d15-4a2b-8f30-810000000001", "COMPARE_CSV_PORT", 8100, "csv-compare", "csv/patient-metier.csv", "text/csv", json.loads((EXAMPLES / "csv/patient-metier-expected.json").read_text()), "CSV"),
+        ("6a2b9104-4d15-4a2b-8f30-810100000001", "COMPARE_XML_PORT", 8101, "xml-compare", "xml/patient-result-sql.xml", "application/xml", json.loads((EXAMPLES / "xml/patient-result-sql-expected.json").read_text()), "XML"),
+        ("6a2b9104-4d15-4a2b-8f30-810200000001", "COMPARE_JSON_PORT", 8102, "json-compare", "json/patient-metier-fr-core.json", "application/json", json.loads((EXAMPLES / "json/patient-metier-fr-core-expected.json").read_text()), "JSON"),
+        ("6a2b9104-4d15-4a2b-8f30-810300000001", "COMPARE_FHIR_PORT", 8103, "fhir-compare", "json/patient-fhir-source.json", "application/json", json.loads((EXAMPLES / "json/patient-fhir-source-expected.json").read_text()), "FHIR"),
     ]
     for channel_id, port_env, port, route, input_file, content_type, expected, label in cases:
         channel_xml = ET.fromstring(api(f"/channels/{channel_id}"))
@@ -271,7 +271,7 @@ def check_channel_organization():
         for case in manifest["channels"]:
             if case["group"] != definition["key"]:
                 continue
-            export = ET.parse(EXAMPLES.parents[1] / "demo/oie-init/channels" / case["channel"]).getroot()
+            export = ET.parse(EXAMPLES.parent / "demo/oie-init/channels" / case["channel"]).getroot()
             channel_id = export.findtext("id")
             assert channel_id in members, case["channel"]
             assigned = {t.findtext("name") for t in tags if channel_id in {s.text for s in t.findall("channelIds/string")}}
@@ -281,23 +281,23 @@ def check_channel_organization():
 
 def main():
     check_channel_organization()
-    for filename, count in [("oru-r01-labo.er7", 12), ("oru-r01-minimal.er7", 4)]:
+    for filename, count in [("hl7v2/oru-r01-labo.er7", 12), ("hl7v2/oru-r01-minimal.er7", 4)]:
         value = json.loads(post("ORU_PORT", 8081, "oru", filename, "text/plain"))
         bundle(value, "transaction", count)
     print("OK ORU → transactions de 12 et 4 ressources, références résolues")
-    check_transformer_preview("oru-r01-to-fhir-bundle.xml", "oru-r01-minimal.er7", value)
+    check_transformer_preview("oru-r01-to-fhir-bundle.xml", "hl7v2/oru-r01-minimal.er7", value)
     check_message_trace()
 
-    patient = json.loads(post("PATIENT_PORT", 8082, "patient", "oru-r01-minimal.er7", "text/plain"))
+    patient = json.loads(post("PATIENT_PORT", 8082, "patient", "hl7v2/oru-r01-minimal.er7", "text/plain"))
     assert patient["resourceType"] == "Patient" and patient["birthDate"] == "1980-02-15"
     print("OK ORU → Patient")
 
     # Le même message lu avec le Strict Parser HL7 v2 : même Patient, chemins HAPI dans le mapping.
-    strict = json.loads(post("STRICT_PATIENT_PORT", 8088, "patient", "oru-r01-minimal.er7", "text/plain"))
+    strict = json.loads(post("STRICT_PATIENT_PORT", 8088, "patient", "hl7v2/oru-r01-minimal.er7", "text/plain"))
     assert strict == patient, strict
     print("OK ORU → Patient par le Strict Parser, identique au parser par défaut")
     # Strict Parser → modèle logique typé → maps ORUR01toBundle et PIDtoPatient importée.
-    fml = json.loads(post("FML_TYPED_PORT", 8087, "bundle", "oru-r01-minimal.er7", "text/plain"))
+    fml = json.loads(post("FML_TYPED_PORT", 8087, "bundle", "hl7v2/oru-r01-minimal.er7", "text/plain"))
     assert fml["resourceType"] == "Bundle" and fml["type"] == "transaction", fml
     assert [entry["resource"]["resourceType"] for entry in fml["entry"]] == ["Patient", "Observation"], fml
     assert fml["entry"][0]["resource"]["identifier"][0]["value"] == "100001", fml
@@ -305,13 +305,13 @@ def main():
     assert fml["entry"][1]["resource"]["valueString"] == "5.10", fml
     print("OK ORU Strict Parser → Bundle par FML typé (PIDtoPatient importée)")
     # La même map écrite dans l'étape (mapSource), sans fichier de map sur le serveur.
-    inline = json.loads(post("FML_INLINE_PORT", 8089, "patient", "oru-r01-minimal.er7", "text/plain"))
+    inline = json.loads(post("FML_INLINE_PORT", 8089, "patient", "hl7v2/oru-r01-minimal.er7", "text/plain"))
     assert inline == patient, inline
     print("OK ORU → Patient par la map FML écrite dans l'étape, identique")
     check_fml_vs_mapper_compare(patient)
     check_fml_previews()
 
-    transaction = json.loads(post("LAB_BUNDLES_PORT", 8083, "labo", "oru-r01-labo.er7", "text/plain"))
+    transaction = json.loads(post("LAB_BUNDLES_PORT", 8083, "labo", "hl7v2/oru-r01-labo.er7", "text/plain"))
     message = messages("labo")[0]
     assert encoded(message, 1) == transaction
     document = encoded(message, 2)
@@ -325,17 +325,17 @@ def main():
     assert encoded(message, 3) == document
     assert "archive-pca/labo-document-" in archive.findtext("response/content")
     print("OK deux Bundles : transaction 12, document 14, mêmes ressources et identités ; document archivé")
-    check_transformer_preview("oru-r01-to-two-lab-bundles.xml", "oru-r01-labo.er7", transaction, document)
+    check_transformer_preview("oru-r01-to-two-lab-bundles.xml", "hl7v2/oru-r01-labo.er7", transaction, document)
 
-    patient = json.loads(post("SQL_PATIENT_PORT", 8084, "sql-patient", "patient-result-sql.xml", "application/xml"))
+    patient = json.loads(post("SQL_PATIENT_PORT", 8084, "sql-patient", "xml/patient-result-sql.xml", "application/xml"))
     assert patient["id"] == "metier-1042" and patient["identifier"][0]["value"] == "000123456"
     assert patient["name"][0]["given"] == ["Élodie"] and patient["birthDate"] == "1985-04-12"
     print("OK XML SQL → Patient, accents et zéros initiaux conservés")
 
-    with (EXAMPLES / "patients-metier-10.csv").open(encoding="utf-8", newline="") as source:
+    with (EXAMPLES / "csv/patients-metier-10.csv").open(encoding="utf-8", newline="") as source:
         rows = list(csv.DictReader(source, delimiter=";"))
     before = last_id("csv")
-    patient = json.loads(post("CSV_PATIENTS_PORT", 8085, "csv-patients", "patients-metier-10.csv", "text/csv"))
+    patient = json.loads(post("CSV_PATIENTS_PORT", 8085, "csv-patients", "csv/patients-metier-10.csv", "text/csv"))
     check_patient(patient, rows[-1])
     batch = [m for m in messages("csv", 10) if int(m.findtext("messageId")) > before]
     assert len(batch) == 10
@@ -344,14 +344,14 @@ def main():
         check_patient(patients["metier-" + row["id_patient"]], row)
     print("OK CSV → dix messages Patient, nettoyage et conversion de chaque ligne")
 
-    collection = json.loads(post("CSV_COLLECTION_PORT", 8086, "csv-patients-collection", "patients-metier-10.csv", "text/csv"))
+    collection = json.loads(post("CSV_COLLECTION_PORT", 8086, "csv-patients-collection", "csv/patients-metier-10.csv", "text/csv"))
     bundle(collection, "collection", 10)
     for entry, row in zip(collection["entry"], rows):
         check_patient(entry["resource"], row)
     print("OK CSV → une collection de dix Patients")
 
     before = last_id("oru")
-    assert not post("ORU_PORT", 8081, "oru", "oru-r01-sans-date-de-naissance.er7", "text/plain")
+    assert not post("ORU_PORT", 8081, "oru", "hl7v2/oru-r01-sans-date-de-naissance.er7", "text/plain")
     message = messages("oru")[0]
     assert int(message.findtext("messageId")) > before
     errors = [c for c in message.findall(".//connectorMessage") if c.findtext("status") == "ERROR"]
@@ -368,7 +368,7 @@ def main():
     print("OK façade : traduction ConceptMap locale GLU → LOINC 14749-6")
 
     result = json.loads(api("/extensions/fhir-profile-mapper/test", "application/json",
-                            (EXAMPLES / "diagnostic-error.json").read_bytes()))
+                            (EXAMPLES / "api/diagnostic-error.json").read_bytes()))
     assert result["output"] is None and result["validationPerformed"] is False
     assert len(result["errors"]) == 1
     error = result["errors"][0]
@@ -377,7 +377,7 @@ def main():
     assert error["path"] == [["active"]] and error["expression"] == "'invalide'"
     print("OK diagnostic : Patient.active, règle 0, conversion, expression 'invalide'")
 
-    request = json.loads((EXAMPLES / "typeerror-error.json").read_text(encoding="utf-8"))
+    request = json.loads((EXAMPLES / "api/typeerror-error.json").read_text(encoding="utf-8"))
     for validation in (False, True):
         request["step"]["validateOutput"] = validation
         result = json.loads(api("/extensions/fhir-profile-mapper/test", "application/json",
@@ -399,7 +399,7 @@ def main():
         assert json.loads(result["output"]).get("gender") == message.get("optional", {}).get("gender")
     print("OK TypeError signalée ; garde explicite vérifiée avec et sans donnée facultative")
 
-    request = json.loads((EXAMPLES / "trace-preview.json").read_text(encoding="utf-8"))
+    request = json.loads((EXAMPLES / "api/trace-preview.json").read_text(encoding="utf-8"))
     result = json.loads(api("/extensions/fhir-profile-mapper/test", "application/json",
                             json.dumps(request).encode("utf-8")))
     assert not result["errors"]
@@ -424,7 +424,7 @@ def main():
     print(f"OK trace : {len(trace['events'])} événements, valeurs sur demande, limite vérifiée, même résultat")
     from tools.run_tests import replay
     total = sum(replay(path, lambda request: json.loads(api("/extensions/fhir-profile-mapper/test", "application/json", json.dumps(request).encode())))
-                for path in sorted((EXAMPLES.parents[1] / "demo/oie-init/channels").glob("*.xml")))
+                for path in sorted((EXAMPLES.parent / "demo/oie-init/channels").glob("*.xml")))
     assert total > 0
     print(f"OK outil de rejeu : {total} samples des exports de démonstration")
     check_additional_channels()

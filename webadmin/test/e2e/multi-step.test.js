@@ -15,7 +15,7 @@ test("a transformer preview assembles two Bundles and exposes every step and pub
     await page.evaluate(message => {
       const editor = window.monaco.editor.getEditors().find(editor => editor.getDomNode()?.closest(".fm-code-box[data-language=hl7v2]"));
       editor.setValue(message);
-    }, await readFile("../demo/examples/oru-r01-labo.er7", "utf8"));
+    }, await readFile("../examples/hl7v2/oru-r01-labo.er7", "utf8"));
     await mapper.getByLabel("Preview scope", { exact: true }).selectOption("transformer");
     const response = page.waitForResponse(response => response.url().endsWith("/fhir-profile-mapper/test"));
     await mapper.getByRole("button", { name: "Run", exact: true }).click();

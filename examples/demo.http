@@ -25,50 +25,50 @@
 POST {{organizationR5}}
 Content-Type: application/json; charset=UTF-8
 
-< ./organisation-metier.json
+< ./json/organisation-metier.json
 
 ### Erreur attendue : Organization.active n'est pas un booléen
 POST {{organizationR5}}
 Content-Type: application/json; charset=UTF-8
 
-< ./organisation-metier-invalide.json
+< ./json/organisation-metier-invalide.json
 
 ### JSON métier → Patient FR Core 2.2.0, IPP et lieu de naissance
 POST {{frCorePatient}}
 Content-Type: application/json; charset=UTF-8
 
-< ./patient-metier-fr-core.json
+< ./json/patient-metier-fr-core.json
 
 ### Erreur attendue : official est exclu pour l'usage de l'identifiant PI
 POST {{frCorePatient}}
 Content-Type: application/json; charset=UTF-8
 
-< ./patient-metier-fr-core-invalide.json
+< ./json/patient-metier-fr-core-invalide.json
 
 ### Patient FHIR → projection FML, active:false conservé et telecom omis
 POST {{fhirSummary}}
 Content-Type: application/json; charset=UTF-8
 
-< ./patient-fhir-source.json
+< ./json/patient-fhir-source.json
 
 ### Erreur attendue : gender inconnu n'est pas un code FHIR autorisé
 POST {{fhirSummary}}
 Content-Type: application/json; charset=UTF-8
 
-< ./patient-fhir-source-invalide.json
+< ./json/patient-fhir-source-invalide.json
 
 ### 1. L'exemple complet : la réponse est le Bundle transaction (12 entrées)
 # charset=UTF-8 : sans lui, l'écouteur HTTP lit le message en ISO-8859-1 et abîme les accents.
 POST {{oru}}
 Content-Type: text/plain; charset=UTF-8
 
-< ./oru-r01-labo.er7
+< ./hl7v2/oru-r01-labo.er7
 
 ### 2. Un seul résultat, sans séjour ni prélèvement (4 entrées)
 POST {{oru}}
 Content-Type: text/plain; charset=UTF-8
 
-< ./oru-r01-minimal.er7
+< ./hl7v2/oru-r01-minimal.er7
 
 ### Diagnostic structuré : conversion booléenne impossible, validation FHIR désactivée
 POST {{oie}}/extensions/fhir-profile-mapper/test
@@ -77,7 +77,7 @@ X-Requested-With: OpenAPI
 Accept: application/json
 Content-Type: text/plain; charset=UTF-8
 
-< ./diagnostic-error.json
+< ./api/diagnostic-error.json
 
 ### Une donnée facultative absente exige une garde explicite dans l'expression
 # msg.optional.gender lève une TypeError ; msg.optional && msg.optional.gender omet l'élément.
@@ -87,7 +87,7 @@ X-Requested-With: OpenAPI
 Accept: application/json
 Content-Type: text/plain; charset=UTF-8
 
-< ./typeerror-error.json
+< ./api/typeerror-error.json
 
 ### Trace de l'aperçu : condition ignorée, valeur absente, conversion et constante
 POST {{oie}}/extensions/fhir-profile-mapper/test
@@ -96,38 +96,38 @@ X-Requested-With: OpenAPI
 Accept: application/json
 Content-Type: text/plain; charset=UTF-8
 
-< ./trace-preview.json
+< ./api/trace-preview.json
 
 ### Une ligne SQL XML de la table métier patient vers ExampleLabPatient
 POST {{sqlPatient}}
 Content-Type: application/xml; charset=UTF-8
 
-< ./patient-result-sql.xml
+< ./xml/patient-result-sql.xml
 
 ### CSV de 10 patients : nettoyage source, mapping FHIR en destination
 # Un message par ligne dans le dashboard ; la réponse HTTP contient le dernier Patient.
 POST {{csvPatients}}
 Content-Type: text/csv; charset=UTF-8
 
-< ./patients-metier-10.csv
+< ./csv/patients-metier-10.csv
 
 ### Le même CSV complet vers une collection de dix Patients (un seul message OIE)
 POST {{csvCollection}}
 Content-Type: text/csv; charset=UTF-8
 
-< ./patients-metier-10.csv
+< ./csv/patients-metier-10.csv
 
 ### Deux Bundles labo : transaction en réponse ; document dans bundleDocument et la seconde destination
 POST {{labo}}
 Content-Type: text/plain; charset=UTF-8
 
-< ./oru-r01-labo.er7
+< ./hl7v2/oru-r01-labo.er7
 
 ### 3. Sans date de naissance : refusé par le profil Patient, réponse vide (message en ERROR)
 POST {{oru}}
 Content-Type: text/plain; charset=UTF-8
 
-< ./oru-r01-sans-date-de-naissance.er7
+< ./hl7v2/oru-r01-sans-date-de-naissance.er7
 
 ### 4. Les derniers messages du canal, avec leur statut et l'erreur éventuelle
 GET {{oie}}/channels/{{channel}}/messages?limit=3&includeContent=true
@@ -159,24 +159,24 @@ X-Requested-With: OpenAPI
 POST {{patient}}
 Content-Type: text/plain; charset=UTF-8
 
-< ./oru-r01-minimal.er7
+< ./hl7v2/oru-r01-minimal.er7
 
 ### 9 bis. Le même Patient, ORU lu avec le Strict Parser HL7 v2 (XML HAPI, groupes et composants typés)
 POST {{strictPatient}}
 Content-Type: text/plain; charset=UTF-8
 
-< ./oru-r01-minimal.er7
+< ./hl7v2/oru-r01-minimal.er7
 ### 9 bis. Bundle Patient + Observation par les maps FML typées ORUR01toBundle et PIDtoPatient
 POST {{fmlTypedBundle}}
 Content-Type: text/plain; charset=UTF-8
 
-< ./oru-r01-minimal.er7
+< ./hl7v2/oru-r01-minimal.er7
 
 ### 9 bis (suite). Le même Patient par la map écrite dans l'étape (mapSource), sans fichier de map
 POST {{fmlInlinePatient}}
 Content-Type: text/plain; charset=UTF-8
 
-< ./oru-r01-minimal.er7
+< ./hl7v2/oru-r01-minimal.er7
 
 ### 9 ter. Le modèle logique OIE (OieMessage) que la map reçoit pour ce message
 POST {{oie}}/extensions/fhir-fml/source

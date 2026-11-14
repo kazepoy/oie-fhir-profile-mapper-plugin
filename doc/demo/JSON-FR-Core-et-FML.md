@@ -15,32 +15,32 @@ données fictives, des attendus versionnés et un contre-exemple chacun.
 | HTTP Terminology Mock ($translate) | HTTP - Mock | `8099/fhir/` | Mock léger `ConceptMap/$translate` hébergé dans OIE |
 
 Les requêtes nominales et invalides figurent dans
-[`demo.http`](../../demo/examples/demo.http). Chaque POST utilise
+[`demo.http`](../../examples/demo.http). Chaque POST utilise
 `Content-Type: application/json; charset=UTF-8`.
 
 ## Organization R5
 
-L'[entrée métier](../../demo/examples/organisation-metier.json) produit
-l'[Organization attendue](../../demo/examples/expected/organisation-r5.json).
+L'[entrée métier](../../examples/json/organisation-metier.json) produit
+l'[Organization attendue](../../examples/json/organisation-metier-expected.json).
 La version R5 est configurée sur l'étape et les datatypes FHIR du canal. Le
 champ `description` est de type `markdown`, [ajouté en R5](https://hl7.org/fhir/R5/organization.html).
 
 Ouvrir l'étape **Organization**, puis **Test → Run all** pour rejouer le sample
-enregistré avec comparaison. L'[entrée invalide](../../demo/examples/organisation-metier-invalide.json)
+enregistré avec comparaison. L'[entrée invalide](../../examples/json/organisation-metier-invalide.json)
 fournit `active: "invalide"` : la conversion doit échouer sur
 `Organization.active`, avant la validation FHIR.
 
 ## Patient FR Core
 
-L'[entrée métier](../../demo/examples/patient-metier-fr-core.json) produit le
-[Patient attendu](../../demo/examples/expected/patient-fr-core.json), qui
+L'[entrée métier](../../examples/json/patient-metier-fr-core.json) produit le
+[Patient attendu](../../examples/json/patient-metier-fr-core-expected.json), qui
 déclare le [profil publié FR Core Patient 2.2.0](https://hl7.fr/ig/fhir/core/2.2.0/StructureDefinition-fr-core-patient.html).
 Le nom officiel, l'identifiant interne et l'extension `patient-birthPlace`
 suivent les contraintes du profil. L'IPP fictif conserve ses zéros initiaux ;
 aucun identifiant national de santé n'est utilisé.
 
 Le sample nominal est enregistré dans l'étape **Patient**. Le
-[contre-exemple](../../demo/examples/patient-metier-fr-core-invalide.json) ne
+[contre-exemple](../../examples/json/patient-metier-fr-core-invalide.json) ne
 change que `usage_ipp`, de `usual` à `official`. Cet usage est exclu du ValueSet
 FR Core de la slice PI. La validation doit signaler une erreur sur
 `Patient.identifier[0].use`, aussi bien en aperçu que dans le canal déployé.
@@ -78,19 +78,19 @@ canaux de démo. Cette opération remplace les personnalisations locales.
 
 ## FHIR Patient to Summary (FML)
 
-La [source](../../demo/examples/patient-fhir-source.json) est déjà un Patient
+La [source](../../examples/json/patient-fhir-source.json) est déjà un Patient
 FHIR R4. Le datatype FHIR valide l'entrée puis la présente en JSON au
 transformeur. La map [`PatientSummary.fml`](../../demo/fhir-volume/fml/PatientSummary.fml)
 utilise `sourceModel: fhir` : elle lit directement `Patient`, sans enveloppe
 `OieMessage`.
 
-Le [résumé attendu](../../demo/examples/expected/patient-fhir-summary.json)
+Le [résumé attendu](../../examples/json/patient-fhir-source-expected.json)
 conserve explicitement l'id, les identifiants, le nom, le sexe, la naissance et
 `active: false`. `telecom` et les autres propriétés sont omis par cette
 projection ; ce canal ne constitue pas une anonymisation.
 
 Dans l'étape **Patient Summary**, l'onglet **Test** est préchargé avec la
-source JSON. Le [contre-exemple](../../demo/examples/patient-fhir-source-invalide.json)
+source JSON. Le [contre-exemple](../../examples/json/patient-fhir-source-invalide.json)
 fournit un sexe `inconnu`, hors du ValueSet FHIR : l'aperçu signale l'erreur de
 validation et le datatype entrant du canal déployé refuse le message.
 
@@ -98,14 +98,14 @@ validation et le datatype entrant du canal déployé refuse le message.
 
 Les cinq canaux suivants complètent la matrice sans modification du contrat plugin :
 
-- **Business JSON to Obs EU Lab (`8093`)** : Observation conforme à `hl7.fhir.eu.laboratory#2.0.0` (contexte `eu-laboratory-2.0.0` avec dépendances directes `eu.base`, `eu.extensions.r4`, `uv.xver-r5.r4`, `terminology.r4` et `uv.extensions.r4`), avec [entrée nominale](../../demo/examples/observation-eu-lab.json) et [contre-exemple](../../demo/examples/observation-eu-lab-invalide.json) sur `status`.
-- **CSV to Permission R5 (FML) (`8094`)** : CSV vers `Bundle` R5 (`Organization` + `Permission`) avec [`PermissionR5.fml`](../../demo/fhir-volume/fml/PermissionR5.fml) en contexte `demo-r5`, [CSV nominal](../../demo/examples/permissions-r5.csv) et [CSV invalide](../../demo/examples/permissions-r5-invalide.csv).
+- **Business JSON to Obs EU Lab (`8093`)** : Observation conforme à `hl7.fhir.eu.laboratory#2.0.0` (contexte `eu-laboratory-2.0.0` avec dépendances directes `eu.base`, `eu.extensions.r4`, `uv.xver-r5.r4`, `terminology.r4` et `uv.extensions.r4`), avec [entrée nominale](../../examples/json/observation-eu-lab.json) et [contre-exemple](../../examples/json/observation-eu-lab-invalide.json) sur `status`.
+- **CSV to Permission R5 (FML) (`8094`)** : CSV vers `Bundle` R5 (`Organization` + `Permission`) avec [`PermissionR5.fml`](../../demo/fhir-volume/fml/PermissionR5.fml) en contexte `demo-r5`, [CSV nominal](../../examples/csv/permissions-r5.csv) et [CSV invalide](../../examples/csv/permissions-r5-invalide.csv).
 - **ORU R01 to FHIR Patient (FML IG) (`8095`)** : résolution d'une `StructureMap` publiée dans `/fhir-volume/ig` via `mapUrl` ([`StructureMap-OruR01ToPatientIG.json`](../../demo/fhir-volume/ig/StructureMap-OruR01ToPatientIG.json)).
-- **Business JSON to Obs (External TX) (`8096`) & HTTP Terminology Mock (`8099`)** : mock OIE léger exposant `ConceptMap/$translate` (`GLU` → LOINC `14749-6`, inconnu → `result=false` avec repli `data-absent-reason#unknown`, `UNAVAILABLE` → HTTP `503` sur [observation indisponible](../../demo/examples/observation-tx-unavailable.json)).
+- **Business JSON to Obs (External TX) (`8096`) & HTTP Terminology Mock (`8099`)** : mock OIE léger exposant `ConceptMap/$translate` (`GLU` → LOINC `14749-6`, inconnu → `result=false` avec repli `data-absent-reason#unknown`, `UNAVAILABLE` → HTTP `503` sur [observation indisponible](../../examples/json/observation-tx-unavailable.json)).
 
 ## Contrôles automatisés
 
-`python3 demo/examples/check.py` compare les réponses HTTP aux attendus, rejoue
+`python3 examples/check.py` compare les réponses HTTP aux attendus, rejoue
 les aperçus et vérifie que chaque contre-exemple produit un nouveau message
 OIE en erreur avec le diagnostic attendu. Les quatorze samples positifs Profile
 Mapper restent rejouables avec `tools/run_tests.py` ; les cinq aperçus FML sont

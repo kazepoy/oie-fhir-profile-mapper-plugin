@@ -5,7 +5,7 @@ socle compte désormais vingt-trois canaux répartis en neuf groupes natifs `<So
 **HL7v2 - Mapper**, **HL7v2 - FML**, **FML versus Mapper**, **JSON - Mapper**, **CSV - Mapper**, **CSV - FML**,
 **XML - Mapper**, **FHIR - FML** et **HTTP - Mock**.
 
-Le [manifeste](../../demo/examples/channels.json) associe chaque export à un
+Le [manifeste](../../examples/channels.json) associe chaque export à un
 groupe, des tags et un fichier d'entrée.
 Les tags fonctionnels colorés (sans tags d'IG ni de profil) sont portés par `exportData/channelTags` dans chaque
 export et suivent partout le même ordre canonique (`version`, `source`, `transformeur`, puis capacités triées alphabétiquement) : ils sont visibles et filtrables dans OIE, et conservés à l'export.
@@ -56,7 +56,7 @@ normalisant les UUID, tout en conservant leurs relations de référence.
 
 L'aperçu HL7 v2 utilise le sérialiseur standard du serveur, pas les propriétés
 du connecteur. Pour les étapes Strict Parser, tester avec **Data type = XML** et
-le [XML typé du message minimal](../../demo/examples/oru-r01-minimal-strict.xml).
+le [XML typé du message minimal](../../examples/hl7v2/oru-r01-minimal-strict.xml).
 Ce fichier provient du Strict Parser OIE, avec suppression du namespace comme
 dans les canaux. Il contient notamment `<OBX.5>5.10</OBX.5>` : ce champ primitif
 n'a pas d'enfant `Varies.1`.
@@ -64,7 +64,7 @@ n'a pas d'enfant `Varies.1`.
 Le Profile Mapper strict enregistre déjà ce sample XML. Pour FML typé,
 sélectionner XML et copier ce fichier dans **Sample message**. FML n'enregistre
 pas encore de jeux d'essai dans l'étape : le manifeste associe l'entrée XML à
-son [Bundle attendu](../../demo/examples/expected/fml-typed-bundle.json), et
+son [Bundle attendu](../../examples/hl7v2/oru-r01-minimal-strict-expected.json), et
 `check.py` les rejoue via `/extensions/fhir-fml/test`.
 
 Le Bundle FML typé est un exemple d'imports et de modèle logique, pas une
@@ -78,7 +78,7 @@ découpage batch. Le rejeu HTTP du CSV reste donc nécessaire.
 
 ## Diagnostics disponibles
 
-`python3 demo/examples/check.py` vérifie aussi :
+`python3 examples/check.py` vérifie aussi :
 
 - naissance obligatoire absente : message déployé en erreur avec `birthDate` ;
 - conversion booléenne impossible : diagnostic avec chemin, règle et expression ;
@@ -106,7 +106,7 @@ Depuis la racine, démo à jour et démarrée :
 ```sh
 python3 -m unittest discover -s tools/tests
 python3 tools/run_tests.py --offline demo/oie-init/channels
-python3 demo/examples/check.py
+python3 examples/check.py
 ```
 
 Le premier contrôle impose une entrée de manifeste par export, l'ordre

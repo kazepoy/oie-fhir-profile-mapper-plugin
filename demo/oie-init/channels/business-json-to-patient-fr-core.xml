@@ -2,7 +2,7 @@
   <id>4eb632c8-a774-4fea-aefa-838b56818091</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>Business JSON to Patient FR Core</name>
-  <description>Business JSON to the FR Core Patient 2.2.0 profile, PI identifier and birth place extension. POST application/json to /patient-fr-core/, port 8091. Nominal and invalid examples in demo/examples/. Validation enabled.</description>
+  <description>Business JSON to the FR Core Patient 2.2.0 profile, PI identifier and birth place extension. POST application/json to /patient-fr-core/, port 8091. Nominal and invalid examples in examples/json/. Validation enabled.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>

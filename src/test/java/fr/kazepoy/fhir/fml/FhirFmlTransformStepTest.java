@@ -134,7 +134,7 @@ public class FhirFmlTransformStepTest {
 
     @Test
     public void theDemoSummaryProjectsAFhirPatientAndKeepsFalseValues() throws Exception {
-        Path examples = Path.of("demo/examples");
+        Path examples = Path.of("examples/json");
         String demo = Path.of("demo", "fhir-volume").toAbsolutePath().toString();
         Map<String, Object> step = Map.of("name", "Résumé Patient", "mapUrl",
                 "http://example.org/fhir/oru2fhir/StructureMap/PatientSummary", "profiles", demo + "/ig;" + demo + "/fml",
@@ -144,7 +144,7 @@ public class FhirFmlTransformStepTest {
         Map<?, ?> answer = (Map<?, ?>) FhirJson.parse(FmlTester.test(request, (type, message) -> message));
         assertEquals(List.of(), answer.get("errors"));
         assertEquals(true, answer.get("validationPerformed"));
-        assertEquals(FhirJson.parse(Files.readString(examples.resolve("expected/patient-fhir-summary.json"))),
+        assertEquals(FhirJson.parse(Files.readString(examples.resolve("patient-fhir-source-expected.json"))),
                 FhirJson.parse(answer.get("output").toString()));
         assertFalse(((List<?>) answer.get("issues")).stream()
                 .anyMatch(i -> List.of("error", "fatal").contains(((Map<?, ?>) i).get("severity"))));

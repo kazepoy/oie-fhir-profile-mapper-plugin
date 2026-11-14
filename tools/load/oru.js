@@ -15,7 +15,7 @@ const HOTE = __ENV.OIE_HOST || 'oie-app';
 const CHAUFFAGE_S = Number(__ENV.CHAUFFAGE_S || 15);
 const MESURE_S = Number(__ENV.MESURE_S || 60);
 const CLIENTS = Number(__ENV.CLIENTS || 1);
-const MESSAGE = open('/examples/oru-r01-labo.er7');
+const MESSAGE = open('/examples/hl7v2/oru-r01-labo.er7');
 
 const VARIANTES = [
   { nom: 'validation+trace', port: 8091, validation: 'oui', trace: 'oui', datatype: 'oui' },
