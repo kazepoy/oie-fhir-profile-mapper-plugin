@@ -231,25 +231,33 @@ def check_additional_channels():
 
 
 def check_fml_vs_mapper_compare(expected_patient):
-    channel_id = "6a2b9104-4d15-4a2b-8f30-809700000001"
-    channel_xml = ET.fromstring(api(f"/channels/{channel_id}"))
-    wait_flags = [c.findtext("waitForPrevious") for c in channel_xml.findall("destinationConnectors/connector")]
-    assert wait_flags == ["false", "false"], wait_flags
-    response = json.loads(post("COMPARE_PATIENT_PORT", 8097, "patient-compare", "oru-r01-minimal.er7", "text/plain"))
-    assert response == expected_patient, response
-    latest = ET.fromstring(api(f"/channels/{channel_id}/messages?limit=1&includeContent=true")).find("message")
-    out1 = encoded(latest, 1)
-    out2 = encoded(latest, 2)
-    assert out1 == expected_patient and out2 == expected_patient and out1 == out2, (out1, out2)
-    source = next(c for c in latest.findall(".//connectorMessage") if c.findtext("metaDataId") == "0")
-    meta = {}
-    for entry in source.findall("metaDataMap/entry"):
-        children = list(entry)
-        if len(children) >= 2:
-            meta[children[0].text] = children[1].text
-    assert float(meta["FML_MS"]) > 0 and float(meta["MAPPER_MS"]) > 0, meta
-    assert meta["OUTPUTS_EQUAL"] == "true" and meta["ERROR_STEP"] == "OK", meta
-    print(f"OK ORU FML vs Mapper (8097) : sorties identiques, FML_MS={meta['FML_MS']}, MAPPER_MS={meta['MAPPER_MS']}, DIFF_MS={meta['DIFF_MS']}")
+    cases = [
+        ("6a2b9104-4d15-4a2b-8f30-809700000001", "COMPARE_PATIENT_PORT", 8097, "patient-compare", "oru-r01-minimal.er7", "text/plain", expected_patient, "ORU"),
+        ("6a2b9104-4d15-4a2b-8f30-809800000001", "COMPARE_STRICT_PORT", 8098, "patient-strict-compare", "oru-r01-minimal.er7", "text/plain", expected_patient, "ORU Strict"),
+        ("6a2b9104-4d15-4a2b-8f30-810000000001", "COMPARE_CSV_PORT", 8100, "csv-compare", "patient-metier.csv", "text/csv", json.loads((EXAMPLES / "expected/patient-csv.json").read_text()), "CSV"),
+        ("6a2b9104-4d15-4a2b-8f30-810100000001", "COMPARE_XML_PORT", 8101, "xml-compare", "patient-result-sql.xml", "application/xml", json.loads((EXAMPLES / "expected/patient-sql-xml.json").read_text()), "XML"),
+        ("6a2b9104-4d15-4a2b-8f30-810200000001", "COMPARE_JSON_PORT", 8102, "json-compare", "patient-metier-fr-core.json", "application/json", json.loads((EXAMPLES / "expected/patient-fr-core.json").read_text()), "JSON"),
+        ("6a2b9104-4d15-4a2b-8f30-810300000001", "COMPARE_FHIR_PORT", 8103, "fhir-compare", "patient-fhir-source.json", "application/json", json.loads((EXAMPLES / "expected/patient-fhir-summary.json").read_text()), "FHIR"),
+    ]
+    for channel_id, port_env, port, route, input_file, content_type, expected, label in cases:
+        channel_xml = ET.fromstring(api(f"/channels/{channel_id}"))
+        wait_flags = [c.findtext("waitForPrevious") for c in channel_xml.findall("destinationConnectors/connector")]
+        assert wait_flags == ["false", "false"], (label, wait_flags)
+        response = json.loads(post(port_env, port, route, input_file, content_type))
+        assert response == expected, (label, response)
+        latest = ET.fromstring(api(f"/channels/{channel_id}/messages?limit=1&includeContent=true")).find("message")
+        out1 = encoded(latest, 1)
+        out2 = encoded(latest, 2)
+        assert out1 == expected and out2 == expected and out1 == out2, (label, out1, out2)
+        source = next(c for c in latest.findall(".//connectorMessage") if c.findtext("metaDataId") == "0")
+        meta = {}
+        for entry in source.findall("metaDataMap/entry"):
+            children = list(entry)
+            if len(children) >= 2:
+                meta[children[0].text] = children[1].text
+        assert float(meta["FML_MS"]) > 0 and float(meta["MAPPER_MS"]) > 0, (label, meta)
+        assert meta["OUTPUTS_EQUAL"] == "true" and meta["ERROR_STEP"] == "OK", (label, meta)
+        print(f"OK {label} FML vs Mapper ({port}) : sorties identiques, FML_MS={meta['FML_MS']}, MAPPER_MS={meta['MAPPER_MS']}, DIFF_MS={meta['DIFF_MS']}")
 
 
 def check_channel_organization():
@@ -351,7 +359,7 @@ def main():
     print("OK profil : naissance obligatoire absente → message ERROR mentionnant birthDate")
 
     query = urllib.parse.urlencode({
-        "server": "n/a", "profiles": "/fhir-ig", "fhirVersion": "R4", "code": "GLU",
+        "server": "n/a", "profiles": "/fhir-volume/ig", "fhirVersion": "R4", "code": "GLU",
         "conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/lab-codes-to-loinc",
         "system": "http://example.org/fhir/oru2fhir/CodeSystem/lab-codes",
     })

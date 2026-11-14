@@ -50,7 +50,7 @@
           <sequenceNumber>0</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig;/fhir-fml</profiles>
+          <profiles>/fhir-volume/ig;/fhir-volume/fml</profiles>
           <mapUrl>http://example.org/fhir/oru2fhir/StructureMap/PatientSummary</mapUrl>
           <sourceModel>fhir</sourceModel>
           <sourceModelUrl>http://hl7.org/fhir/StructureDefinition/Patient</sourceModelUrl>

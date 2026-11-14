@@ -62,7 +62,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <mapUrl />
           <mapSource>map "http://example.org/fhir/oru2fhir/StructureMap/OruR01ToPatient" = "OruR01ToPatient"
 
-// Demo: an ORU^R01 PID segment becomes a Patient conforming to ExampleLabPatient (/fhir-ig),
+// Demo: an ORU^R01 PID segment becomes a Patient conforming to ExampleLabPatient (/fhir-volume/ig),
 // like the "ORU R01 to FHIR Patient" Profile Mapper channel, but written in FML.
 // Source: the generic OIE logical model (OieMessage). A node is addressed by name
 // (PID, PID.5) or by position (component 1, 2...); its value is stored in value.
@@ -89,7 +89,7 @@ group OruR01ToPatient(source src : OieMessage, target patient : Patient) {
       xpn.node as type where position = 7 and value = 'D' -&gt; name.use = 'usual' "use-usual";
       xpn.node as type where position = 7 and value = 'M' -&gt; name.use = 'maiden' "use-maiden";
     } "name";
-    // Gender: HL7 table 0001 to administrative-gender via the ConceptMap in /fhir-ig.
+    // Gender: HL7 table 0001 to administrative-gender via the ConceptMap in /fhir-volume/ig.
     pid.node as sex where name = 'PID.8' then {
       sex.node as code where position = 1 then {
         code.value as v -&gt; patient.gender = translate(v, 'http://example.org/fhir/oru2fhir/ConceptMap/v2-0001-to-gender', 'code') "gender";
@@ -176,7 +176,7 @@ OBX|1|NM|GLU^Glucose^L||5.10|mmol/L^mmol/L^UCUM|3.90-5.50|N|||F|||20260114073000
           <validateOutbound>true</validateOutbound>
           <invalidMessages>Reject</invalidMessages>
           <failOn>Errors</failOn>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <requiredProfile />
           <unknownCodeSystems>Warning</unknownCodeSystems>
           <anyExtensionsAllowed>true</anyExtensionsAllowed>

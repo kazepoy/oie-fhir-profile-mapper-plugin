@@ -10,7 +10,7 @@ données fictives, des attendus versionnés et un contre-exemple chacun.
 | FHIR Patient to Summary (FML) | FHIR - FML | `8092/patient-summary/` | Une ressource FHIR reçue directement par une map FML |
 | Business JSON to Obs EU Lab | JSON - Mapper | `8093/eu-lab-observation/` | Profil publié HL7 Europe Laboratory 2.0.0 et champ obligatoire `effective[x]` |
 | CSV to Permission R5 (FML) | CSV - FML | `8094/permission-r5/` | Source CSV vers `Bundle` R5 contenant `Organization` et `Permission` |
-| ORU R01 to FHIR Patient (FML IG) | HL7v2 - FML | `8095/patient-fml-ig/` | `StructureMap` JSON publiée dans `/fhir-ig`, appelée par `mapUrl` |
+| ORU R01 to FHIR Patient (FML IG) | HL7v2 - FML | `8095/patient-fml-ig/` | `StructureMap` JSON publiée dans `/fhir-volume/ig`, appelée par `mapUrl` |
 | Business JSON to Obs (External TX) | JSON - Mapper | `8096/obs-external-tx/` | `ConceptMap/$translate` vers un serveur HTTP externe, repli et panne 503 |
 | HTTP Terminology Mock ($translate) | HTTP - Mock | `8099/fhir/` | Mock léger `ConceptMap/$translate` hébergé dans OIE |
 
@@ -73,14 +73,14 @@ La validation de ce Patient ne prouve donc pas la prise en charge de tout le
 graphe d'IG et de toutes ses variantes de versions.
 
 Sur une installation existante, reconstruire l'image et relancer
-l'initialisation avec `OIE_INIT_FORCE=true` pour mettre à jour le contexte et les
-canaux de démo. Cette option remplace leurs personnalisations locales.
+l'initialisation (`docker compose run --rm oie-init`) pour réinitialiser le contexte et les
+canaux de démo. Cette opération remplace les personnalisations locales.
 
 ## FHIR Patient to Summary (FML)
 
 La [source](../../demo/examples/patient-fhir-source.json) est déjà un Patient
 FHIR R4. Le datatype FHIR valide l'entrée puis la présente en JSON au
-transformeur. La map [`PatientSummary.fml`](../../demo/fml/PatientSummary.fml)
+transformeur. La map [`PatientSummary.fml`](../../demo/fhir-volume/fml/PatientSummary.fml)
 utilise `sourceModel: fhir` : elle lit directement `Patient`, sans enveloppe
 `OieMessage`.
 
@@ -99,8 +99,8 @@ validation et le datatype entrant du canal déployé refuse le message.
 Les cinq canaux suivants complètent la matrice sans modification du contrat plugin :
 
 - **Business JSON to Obs EU Lab (`8093`)** : Observation conforme à `hl7.fhir.eu.laboratory#2.0.0` (contexte `eu-laboratory-2.0.0` avec dépendances directes `eu.base`, `eu.extensions.r4`, `uv.xver-r5.r4`, `terminology.r4` et `uv.extensions.r4`), avec [entrée nominale](../../demo/examples/observation-eu-lab.json) et [contre-exemple](../../demo/examples/observation-eu-lab-invalide.json) sur `status`.
-- **CSV to Permission R5 (FML) (`8094`)** : CSV vers `Bundle` R5 (`Organization` + `Permission`) avec [`PermissionR5.fml`](../../demo/fml/PermissionR5.fml) en contexte `demo-r5`, [CSV nominal](../../demo/examples/permissions-r5.csv) et [CSV invalide](../../demo/examples/permissions-r5-invalide.csv).
-- **ORU R01 to FHIR Patient (FML IG) (`8095`)** : résolution d'une `StructureMap` publiée dans `/fhir-ig` via `mapUrl` ([`StructureMap-OruR01ToPatientIG.json`](../../demo/ig/StructureMap-OruR01ToPatientIG.json)).
+- **CSV to Permission R5 (FML) (`8094`)** : CSV vers `Bundle` R5 (`Organization` + `Permission`) avec [`PermissionR5.fml`](../../demo/fhir-volume/fml/PermissionR5.fml) en contexte `demo-r5`, [CSV nominal](../../demo/examples/permissions-r5.csv) et [CSV invalide](../../demo/examples/permissions-r5-invalide.csv).
+- **ORU R01 to FHIR Patient (FML IG) (`8095`)** : résolution d'une `StructureMap` publiée dans `/fhir-volume/ig` via `mapUrl` ([`StructureMap-OruR01ToPatientIG.json`](../../demo/fhir-volume/ig/StructureMap-OruR01ToPatientIG.json)).
 - **Business JSON to Obs (External TX) (`8096`) & HTTP Terminology Mock (`8099`)** : mock OIE léger exposant `ConceptMap/$translate` (`GLU` → LOINC `14749-6`, inconnu → `result=false` avec repli `data-absent-reason#unknown`, `UNAVAILABLE` → HTTP `503` sur [observation indisponible](../../demo/examples/observation-tx-unavailable.json)).
 
 ## Contrôles automatisés

@@ -386,6 +386,82 @@
         "inline"
       ],
       "input": "oru-r01-minimal.er7"
+    },
+    {
+      "channel": "oru-r01-patient-strict-fml-vs-mapper.xml",
+      "group": "fml-versus-mapper",
+      "tags": [
+        "R4",
+        "HL7v2",
+        "FML",
+        "Mapper",
+        "benchmark",
+        "destination-mapping",
+        "dual-destination",
+        "inline",
+        "strict-parser"
+      ],
+      "input": "oru-r01-minimal.er7"
+    },
+    {
+      "channel": "csv-patient-fml-vs-mapper.xml",
+      "group": "fml-versus-mapper",
+      "tags": [
+        "R4",
+        "CSV",
+        "FML",
+        "Mapper",
+        "benchmark",
+        "destination-mapping",
+        "dual-destination",
+        "inline"
+      ],
+      "input": "patient-metier.csv"
+    },
+    {
+      "channel": "sql-xml-patient-fml-vs-mapper.xml",
+      "group": "fml-versus-mapper",
+      "tags": [
+        "R4",
+        "XML",
+        "FML",
+        "Mapper",
+        "benchmark",
+        "destination-mapping",
+        "dual-destination",
+        "inline"
+      ],
+      "input": "patient-result-sql.xml"
+    },
+    {
+      "channel": "business-json-patient-fml-vs-mapper.xml",
+      "group": "fml-versus-mapper",
+      "tags": [
+        "R4",
+        "JSON",
+        "FML",
+        "Mapper",
+        "benchmark",
+        "destination-mapping",
+        "dual-destination",
+        "inline"
+      ],
+      "input": "patient-metier-fr-core.json"
+    },
+    {
+      "channel": "fhir-patient-summary-fml-vs-mapper.xml",
+      "group": "fml-versus-mapper",
+      "tags": [
+        "R4",
+        "FHIR",
+        "FML",
+        "Mapper",
+        "benchmark",
+        "destination-mapping",
+        "dual-destination",
+        "inline"
+      ],
+      "input": "patient-fhir-source.json"
     }
   ]
 }

@@ -4,7 +4,7 @@
   "url": "http://example.org/fhir/oru2fhir/StructureMap/OruR01ToPatientIG",
   "name": "OruR01ToPatientIG",
   "status": "draft",
-  "description": "Demo: the PID of an ORU^R01 becomes a Patient conforming to ExampleLabPatient (/fhir-ig), like\r\nthe \"ORU R01 to FHIR Patient\" Profile Mapper channel, but in FML.\r\nSource: the generic OIE logical model (OieMessage). A node is addressed by name\r\n(PID, PID.5) or position (component 1, 2...); its value is in value.",
+  "description": "Demo: the PID of an ORU^R01 becomes a Patient conforming to ExampleLabPatient (/fhir-volume/ig), like\r\nthe \"ORU R01 to FHIR Patient\" Profile Mapper channel, but in FML.\r\nSource: the generic OIE logical model (OieMessage). A node is addressed by name\r\n(PID, PID.5) or position (component 1, 2...); its value is in value.",
   "structure": [ {
     "url": "http://oie.org/fhir/StructureDefinition/OieMessage",
     "mode": "source",
@@ -288,7 +288,7 @@
             } ]
           } ]
         } ],
-        "documentation": "Gender: HL7 table 0001 to administrative-gender via the ConceptMap in /fhir-ig."
+        "documentation": "Gender: HL7 table 0001 to administrative-gender via the ConceptMap in /fhir-volume/ig."
       }, {
         "name": "dateofbirth",
         "source": [ {

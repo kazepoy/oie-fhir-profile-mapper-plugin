@@ -57,7 +57,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <sequenceNumber>1</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-typed</profiles>
+          <profiles>/fhir-volume/fml-typed</profiles>
           <mapUrl>http://example.org/typed/StructureMap/ORUR01toBundle</mapUrl>
           <sourceModel>hl7v2-logical</sourceModel>
           <sourceModelUrl>http://example.org/hl7v2/StructureDefinition/ORU__R01</sourceModelUrl>
@@ -133,7 +133,7 @@ OBX|1|NM|GLU^Glucose^L||5.10|mmol/L^mmol/L^UCUM|3.90-5.50|N|||F|||20260114073000
           <validateOutbound>true</validateOutbound>
           <invalidMessages>Reject</invalidMessages>
           <failOn>Errors</failOn>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <requiredProfile />
           <unknownCodeSystems>Warning</unknownCodeSystems>
           <anyExtensionsAllowed>true</anyExtensionsAllowed>

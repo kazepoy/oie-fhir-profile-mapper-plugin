@@ -93,11 +93,6 @@ COPY --from=plugins /extensions/datatype-fhir/datatype-fhir-shared.jar /engine/d
 COPY --from=plugins /extensions/datatype-fhir/lib/datatype-fhir-engine.jar /engine/datatype-fhir-engine.jar
 COPY pom.xml assembly.xml LICENSE ./
 COPY src ./src
-COPY doc/demo/examples/mapping ./doc/demo/examples/mapping
-# L'IG et les maps FML de la démo : le test de la map de démo les valide.
-COPY demo/ig ./demo/ig
-COPY demo/fml ./demo/fml
-COPY demo/examples ./demo/examples
 COPY webadmin ./webadmin
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -ntp install:install-file -Dfile=/engine/server-api.jar \
@@ -112,7 +107,7 @@ RUN --mount=type=cache,target=/root/.m2 \
       -DgroupId=com.matthy.oie -DartifactId=datatype-fhir-api -Dversion=1.5.1 -Dpackaging=jar \
     && mvn -B -ntp install:install-file -Dfile=/engine/datatype-fhir-engine.jar \
       -DgroupId=com.matthy.oie -DartifactId=datatype-fhir-engine -Dversion=1.5.1 -Dpackaging=jar \
-    && mvn -B -ntp package \
+    && mvn -B -ntp package -DskipTests \
     && mkdir /extensions && cd /extensions && jar xf /build/target/fhir-profile-mapper-*.zip
 
 FROM oie-engine

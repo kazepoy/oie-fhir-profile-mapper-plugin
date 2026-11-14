@@ -65,13 +65,12 @@ services:
         target: /opt/engine/conf/custom.vmoptions
     ports:
       - "${OIE_BIND_ADDRESS:-127.0.0.1}:${OIE_HTTPS_PORT:-8443}:8443"
-      - "8081-8099:8081-8099"
+      - "8081-8105:8081-8105"
     volumes:
       - appdata:/opt/engine/appdata
       - logs:/opt/engine/logs
-      - ./ig:/fhir-ig:ro
-      - ./fml:/fhir-fml:ro
-      - ../src/test/resources/fml/typed:/fhir-typed:ro
+      - ./custom-extensions:/opt/engine/custom-extensions
+      - ./fhir-volume:/fhir-volume:ro
     depends_on:
       oie-db:
         condition: service_healthy
@@ -83,7 +82,7 @@ services:
       start_period: 120s
     logging: *logging
 
-  # Importe les canaux de demo/oie-init/channels sans remplacer les canaux existants.
+  # Réinitialise OIE avec les contextes FHIR, les canaux de demo/oie-init/channels et les groupes.
   oie-init:
     image: curlimages/curl:8.21.0
     restart: "no"
@@ -92,7 +91,6 @@ services:
       OIE_URL: https://oie-app:8443
       OIE_USER: admin
       OIE_PASSWORD: ${OIE_PASSWORD:-demo-oie-password}
-      OIE_INIT_FORCE: ${OIE_INIT_FORCE:-false}
       OIE_SKIP_FIRST_LOGIN: ${OIE_SKIP_FIRST_LOGIN:-true}
     volumes:
       - ./oie-init:/oie-init:ro

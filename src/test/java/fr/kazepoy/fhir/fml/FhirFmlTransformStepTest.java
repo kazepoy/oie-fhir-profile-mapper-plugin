@@ -108,7 +108,7 @@ public class FhirFmlTransformStepTest {
     @Test
     public void theDemoMapMakesAValidExampleLabPatient() throws Exception {
         String oru = Files.readString(Path.of(fixture("fml/messages/oru-r01-minimal.xml")));
-        String demo = Path.of("demo").toAbsolutePath().toString();
+        String demo = Path.of("demo", "fhir-volume").toAbsolutePath().toString();
         String request = FhirJson.write(Map.of("step", Map.of("mapUrl", "http://example.org/fhir/oru2fhir/StructureMap/OruR01ToPatient",
                 "profiles", demo + "/ig;" + demo + "/fml", "validateOutput", true), "message", oru, "dataType", "XML"));
         Map<?, ?> answer = (Map<?, ?>) FhirJson.parse(FmlTester.test(request, (type, message) -> message));
@@ -135,7 +135,7 @@ public class FhirFmlTransformStepTest {
     @Test
     public void theDemoSummaryProjectsAFhirPatientAndKeepsFalseValues() throws Exception {
         Path examples = Path.of("demo/examples");
-        String demo = Path.of("demo").toAbsolutePath().toString();
+        String demo = Path.of("demo", "fhir-volume").toAbsolutePath().toString();
         Map<String, Object> step = Map.of("name", "Résumé Patient", "mapUrl",
                 "http://example.org/fhir/oru2fhir/StructureMap/PatientSummary", "profiles", demo + "/ig;" + demo + "/fml",
                 "sourceModel", "fhir", "fhirVersion", "R4", "validateOutput", true);

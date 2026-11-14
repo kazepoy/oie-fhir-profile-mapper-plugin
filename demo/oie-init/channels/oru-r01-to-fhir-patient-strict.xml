@@ -57,7 +57,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <sequenceNumber>1</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient</profileUrl>
           <profileVersion>0.1.0</profileVersion>
           <resourceType>Patient</resourceType>
@@ -143,7 +143,7 @@ OBX|1|NM|GLU^Glucose^L||5.10|mmol/L^mmol/L^UCUM|3.90-5.50|N|||F|||20260114073000
           <validateOutbound>true</validateOutbound>
           <invalidMessages>Reject</invalidMessages>
           <failOn>Errors</failOn>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <requiredProfile />
           <unknownCodeSystems>Warning</unknownCodeSystems>
           <anyExtensionsAllowed>true</anyExtensionsAllowed>

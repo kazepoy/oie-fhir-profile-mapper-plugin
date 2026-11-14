@@ -50,7 +50,7 @@
           <sequenceNumber>0</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R5</fhirVersion>
-          <profiles>/fhir-fml/PermissionR5.fml</profiles>
+          <profiles>/fhir-volume/fml/PermissionR5.fml</profiles>
           <context />
           <mapUrl>http://example.org/fhir/r5/StructureMap/CsvToPermissionR5</mapUrl>
           <mapSource />

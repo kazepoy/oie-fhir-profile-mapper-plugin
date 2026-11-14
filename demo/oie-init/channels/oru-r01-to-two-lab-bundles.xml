@@ -57,7 +57,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <sequenceNumber>1</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleOruBundle</profileUrl>
           <profileVersion />
           <resourceType>Bundle</resourceType>
@@ -80,7 +80,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <sequenceNumber>2</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabDocument</profileUrl>
           <profileVersion />
           <resourceType>Bundle</resourceType>
@@ -103,7 +103,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <sequenceNumber>3</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <profileUrl>http://hl7.org/fhir/StructureDefinition/Composition</profileUrl>
           <profileVersion />
           <resourceType>Composition</resourceType>
@@ -125,7 +125,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <sequenceNumber>4</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <profileUrl>http://hl7.org/fhir/StructureDefinition/Organization</profileUrl>
           <profileVersion />
           <resourceType>Organization</resourceType>
@@ -147,7 +147,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <sequenceNumber>5</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient</profileUrl>
           <profileVersion />
           <resourceType>Patient</resourceType>
@@ -170,7 +170,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <sequenceNumber>6</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <profileUrl>Encounter</profileUrl>
           <profileVersion />
           <resourceType>Encounter</resourceType>
@@ -192,7 +192,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <sequenceNumber>7</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabServiceRequest</profileUrl>
           <profileVersion />
           <resourceType>ServiceRequest</resourceType>
@@ -214,7 +214,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <sequenceNumber>8</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabSpecimen</profileUrl>
           <profileVersion />
           <resourceType>Specimen</resourceType>
@@ -236,7 +236,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <sequenceNumber>9</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabObservation</profileUrl>
           <profileVersion />
           <resourceType>Observation</resourceType>
@@ -258,7 +258,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
           <sequenceNumber>10</sequenceNumber>
           <enabled>true</enabled>
           <fhirVersion>R4</fhirVersion>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabDiagnosticReport</profileUrl>
           <profileVersion />
           <resourceType>DiagnosticReport</resourceType>
@@ -352,7 +352,7 @@ OBX|1|ED|CR_PDF^Compte rendu PDF^L||^application^pdf^Base64^JVBERi0xLjQKMSAwIG9i
           <validateOutbound>true</validateOutbound>
           <invalidMessages>Reject</invalidMessages>
           <failOn>Errors</failOn>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <requiredProfile />
           <unknownCodeSystems>Warning</unknownCodeSystems>
           <anyExtensionsAllowed>true</anyExtensionsAllowed>
@@ -554,7 +554,7 @@ return connectorMessage.getEncodedData();</script>
             <validateOutbound>true</validateOutbound>
             <invalidMessages>Reject</invalidMessages>
             <failOn>Errors</failOn>
-            <profiles>/fhir-ig</profiles>
+            <profiles>/fhir-volume/ig</profiles>
             <requiredProfile>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabDocument</requiredProfile>
             <unknownCodeSystems>Warning</unknownCodeSystems>
             <anyExtensionsAllowed>true</anyExtensionsAllowed>
@@ -669,7 +669,7 @@ return 'Archived: ' + file;</script>
             <validateOutbound>false</validateOutbound>
             <invalidMessages>Reject</invalidMessages>
             <failOn>Errors</failOn>
-            <profiles>/fhir-ig</profiles>
+            <profiles>/fhir-volume/ig</profiles>
             <requiredProfile>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabDocument</requiredProfile>
             <unknownCodeSystems>Warning</unknownCodeSystems>
             <anyExtensionsAllowed>true</anyExtensionsAllowed>

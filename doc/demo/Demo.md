@@ -17,27 +17,21 @@ de leur SHA-256. Les packages officiels
 [FR Core 2.2.0](https://hl7.fr/ig/fhir/core/2.2.0/) et
 [HL7 Europe Laboratory 2.0.0](https://hl7.eu/fhir/laboratory/2.0.0/) sont eux
 aussi épinglés et vérifiés. Le mapper est compilé avec Maven à partir de l'API de l'image OIE
-cible, puis installé dans cette même image. Le compilateur, le runtime et
-l'éditeur graphique sont repris du POC. L'initialisation importe et déploie dix-huit
-canaux (dans neuf groupes `<Source> - <Transfo>`), avec leur IG de démonstration montée dans `/fhir-ig`, les maps FML
-de [demo/fml](../../demo/fml) montées dans `/fhir-fml`, et les fixtures du modèle FML
-typé montées dans `/fhir-typed`.
+cible, puis installé dans cette même image. Le compilateur, le runtime et l'éditeur graphique sont repris du POC. L'initialisation importe et déploie vingt-trois canaux (dans neuf groupes `<Source> - <Transfo>`), avec les ressources de [demo/fhir-volume](../../demo/fhir-volume) montées dans `/fhir-volume` (`ig/`, `fml/` et `fml-typed/`).
 
 L'initialisation crée cinq contextes dans *Settings › FHIR Mapper* :
 `demo-labo`, `fr-core-2.2.0`, `eu-laboratory-2.0.0`, `external-terminology` et `demo-r5`.
 Les deux contextes d'IG rendent les profils publiés sélectionnables dans une étape R4 sans téléchargement manuel.
 Le contexte FR Core et le contexte EU Laboratory fournissent aussi leurs dépendances directes non-core ; voir [leur périmètre](JSON-FR-Core-et-FML.md#packages-du-contexte).
 `external-terminology` pointe vers le mock HTTP de terminologie interne (`http://127.0.0.1:8099/fhir`).
-Sur un volume déjà initialisé, lancer une fois avec `OIE_INIT_FORCE=true` pour
-remplacer les anciens réglages de démonstration.
+Sur un volume déjà initialisé, relancer `oie-init` réinitialise les contextes, canaux, groupes et tags à l'état initial.
 
 ## Ce que montre chaque canal
 
 La [matrice des exemples](Matrice-exemples.md) classe les canaux par groupes et
 tags, précise les samples disponibles et distingue les capacités démontrées
-des cas encore à construire. Les douze canaux comportant Profile Mapper ont des samples
-enregistrés avec attendu ; cinq aperçus FML sont rejoués par `check.py`, plus un mock HTTP de terminologie.
-Les dix-huit canaux sont classés dans neuf groupes natifs OIE (`HL7v2 - Mapper`, `HL7v2 - FML`, `FML versus Mapper`, `JSON - Mapper`, `CSV - Mapper`, `CSV - FML`, `XML - Mapper`, `FHIR - FML`, `HTTP - Mock`) et portent des tags
+des cas encore à construire. Les dix-sept canaux comportant Profile Mapper ont des samples enregistrés avec attendu ; cinq aperçus FML sont rejoués par `check.py`, plus un mock HTTP de terminologie.
+Les vingt-trois canaux sont classés dans neuf groupes natifs OIE (`HL7v2 - Mapper`, `HL7v2 - FML`, `FML versus Mapper`, `JSON - Mapper`, `CSV - Mapper`, `CSV - FML`, `XML - Mapper`, `FHIR - FML`, `HTTP - Mock`) et portent des tags
 fonctionnels colorés (sans tags IG/profil) ordonnés uniformément : version, source, transformeur, puis fonctions illustrées triées alphabétiquement.
 
 | Canal | Port | Fonctions montrées |
@@ -56,10 +50,15 @@ fonctionnels colorés (sans tags IG/profil) ordonnés uniformément : version, s
 | FHIR Patient to Summary (FML) | 8092 | Source FHIR JSON validée, map de projection, `active: false` conservé, code de sexe invalide refusé |
 | Business JSON to Obs EU Lab | 8093 | Contexte `eu-laboratory-2.0.0`, profil `Observation-resultslab-eu-lab`, attendu et champ obligatoire `effective[x]` manquant refusé |
 | CSV to Permission R5 (FML) | 8094 | Source CSV par défaut, map FML R5 produisant un Bundle transaction `Organization` + `Permission` (spécifique R5) |
-| ORU R01 to FHIR Patient (FML IG) | 8095 | Map `StructureMap` JSON publiée dans `/fhir-ig`, résolue par `mapUrl` sans map inline ni fichier `.fml` |
+| ORU R01 to FHIR Patient (FML IG) | 8095 | Map `StructureMap` JSON publiée dans `/fhir-volume/ig`, résolue par `mapUrl` sans map inline ni fichier `.fml` |
 | Business JSON to Obs (External TX) | 8096 | Serveur de terminologie externe (`external-terminology`), traduction `GLU` → LOINC, repli sur code inconnu et erreur HTTP 503 |
 | ORU R01 Patient (FML vs Mapper) | 8097 | Double destination parallèle sur entrée HL7 v2 simple : Destination 1 en FML inline, Destination 2 en Profile Mapper, sorties identiques et temps comparés en métadonnées (`FML_MS`, `MAPPER_MS`, `DIFF_MS`, `OUTPUTS_EQUAL`) |
+| ORU R01 Patient Strict (FML vs Mapper) | 8098 | Même comparaison parallèle FML inline vs Profile Mapper sur HL7 v2 Strict Parser |
 | HTTP Terminology Mock ($translate) | 8099 | Mock OIE HTTP implémentant `GET /fhir/ConceptMap/$translate` pour les essais de terminologie externe et d'indisponibilité |
+| CSV Patient (FML vs Mapper) | 8100 | Même comparaison parallèle FML inline vs Profile Mapper sur entrée CSV (`DELIMITED`) |
+| SQL XML Patient (FML vs Mapper) | 8101 | Même comparaison parallèle FML inline vs Profile Mapper sur XML SQL métier |
+| Business JSON Patient (FML vs Mapper) | 8102 | Même comparaison parallèle FML inline vs Profile Mapper sur JSON métier vers Patient FR Core 2.2.0 |
+| FHIR Patient Summary (FML vs Mapper) | 8103 | Même comparaison parallèle FML inline (`sourceModel=fhir`) vs Profile Mapper sur ressource Patient FHIR R4 |
 
 Pour voir l'assistance à la saisie : ouvrir le canal du port 8082, son transformeur
 source, l'étape *Patient*, puis **Full screen**. Cliquer un champ pour l'éditer avec
@@ -101,7 +100,7 @@ L'image active le niveau `INFO` pour les loggers `fr.kazepoy.fhir.mapper` et `fr
 
 Les réglages sont dans [compose.yaml](../../demo/compose.yaml). Pour les personnaliser,
 copier [.env.example](../../demo/.env.example) en `demo/.env` avant le premier lancement.
-Les ports 8443 et 8081 à 8099 doivent être libres. L'administration utilise
+Les ports 8443 et 8081 à 8105 doivent être libres. L'administration utilise
 `OIE_BIND_ADDRESS` ; la plage des exemples est publiée sur toutes les interfaces.
 Les conteneurs et volumes utilisent le projet
 Compose `fhir-profile-mapper-demo`.
@@ -222,15 +221,8 @@ l'initialisation depuis `demo/` :
 docker compose run --rm oie-init
 ```
 
-L'init importe et déploie les nouveaux canaux. Un canal déjà présent est conservé ;
-`OIE_INIT_FORCE=true` permet de le remplacer par son export :
-
-```sh
-docker compose run --rm -e OIE_INIT_FORCE=true oie-init
-```
-
-Cette commande remplace les canaux portant les identifiants des exports fournis.
-L'init refuse les imports signalés invalides par OIE et les erreurs de déploiement.
+L'init supprime les canaux, groupes et tags existants, puis importe et déploie les
+exemples depuis zéro. L'init refuse les imports signalés invalides par OIE et les erreurs de déploiement.
 Les futurs listeners peuvent utiliser les ports 8081 à 8099 déjà publiés.
 Au-delà de cette plage, compléter `oie-app.ports`.
 

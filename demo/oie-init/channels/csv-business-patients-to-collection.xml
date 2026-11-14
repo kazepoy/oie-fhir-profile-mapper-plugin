@@ -183,7 +183,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
             <sequenceNumber>1</sequenceNumber>
             <enabled>true</enabled>
             <fhirVersion>R4</fhirVersion>
-            <profiles>/fhir-ig</profiles>
+            <profiles>/fhir-volume/ig</profiles>
             <profileUrl>http://hl7.org/fhir/StructureDefinition/Bundle</profileUrl>
             <profileVersion>4.0.1</profileVersion>
             <resourceType>Bundle</resourceType>
@@ -206,7 +206,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
             <sequenceNumber>2</sequenceNumber>
             <enabled>true</enabled>
             <fhirVersion>R4</fhirVersion>
-            <profiles>/fhir-ig</profiles>
+            <profiles>/fhir-volume/ig</profiles>
             <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient</profileUrl>
             <profileVersion>0.1.0</profileVersion>
             <resourceType>Patient</resourceType>
@@ -351,7 +351,7 @@ channelMap.put('__demoEtape', 'OUTPUT / FHIR Collection Bundle');</script>
             <validateOutbound>true</validateOutbound>
             <invalidMessages>Reject</invalidMessages>
             <failOn>Errors</failOn>
-            <profiles>/fhir-ig</profiles>
+            <profiles>/fhir-volume/ig</profiles>
             <requiredProfile>http://hl7.org/fhir/StructureDefinition/Bundle</requiredProfile>
             <unknownCodeSystems>Warning</unknownCodeSystems>
             <anyExtensionsAllowed>true</anyExtensionsAllowed>

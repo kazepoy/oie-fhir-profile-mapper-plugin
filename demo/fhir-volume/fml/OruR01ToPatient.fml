@@ -1,6 +1,6 @@
 map "http://example.org/fhir/oru2fhir/StructureMap/OruR01ToPatient" = "OruR01ToPatient"
 
-// Demo: the PID of an ORU^R01 becomes a Patient conforming to ExampleLabPatient (/fhir-ig), like
+// Demo: the PID of an ORU^R01 becomes a Patient conforming to ExampleLabPatient (/fhir-volume/ig), like
 // the "ORU R01 to FHIR Patient" Profile Mapper channel, but in FML.
 // Source: the generic OIE logical model (OieMessage). A node is addressed by name
 // (PID, PID.5) or position (component 1, 2...); its value is in value.
@@ -27,7 +27,7 @@ group OruR01ToPatient(source src : OieMessage, target patient : Patient) {
       xpn.node as type where position = 7 and value = 'D' -> name.use = 'usual' "use-usual";
       xpn.node as type where position = 7 and value = 'M' -> name.use = 'maiden' "use-maiden";
     } "name";
-    // Gender: HL7 table 0001 to administrative-gender via the ConceptMap in /fhir-ig.
+    // Gender: HL7 table 0001 to administrative-gender via the ConceptMap in /fhir-volume/ig.
     pid.node as sex where name = 'PID.8' then {
       sex.node as code where position = 1 then {
         code.value as v -> patient.gender = translate(v, 'http://example.org/fhir/oru2fhir/ConceptMap/v2-0001-to-gender', 'code') "gender";

@@ -1,0 +1,28 @@
+{
+  "resourceType": "Patient",
+  "id": "metier-1042",
+  "meta": {
+    "profile": [
+      "http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient"
+    ]
+  },
+  "identifier": [
+    {
+      "system": "http://example.org/fhir/oru2fhir/sid/ipp",
+      "value": "000123456"
+    }
+  ],
+  "active": true,
+  "name": [
+    {
+      "use": "official",
+      "family": "Durand",
+      "given": [
+        "Élodie"
+      ]
+    }
+  ],
+  "gender": "female",
+  "birthDate": "1985-04-12"
+}
+

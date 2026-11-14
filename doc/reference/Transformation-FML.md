@@ -143,7 +143,7 @@ l'envelopper dans `OieMessage`. `sourceModelUrl` n'est pas utilisé dans ce mode
 
 ### Exemple de map
 
-Extrait de la [map de démo](../../demo/fml/OruR01ToPatient.fml) :
+Extrait de la [map de démo](../../demo/fhir-volume/fml/OruR01ToPatient.fml) :
 
 ```fml
 map "http://example.org/fhir/oru2fhir/StructureMap/OruR01ToPatient" = "OruR01ToPatient"
@@ -270,11 +270,11 @@ Le channel **ORU R01 to FHIR Bundle (FML typed)** (port 8087, `/bundle/`)
 active le Strict Parser et exécute `ORUR01toBundle`. La map importe
 `PIDtoPatient` et produit un Bundle transaction contenant Patient et Observation.
 Le modèle logique et les deux maps représentatives sont montés dans
-`/fhir-typed`. [check.py](../../demo/examples/check.py) vérifie la sortie avec la
+`/fhir-volume/fml-typed`. [check.py](../../demo/examples/check.py) vérifie la sortie avec la
 validation FHIR active.
 
 Le channel **ORU R01 to FHIR Patient (FML inline)** (port 8089) porte la même map
-dans sa propriété `mapSource`, sans `/fhir-fml` dans ses emplacements : il montre la
+dans sa propriété `mapSource`, sans `/fhir-volume/fml` dans ses emplacements : il montre la
 map écrite et vérifiée dans l'onglet **Map**.
 
 ## 7. Tests

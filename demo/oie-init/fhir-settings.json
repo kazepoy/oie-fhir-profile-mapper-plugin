@@ -3,7 +3,7 @@
     {
       "name": "demo-labo",
       "fhirVersion": "R4",
-      "packages": ["/fhir-ig"],
+      "packages": ["/fhir-volume/ig"],
       "terminologyServer": "",
       "terminologyAuthorization": "",
       "cacheSeconds": 300,
@@ -45,7 +45,7 @@
     {
       "name": "external-terminology",
       "fhirVersion": "R4",
-      "packages": ["/fhir-ig"],
+      "packages": ["/fhir-volume/ig"],
       "terminologyServer": "http://127.0.0.1:8099/fhir",
       "terminologyAuthorization": "",
       "cacheSeconds": 0,

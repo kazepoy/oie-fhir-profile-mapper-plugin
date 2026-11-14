@@ -355,7 +355,7 @@ OIE, si configurée, reste indépendante et peut entraîner une seconde validati
 Les profils, ConceptMaps et packages doivent être accessibles sur le serveur
 via `profiles`. Le format actuel ne contient ni manifeste de dépendances ni
 verrouillage des versions des packages. Conserver les fichiers de référence
-avec le déploiement ; l'IG de démonstration est dans `demo/ig`.
+avec le déploiement ; l'IG de démonstration est dans `demo/fhir-volume/ig`.
 
 ## 8. Diagnostics, tests d'API et traces
 

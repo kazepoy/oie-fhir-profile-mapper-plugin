@@ -2,7 +2,7 @@
   <id>007924d5-6deb-40d3-ac19-c4c8715a4091</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>ORU R01 to FHIR Patient</name>
-  <description>Demo oru2fhir: an ORU^R01 (POST ER7 to /patient/, port 8082) becomes a single FHIR R4 Patient resource conforming to ExampleLabPatient in /fhir-ig. One FHIR Profile Mapper step; the HTTP response is the Patient.</description>
+  <description>Demo oru2fhir: an ORU^R01 (POST ER7 to /patient/, port 8082) becomes a single FHIR R4 Patient resource conforming to ExampleLabPatient in /fhir-volume/ig. One FHIR Profile Mapper step; the HTTP response is the Patient.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -146,7 +146,7 @@ OBX|1|NM|GLU^Glucose^L||5.10|mmol/L^mmol/L^UCUM|3.90-5.50|N|||F|||20260114073000
           <validateOutbound>true</validateOutbound>
           <invalidMessages>Reject</invalidMessages>
           <failOn>Errors</failOn>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <requiredProfile />
           <unknownCodeSystems>Warning</unknownCodeSystems>
           <anyExtensionsAllowed>true</anyExtensionsAllowed>

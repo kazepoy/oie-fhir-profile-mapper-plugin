@@ -2,7 +2,7 @@
   <id>6a2b9104-4d15-4a2b-8f30-809500000001</id>
   <nextMetaDataId>2</nextMetaDataId>
   <name>ORU R01 to FHIR Patient (FML IG)</name>
-  <description>Demo of a StructureMap JSON packaged in an IG folder (/fhir-ig): POST HL7 v2 ER7 to /patient-fml-ig/, port 8095. The step selects mapUrl without mapSource or .fml files.</description>
+  <description>Demo of a StructureMap JSON packaged in an IG folder (/fhir-volume/ig): POST HL7 v2 ER7 to /patient-fml-ig/, port 8095. The step selects mapUrl without mapSource or .fml files.</description>
   <revision>1</revision>
   <sourceConnector version="4.7.0">
     <metaDataId>0</metaDataId>
@@ -133,7 +133,7 @@ OBX|1|NM|GLU^Glucose^L||5.10|mmol/L^mmol/L^UCUM|3.90-5.50|N|||F|||20260114073000
           <validateOutbound>true</validateOutbound>
           <invalidMessages>Reject</invalidMessages>
           <failOn>Errors</failOn>
-          <profiles>/fhir-ig</profiles>
+          <profiles>/fhir-volume/ig</profiles>
           <requiredProfile />
           <unknownCodeSystems>Warning</unknownCodeSystems>
           <anyExtensionsAllowed>true</anyExtensionsAllowed>

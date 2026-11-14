@@ -9,8 +9,8 @@ Le champ **Packages and profile files** contient **un chemin serveur par ligne**
 Exemples de contenu :
 
 ```text
-/fhir-ig
-/fhir-fml
+/fhir-volume/ig
+/fhir-volume/fml
 /opt/fhir/packages/mon-guide.tgz
 ```
 

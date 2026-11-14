@@ -207,7 +207,7 @@ public class FmlBridgeTest {
     public void runsDemoPermissionR5MapAndIgPackagedStructureMap() throws Exception {
         FhirSerializationProperties r5Props = new FhirSerializationProperties();
         r5Props.setFhirVersion(FhirSerializationProperties.FhirVersion.R5);
-        r5Props.setProfiles(Path.of("demo/fml/PermissionR5.fml").toAbsolutePath().toString());
+        r5Props.setProfiles(Path.of("demo/fhir-volume/fml/PermissionR5.fml").toAbsolutePath().toString());
         Map<String, String> r5Opts = r5Props.engineOptions();
         String delimitedXml = "<delimited>"
                 + "<row><column1>permission_id</column1><column2>status</column2><column3>combining</column3>"
@@ -224,7 +224,7 @@ public class FmlBridgeTest {
 
         FhirSerializationProperties igProps = new FhirSerializationProperties();
         igProps.setFhirVersion(FhirSerializationProperties.FhirVersion.R4);
-        igProps.setProfiles(Path.of("demo/ig").toAbsolutePath().toString());
+        igProps.setProfiles(Path.of("demo/fhir-volume/ig").toAbsolutePath().toString());
         JsonNode igPatient = JSON.readTree(bridge.transform(
                 "http://example.org/fhir/oru2fhir/StructureMap/OruR01ToPatientIG",
                 oru, "xml", Map.of(), Map.of(), igProps.engineOptions()));

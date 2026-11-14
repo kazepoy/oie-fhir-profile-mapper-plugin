@@ -1,0 +1,614 @@
+<channel version="4.7.0">
+  <id>6a2b9104-4d15-4a2b-8f30-810100000001</id>
+  <nextMetaDataId>3</nextMetaDataId>
+  <name>SQL XML Patient (FML vs Mapper)</name>
+  <description>Benchmark channel comparing inline FML and Profile Mapper on business SQL-style XML (POST application/xml to /xml-compare/, port 8101). Destination 1 runs inline FML and Destination 2 runs Profile Mapper in parallel; both produce the same ExampleLabPatient and record FML_MS, MAPPER_MS, DIFF_MS, OUTPUTS_EQUAL, and ERROR_STEP in metadata.</description>
+  <revision>1</revision>
+  <sourceConnector version="4.7.0">
+    <metaDataId>0</metaDataId>
+    <name>sourceConnector</name>
+    <properties class="com.mirth.connect.connectors.http.HttpReceiverProperties" version="4.7.0">
+      <pluginProperties />
+      <listenerConnectorProperties version="4.7.0">
+        <host>0.0.0.0</host>
+        <port>8101</port>
+      </listenerConnectorProperties>
+      <sourceConnectorProperties version="4.7.0">
+        <responseVariable>d1</responseVariable>
+        <respondAfterProcessing>true</respondAfterProcessing>
+        <processBatch>false</processBatch>
+        <firstResponse>false</firstResponse>
+        <processingThreads>1</processingThreads>
+        <resourceIds class="linked-hash-map">
+          <entry>
+            <string>Default Resource</string>
+            <string>[Default Resource]</string>
+          </entry>
+        </resourceIds>
+        <queueBufferSize>1000</queueBufferSize>
+      </sourceConnectorProperties>
+      <xmlBody>false</xmlBody>
+      <parseMultipart>false</parseMultipart>
+      <includeMetadata>false</includeMetadata>
+      <binaryMimeTypes>application/.*(?&lt;!json|xml)|image/.*|video/.*|audio/.*</binaryMimeTypes>
+      <binaryMimeTypesRegex>true</binaryMimeTypesRegex>
+      <responseContentType>application/fhir+json; charset=UTF-8</responseContentType>
+      <responseDataTypeBinary>false</responseDataTypeBinary>
+      <responseStatusCode>200</responseStatusCode>
+      <responseHeaders class="linked-hash-map" />
+      <responseHeadersVariable />
+      <useResponseHeadersVariable>false</useResponseHeadersVariable>
+      <charset>UTF-8</charset>
+      <contextPath>/xml-compare</contextPath>
+      <timeout>30000</timeout>
+      <staticResources />
+    </properties>
+    <transformer version="4.7.0">
+      <elements />
+      <inboundTemplate>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;result&gt;
+  &lt;id_patient&gt;1042&lt;/id_patient&gt;
+  &lt;ipp&gt;000123456&lt;/ipp&gt;
+  &lt;nom_naissance&gt;Durand&lt;/nom_naissance&gt;
+  &lt;prenom&gt;Élodie&lt;/prenom&gt;
+  &lt;date_naissance&gt;1985-04-12&lt;/date_naissance&gt;
+  &lt;sexe&gt;F&lt;/sexe&gt;
+  &lt;actif&gt;1&lt;/actif&gt;
+&lt;/result&gt;
+</inboundTemplate>
+      <inboundDataType>XML</inboundDataType>
+      <outboundDataType>XML</outboundDataType>
+      <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="4.7.0">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="4.7.0">
+          <stripNamespaces>false</stripNamespaces>
+        </serializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="4.7.0">
+          <splitType>Element_Name</splitType>
+          <elementName />
+          <level>1</level>
+          <query />
+          <batchScript />
+        </batchProperties>
+      </inboundProperties>
+      <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="4.7.0">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="4.7.0">
+          <stripNamespaces>false</stripNamespaces>
+        </serializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="4.7.0">
+          <splitType>Element_Name</splitType>
+          <elementName />
+          <level>1</level>
+          <query />
+          <batchScript />
+        </batchProperties>
+      </outboundProperties>
+    </transformer>
+    <filter version="4.7.0">
+      <elements />
+    </filter>
+    <transportName>HTTP Listener</transportName>
+    <mode>SOURCE</mode>
+    <enabled>true</enabled>
+    <waitForPrevious>true</waitForPrevious>
+  </sourceConnector>
+  <destinationConnectors>
+    <connector version="4.7.0">
+      <metaDataId>1</metaDataId>
+      <name>Patient (FML inline)</name>
+      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
+        <pluginProperties />
+        <destinationConnectorProperties version="4.7.0">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable />
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <script>return connectorMessage.getEncodedData();</script>
+      </properties>
+      <transformer version="4.7.0">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
+            <name>Start Patient (FML inline) timing</name>
+            <sequenceNumber>0</sequenceNumber>
+            <enabled>true</enabled>
+            <script>channelMap.put('__fmlDebut', java.lang.System.nanoTime());</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <fr.kazepoy.fhir.fml.FhirFmlTransformStep version="4.7.0">
+            <name>Patient (FML inline)</name>
+            <sequenceNumber>1</sequenceNumber>
+            <enabled>true</enabled>
+            <fhirVersion>R4</fhirVersion>
+            <profiles />
+            <context>demo-labo</context>
+            <mapUrl />
+            <mapSource>map "http://example.org/fhir/oru2fhir/StructureMap/SqlXmlToPatient" = "SqlXmlToPatient"
+
+uses "http://oie.org/fhir/StructureDefinition/OieMessage" alias OieMessage as source
+uses "http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient" alias Patient as target
+
+group SqlXmlToPatient(source src : OieMessage, target patient : Patient) {
+  src -&gt; patient.meta as meta, meta.profile = 'http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient' "profile";
+  src where name = 'result' then {
+    src.node as id where name = 'id_patient' then { id.value as v -&gt; patient.id = ('metier-' &amp; v) "id"; } "id-node";
+    src.node as act where name = 'actif' and value = '1' -&gt; patient.active = true "active-true";
+    src.node as act where name = 'actif' and value = '0' -&gt; patient.active = false "active-false";
+    src.node as ipp where name = 'ipp' -&gt; patient.identifier as identifier then {
+      ipp -&gt; identifier.system = 'http://example.org/fhir/oru2fhir/sid/ipp' "ipp-system";
+      ipp.value as v -&gt; identifier.value = v "ipp-value";
+    } "identifier";
+    src -&gt; patient.name as name, name.use = 'official' then {
+      src.node as nom where name = 'nom_naissance' then { nom.value as v -&gt; name.family = v "family"; } "family-node";
+      src.node as pre where name = 'prenom' then { pre.value as v -&gt; name.given = v "given"; } "given-node";
+    } "name";
+    src.node as sex where name = 'sexe' then {
+      sex.value as v -&gt; patient.gender = translate(v, 'http://example.org/fhir/oru2fhir/ConceptMap/v2-0001-to-gender', 'code') "gender";
+    } "sex-node";
+    src.node as dob where name = 'date_naissance' then { dob.value as v -&gt; patient.birthDate = v "birthDate"; } "dob-node";
+  } "result";
+}
+</mapSource>
+            <variable />
+            <validateOutput>true</validateOutput>
+            <contextVariables />
+          </fr.kazepoy.fhir.fml.FhirFmlTransformStep>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
+            <name>Record FML_MS</name>
+            <sequenceNumber>2</sequenceNumber>
+            <enabled>true</enabled>
+            <script>var elapsed = Number(java.lang.System.nanoTime()) - Number(channelMap.get('__fmlDebut'));
+channelMap.put('FML_MS', Math.round(elapsed / 1000) / 1000);</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>FHIR</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="4.7.0">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="4.7.0">
+            <stripNamespaces>false</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="4.7.0">
+            <splitType>Element_Name</splitType>
+            <elementName />
+            <level>1</level>
+            <query />
+            <batchScript />
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
+            <fhirVersion>R4</fhirVersion>
+            <transformerFormat>XML</transformerFormat>
+            <stripNamespaces>true</stripNamespaces>
+            <outputFormat>JSON</outputFormat>
+            <prettyPrint>true</prettyPrint>
+            <validateInbound>false</validateInbound>
+            <validateOutbound>false</validateOutbound>
+            <invalidMessages>Reject</invalidMessages>
+            <failOn>Errors</failOn>
+            <profiles>/fhir-volume/ig</profiles>
+            <requiredProfile />
+            <unknownCodeSystems>Warning</unknownCodeSystems>
+            <anyExtensionsAllowed>true</anyExtensionsAllowed>
+            <terminologyServer />
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
+            <splitType>Bundle_Entry</splitType>
+            <batchScript />
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="4.7.0">
+        <elements />
+        <inboundDataType>RAW</inboundDataType>
+        <outboundDataType>RAW</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
+            <splitType>JavaScript</splitType>
+            <batchScript />
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
+            <splitType>JavaScript</splitType>
+            <batchScript />
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="4.7.0">
+        <elements />
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>false</waitForPrevious>
+    </connector>
+    <connector version="4.7.0">
+      <metaDataId>2</metaDataId>
+      <name>Patient (Mapper)</name>
+      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="4.7.0">
+        <pluginProperties />
+        <destinationConnectorProperties version="4.7.0">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable />
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <script>return connectorMessage.getEncodedData();</script>
+      </properties>
+      <transformer version="4.7.0">
+        <elements>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
+            <name>Start Patient (Mapper) timing</name>
+            <sequenceNumber>0</sequenceNumber>
+            <enabled>true</enabled>
+            <script>channelMap.put('__mapperDebut', java.lang.System.nanoTime());</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+          <fr.kazepoy.fhir.mapper.FhirProfileMapperStep version="4.7.0">
+            <name>Patient (Mapper)</name>
+            <sequenceNumber>1</sequenceNumber>
+            <enabled>true</enabled>
+            <fhirVersion>R4</fhirVersion>
+            <profiles />
+            <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient</profileUrl>
+            <profileVersion>0.1.0</profileVersion>
+            <resourceType>Patient</resourceType>
+            <addMetaProfile>true</addMetaProfile>
+            <setLastUpdated>false</setLastUpdated>
+            <variable />
+            <action>resource</action>
+            <bundleTargets>[]</bundleTargets>
+            <bundleType>transaction</bundleType>
+            <refName />
+            <terminologyServer>n/a</terminologyServer>
+            <terminologyAuthorization />
+            <terminologyCacheSeconds>300</terminologyCacheSeconds>
+            <terminologyTimeoutSeconds>10</terminologyTimeoutSeconds>
+            <mappings>[{"key": "Patient.id", "element": "Patient.id", "type": "id", "expression": "'metier-' + msg['id_patient'].toString()", "path": [["id"]]}, {"key": "Patient.active", "element": "Patient.active", "type": "boolean", "expression": "msg['actif'].toString()", "path": [["active"]]}, {"key": "Patient.identifier:ipp.value", "element": "Patient.identifier:ipp.value", "type": "string", "expression": "msg['ipp'].toString()", "path": [["identifier", "ipp#0"], ["value"]]}, {"key": "Patient.name.use", "element": "Patient.name.use", "type": "code", "expression": "'official'", "path": [["name", "#0"], ["use"]]}, {"key": "Patient.name.family", "element": "Patient.name.family", "type": "string", "expression": "msg['nom_naissance'].toString()", "path": [["name", "#0"], ["family"]]}, {"key": "Patient.name.given", "element": "Patient.name.given", "type": "string", "expression": "msg['prenom'].toString()", "path": [["name", "#0"], ["given", "#0"]]}, {"key": "Patient.gender", "element": "Patient.gender", "type": "code", "expression": "msg['sexe'].toString()", "path": [["gender"]], "translate": {"conceptMap": "http://example.org/fhir/oru2fhir/ConceptMap/v2-0001-to-gender", "source": "http://terminology.hl7.org/CodeSystem/v2-0001", "target": "", "unmapped": "none", "keepSource": false}}, {"key": "Patient.birthDate", "element": "Patient.birthDate", "type": "date", "expression": "msg['date_naissance'].toString()", "path": [["birthDate"]]}, {"key": "Patient.identifier:ipp.system", "element": "Patient.identifier:ipp.system", "fixed": "http://example.org/fhir/oru2fhir/sid/ipp", "when": 1, "path": [["identifier", "ipp#0"], ["system"]]}]</mappings>
+            <samples>[{"id": "8a344391-6118-58c7-a84c-4e4a010f8101", "name": "SQL XML row", "dataType": "XML", "scope": "step", "message": "&lt;?xml version=\"1.0\" encoding=\"UTF-8\"?&gt;\n&lt;result&gt;\n  &lt;id_patient&gt;1042&lt;/id_patient&gt;\n  &lt;ipp&gt;000123456&lt;/ipp&gt;\n  &lt;nom_naissance&gt;Durand&lt;/nom_naissance&gt;\n  &lt;prenom&gt;Élodie&lt;/prenom&gt;\n  &lt;date_naissance&gt;1985-04-12&lt;/date_naissance&gt;\n  &lt;sexe&gt;F&lt;/sexe&gt;\n  &lt;actif&gt;1&lt;/actif&gt;\n&lt;/result&gt;\n", "expected": "{\n  \"resourceType\": \"Patient\",\n  \"id\": \"metier-1042\",\n  \"meta\": {\n    \"profile\": [\n      \"http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient\"\n    ]\n  },\n  \"identifier\": [\n    {\n      \"system\": \"http://example.org/fhir/oru2fhir/sid/ipp\",\n      \"value\": \"000123456\"\n    }\n  ],\n  \"active\": true,\n  \"name\": [\n    {\n      \"use\": \"official\",\n      \"family\": \"Durand\",\n      \"given\": [\n        \"Élodie\"\n      ]\n    }\n  ],\n  \"gender\": \"female\",\n  \"birthDate\": \"1985-04-12\"\n}\n\n"}]</samples>
+            <formatVersion>2</formatVersion>
+            <context>demo-labo</context>
+            <validation>inherit</validation>
+          </fr.kazepoy.fhir.mapper.FhirProfileMapperStep>
+          <com.mirth.connect.plugins.javascriptstep.JavaScriptStep version="4.7.0">
+            <name>Record MAPPER_MS</name>
+            <sequenceNumber>2</sequenceNumber>
+            <enabled>true</enabled>
+            <script>var elapsed = Number(java.lang.System.nanoTime()) - Number(channelMap.get('__mapperDebut'));
+channelMap.put('MAPPER_MS', Math.round(elapsed / 1000) / 1000);</script>
+          </com.mirth.connect.plugins.javascriptstep.JavaScriptStep>
+        </elements>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>FHIR</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="4.7.0">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="4.7.0">
+            <stripNamespaces>false</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="4.7.0">
+            <splitType>Element_Name</splitType>
+            <elementName />
+            <level>1</level>
+            <query />
+            <batchScript />
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirDataTypeProperties" version="4.7.0">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirSerializationProperties" version="4.7.0">
+            <fhirVersion>R4</fhirVersion>
+            <transformerFormat>XML</transformerFormat>
+            <stripNamespaces>true</stripNamespaces>
+            <outputFormat>JSON</outputFormat>
+            <prettyPrint>true</prettyPrint>
+            <validateInbound>false</validateInbound>
+            <validateOutbound>false</validateOutbound>
+            <invalidMessages>Reject</invalidMessages>
+            <failOn>Errors</failOn>
+            <profiles>/fhir-volume/ig</profiles>
+            <requiredProfile />
+            <unknownCodeSystems>Warning</unknownCodeSystems>
+            <anyExtensionsAllowed>true</anyExtensionsAllowed>
+            <terminologyServer />
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.fhir.FhirBatchProperties" version="4.7.0">
+            <splitType>Bundle_Entry</splitType>
+            <batchScript />
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="4.7.0">
+        <elements />
+        <inboundDataType>RAW</inboundDataType>
+        <outboundDataType>RAW</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
+            <splitType>JavaScript</splitType>
+            <batchScript />
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="4.7.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="4.7.0">
+            <splitType>JavaScript</splitType>
+            <batchScript />
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="4.7.0">
+        <elements />
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>false</waitForPrevious>
+    </connector>
+  </destinationConnectors>
+  <preprocessingScript>// Reset benchmark metadata on each message.
+channelMap.remove('FML_MS');
+channelMap.remove('MAPPER_MS');
+channelMap.remove('DIFF_MS');
+channelMap.put('OUTPUTS_EQUAL', 'false');
+channelMap.put('ERROR_STEP', 'OK');
+return message;</preprocessingScript>
+  <postprocessingScript>// Compare both destination outputs and store execution timings in metadata.
+var cm1 = message.getConnectorMessages().get(java.lang.Integer.valueOf(1));
+var cm2 = message.getConnectorMessages().get(java.lang.Integer.valueOf(2));
+var fmlMs = cm1 != null ? cm1.getChannelMap().get('FML_MS') : null;
+var mapperMs = cm2 != null ? cm2.getChannelMap().get('MAPPER_MS') : null;
+
+function canonical(value) {
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
+    return '{' + Object.keys(value).sort().map(function (k) {
+        return JSON.stringify(k) + ':' + canonical(value[k]);
+    }).join(',') + '}';
+}
+
+var out1 = cm1 &amp;&amp; cm1.getEncoded() ? String(cm1.getEncoded().getContent()) : '';
+var out2 = cm2 &amp;&amp; cm2.getEncoded() ? String(cm2.getEncoded().getContent()) : '';
+var outputsEqual = 'false';
+if (out1 &amp;&amp; out2) {
+    try {
+        outputsEqual = canonical(JSON.parse(out1)) === canonical(JSON.parse(out2)) ? 'true' : 'false';
+    } catch (e) {
+        outputsEqual = out1.trim() === out2.trim() ? 'true' : 'false';
+    }
+}
+
+var errorLabel = 'OK';
+var connectors = message.getConnectorMessages().values().iterator();
+while (connectors.hasNext()) {
+    var cm = connectors.next();
+    var error = cm.getProcessingError() || cm.getResponseError() || cm.getPostProcessorError();
+    if (error) {
+        var details = String(error);
+        var cause = /DETAILS:\s*([^\r\n]+)/.exec(details);
+        errorLabel = (cm.getConnectorName() + ': ' + (cause ? cause[1] : details.split(/\r?\n/)[0])).substring(0, 255);
+        break;
+    }
+}
+
+var values = new java.util.HashMap();
+if (fmlMs != null) values.put('FML_MS', new java.math.BigDecimal(String(fmlMs)));
+if (mapperMs != null) values.put('MAPPER_MS', new java.math.BigDecimal(String(mapperMs)));
+if (fmlMs != null &amp;&amp; mapperMs != null) {
+    var diffMs = Math.round((Number(fmlMs) - Number(mapperMs)) * 1000) / 1000;
+    values.put('DIFF_MS', new java.math.BigDecimal(String(diffMs)));
+}
+values.put('OUTPUTS_EQUAL', outputsEqual);
+values.put('ERROR_STEP', errorLabel);
+var record = new Packages.com.mirth.connect.donkey.model.message.ConnectorMessage();
+record.setChannelId(channelId);
+record.setMessageId(message.getMessageId());
+record.setMetaDataId(0);
+record.setMetaDataMap(values);
+var dao = Packages.com.mirth.connect.donkey.server.Donkey.getInstance().getDaoFactory().getDao();
+var committed = false;
+try {
+    dao.storeMetaData(record, dao.getMetaDataColumns(channelId));
+    dao.commit();
+    committed = true;
+} finally {
+    try {
+        if (!committed) dao.rollback();
+    } finally {
+        dao.close();
+    }
+}
+return;</postprocessingScript>
+  <deployScript>return;</deployScript>
+  <undeployScript>return;</undeployScript>
+  <properties version="4.7.0">
+    <clearGlobalChannelMap>true</clearGlobalChannelMap>
+    <messageStorageMode>DEVELOPMENT</messageStorageMode>
+    <encryptData>false</encryptData>
+    <encryptAttachments>false</encryptAttachments>
+    <encryptCustomMetaData>false</encryptCustomMetaData>
+    <removeContentOnCompletion>false</removeContentOnCompletion>
+    <removeOnlyFilteredOnCompletion>false</removeOnlyFilteredOnCompletion>
+    <removeAttachmentsOnCompletion>false</removeAttachmentsOnCompletion>
+    <initialState>STARTED</initialState>
+    <storeAttachments>true</storeAttachments>
+    <metaDataColumns>
+      <com.mirth.connect.donkey.model.channel.MetaDataColumn>
+        <name>FML_MS</name>
+        <type>NUMBER</type>
+        <mappingName>FML_MS</mappingName>
+      </com.mirth.connect.donkey.model.channel.MetaDataColumn>
+      <com.mirth.connect.donkey.model.channel.MetaDataColumn>
+        <name>MAPPER_MS</name>
+        <type>NUMBER</type>
+        <mappingName>MAPPER_MS</mappingName>
+      </com.mirth.connect.donkey.model.channel.MetaDataColumn>
+      <com.mirth.connect.donkey.model.channel.MetaDataColumn>
+        <name>DIFF_MS</name>
+        <type>NUMBER</type>
+        <mappingName>DIFF_MS</mappingName>
+      </com.mirth.connect.donkey.model.channel.MetaDataColumn>
+      <com.mirth.connect.donkey.model.channel.MetaDataColumn>
+        <name>OUTPUTS_EQUAL</name>
+        <type>STRING</type>
+        <mappingName>OUTPUTS_EQUAL</mappingName>
+      </com.mirth.connect.donkey.model.channel.MetaDataColumn>
+      <com.mirth.connect.donkey.model.channel.MetaDataColumn>
+        <name>ERROR_STEP</name>
+        <type>STRING</type>
+        <mappingName>ERROR_STEP</mappingName>
+      </com.mirth.connect.donkey.model.channel.MetaDataColumn>
+    </metaDataColumns>
+    <attachmentProperties version="4.7.0">
+      <type>None</type>
+      <properties />
+    </attachmentProperties>
+    <resourceIds class="linked-hash-map">
+      <entry>
+        <string>Default Resource</string>
+        <string>[Default Resource]</string>
+      </entry>
+    </resourceIds>
+  </properties>
+  <exportData>
+    <metadata>
+      <enabled>true</enabled>
+      <lastModified>
+        <time>1787000000000</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <pruningSettings>
+        <archiveEnabled>true</archiveEnabled>
+        <pruneErroredMessages>false</pruneErroredMessages>
+      </pruningSettings>
+      <userId>1</userId>
+    </metadata>
+    <channelTags>
+      <channelTag>
+        <id>612284a7-41e3-5f8f-a137-093fab0a405c</id>
+        <name>R4</name>
+        <channelIds>
+          <string>6a2b9104-4d15-4a2b-8f30-810100000001</string>
+        </channelIds>
+        <backgroundColor>
+          <red>37</red>
+          <green>99</green>
+          <blue>235</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>61eb6a3c-44eb-5f48-b531-763f3390a590</id>
+        <name>XML</name>
+        <channelIds>
+          <string>6a2b9104-4d15-4a2b-8f30-810100000001</string>
+        </channelIds>
+        <backgroundColor>
+          <red>8</red>
+          <green>145</green>
+          <blue>178</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>6f8d86d3-a582-5edb-9836-94587030a667</id>
+        <name>FML</name>
+        <channelIds>
+          <string>6a2b9104-4d15-4a2b-8f30-810100000001</string>
+        </channelIds>
+        <backgroundColor>
+          <red>124</red>
+          <green>58</green>
+          <blue>237</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>c2c74737-3123-52e7-886d-ee30e924db89</id>
+        <name>Mapper</name>
+        <channelIds>
+          <string>6a2b9104-4d15-4a2b-8f30-810100000001</string>
+        </channelIds>
+        <backgroundColor>
+          <red>29</red>
+          <green>78</green>
+          <blue>216</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>6efc4ffa-91f6-5a29-96be-b67eb82873b2</id>
+        <name>benchmark</name>
+        <channelIds>
+          <string>6a2b9104-4d15-4a2b-8f30-810100000001</string>
+        </channelIds>
+        <backgroundColor>
+          <red>217</red>
+          <green>119</green>
+          <blue>6</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>d63f14a6-0b7d-5140-8c84-06f9e0a0ce3b</id>
+        <name>destination-mapping</name>
+        <channelIds>
+          <string>6a2b9104-4d15-4a2b-8f30-810100000001</string>
+        </channelIds>
+        <backgroundColor>
+          <red>180</red>
+          <green>83</green>
+          <blue>9</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>ca96cabd-a51c-5e84-8143-6a0add3c5f7f</id>
+        <name>dual-destination</name>
+        <channelIds>
+          <string>6a2b9104-4d15-4a2b-8f30-810100000001</string>
+        </channelIds>
+        <backgroundColor>
+          <red>194</red>
+          <green>65</green>
+          <blue>12</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>d97bd593-b6df-560c-b71c-bab1ba618687</id>
+        <name>inline</name>
+        <channelIds>
+          <string>6a2b9104-4d15-4a2b-8f30-810100000001</string>
+        </channelIds>
+        <backgroundColor>
+          <red>139</red>
+          <green>92</green>
+          <blue>246</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+    </channelTags>
+  </exportData>
+</channel>

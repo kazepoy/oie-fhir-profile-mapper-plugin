@@ -166,7 +166,7 @@ channelMap.put('__demoTransfoDebut', java.lang.System.nanoTime());</script>
             <sequenceNumber>1</sequenceNumber>
             <enabled>true</enabled>
             <fhirVersion>R4</fhirVersion>
-            <profiles>/fhir-ig</profiles>
+            <profiles>/fhir-volume/ig</profiles>
             <profileUrl>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient</profileUrl>
             <profileVersion>0.1.0</profileVersion>
             <resourceType>Patient</resourceType>
@@ -230,7 +230,7 @@ channelMap.put('__demoEtape', 'OUTPUT / FHIR Patient');</script>
             <validateOutbound>true</validateOutbound>
             <invalidMessages>Reject</invalidMessages>
             <failOn>Errors</failOn>
-            <profiles>/fhir-ig</profiles>
+            <profiles>/fhir-volume/ig</profiles>
             <requiredProfile>http://example.org/fhir/oru2fhir/StructureDefinition/ExampleLabPatient</requiredProfile>
             <unknownCodeSystems>Warning</unknownCodeSystems>
             <anyExtensionsAllowed>true</anyExtensionsAllowed>
