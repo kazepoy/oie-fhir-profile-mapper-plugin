@@ -148,8 +148,8 @@ jusqu'à l'échec. Aucun stockage propre au plugin n'est ajouté.
 - Administration web : **Messages**, choisir le message, onglet **Mappings**,
   variable `fhirMapperTrace` de portée *Connector*.
 - API OIE : `GET /api/channels/{channelId}/messages/{messageId}`, puis
-  `connectorMessages/…/connectorMapContent`. Voir `connector_trace()` dans
-  [check.py](../../examples/check.py).
+  `connectorMessages/…/connectorMapContent`. Voir
+  [demo-flows.test.js](../../webadmin/test/e2e/demo-flows.test.js).
 
 Le mode de stockage des messages du channel doit conserver les maps : c'est le
 cas du mode *Development* utilisé par la démo ; vérifier ce point pour un autre
@@ -205,13 +205,14 @@ résultat identique avec et sans trace, corrélation (channel, révision, messag
 finalisation et publication, étapes non tracées, consentement aux valeurs par
 étape, trace partielle sur erreur et troncature.
 
-Le [script de rejeu](../../examples/check.py) vérifie ces propriétés sur l'API
-OIE, avec l'exemple complet et la troncature à trois événements, puis la trace
-du dernier message ORU du channel de démo, dont les étapes Patient et Observation
-sont tracées. Les tests Node vérifient les libellés, les indices et la
-sérialisation de l'export. Le téléchargement de l'export, l'activation dans
-**Properties** et la lecture dans **Messages > Mappings** ont été vérifiés dans
-le navigateur.
+Les tests [Node / Playwright](../../webadmin/test/e2e/demo-mapper-api.test.js)
+vérifient ces propriétés sur l'API OIE, avec l'exemple complet et la troncature
+à trois événements, puis [demo-flows.test.js](../../webadmin/test/e2e/demo-flows.test.js)
+contrôle la trace du dernier message ORU du channel de démo, dont les étapes
+Patient et Observation sont tracées. Les tests unitaires Node vérifient les
+libellés, les indices et la sérialisation de l'export. Le téléchargement de
+l'export, l'activation dans **Properties** et la lecture dans
+**Messages > Mappings** ont été vérifiés dans le navigateur.
 
 ## Aperçu multi-étapes
 

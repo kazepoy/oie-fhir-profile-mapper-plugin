@@ -30,7 +30,7 @@ Sur un volume déjà initialisé, relancer `oie-init` réinitialise les contexte
 
 La [matrice des exemples](Matrice-exemples.md) classe les canaux par groupes et
 tags, précise les samples disponibles et distingue les capacités démontrées
-des cas encore à construire. Les dix-sept canaux comportant Profile Mapper ont des samples enregistrés avec attendu ; cinq aperçus FML sont rejoués par `check.py`, plus un mock HTTP de terminologie.
+des cas encore à construire. Les dix-sept canaux comportant Profile Mapper ont des samples enregistrés avec attendu ; cinq aperçus FML sont rejoués par la suite `test:e2e`, plus un mock HTTP de terminologie.
 Les vingt-trois canaux sont classés dans neuf groupes natifs OIE (`HL7v2 - Mapper`, `HL7v2 - FML`, `FML versus Mapper`, `JSON - Mapper`, `CSV - Mapper`, `CSV - FML`, `XML - Mapper`, `FHIR - FML`, `HTTP - Mock`) et portent des tags
 fonctionnels colorés (sans tags IG/profil) ordonnés uniformément : version, source, transformeur, puis fonctions illustrées triées alphabétiquement.
 
@@ -108,19 +108,20 @@ Compose `fhir-profile-mapper-demo`.
 ## Rejouer les exemples
 
 Les requêtes prêtes à exécuter sont dans
-[demo.http](../../examples/demo.http). Le contrôle complet nécessite Python 3 et les dépendances des outils,
+[demo.http](../../examples/demo.http). La vérification complète des canaux, des
+aperçus, des traces, des *samples* et de l'administration web passe par Node et
+Playwright (voir la [stratégie de tests](../development/Strategie-tests.md)),
 depuis la racine du projet :
 
 ```sh
-python3 -m pip install -r tools/requirements.txt
-python3 examples/check.py
+npm --prefix webadmin run test:e2e
 ```
 
-Ce script crée des messages dans les canaux de démo. Il vérifie les réponses
-HTTP et lit les messages via l’API OIE, sans modifier les canaux. Il compare
+La suite crée des messages dans les canaux de démo. Elle vérifie les réponses
+HTTP et lit les messages via l’API OIE, sans modifier les canaux. Elle compare
 aussi les aperçus multi-étapes aux sorties des canaux déployés, pour un Bundle
-et les deux Bundles labo, puis rejoue les samples des exports avec le même outil
-que [run_tests.py](Rejeu-tests.md).
+et les deux Bundles labo, puis rejoue les *samples* des exports et les parcours
+navigateur.
 
 | Port | Route | Résultat vérifié |
 |---|---|---|

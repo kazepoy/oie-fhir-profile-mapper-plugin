@@ -105,8 +105,9 @@ Les cinq canaux suivants complètent la matrice sans modification du contrat plu
 
 ## Contrôles automatisés
 
-`python3 examples/check.py` compare les réponses HTTP aux attendus, rejoue
-les aperçus et vérifie que chaque contre-exemple produit un nouveau message
+La suite [demo-channels.test.js](../../webadmin/test/e2e/demo-channels.test.js)
+(`npm --prefix webadmin run test:e2e`) compare les réponses HTTP aux attendus,
+rejoue les aperçus et vérifie que chaque contre-exemple produit un nouveau message
 OIE en erreur avec le diagnostic attendu. Les quatorze samples positifs Profile
 Mapper restent rejouables avec `tools/run_tests.py` ; les cinq aperçus FML sont
 contrôlés depuis le manifeste de démonstration.

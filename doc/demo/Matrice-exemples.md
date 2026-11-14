@@ -65,7 +65,7 @@ Le Profile Mapper strict enregistre déjà ce sample XML. Pour FML typé,
 sélectionner XML et copier ce fichier dans **Sample message**. FML n'enregistre
 pas encore de jeux d'essai dans l'étape : le manifeste associe l'entrée XML à
 son [Bundle attendu](../../examples/hl7v2/oru-r01-minimal-strict-expected.json), et
-`check.py` les rejoue via `/extensions/fhir-fml/test`.
+la suite [Node / Playwright](../../webadmin/test/e2e/demo-channels.test.js) les rejoue via `/api/extensions/fhir-fml/test`.
 
 Le Bundle FML typé est un exemple d'imports et de modèle logique, pas une
 conversion clinique complète : la valeur biologique est une `valueString`, sans
@@ -78,7 +78,7 @@ découpage batch. Le rejeu HTTP du CSV reste donc nécessaire.
 
 ## Diagnostics disponibles
 
-`python3 examples/check.py` vérifie aussi :
+La suite `npm --prefix webadmin run test:e2e` vérifie aussi :
 
 - naissance obligatoire absente : message déployé en erreur avec `birthDate` ;
 - conversion booléenne impossible : diagnostic avec chemin, règle et expression ;
@@ -106,7 +106,7 @@ Depuis la racine, démo à jour et démarrée :
 ```sh
 python3 -m unittest discover -s tools/tests
 python3 tools/run_tests.py --offline demo/oie-init/channels
-python3 examples/check.py
+npm --prefix webadmin run test:e2e
 ```
 
 Le premier contrôle impose une entrée de manifeste par export, l'ordre

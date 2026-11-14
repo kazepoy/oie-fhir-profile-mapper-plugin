@@ -36,7 +36,7 @@ that FHIR Data Type ships, with no extra library.
 ```sh
 cd demo
 docker compose up -d --build
-python3 examples/check.py   # sends messages through the demo channels
+cd ../webadmin && npm run test:e2e   # runs API, channel and Web Admin Playwright tests
 ```
 
 Administration: <https://localhost:8443/oie-webadmin/> (`admin` /

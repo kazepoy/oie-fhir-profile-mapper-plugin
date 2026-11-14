@@ -102,8 +102,7 @@ avec `fr.kazepoy.fhir.*`, les résultats de la démo et les contrôles suivants 
 ```sh
 mvn clean package
 python3 -m unittest discover -s tools/tests
-python3 examples/check.py
-cd webadmin && npm run test:e2e
+npm --prefix webadmin run test:e2e
 ```
 
 Le rejeu de démo et Playwright nécessitent la démo active. Une limitation

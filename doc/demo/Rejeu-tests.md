@@ -58,6 +58,7 @@ Code de sortie : **0** si tous les contrôles réussissent, **1** en cas d’éc
 La sortie récapitule les fichiers réussis ; un fichier en échec peut avoir
 exécuté des samples avant son premier échec.
 
-`python3 examples/check.py` utilise ce rejeu sur les exports de démonstration
-et vérifie aussi les sorties des canaux déployés (ce dernier script crée des
-messages de démonstration). Voir [Demo.md](Demo.md).
+La suite [demo-mapper-api.test.js](../../webadmin/test/e2e/demo-mapper-api.test.js)
+rejoue également tous ces *samples* en ligne via Node/Playwright et vérifie les
+sorties des canaux déployés (`npm --prefix webadmin run test:e2e`). Voir
+[Demo.md](Demo.md).

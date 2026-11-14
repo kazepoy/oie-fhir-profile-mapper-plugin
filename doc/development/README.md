@@ -1,6 +1,7 @@
 # Développement
 
 - [Compiler, installer et publier](Developpement.md) ;
+- [stratégie de tests](Strategie-tests.md) ;
 - [internationaliser le frontend](i18n.md).
 
 Les exemples et leur rejeu appartiennent à la [démonstration](../demo/README.md).

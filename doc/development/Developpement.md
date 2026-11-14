@@ -101,10 +101,12 @@ parcours sont explicitement définis, indépendamment du poste de développement
 
 ## Rejouer les exemples
 
-Le [guide de rejeu](../demo/Rejeu-tests.md) décrit `tools/run_tests.py`, la validation
-hors ligne et les essais sur serveur. La CI de release contrôle les exports
-positifs hors ligne ; `examples/check.py` compare les aperçus aux sorties
-déployées et rejoue les samples de la démo en ligne.
+La [stratégie de tests](Strategie-tests.md) présente les trois niveaux de
+contrôle (unitaires Java/JS, API/canaux et navigateur). Le
+[guide de rejeu](../demo/Rejeu-tests.md) décrit `tools/run_tests.py`, la
+validation hors ligne et les essais sur serveur utilisés par la CI de release ;
+`npm --prefix webadmin run test:e2e` exécute l'ensemble des vérifications en
+ligne (canaux, aperçus, *samples* et interface web).
 
 ## Contrôler la documentation
 
