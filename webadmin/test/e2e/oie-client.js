@@ -20,9 +20,9 @@ export const readExample = rel => readRepoFile(`examples/${rel}`);
 export const readJsonExample = async rel => JSON.parse(await readExample(rel));
 export const loadManifest = async () => JSON.parse(await readExample("channels.json"));
 
-/** Reads the <id> of a channel export XML in demo/oie-init/channels/. */
+/** Reads the <id> of a channel export XML in demo/oie-init/data/channels/. */
 export async function channelId(channelFile) {
-  const xml = await readRepoFile(`demo/oie-init/channels/${channelFile}`);
+  const xml = await readRepoFile(`demo/oie-init/data/channels/${channelFile}`);
   const id = xml.match(/<channel[^>]*>\s*<id>([^<]+)<\/id>/)?.[1];
   if (!id) throw new Error(`Missing channel id in ${channelFile}`);
   return id.trim();

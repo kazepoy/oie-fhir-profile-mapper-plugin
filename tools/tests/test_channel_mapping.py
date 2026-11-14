@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 class ChannelMappingTest(unittest.TestCase):
     def test_all_demo_exports_can_be_read_and_updated_without_touching_other_steps(self):
-        for path in (ROOT / "demo/oie-init/channels").glob("*.xml"):
+        for path in (ROOT / "demo/oie-init/data/channels").glob("*.xml"):
             xml = path.read_bytes().decode("utf-8")
             root, entries = steps(xml)
             for connector, kind, node, step in entries:
@@ -34,7 +34,7 @@ class ChannelMappingTest(unittest.TestCase):
                 self.assertEqual(root.findtext("id"), ET.fromstring(updated).findtext("id"))
 
     def test_wrong_selection_and_invalid_rules_are_rejected(self):
-        xml = (ROOT / "demo/oie-init/channels/sql-xml-to-fhir-patient.xml").read_text()
+        xml = (ROOT / "demo/oie-init/data/channels/sql-xml-to-fhir-patient.xml").read_text()
         with self.assertRaises(ValueError):
             select(xml, "999", "999")
         _, entries = steps(xml)

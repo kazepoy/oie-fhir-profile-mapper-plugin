@@ -1,0 +1,213 @@
+<serverConfiguration version="4.7.0">
+  <channelGroups/>
+  <channels/>
+  <channelTags/>
+  <alerts/>
+  <codeTemplateLibraries/>
+  <serverSettings>
+    <clearGlobalMap>true</clearGlobalMap>
+    <queueBufferSize>1000</queueBufferSize>
+    <defaultMetaDataColumns>
+      <metaDataColumn>
+        <name>SOURCE</name>
+        <type>STRING</type>
+        <mappingName>mirth_source</mappingName>
+      </metaDataColumn>
+      <metaDataColumn>
+        <name>TYPE</name>
+        <type>STRING</type>
+        <mappingName>mirth_type</mappingName>
+      </metaDataColumn>
+    </defaultMetaDataColumns>
+    <defaultAdministratorBackgroundColor>
+      <red>42</red>
+      <green>117</green>
+      <blue>178</blue>
+      <alpha>255</alpha>
+    </defaultAdministratorBackgroundColor>
+    <smtpTimeout>5000</smtpTimeout>
+    <smtpSecure>0</smtpSecure>
+    <smtpAuth>false</smtpAuth>
+    <loginNotificationEnabled>false</loginNotificationEnabled>
+    <loginNotificationMessage></loginNotificationMessage>
+    <administratorAutoLogoutIntervalEnabled>false</administratorAutoLogoutIntervalEnabled>
+    <administratorAutoLogoutIntervalField>5</administratorAutoLogoutIntervalField>
+  </serverSettings>
+  <updateSettings version="4.7.0">
+    <statsEnabled>true</statsEnabled>
+  </updateSettings>
+  <globalScripts>
+    <entry>
+      <string>Undeploy</string>
+      <string>// This script executes once for each deploy, undeploy, or redeploy task
+// if at least one channel was undeployed
+// You only have access to the globalMap here to persist data
+return;</string>
+    </entry>
+    <entry>
+      <string>Postprocessor</string>
+      <string>// This script executes once after a message has been processed
+// This script applies across all channels
+// Responses returned from here will be stored as &quot;Postprocessor&quot; in the response map
+// You have access to &quot;response&quot;, if returned from the channel postprocessor
+return;</string>
+    </entry>
+    <entry>
+      <string>Deploy</string>
+      <string>// This script executes once for each deploy or redeploy task
+// You only have access to the globalMap here to persist data
+return;</string>
+    </entry>
+    <entry>
+      <string>Preprocessor</string>
+      <string>// Modify the message variable below to pre process data
+// This script applies across all channels
+return message;</string>
+    </entry>
+  </globalScripts>
+  <pluginProperties>
+    <entry>
+      <string>FHIR Profile Mapper</string>
+      <properties>
+        <property name="settings">{
+  &quot;contexts&quot;: [
+    {
+      &quot;name&quot;: &quot;demo-labo&quot;,
+      &quot;fhirVersion&quot;: &quot;R4&quot;,
+      &quot;packages&quot;: [
+        &quot;/fhir-volume/ig&quot;
+      ],
+      &quot;terminologyServer&quot;: &quot;&quot;,
+      &quot;terminologyAuthorization&quot;: &quot;&quot;,
+      &quot;cacheSeconds&quot;: 300,
+      &quot;timeoutSeconds&quot;: 10,
+      &quot;validation&quot;: &quot;always&quot;
+    },
+    {
+      &quot;name&quot;: &quot;fr-core-2.2.0&quot;,
+      &quot;fhirVersion&quot;: &quot;R4&quot;,
+      &quot;packages&quot;: [
+        &quot;/fhir-packages/hl7.fhir.fr.core-2.2.0.tgz&quot;,
+        &quot;/fhir-packages/hl7.fhir.uv.extensions.r4-5.2.0.tgz&quot;,
+        &quot;/fhir-packages/hl7.terminology.r4-7.1.0.tgz&quot;,
+        &quot;/fhir-packages/ans.fr.terminologies-1.7.0.tgz&quot;
+      ],
+      &quot;terminologyServer&quot;: &quot;&quot;,
+      &quot;terminologyAuthorization&quot;: &quot;&quot;,
+      &quot;cacheSeconds&quot;: 300,
+      &quot;timeoutSeconds&quot;: 10,
+      &quot;validation&quot;: &quot;always&quot;
+    },
+    {
+      &quot;name&quot;: &quot;eu-laboratory-2.0.0&quot;,
+      &quot;fhirVersion&quot;: &quot;R4&quot;,
+      &quot;packages&quot;: [
+        &quot;/fhir-packages/hl7.fhir.eu.laboratory-2.0.0.tgz&quot;,
+        &quot;/fhir-packages/hl7.fhir.eu.base-2.0.0.tgz&quot;,
+        &quot;/fhir-packages/hl7.fhir.eu.extensions.r4-1.3.0.tgz&quot;,
+        &quot;/fhir-packages/hl7.fhir.uv.extensions.r4-5.2.0.tgz&quot;,
+        &quot;/fhir-packages/hl7.terminology.r4-7.1.0.tgz&quot;,
+        &quot;/fhir-packages/hl7.fhir.uv.xver-r5.r4-0.1.0.tgz&quot;
+      ],
+      &quot;terminologyServer&quot;: &quot;&quot;,
+      &quot;terminologyAuthorization&quot;: &quot;&quot;,
+      &quot;cacheSeconds&quot;: 300,
+      &quot;timeoutSeconds&quot;: 10,
+      &quot;validation&quot;: &quot;always&quot;
+    },
+    {
+      &quot;name&quot;: &quot;external-terminology&quot;,
+      &quot;fhirVersion&quot;: &quot;R4&quot;,
+      &quot;packages&quot;: [
+        &quot;/fhir-volume/ig&quot;
+      ],
+      &quot;terminologyServer&quot;: &quot;http://127.0.0.1:10819/fhir&quot;,
+      &quot;terminologyAuthorization&quot;: &quot;&quot;,
+      &quot;cacheSeconds&quot;: 0,
+      &quot;timeoutSeconds&quot;: 3,
+      &quot;validation&quot;: &quot;always&quot;
+    },
+    {
+      &quot;name&quot;: &quot;demo-r5&quot;,
+      &quot;fhirVersion&quot;: &quot;R5&quot;,
+      &quot;packages&quot;: [],
+      &quot;terminologyServer&quot;: &quot;&quot;,
+      &quot;terminologyAuthorization&quot;: &quot;&quot;,
+      &quot;cacheSeconds&quot;: 300,
+      &quot;timeoutSeconds&quot;: 10,
+      &quot;validation&quot;: &quot;always&quot;
+    }
+  ]
+}</property>
+      </properties>
+    </entry>
+    <entry>
+      <string>Role-Based Access Control</string>
+      <properties>
+        <property name="schema_version">4</property>
+      </properties>
+    </entry>
+    <entry>
+      <string>Data Pruner</string>
+      <properties>
+        <property name="archiveEnabled">&lt;boolean&gt;false&lt;/boolean&gt;</property>
+        <property name="archiverBlockSize">50</property>
+        <property name="archiverOptions">&lt;com.mirth.connect.util.messagewriter.MessageWriterOptions&gt;
+  &lt;destinationContent&gt;false&lt;/destinationContent&gt;
+  &lt;encrypt&gt;false&lt;/encrypt&gt;
+  &lt;includeAttachments&gt;false&lt;/includeAttachments&gt;
+  &lt;passwordEnabled&gt;false&lt;/passwordEnabled&gt;
+&lt;/com.mirth.connect.util.messagewriter.MessageWriterOptions&gt;</property>
+        <property name="enabled">false</property>
+        <property name="includeAttachments">&lt;boolean&gt;false&lt;/boolean&gt;</property>
+        <property name="maxEventAge"></property>
+        <property name="pollingProperties">&lt;com.mirth.connect.donkey.model.channel.PollConnectorProperties version=&quot;4.7.0&quot;&gt;
+  &lt;pollingType&gt;INTERVAL&lt;/pollingType&gt;
+  &lt;pollOnStart&gt;false&lt;/pollOnStart&gt;
+  &lt;pollingFrequency&gt;3600000&lt;/pollingFrequency&gt;
+  &lt;pollingHour&gt;0&lt;/pollingHour&gt;
+  &lt;pollingMinute&gt;0&lt;/pollingMinute&gt;
+  &lt;cronJobs/&gt;
+  &lt;pollConnectorPropertiesAdvanced&gt;
+    &lt;weekly&gt;true&lt;/weekly&gt;
+    &lt;inactiveDays&gt;
+      &lt;boolean&gt;false&lt;/boolean&gt;
+      &lt;boolean&gt;false&lt;/boolean&gt;
+      &lt;boolean&gt;false&lt;/boolean&gt;
+      &lt;boolean&gt;false&lt;/boolean&gt;
+      &lt;boolean&gt;false&lt;/boolean&gt;
+      &lt;boolean&gt;false&lt;/boolean&gt;
+      &lt;boolean&gt;false&lt;/boolean&gt;
+      &lt;boolean&gt;false&lt;/boolean&gt;
+    &lt;/inactiveDays&gt;
+    &lt;dayOfMonth&gt;1&lt;/dayOfMonth&gt;
+    &lt;allDay&gt;true&lt;/allDay&gt;
+    &lt;startingHour&gt;8&lt;/startingHour&gt;
+    &lt;startingMinute&gt;0&lt;/startingMinute&gt;
+    &lt;endingHour&gt;17&lt;/endingHour&gt;
+    &lt;endingMinute&gt;0&lt;/endingMinute&gt;
+  &lt;/pollConnectorPropertiesAdvanced&gt;
+&lt;/com.mirth.connect.donkey.model.channel.PollConnectorProperties&gt;</property>
+        <property name="pruneEvents">false</property>
+        <property name="pruningBlockSize">1000</property>
+      </properties>
+    </entry>
+  </pluginProperties>
+  <resourceProperties>
+    <list>
+      <com.mirth.connect.plugins.directoryresource.DirectoryResourceProperties version="4.7.0">
+  <pluginPointName>Directory Resource</pluginPointName>
+        <type>Directory</type>
+        <id>Default Resource</id>
+        <name>[Default Resource]</name>
+        <description>Loads libraries from the custom-lib folder in the Open Integration Engine home directory.</description>
+        <includeWithGlobalScripts>true</includeWithGlobalScripts>
+        <loadParentFirst>false</loadParentFirst>
+        <directory>custom-lib</directory>
+        <directoryRecursion>true</directoryRecursion>
+      </com.mirth.connect.plugins.directoryresource.DirectoryResourceProperties>
+    </list>
+  </resourceProperties>
+  <channelDependencies/>
+  <configurationMap/>
+</serverConfiguration>

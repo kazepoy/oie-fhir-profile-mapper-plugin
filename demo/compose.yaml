@@ -25,6 +25,7 @@ services:
   oie-db:
     image: postgres:18.3-alpine
     restart: unless-stopped
+    command: ["postgres", "-c", "idle_in_transaction_session_timeout=15000"]
     environment:
       POSTGRES_DB: oie
       POSTGRES_USER: oie
@@ -82,7 +83,7 @@ services:
       start_period: 120s
     logging: *logging
 
-  # Réinitialise OIE avec les contextes FHIR, les canaux de demo/oie-init/channels et les groupes.
+  # Réinitialise OIE depuis demo/oie-init/data (configuration, canaux et groupes).
   oie-init:
     image: curlimages/curl:8.21.0
     restart: "no"

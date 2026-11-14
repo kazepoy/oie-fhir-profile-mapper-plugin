@@ -29,7 +29,7 @@ class MappingSchemaTest(unittest.TestCase):
         self.assertTrue(any("$.mappings (décodé)" in e for e in errors(invalid)))
 
     def test_all_demo_channels(self):
-        channels = list((ROOT / "demo/oie-init/channels").glob("*.xml"))
+        channels = list((ROOT / "demo/oie-init/data/channels").glob("*.xml"))
         self.assertEqual(23, len(channels))  # 11 Profile Mapper, 5 FML, 6 FML+Mapper, 1 HTTP mock
         count = 0
         for path in channels:
@@ -51,7 +51,7 @@ class MappingSchemaTest(unittest.TestCase):
 
     def test_demo_matrix_covers_exports_and_their_test_material(self):
         examples = ROOT / "examples"
-        channels = ROOT / "demo/oie-init/channels"
+        channels = ROOT / "demo/oie-init/data/channels"
         cases = json.loads((examples / "channels.json").read_text())["channels"]
         names = [case["channel"] for case in cases]
         self.assertEqual(len(names), len(set(names)))
@@ -100,13 +100,13 @@ class MappingSchemaTest(unittest.TestCase):
 
     def test_native_groups_and_tags_match_the_demo_manifest(self):
         manifest = json.loads((ROOT / "examples/channels.json").read_text())
-        exports = {case["channel"]: ET.parse(ROOT / "demo/oie-init/channels" / case["channel"]).getroot()
+        exports = {case["channel"]: ET.parse(ROOT / "demo/oie-init/data/channels" / case["channel"]).getroot()
                    for case in manifest["channels"]}
         ports = [root.findtext("sourceConnector/properties/listenerConnectorProperties/port") for root in exports.values()]
         self.assertEqual(len(ports), len(set(ports)))
         members = set()
         for definition in manifest["groups"]:
-            group = ET.parse(ROOT / "demo/oie-init/groups" / (definition["key"] + ".xml")).getroot().find("channelGroup")
+            group = ET.parse(ROOT / "demo/oie-init/data/groups" / (definition["key"] + ".xml")).getroot().find("channelGroup")
             self.assertEqual(definition["id"], group.findtext("id"))
             self.assertEqual(definition["name"], group.findtext("name"))
             expected = {exports[c["channel"]].findtext("id") for c in manifest["channels"] if c["group"] == definition["key"]}

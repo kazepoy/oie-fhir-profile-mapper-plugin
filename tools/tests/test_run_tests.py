@@ -44,7 +44,7 @@ class ReplayTest(unittest.TestCase):
 
     def test_demo_exports_keep_connector_and_response_groups_separate(self):
         count = 0
-        for path in (ROOT / "demo/oie-init/channels").glob("*.xml"):
+        for path in (ROOT / "demo/oie-init/data/channels").glob("*.xml"):
             for group, steps in groups(path).items():
                 self.assertRegex(group, r"^\d+/(transformer|responseTransformer)$")
                 count += len(steps)

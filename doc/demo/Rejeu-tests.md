@@ -12,7 +12,7 @@ volontairement invalides comme `invalid-path.step.json`.
 
 ```sh
 python3 -m pip install -r tools/requirements.txt
-python3 tools/run_tests.py --offline demo/oie-init/channels \
+python3 tools/run_tests.py --offline demo/oie-init/data/channels \
   doc/demo/examples/mapping/patient-samples.step.json \
   doc/demo/examples/mapping/laboratory-samples.steps.json
 ```
@@ -28,7 +28,7 @@ l’environnement, puis :
 
 ```sh
 python3 tools/run_tests.py --url https://localhost:8443/api --user admin \
-  --insecure demo/oie-init/channels \
+  --insecure demo/oie-init/data/channels \
   doc/demo/examples/mapping/laboratory-samples.steps.json
 ```
 

@@ -1,7 +1,8 @@
 #!/bin/sh
-# Réinitialise OIE à l'état initial de la démo : supprime les canaux, groupes et tags
-# existants, installe les contextes FHIR, importe et déploie tous les canaux de
-# channels/ et groupes de groups/, puis marque la première connexion comme faite.
+# Réinitialise OIE depuis demo/oie-init/data :
+# 1. Restaure la configuration serveur OIE (écrase l'existant, contextes FHIR inclus).
+# 2. Importe les canaux (data/channels/) et les groupes (data/groups/) au format export OIE.
+# 3. Déploie les canaux et marque la première connexion comme faite.
 set -eu
 
 OIE_URL="${OIE_URL:-https://oie-app:8443}"
@@ -9,10 +10,11 @@ OIE_USER="${OIE_USER:-admin}"
 OIE_PASSWORD="${OIE_PASSWORD:-admin}"
 OIE_SKIP_FIRST_LOGIN="${OIE_SKIP_FIRST_LOGIN:-true}"
 INIT_DIR="${OIE_INIT_DIR:-/oie-init}"
-CHANNELS_DIR="$INIT_DIR/channels"
-GROUPS_DIR="$INIT_DIR/groups"
-SETTINGS_FILE="$INIT_DIR/fhir-settings.json"
-EMPTY_SET_FILE="$INIT_DIR/empty-set.xml"
+DATA_DIR="$INIT_DIR/data"
+CONFIG_FILE="$DATA_DIR/configuration.xml"
+CHANNELS_DIR="$DATA_DIR/channels"
+GROUPS_DIR="$DATA_DIR/groups"
+EMPTY_SET_FILE=/tmp/oie-empty-set.xml
 RESPONSE_FILE=/tmp/oie-response.txt
 
 fail() {
@@ -47,78 +49,18 @@ api() {
   fi
 }
 
-bulk_update_groups() {
-  status=$(curl --insecure --noproxy '*' --silent --show-error --max-time 300 \
-    --user "$OIE_USER:$OIE_PASSWORD" --header 'X-Requested-With: OpenAPI' \
-    --form "channelGroups=@$1;type=application/xml" \
-    --form "removedChannelGroupIds=@$2;type=application/xml" \
-    --output "$RESPONSE_FILE" --write-out '%{http_code}' \
-    "$OIE_URL/api/channelgroups/_bulkUpdate?override=true") || fail "Mise à jour des groupes impossible"
-  case "$status" in
-    2??) ;;
-    *) fail "HTTP $status sur /channelgroups/_bulkUpdate : $(cat "$RESPONSE_FILE")" ;;
-  esac
-  if grep -qE '<boolean>false</boolean>|"boolean" *: *false|^false$' "$RESPONSE_FILE"; then
-    fail "Groupes refusés : $(cat "$RESPONSE_FILE")"
-  fi
-}
-
 xml_value() {
   sed -n "s:.*<$1>\(.*\)</$1>.*:\1:p" "$2" | head -n 1
 }
 
 echo "=== Réinitialisation OIE ($OIE_URL) ==="
 
-# 1. Nettoyage complet : canaux déployés/enregistrés, groupes et tags.
-api GET /channels/idsAndNames
-awk '
-  BEGIN { print "<set>" }
-  /<entry>/ { first=1; next }
-  first && /<string>[^<]+<\/string>/ {
-    id=$0
-    sub(/^.*<string>/, "", id)
-    sub(/<\/string>.*$/, "", id)
-    first=0
-    print "  <string>" id "</string>"
-  }
-  END { print "</set>" }
-' "$RESPONSE_FILE" > /tmp/oie-existing-ids.xml
+# 1. Restauration de la configuration OIE (écrase canaux, groupes, tags et réglages existants).
+[ -f "$CONFIG_FILE" ] || fail "Fichier de configuration introuvable : $CONFIG_FILE"
+echo "Import de la configuration serveur OIE..."
+api PUT "/server/configuration?deploy=true&overwriteConfigMap=true" "$CONFIG_FILE"
 
-if grep -Fq "<string>" /tmp/oie-existing-ids.xml; then
-  echo "Suppression des canaux existants..."
-  api POST "/channels/_undeploy?returnErrors=true" /tmp/oie-existing-ids.xml
-  [ ! -s "$RESPONSE_FILE" ] || fail "Arrêt des canaux refusé : $(cat "$RESPONSE_FILE")"
-  api POST /channels/_removeChannels /tmp/oie-existing-ids.xml
-fi
-
-api GET /channelgroups
-awk '
-  BEGIN { print "<set>" }
-  /<channelGroup[ >]/ { in_group=1; got_id=0; next }
-  /<\/channelGroup>/ { in_group=0; got_id=0; next }
-  in_group && !got_id && /<id>[^<]+<\/id>/ {
-    id=$0
-    sub(/^.*<id>/, "", id)
-    sub(/<\/id>.*$/, "", id)
-    got_id=1
-    print "  <string>" id "</string>"
-  }
-  END { print "</set>" }
-' "$RESPONSE_FILE" > /tmp/oie-removed-groups.xml
-
-if grep -Fq "<string>" /tmp/oie-removed-groups.xml; then
-  bulk_update_groups "$EMPTY_SET_FILE" /tmp/oie-removed-groups.xml
-fi
-
-api PUT /server/channelTags "$EMPTY_SET_FILE" application/xml
-
-# 2. Contextes FHIR (Settings > FHIR Mapper) : requis avant l'import/déploiement des canaux.
-if [ -f "$SETTINGS_FILE" ]; then
-  api POST /extensions/fhir-profile-mapper/settings "$SETTINGS_FILE" text/plain
-  echo "Contextes FHIR installés"
-fi
-
-# 3. Import des canaux.
+# 2. Import des canaux au format export OIE.
 count=0
 printf '<set>\n' > /tmp/oie-deploy-ids.xml
 for file in "$CHANNELS_DIR"/*.xml; do
@@ -133,13 +75,13 @@ for file in "$CHANNELS_DIR"/*.xml; do
 done
 printf '</set>\n' >> /tmp/oie-deploy-ids.xml
 
-# Contrôle global d'invalidité (extension absente ou étape non désérialisée).
 api GET /channels
 if grep -Fq "This channel is invalid." "$RESPONSE_FILE"; then
   fail "Au moins un canal est invalide après import. Vérifier les extensions et la désérialisation des étapes."
 fi
 
-# 4. Installation de tous les groupes en un seul appel.
+# 3. Import des groupes de canaux.
+printf '<set/>\n' > "$EMPTY_SET_FILE"
 {
   printf '<set>\n'
   for file in "$GROUPS_DIR"/*.xml; do
@@ -150,11 +92,23 @@ fi
 } > /tmp/oie-groups.xml
 
 if grep -Fq "<channelGroup" /tmp/oie-groups.xml; then
-  bulk_update_groups /tmp/oie-groups.xml "$EMPTY_SET_FILE"
+  status=$(curl --insecure --noproxy '*' --silent --show-error --max-time 300 \
+    --user "$OIE_USER:$OIE_PASSWORD" --header 'X-Requested-With: OpenAPI' \
+    --form "channelGroups=@/tmp/oie-groups.xml;type=application/xml" \
+    --form "removedChannelGroupIds=@$EMPTY_SET_FILE;type=application/xml" \
+    --output "$RESPONSE_FILE" --write-out '%{http_code}' \
+    "$OIE_URL/api/channelgroups/_bulkUpdate?override=true") || fail "Mise à jour des groupes impossible"
+  case "$status" in
+    2??) ;;
+    *) fail "HTTP $status sur /channelgroups/_bulkUpdate : $(cat "$RESPONSE_FILE")" ;;
+  esac
+  if grep -qE '<boolean>false</boolean>|"boolean" *: *false|^false$' "$RESPONSE_FILE"; then
+    fail "Groupes refusés : $(cat "$RESPONSE_FILE")"
+  fi
   echo "Groupes installés"
 fi
 
-# 5. Déploiement groupé en un seul appel.
+# 4. Déploiement groupé des canaux importés.
 if [ "$count" -gt 0 ]; then
   echo "Déploiement de $count canal(aux)..."
   api POST "/channels/_deploy?returnErrors=true" /tmp/oie-deploy-ids.xml
@@ -163,7 +117,7 @@ if [ "$count" -gt 0 ]; then
   fi
 fi
 
-# 6. Première connexion du compte marquée comme faite (évite l'assistant de changement de mot de passe).
+# 5. Première connexion marquée comme faite (évite l'assistant de changement de mot de passe).
 if [ "$OIE_SKIP_FIRST_LOGIN" = true ]; then
   request GET /users/current > /dev/null
   user_id=$(xml_value id "$RESPONSE_FILE")

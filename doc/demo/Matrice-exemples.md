@@ -105,7 +105,7 @@ Depuis la racine, démo à jour et démarrée :
 
 ```sh
 python3 -m unittest discover -s tools/tests
-python3 tools/run_tests.py --offline demo/oie-init/channels
+python3 tools/run_tests.py --offline demo/oie-init/data/channels
 npm --prefix webadmin run test:e2e
 ```
 

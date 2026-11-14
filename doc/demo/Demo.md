@@ -214,16 +214,16 @@ les API de notre plugin. Le fonctionnement de l'éditeur est décrit dans
 
 ## Ajouter ou réimporter des exemples
 
-Déposer les exports XML de canaux dans
-[demo/oie-init/channels/](../../demo/oie-init/channels/), puis relancer
+Déposer les données OIE dans [demo/oie-init/data/](../../demo/oie-init/data/) (`configuration.xml`, `channels/`, `groups/`), puis relancer
 l'initialisation depuis `demo/` :
 
 ```sh
 docker compose run --rm oie-init
 ```
 
-L'init supprime les canaux, groupes et tags existants, puis importe et déploie les
-exemples depuis zéro. L'init refuse les imports signalés invalides par OIE et les erreurs de déploiement.
+L'init restaure la configuration serveur OIE (ce qui écrase les canaux, groupes,
+tags et réglages existants), puis importe et déploie les canaux et groupes depuis
+zéro. L'init refuse les imports signalés invalides par OIE et les erreurs de déploiement.
 Les futurs listeners peuvent utiliser les ports 10800 à 10900 déjà publiés.
 Au-delà de cette plage, compléter `oie-app.ports`.
 

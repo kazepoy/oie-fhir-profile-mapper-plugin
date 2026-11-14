@@ -89,7 +89,7 @@ jobs:
           pip install -q -r tools/requirements.txt
           python3 -m unittest discover -s tools/tests
           python3 tools/check_doc_links.py
-          python3 tools/run_tests.py --offline demo/oie-init/channels doc/demo/examples/mapping/patient-samples.step.json doc/demo/examples/mapping/laboratory-samples.steps.json
+          python3 tools/run_tests.py --offline demo/oie-init/data/channels doc/demo/examples/mapping/patient-samples.step.json doc/demo/examples/mapping/laboratory-samples.steps.json
 
       - name: Build
         run: mvn -B -ntp package

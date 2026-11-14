@@ -23,7 +23,7 @@ pas inventer de propriété ou de forme de règle absente du schéma.
 
 ## Déroulement attendu
 
-1. Partir du canal de [`demo/oie-init/channels`](../../demo/oie-init/channels/)
+1. Partir du canal de [`demo/oie-init/data/channels`](../../demo/oie-init/data/channels/)
    le plus proche du besoin et identifier connecteur, transformeur et type de
    données source.
 2. Pour un nouveau canal, attribuer un nouvel UUID, un nom non ambigu et un port
@@ -104,10 +104,10 @@ Prérequis : Python et les dépendances de `tools/requirements.txt`. Depuis la
 racine du dépôt, créer `target/`, puis :
 
 ```sh
-python3 tools/channel_mapping.py list demo/oie-init/channels/sql-xml-to-fhir-patient.xml
-python3 tools/channel_mapping.py extract demo/oie-init/channels/sql-xml-to-fhir-patient.xml --connector 0 --sequence 1 --assign-ids --output target/patient.json
+python3 tools/channel_mapping.py list demo/oie-init/data/channels/sql-xml-to-fhir-patient.xml
+python3 tools/channel_mapping.py extract demo/oie-init/data/channels/sql-xml-to-fhir-patient.xml --connector 0 --sequence 1 --assign-ids --output target/patient.json
 python3 tools/check_mapping.py target/patient.json
-python3 tools/channel_mapping.py apply demo/oie-init/channels/sql-xml-to-fhir-patient.xml --connector 0 --sequence 1 --step target/patient.json --output target/channel-modifie.xml
+python3 tools/channel_mapping.py apply demo/oie-init/data/channels/sql-xml-to-fhir-patient.xml --connector 0 --sequence 1 --step target/patient.json --output target/channel-modifie.xml
 python3 tools/channel_mapping.py explain target/channel-modifie.xml --connector 0 --sequence 1
 ```
 
